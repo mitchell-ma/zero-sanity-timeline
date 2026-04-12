@@ -40,7 +40,7 @@ import {
   getTotalAttack,
 } from '../../model/calculation/damageFormulas';
 import { EventsQueryService } from '../timeline/eventsQueryService';
-import { hasDealDamageClause, findDealDamageInClauses } from '../timeline/clauseQueries';
+import { hasDealDamageClause, findDealDamageInClauses, shouldFireChance } from '../timeline/clauseQueries';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import type { Slot } from '../timeline/columnBuilder';
 import { ENEMY_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
@@ -765,6 +765,19 @@ export function buildDamageTableRows(
                 const mainStatValue = dealInfo?.mainStat === DamageScalingStatType.DEFENSE ? opData.totalDefense
                   : dealInfo?.mainStat === DamageScalingStatType.HP ? opData.effectiveHp
                   : effectiveAttack;
+
+                // CHANCE gate: when this DEAL DAMAGE is nested inside a CHANCE
+                // compound, the row fires only if the frame's isChance pin (or
+                // mode-driven default) resolves to hit. Miss → skip the row
+                // entirely (no damage, no multiplier dilution). Pure pin-driven;
+                // the probability in the CHANCE wrapper is display-only and has
+                // no effect here.
+                if (dealInfo?.insideChance) {
+                  const chancePin = overrides?.[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isChance;
+                  if (!shouldFireChance(resolvedCritMode, chancePin)) {
+                    continue;
+                  }
+                }
 
                 params = {
                   attack: mainStatValue,

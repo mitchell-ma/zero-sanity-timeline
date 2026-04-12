@@ -145,17 +145,13 @@ export function computeStatusViewOverrides(
       if (allSorted.length <= 1 && !stackable && !hasRecordedStacks) continue;
 
       for (const ev of allSorted) {
-        // Use stacks recorded at creation time; fall back to dynamic position from active events
         let position: number;
-        // Position = number of earlier overlapping events + 1 (determines roman numeral label)
-        // Uses allSorted (including consumed) so consumed events retain their position.
         let activeEarlier = 0;
         for (const prev of allSorted) {
           if (prev.uid === ev.uid) break;
-          if (eventEndFrame(prev) > ev.startFrame) activeEarlier++;
+          if (eventEndFrame(prev) >= ev.startFrame) activeEarlier++;
         }
         position = activeEarlier + 1;
-        // Clamp to stack limit — events beyond the cap repeat the max label
         if (stackLimit != null && position > stackLimit) position = stackLimit;
 
         const labelValue = ev.stacks != null ? ev.stacks : position;

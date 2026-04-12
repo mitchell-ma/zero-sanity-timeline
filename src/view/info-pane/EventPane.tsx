@@ -362,11 +362,19 @@ function EventPane({
         {(() => {
           // ── Build Status Definition card extraFields ─────────────────
           // Consolidates susceptibility, reaction properties (element/
-          // stacks/statusValue/isForced) and non-reaction status properties
-          // (stacks/statusValue) — all formerly rendered as their own
-          // edit-panel-sections. Now they sit inside the Status Definition
-          // card, sharing the hot-wire edit affordance. TimelineEvent-rooted
-          // paths via jsonOverrides; freeform-only edits, auto reset.
+          // stacks/isForced) and non-reaction status properties (stacks) —
+          // all formerly rendered as their own edit-panel-sections. Now they
+          // sit inside the Status Definition card, sharing the hot-wire edit
+          // affordance. TimelineEvent-rooted paths via jsonOverrides;
+          // freeform-only edits, auto reset.
+          //
+          // NOTE: statusValue is intentionally NOT surfaced here. The field
+          // is a runtime-resolved scalar extracted from the status's clause
+          // `with.value` at event creation — when the value is a complex
+          // ValueNode (e.g. VARY_BY [POTENTIAL, INTELLECT]) the resolved
+          // scalar is just one cell of the matrix and misleads the reader.
+          // The authoritative source lives in the clause itself, rendered by
+          // ClauseTabs below the properties list.
           const isReaction = event.ownerEntityId === ENEMY_ID && REACTION_COLUMN_IDS.has(event.columnId);
           const reactionElement = isReaction
             ? (getStatusElementMap()[event.columnId.toUpperCase()] as ElementType | undefined)
@@ -399,26 +407,6 @@ function EventPane({
                     event.stacks
                   )}
                   <span style={{ marginLeft: 4, color: 'var(--text-muted)', fontSize: 10 }}>/ {maxStacks}</span>
-                </span>
-              </div>
-            );
-          }
-
-          if (event.statusValue != null) {
-            statusRows.push(
-              <div key="statusValue" className="ops-field">
-                <span className="ops-field-label">Status Value</span>
-                <span className="ops-field-value">
-                  {editState ? (
-                    <EditableValue
-                      value={event.statusValue}
-                      path="statusValue"
-                      editState={editState}
-                      format={(v) => `${formatFlat(v * 100)}%`}
-                    />
-                  ) : (
-                    `${formatFlat(event.statusValue * 100)}%`
-                  )}
                 </span>
               </div>
             );

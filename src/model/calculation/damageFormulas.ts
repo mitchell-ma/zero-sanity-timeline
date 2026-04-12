@@ -564,8 +564,6 @@ export interface DamageParams {
   resistanceMultiplier: number;
   /** Operator talent special multiplier (e.g. Last Rite T2, Avywenna P5). Default 1. */
   specialMultiplier?: number;
-  /** CHANCE expectation multiplier (0..1). Default 1 (no CHANCE gate). */
-  chanceMultiplier?: number;
   /** Individual sub-component values for breakdown display. */
   sub?: DamageSubComponents;
 }
@@ -574,11 +572,16 @@ export interface DamageParams {
  * Full damage formula:
  *
  * Damage = Attack × BaseMultiplier × AttributeBonus × MultiplierGroup
- *        × CritMultiplier × ChanceMultiplier × AmpMultiplier
+ *        × CritMultiplier × AmpMultiplier
  *        × StaggerMultiplier × FinisherMultiplier × LinkMultiplier
  *        × WeaknessMultiplier × SusceptibilityMultiplier
  *        × IncreasedDMGTakenMultiplier × DMGReductionMultiplier
  *        × ProtectionMultiplier × DefenseMultiplier × ResistanceMultiplier
+ *
+ * CHANCE-wrapped damage effects are gated by the per-frame `isChance` pin in
+ * the damage builder — if the pin says miss, the row is skipped entirely and
+ * this function is never called for it. There is no chance-expectation
+ * weighting.
  */
 export function calculateDamage(params: DamageParams): number {
   const effectiveAttack = Math.round(params.attack * params.attributeBonus * 10) / 10;
@@ -587,7 +590,6 @@ export function calculateDamage(params: DamageParams): number {
     params.baseMultiplier *
     params.multiplierGroup *
     params.critMultiplier *
-    (params.chanceMultiplier ?? 1) *
     params.ampMultiplier *
     params.staggerMultiplier *
     params.finisherMultiplier *

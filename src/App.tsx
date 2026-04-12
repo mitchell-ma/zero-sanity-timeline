@@ -289,6 +289,7 @@ export default function App() {
                     onRemoveFrame={app.handleRemoveFrame}
                     onRemoveFrames={app.handleRemoveFrames}
                     onSetCritPins={app.handleSetCritPins}
+                    onSetChancePins={app.handleSetChancePins}
                     onRemoveSegment={app.handleRemoveSegment}
                     onAddSegment={app.handleAddSegment}
                     onAddFrame={app.handleAddFrame}

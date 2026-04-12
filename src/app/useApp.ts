@@ -1200,6 +1200,15 @@ export function useApp() {
     setCombatState((prev) => ctrl.setCritPins(prev, targets, value));
   }, [ctrl, setCombatState]);
 
+  const handleSetChancePins = useCallback((frames: SelectedFrame[], value: boolean) => {
+    const all = processedEventsRef.current;
+    const targets = frames.map((f) => {
+      const target = all.find((ev) => ev.uid === f.eventUid);
+      return target ? { target, segmentIndex: f.segmentIndex, frameIndex: f.frameIndex } : null;
+    }).filter(Boolean) as { target: TimelineEvent; segmentIndex: number; frameIndex: number }[];
+    setCombatState((prev) => ctrl.setChancePins(prev, targets, value));
+  }, [ctrl, setCombatState]);
+
   const handleRandomizeCrit = useCallback(() => {
     const accumulator = getLastStatAccumulator();
     if (!accumulator) throw new Error('[handleRandomizeCrit] StatAccumulator not available — pipeline must run before rolling crits');
@@ -1816,7 +1825,7 @@ export function useApp() {
     handleAddEvent, handleUpdateEvent, handleMoveEvent, handleMoveEvents,
     handleRemoveEvent, handleRemoveEvents, handleDuplicateEvents,
     handleResetEvent, handleResetEvents, handleResetSegments, handleResetFrames,
-    handleRemoveFrame, handleRemoveFrames, handleSetCritPins, handleRandomizeCrit, handleAddFrame, handleAddSegment,
+    handleRemoveFrame, handleRemoveFrames, handleSetCritPins, handleSetChancePins, handleRandomizeCrit, handleAddFrame, handleAddSegment,
     handleSetJsonOverride, handleClearJsonOverride,
     handleRemoveSegment, handleMoveFrame, handleResizeSegment, handleFrameClick,
 

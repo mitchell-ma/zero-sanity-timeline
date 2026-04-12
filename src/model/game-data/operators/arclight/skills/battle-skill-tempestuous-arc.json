@@ -131,6 +131,84 @@
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
                       "value": [
+                        0.45,
+                        0.5,
+                        0.54,
+                        0.59,
+                        0.63,
+                        0.68,
+                        0.72,
+                        0.77,
+                        0.81,
+                        0.87,
+                        0.93,
+                        1.01
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "END_AXIS"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.2,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "_note": "Additional attack: only fires when enemy has active Electrification. Consumes the Electrification, deals Electric DMG, recovers SP, and applies Wildland Trekker Trigger for the talent counter.",
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "ELECTRIFICATION"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "ELECTRIFICATION",
+                  "from": "ENEMY"
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
                         1.8,
                         1.98,
                         2.16,
@@ -159,6 +237,77 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          35,
+                          35,
+                          35,
+                          35,
+                          35,
+                          40,
+                          40
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          0,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "WILDLAND_TREKKER_TALENT",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
                 }
               ]
             }
@@ -170,7 +319,7 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 1.2
+            "value": 1.6
           },
           "unit": "SECOND"
         },

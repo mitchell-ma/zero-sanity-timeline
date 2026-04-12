@@ -1,7 +1,7 @@
 {
   "properties": {
     "name": "Auger Angling",
-    "description": "When the Arts Reaction or Originium Crystals of a nearby target is consumed. Opens an angling hole beneath the enemy that deals Physical DMG and recovers some SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers some more SP.",
+    "description": "When a nearby target's Arts Reaction or Originium Crystals are consumed, opens an angling hole beneath the enemy that deals Physical DMG and recovers SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers extra SP. T2 Veteran Angler improves the Rare Fin catching chance by +0.2%/+0.5% per 10 Intellect (cap +30%). P3 May the Willing Bite applies a 10s +15% ATK team buff on Rare Fin catches.",
     "eventType": "SKILL",
     "eventIdType": "COMBO",
     "element": "PHYSICAL",
@@ -93,7 +93,8 @@
             "offset": {
               "value": 0.77,
               "unit": "SECOND"
-            }
+            },
+            "element": "PHYSICAL"
           },
           "clause": [
             {
@@ -126,28 +127,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        1,
-                        1.1,
-                        1.2,
-                        1.3,
-                        1.4,
-                        1.5,
-                        1.6,
-                        1.7,
-                        1.8,
-                        1.93,
-                        2.08,
-                        2.25
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -185,72 +164,155 @@
             }
           ],
           "clauseType": "ALL"
-        }
-      ]
-    },
-    {
-      "metadata": {
-        "eventComponentType": "SEGMENT"
-      },
-      "properties": {
-        "duration": {
-          "value": {
-            "verb": "IS",
-            "value": 0
-          },
-          "unit": "SECOND"
         },
-        "name": "Rare Fin Bonus"
-      },
-      "frames": [
         {
           "metadata": {
             "eventComponentType": "FRAME"
           },
           "properties": {
             "offset": {
-              "value": 0,
+              "value": 0.77,
               "unit": "SECOND"
-            }
+            },
+            "element": "PHYSICAL"
           },
           "clause": [
             {
-              "conditions": [
-                {
-                  "subjectDeterminer": "THIS",
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "object": "POTENTIAL",
-                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "with": {
-                    "value": {
-                      "verb": "IS",
-                      "value": 3
-                    }
-                  }
-                }
-              ],
+              "conditions": [],
               "effects": [
                 {
-                  "verb": "APPLY",
-                  "object": "STAT",
-                  "objectQualifier": "PHYSICAL",
-                  "toDeterminer": "ALL",
-                  "to": "OPERATOR",
+                  "verb": "CHANCE",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 0.15
-                    },
-                    "duration": {
-                      "value": {
+                      "operation": "ADD",
+                      "left": {
                         "verb": "IS",
-                        "value": 10
+                        "value": 0.1
                       },
-                      "unit": "SECOND"
+                      "right": {
+                        "operation": "MIN",
+                        "left": {
+                          "verb": "IS",
+                          "value": 0.3
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "operation": "INTEGER_DIV",
+                            "left": {
+                              "verb": "IS",
+                              "object": "STAT",
+                              "objectId": "INTELLECT",
+                              "of": {
+                                "object": "OPERATOR",
+                                "determiner": "THIS"
+                              }
+                            },
+                            "right": {
+                              "verb": "IS",
+                              "value": 10
+                            }
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "TALENT_LEVEL",
+                            "value": [
+                              0,
+                              0.002,
+                              0.005
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        }
+                      }
                     }
                   },
-                  "objectId": "DAMAGE_BONUS"
+                  "effects": [
+                    {
+                      "verb": "DEAL",
+                      "objectQualifier": "PHYSICAL",
+                      "object": "DAMAGE",
+                      "to": "ENEMY",
+                      "with": {
+                        "value": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            1,
+                            1.1,
+                            1.2,
+                            1.3,
+                            1.4,
+                            1.5,
+                            1.6,
+                            1.7,
+                            1.8,
+                            1.93,
+                            2.08,
+                            2.25
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "mainStat": {
+                          "verb": "IS",
+                          "object": "STAT",
+                          "objectId": "ATTACK",
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "verb": "RECOVER",
+                      "object": "SKILL_POINT",
+                      "toDeterminer": "THIS",
+                      "to": "OPERATOR",
+                      "with": {
+                        "value": {
+                          "verb": "IS",
+                          "value": 10
+                        }
+                      }
+                    },
+                    {
+                      "verb": "ALL",
+                      "predicates": [
+                        {
+                          "conditions": [
+                            {
+                              "subjectDeterminer": "THIS",
+                              "subject": "OPERATOR",
+                              "verb": "HAVE",
+                              "object": "POTENTIAL",
+                              "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                              "with": {
+                                "value": {
+                                  "verb": "IS",
+                                  "value": 3
+                                }
+                              }
+                            }
+                          ],
+                          "effects": [
+                            {
+                              "verb": "APPLY",
+                              "object": "STATUS",
+                              "objectId": "MAY_THE_WILLING_BITE",
+                              "to": "TEAM"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -320,8 +382,7 @@
             "objectId": "REACTION",
             "of": {
               "object": "ENEMY"
-            },
-            "objectQualifier": "ARTS"
+            }
           }
         ]
       },

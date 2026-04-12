@@ -58,6 +58,7 @@ import {
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 import TimelineColumn from './TimelineColumn';
 import { getCritModeGeneration } from '../controller/combatStateController';
+import { hasChanceClause } from '../controller/timeline/clauseQueries';
 import { throttleByRAF } from '../utils/throttle';
 import type { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { getAxisMap, type Orientation } from '../utils/axisMap';
@@ -121,6 +122,7 @@ interface CombatPlannerProps {
   onRemoveFrame?: (eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onRemoveFrames?: (frames: import('../consts/viewTypes').SelectedFrame[]) => void;
   onSetCritPins?: (frames: import('../consts/viewTypes').SelectedFrame[], value: boolean) => void;
+  onSetChancePins?: (frames: import('../consts/viewTypes').SelectedFrame[], value: boolean) => void;
   onRemoveSegment?: (eventUid: string, segmentIndex: number) => void;
   onAddSegment?: (eventUid: string, segmentLabel: string) => void;
   onAddFrame?: (eventUid: string, segmentIndex: number, frameOffsetFrame: number) => void;
@@ -247,6 +249,7 @@ export default React.memo(function CombatPlanner({
   onRemoveFrame,
   onRemoveFrames,
   onSetCritPins,
+  onSetChancePins,
   onRemoveSegment,
   onAddSegment,
   onAddFrame,
@@ -2041,6 +2044,37 @@ export default React.memo(function CombatPlanner({
       });
     }
 
+    // ── CHANCE pin toggle ─────────────────────────────────────────────────
+    // Only show on frames whose clauses carry a CHANCE compound. The pin
+    // forces the CHANCE gate to hit (true) or miss (false); unpinned frames
+    // follow the active CritMode default.
+    const chanceFrames = targetFrames.filter((sf) => {
+      const ev = events.find((ev) => ev.uid === sf.eventUid);
+      const frame = ev?.segments[sf.segmentIndex]?.frames?.[sf.frameIndex];
+      return frame ? hasChanceClause(frame.clauses) : false;
+    });
+    if (onSetChancePins && chanceFrames.length > 0) {
+      const resolveChance = (sf: import('../consts/viewTypes').SelectedFrame) => {
+        const ev = events.find((ev) => ev.uid === sf.eventUid);
+        return ev?.segments[sf.segmentIndex]?.frames?.[sf.frameIndex]?.isChance ?? false;
+      };
+      const allHit = chanceFrames.length > 0 && chanceFrames.every(resolveChance);
+      const chanceTarget = !allHit;
+      items.push({
+        label: isBatch
+          ? (allHit ? `Set ${chanceFrames.length} Frames Chance Miss` : `Set ${chanceFrames.length} Frames Chance Hit`)
+          : (allHit ? 'Set Chance Miss' : 'Set Chance Hit'),
+        action: () => {
+          for (const sf of chanceFrames) {
+            const el = document.querySelector(`[data-frame-id="${sf.eventUid}-${sf.segmentIndex}-${sf.frameIndex}"]`);
+            if (el) el.classList.toggle('event-frame-diamond--chance', chanceTarget);
+          }
+          onSetChancePins(chanceFrames, chanceTarget);
+          onContextMenu(null);
+        },
+      });
+    }
+
     if (isBatch) {
       items.push({
         label: `Remove ${targetFrames.length} Frames`,
@@ -2060,7 +2094,7 @@ export default React.memo(function CombatPlanner({
     }
 
     onContextMenu({ x: e.clientX, y: e.clientY, items });
-  }, [readOnly, onContextMenu, onRemoveFrame, onRemoveFrames, onSetCritPins, selectedFrames, onSelectedFramesChange, events]);
+  }, [readOnly, onContextMenu, onRemoveFrame, onRemoveFrames, onSetCritPins, onSetChancePins, selectedFrames, onSelectedFramesChange, events]);
 
   // ─── Right-click on segment (multi-segment events only) ────────────────────
   const handleSegmentContextMenu = useCallback((

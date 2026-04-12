@@ -148,7 +148,6 @@
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "FRAGILITY",
-                  "objectQualifier": "CRYO",
                   "to": "ENEMY",
                   "with": {
                     "value": {
@@ -171,7 +170,8 @@
                       },
                       "unit": "SECOND"
                     }
-                  }
+                  },
+                  "objectQualifier": "CRYO"
                 }
               ]
             }

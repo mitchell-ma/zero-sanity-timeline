@@ -17,8 +17,8 @@
           "effects": [
             {
               "verb": "APPLY",
-              "objectQualifier": "ELECTRIC",
-              "object": "STATUS", "objectId": "SUSCEPTIBILITY",
+              "object": "STATUS",
+              "objectId": "SUSCEPTIBILITY",
               "to": "ENEMY",
               "with": {
                 "value": {
@@ -43,12 +43,13 @@
                     "determiner": "THIS"
                   }
                 }
-              }
+              },
+              "objectQualifier": "ELECTRIC"
             },
             {
               "verb": "APPLY",
-              "objectQualifier": "HEAT",
-              "object": "STATUS", "objectId": "SUSCEPTIBILITY",
+              "object": "STATUS",
+              "objectId": "SUSCEPTIBILITY",
               "to": "ENEMY",
               "with": {
                 "value": {
@@ -73,7 +74,8 @@
                     "determiner": "THIS"
                   }
                 }
-              }
+              },
+              "objectQualifier": "HEAT"
             }
           ]
         }

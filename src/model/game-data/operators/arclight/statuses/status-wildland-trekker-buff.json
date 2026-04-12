@@ -7,48 +7,54 @@
           "verb": "APPLY",
           "objectQualifier": "ELECTRIC",
           "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
+          "objectId": "DAMAGE_BONUS",
+          "to": "TEAM",
           "with": {
             "value": {
-              "verb": "VARY_BY",
-              "object": [
-                "POTENTIAL",
-                "INTELLECT"
-              ],
-              "value": {
-                "P0": {
-                  "1": 0.0005,
-                  "2": 0.0008
+              "operation": "MULT",
+              "left": {
+                "operation": "MULT",
+                "left": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.0005,
+                    0.0008
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 },
-                "P1": {
-                  "1": 0.0005,
-                  "2": 0.0008
-                },
-                "P2": {
-                  "1": 0.0005,
-                  "2": 0.0008
-                },
-                "P3": {
-                  "1": 0.00065,
-                  "2": 0.00104
-                },
-                "P4": {
-                  "1": 0.00065,
-                  "2": 0.00104
-                },
-                "P5": {
-                  "1": 0.00065,
-                  "2": 0.00104
+                "right": {
+                  "verb": "VARY_BY",
+                  "object": "POTENTIAL",
+                  "value": [
+                    1,
+                    1,
+                    1,
+                    1.3,
+                    1.3,
+                    1.3
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
                 }
               },
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+              "right": {
+                "verb": "IS",
+                "object": "STAT",
+                "objectId": "INTELLECT",
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
               }
             }
-          },
-          "objectId": "DAMAGE_BONUS"
+          }
         }
       ]
     }
@@ -56,8 +62,7 @@
   "properties": {
     "id": "WILDLAND_TREKKER_BUFF",
     "name": "Wildland Trekker",
-    "target": "OPERATOR",
-    "targetDeterminer": "ALL",
+    "to": "TEAM",
     "element": "ELECTRIC",
     "stacks": {
       "limit": {
@@ -75,7 +80,7 @@
     },
     "eventType": "STATUS",
     "eventIdType": "SKILL_STATUS",
-    "description": "Talent Wildland Trekker improved: DMG Boost effect increased to times the original."
+    "description": "Team buff from Wildland Trekker: Electric DMG Dealt +0.05% per point of Arclight's Intellect (+0.08% at T2, ×1.3 at P3). Duration 15s, does not stack."
   },
   "metadata": {
     "originId": "ARCLIGHT",

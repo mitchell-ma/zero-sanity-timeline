@@ -19,7 +19,6 @@
           "effects": [
             {
               "verb": "APPLY",
-              "objectQualifier": "ELECTRIC",
               "object": "STATUS",
               "objectId": "AMP",
               "to": "TEAM",
@@ -46,11 +45,11 @@
                     "determiner": "SOURCE"
                   }
                 }
-              }
+              },
+              "objectQualifier": "ELECTRIC"
             },
             {
               "verb": "APPLY",
-              "objectQualifier": "HEAT",
               "object": "STATUS",
               "objectId": "AMP",
               "to": "TEAM",
@@ -77,7 +76,8 @@
                     "determiner": "SOURCE"
                   }
                 }
-              }
+              },
+              "objectQualifier": "HEAT"
             }
           ]
         }

@@ -70,58 +70,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "operation": "MULT",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          1.64,
-                          1.81,
-                          1.97,
-                          2.14,
-                          2.3,
-                          2.47,
-                          2.63,
-                          2.79,
-                          2.96,
-                          3.16,
-                          3.41,
-                          3.7
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [
-                          1,
-                          1,
-                          1,
-                          1,
-                          1,
-                          1.2
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
-                      }
-                    },
-                    "poiseExtra": {
-                      "verb": "IS",
-                      "value": 10
-                    },
-                    "count": {
-                      "verb": "IS",
-                      "value": {
-                        "verb": "IS",
-                        "value": 4
-                      }
-                    },
                     "value": {
                       "operation": "MULT",
                       "left": {
@@ -214,47 +162,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "operation": "MULT",
-                      "left": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          1.64,
-                          1.81,
-                          1.97,
-                          2.14,
-                          2.3,
-                          2.47,
-                          2.63,
-                          2.79,
-                          2.96,
-                          3.16,
-                          3.41,
-                          3.7
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
-                      },
-                      "right": {
-                        "verb": "VARY_BY",
-                        "object": "POTENTIAL",
-                        "value": [
-                          1,
-                          1,
-                          1,
-                          1,
-                          1,
-                          1.2
-                        ],
-                        "of": {
-                          "object": "OPERATOR",
-                          "determiner": "THIS"
-                        }
-                      }
-                    },
                     "value": {
                       "operation": "MULT",
                       "left": {

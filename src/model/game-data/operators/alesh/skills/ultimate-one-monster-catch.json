@@ -5,7 +5,18 @@
     "eventType": "SKILL",
     "eventIdType": "ULTIMATE",
     "element": "CRYO",
-    "id": "ONE_MONSTER_CATCH"
+    "id": "ONE_MONSTER_CATCH",
+    "suppliedParameters": {
+      "VARY_BY": [
+        {
+          "id": "ENEMY_DEFEATED",
+          "name": "Enemies Defeated",
+          "lowerRange": 0,
+          "upperRange": 5,
+          "default": 0
+        }
+      ]
+    }
   },
   "clause": [
     {
@@ -103,25 +114,40 @@
                   "object": "SKILL_POINT",
                   "with": {
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        20,
-                        25,
-                        25,
-                        25
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          25,
+                          25,
+                          25
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "ENEMY_DEFEATED",
+                        "value": [
+                          0,
+                          5,
+                          10,
+                          15,
+                          20,
+                          25
+                        ]
                       }
                     }
                   }
@@ -175,6 +201,101 @@
                       "of": {
                         "object": "OPERATOR",
                         "determiner": "THIS"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0.417,
+              "unit": "SECOND"
+            },
+            "element": "CRYO"
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
+                },
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "HP",
+                  "cardinalityConstraint": "LESS_THAN",
+                  "with": {
+                    "value": {
+                      "unit": "PERCENTAGE",
+                      "value": {
+                        "verb": "IS",
+                        "value": 50
+                      }
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "CRYO",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.36,
+                          4.79,
+                          5.23,
+                          5.66,
+                          6.1,
+                          6.53,
+                          6.97,
+                          7.41,
+                          7.84,
+                          8.39,
+                          9.04,
+                          9.8
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "verb": "IS",
+                        "value": 0.5
                       }
                     },
                     "mainStat": {

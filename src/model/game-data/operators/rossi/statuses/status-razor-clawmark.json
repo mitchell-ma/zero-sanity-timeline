@@ -5,8 +5,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "FRAGILITY",
-          "objectQualifier": "PHYSICAL",
+          "object": "STATUS",
+          "objectId": "FRAGILITY",
           "to": "ENEMY",
           "with": {
             "value": {
@@ -25,12 +25,13 @@
               },
               "unit": "PERCENTAGE"
             }
-          }
+          },
+          "objectQualifier": "PHYSICAL"
         },
         {
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "FRAGILITY",
-          "objectQualifier": "HEAT",
+          "object": "STATUS",
+          "objectId": "FRAGILITY",
           "to": "ENEMY",
           "with": {
             "value": {
@@ -49,7 +50,8 @@
               },
               "unit": "PERCENTAGE"
             }
-          }
+          },
+          "objectQualifier": "HEAT"
         }
       ]
     }

@@ -34,6 +34,8 @@ import {
   setPropertyOverride,
   setCritPin,
   clearAllCritPins as clearAllCritPinsFromStore,
+  setFrameChancePin,
+  clearAllFrameChancePins as clearAllChancePinsFromStore,
   setJsonOverride,
   clearJsonOverride,
 } from './overrideController';
@@ -118,6 +120,23 @@ export class CombatStateController {
 
   clearAllCritPins(state: CombatState): CombatState {
     const overrides = clearAllCritPinsFromStore(state.overrides);
+    return overrides === state.overrides ? state : { ...state, overrides };
+  }
+
+  setChancePins(
+    state: CombatState,
+    frames: { target: TimelineEvent; segmentIndex: number; frameIndex: number }[],
+    value: boolean,
+  ): CombatState {
+    let overrides = state.overrides;
+    for (const { target, segmentIndex, frameIndex } of frames) {
+      overrides = setFrameChancePin(overrides, target, segmentIndex, frameIndex, value);
+    }
+    return overrides === state.overrides ? state : { ...state, overrides };
+  }
+
+  clearAllChancePins(state: CombatState): CombatState {
+    const overrides = clearAllChancePinsFromStore(state.overrides);
     return overrides === state.overrides ? state : { ...state, overrides };
   }
 

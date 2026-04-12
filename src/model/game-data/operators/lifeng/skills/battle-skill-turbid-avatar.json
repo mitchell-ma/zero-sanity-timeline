@@ -241,8 +241,18 @@
                   "value": {
                     "verb": "VARY_BY",
                     "object": "POTENTIAL",
-                    "value": [0, 2, 2, 2, 2, 2],
-                    "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    "value": [
+                      0,
+                      2,
+                      2,
+                      2,
+                      2,
+                      2
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               ],
@@ -251,7 +261,6 @@
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "SUSCEPTIBILITY",
-                  "objectQualifier": "PHYSICAL",
                   "to": "ENEMY",
                   "with": {
                     "value": {
@@ -260,23 +269,50 @@
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
-                          0.05, 0.05, 0.05, 0.05, 0.05,
-                          0.07, 0.07, 0.07, 0.09, 0.1, 0.1, 0.12
+                          0.05,
+                          0.05,
+                          0.05,
+                          0.05,
+                          0.05,
+                          0.07,
+                          0.07,
+                          0.07,
+                          0.09,
+                          0.1,
+                          0.1,
+                          0.12
                         ],
-                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       },
                       "right": {
                         "verb": "VARY_BY",
                         "object": "POTENTIAL",
-                        "value": [0, 0.05, 0.05, 0.05, 0.05, 0.05],
-                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                        "value": [
+                          0,
+                          0.05,
+                          0.05,
+                          0.05,
+                          0.05,
+                          0.05
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "duration": {
-                      "value": { "verb": "IS", "value": 12 },
+                      "value": {
+                        "verb": "IS",
+                        "value": 12
+                      },
                       "unit": "SECOND"
                     }
-                  }
+                  },
+                  "objectQualifier": "PHYSICAL"
                 }
               ]
             }

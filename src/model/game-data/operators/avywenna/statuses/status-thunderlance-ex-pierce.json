@@ -152,11 +152,11 @@
                               "of": {
                                 "object": "STATUS",
                                 "objectId": "SUSCEPTIBILITY",
-                                "objectQualifier": "ELECTRIC",
                                 "of": {
                                   "object": "ENEMY",
                                   "determiner": "THIS"
-                                }
+                                },
+                                "objectQualifier": "ELECTRIC"
                               }
                             }
                           }

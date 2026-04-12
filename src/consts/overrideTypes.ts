@@ -3,6 +3,13 @@
 export interface FrameOverride {
   /** Pin crit outcome: true = force crit, false = force no-crit, undefined = use mode default. */
   isCritical?: boolean;
+  /**
+   * Pin CHANCE outcome for frames carrying a CHANCE compound: true = force hit,
+   * false = force miss, undefined = use mode default. Only meaningful on frames
+   * whose clauses contain a CHANCE wrapper — the UI exposes the pin only for
+   * such frames.
+   */
+  isChance?: boolean;
   /** Override frame position within segment. */
   offsetFrame?: number;
 }

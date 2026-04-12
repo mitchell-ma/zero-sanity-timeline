@@ -87,14 +87,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "poiseExtra": {
-                      "verb": "IS",
-                      "value": 10
-                    },
-                    "count": {
-                      "verb": "IS",
-                      "value": 4
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -164,14 +156,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "poiseExtra": {
-                      "verb": "IS",
-                      "value": 10
-                    },
-                    "count": {
-                      "verb": "IS",
-                      "value": 4
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",

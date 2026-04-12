@@ -44,7 +44,8 @@
           },
           "unit": "SECOND"
         },
-        "element": "ELECTRIC"
+        "element": "ELECTRIC",
+        "name": "Exploding Blitz"
       },
       "frames": [
         {
@@ -71,8 +72,26 @@
                   "to": "ENEMY",
                   "with": {
                     "value": {
-                      "verb": "IS",
-                      "value": 7
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        10,
+                        10,
+                        10
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -82,28 +101,6 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "damageMultiplierIncrement": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        2.44,
-                        2.69,
-                        2.93,
-                        3.18,
-                        3.42,
-                        3.67,
-                        3.91,
-                        4.15,
-                        4.4,
-                        4.7,
-                        5.07,
-                        5.5
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
@@ -138,6 +135,70 @@
                   }
                 }
               ]
+            },
+            {
+              "_note": "If the enemy already has Electric Infliction, consume it and forcibly apply Electrification.",
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "ELECTRIC"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "ELECTRIC",
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "ELECTRIFICATION",
+                  "to": "ENEMY",
+                  "with": {
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "_note": "Otherwise, apply a fresh Electric Infliction stack.",
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "ELECTRIC",
+                  "negated": true
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "INFLICTION",
+                  "objectQualifier": "ELECTRIC",
+                  "to": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                }
+              ]
             }
           ],
           "clauseType": "ALL"
@@ -159,7 +220,7 @@
           },
           "unit": "SECOND"
         },
-        "name": "DELAYED"
+        "name": "Arc Explosion"
       },
       "frames": [
         {
@@ -173,7 +234,8 @@
             "offset": {
               "value": 1.33,
               "unit": "SECOND"
-            }
+            },
+            "element": "ELECTRIC"
           },
           "clause": [
             {
@@ -185,8 +247,65 @@
                   "to": "ENEMY",
                   "with": {
                     "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        7,
+                        10,
+                        10,
+                        10
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        2.44,
+                        2.69,
+                        2.93,
+                        3.18,
+                        3.42,
+                        3.67,
+                        3.91,
+                        4.15,
+                        4.4,
+                        4.7,
+                        5.07,
+                        5.5
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    },
+                    "mainStat": {
                       "verb": "IS",
-                      "value": 7
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }

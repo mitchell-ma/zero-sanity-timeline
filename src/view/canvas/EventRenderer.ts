@@ -108,28 +108,49 @@ function hasInflictionOrStatus(f: EventFrameMarker): boolean {
 }
 
 function getFrameElementColor(f: EventFrameMarker, skillElement?: string): number | undefined {
-  let el: string | undefined;
-  if (f.clauses) {
-    for (const pred of f.clauses) {
-      if (el) break;
+  // Priority chain:
+  //   1. Explicit frame element (author declared `properties.element`, surfaced
+  //      as `damageElement`) — highest priority because it reflects explicit intent
+  //   2. DEAL DAMAGE effect's `objectQualifier` — inferred from the damage itself
+  //   3. APPLY / CONSUME effect's element qualifier (inflictions, reactions,
+  //      element-tagged statuses) — inferred from secondary effects
+  //   4. Fall back to the skill's declared element
+  let el: string | undefined = f.damageElement;
+  if (!el && f.clauses) {
+    // DEAL DAMAGE walk
+    outer: for (const pred of f.clauses) {
       for (const ef of pred.effects) {
-        if (!ef.dslEffect) continue;
-        const q = ef.dslEffect.objectQualifier;
-        if (ef.dslEffect.verb === VerbType.APPLY || ef.dslEffect.verb === VerbType.CONSUME) {
-          if (ef.dslEffect.object === NounType.INFLICTION && q) { el = q; break; }
-          if (ef.dslEffect.object === NounType.STATUS && ef.dslEffect.objectId === NounType.REACTION && q) {
-            el = getStatusElementMap()[q]; break;
+        const dsl = ef.dslEffect;
+        if (!dsl) continue;
+        if (dsl.verb === VerbType.DEAL && dsl.object === NounType.DAMAGE && dsl.objectQualifier) {
+          el = dsl.objectQualifier as string;
+          break outer;
+        }
+      }
+    }
+  }
+  if (!el && f.clauses) {
+    // Inflictions / reactions / element-tagged statuses walk
+    outer: for (const pred of f.clauses) {
+      for (const ef of pred.effects) {
+        const dsl = ef.dslEffect;
+        if (!dsl) continue;
+        const q = dsl.objectQualifier;
+        if (dsl.verb === VerbType.APPLY || dsl.verb === VerbType.CONSUME) {
+          if (dsl.object === NounType.INFLICTION && q) { el = q; break outer; }
+          if (dsl.object === NounType.STATUS && dsl.objectId === NounType.REACTION && q) {
+            el = getStatusElementMap()[q]; break outer;
           }
-          if (ef.dslEffect.object === NounType.STATUS && ef.dslEffect.objectId
-              && ef.dslEffect.objectId !== AdjectiveType.PHYSICAL
-              && ef.dslEffect.objectId !== NounType.REACTION) {
-            el = getStatusElementMap()[ef.dslEffect.objectId]; break;
+          if (dsl.object === NounType.STATUS && dsl.objectId
+              && dsl.objectId !== AdjectiveType.PHYSICAL
+              && dsl.objectId !== NounType.REACTION) {
+            el = getStatusElementMap()[dsl.objectId]; break outer;
           }
         }
       }
     }
   }
-  if (!el) el = f.damageElement ?? skillElement;
+  if (!el) el = skillElement;
   if (!el) return undefined;
   const base = ELEMENT_COLORS[el as ElementType];
   if (!base) return undefined;

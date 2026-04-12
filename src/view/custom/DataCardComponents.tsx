@@ -474,6 +474,26 @@ function VaryByLeaf({ node, label, editState, basePath }: {
   );
 }
 
+/**
+ * Recursively format an of-clause possessor chain into a human-readable string.
+ * Walks nested `of.of` chains so the full ownership path renders, e.g.:
+ *   `{ object: "STATUS", objectId: "INFLICTION", objectQualifier: "CRYO",
+ *      of: { object: "ENEMY", determiner: "THIS" } }`
+ *   → " of cryo infliction of this enemy"
+ */
+function formatOfChain(of: Record<string, unknown>): string {
+  const parts: string[] = [];
+  if (of.determiner) parts.push(String(of.determiner).replace(/_/g, ' ').toLowerCase());
+  if (of.objectQualifier) parts.push(String(of.objectQualifier).replace(/_/g, ' ').toLowerCase());
+  if (of.objectId) parts.push(String(of.objectId).replace(/_/g, ' ').toLowerCase());
+  else if (of.object) parts.push(String(of.object).replace(/_/g, ' ').toLowerCase());
+  const phrase = parts.length > 0 ? ` of ${parts.join(' ')}` : '';
+  // Recurse into nested of-clause (e.g. "of CRYO INFLICTION → of THIS ENEMY")
+  const nested = of.of as Record<string, unknown> | undefined;
+  const nestedPhrase = nested ? formatOfChain(nested) : '';
+  return phrase + nestedPhrase;
+}
+
 function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: string }) {
   if (node.verb === VerbType.IS && node.object === NounType.STAT) {
     const stat = String(node.objectId ?? node.stat ?? 'STAT').replace(/_/g, ' ');
@@ -484,17 +504,9 @@ function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: str
   if (node.verb === VerbType.IS && !node.object) return <span className="ops-vt-leaf">{String(node.value)}</span>;
   if (node.verb === VerbType.VARY_BY && Array.isArray(node.value)) return <VaryByLeaf node={node} label={label} />;
   if (node.object && node.of) {
-    const stackOfClause = node.of as { object?: string; objectId?: string; determiner?: string };
-    // Render the `of` phrase from whichever of determiner/objectId/object are present,
-    // e.g. `of this status`, `of whirlpool`, `of cryo infliction`.
-    const ofParts = [
-      stackOfClause.determiner ? String(stackOfClause.determiner).replace(/_/g, ' ').toLowerCase() : undefined,
-      stackOfClause.objectId ? String(stackOfClause.objectId).replace(/_/g, ' ').toLowerCase() : undefined,
-      stackOfClause.object && !stackOfClause.objectId
-        ? String(stackOfClause.object).replace(/_/g, ' ').toLowerCase()
-        : undefined,
-    ].filter(Boolean);
-    const ofLabel = ofParts.length > 0 ? ` of ${ofParts.join(' ')}` : '';
+    // Render the full `of` possessor chain including qualifier and nested of-clause,
+    // e.g. `stacks of CRYO INFLICTION of this ENEMY`.
+    const ofLabel = formatOfChain(node.of as Record<string, unknown>);
     return <span className="ops-vt-leaf">{label && <span className="ops-prop-tree-leaf-label">{label}</span>} {String(node.object).toLowerCase()}{ofLabel}</span>;
   }
   if (node.object) return <span className="ops-vt-leaf">{String(node.object).toLowerCase()} stacks</span>;
@@ -552,27 +564,76 @@ function EffectView({ effect: ef, editState, basePath }: {
   basePath?: string;
 }) {
   const nestedEffects = Array.isArray(ef.effects) ? ef.effects as Record<string, unknown>[] : null;
-  if (nestedEffects) {
+  const nestedPredicates = Array.isArray(ef.predicates) ? ef.predicates as Record<string, unknown>[] : null;
+  const nestedElseEffects = Array.isArray(ef.elseEffects) ? ef.elseEffects as Record<string, unknown>[] : null;
+  if (nestedEffects || nestedPredicates) {
     const constraint = ef.cardinalityConstraint as string | undefined;
     const val = ef.value as string | number | undefined;
     const constraintLabel = [constraint?.replace(/_/g, ' '), val].filter(Boolean).join(' ');
+    // For CHANCE, render the probability from with.value
+    const isChance = String(ef.verb) === VerbType.CHANCE;
+    const chanceWith = isChance ? (ef.with as Record<string, unknown> | undefined)?.value as Record<string, unknown> | undefined : undefined;
     return (
       <div className="ops-frame-effect">
         <div className="ops-frame-effect-sentence">
           <span className="ops-frame-effect-verb">{String(ef.verb).replace(/_/g, ' ')}</span>
           {constraintLabel && <span className="ops-frame-effect-prep">{constraintLabel}</span>}
         </div>
-        <div className="ops-prop-tree-children">
-          {nestedEffects.map((nested, ni) => (
-            <div key={ni} className={`ops-vt-branch${ni === nestedEffects.length - 1 ? '' : ' ops-vt-branch--mid'}`}>
-              <EffectView
-                effect={nested}
-                editState={editState}
-                basePath={basePath ? `${basePath}.effects[${ni}]` : undefined}
-              />
+        {/* CHANCE probability display */}
+        {chanceWith && (
+          <div className="ops-prop-tree-children">
+            <div className="ops-vt-branch ops-vt-branch--mid">
+              <ValueNodeTree node={chanceWith} label="probability" />
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+        {/* Predicated branches (ALL/ANY with conditions + effects) */}
+        {nestedPredicates && (
+          <div className="ops-prop-tree-children">
+            {nestedPredicates.map((pred, pi) => (
+              <div key={`p-${pi}`} className={`ops-vt-branch${!nestedEffects && pi === nestedPredicates.length - 1 && !nestedElseEffects ? '' : ' ops-vt-branch--mid'}`}>
+                <ClausePredicateView
+                  predicate={pred}
+                  editState={editState}
+                  basePath={basePath ? `${basePath}.predicates[${pi}]` : undefined}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Flat effects (hit branch for CHANCE, unconditional for ALL/ANY) */}
+        {nestedEffects && (
+          <div className="ops-prop-tree-children">
+            {nestedEffects.map((nested, ni) => (
+              <div key={ni} className={`ops-vt-branch${ni === nestedEffects.length - 1 && !nestedElseEffects ? '' : ' ops-vt-branch--mid'}`}>
+                <EffectView
+                  effect={nested}
+                  editState={editState}
+                  basePath={basePath ? `${basePath}.effects[${ni}]` : undefined}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        {/* CHANCE else branch */}
+        {nestedElseEffects && nestedElseEffects.length > 0 && (
+          <>
+            <div className="ops-frame-effect-sentence" style={{ marginTop: 2 }}>
+              <span className="ops-frame-effect-verb">ELSE</span>
+            </div>
+            <div className="ops-prop-tree-children">
+              {nestedElseEffects.map((nested, ni) => (
+                <div key={`else-${ni}`} className={`ops-vt-branch${ni === nestedElseEffects.length - 1 ? '' : ' ops-vt-branch--mid'}`}>
+                  <EffectView
+                    effect={nested}
+                    editState={editState}
+                    basePath={basePath ? `${basePath}.elseEffects[${ni}]` : undefined}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     );
   }
@@ -963,17 +1024,19 @@ function sumFrameMultipliers(frames: JsonSkillData[]): number[] | null {
     const clause = (f.clause ?? []) as unknown as { effects?: Record<string, unknown>[] }[];
     for (const c of clause) {
       for (const ef of c.effects ?? []) {
+        // Only DEAL DAMAGE effects contribute to the skill card's total multiplier.
+        // Other verbs (APPLY stacks, DEAL STAGGER, etc.) must not pollute the sum.
+        if (ef.verb !== VerbType.DEAL || ef.object !== NounType.DAMAGE) continue;
         const withProps = (ef.with ?? {}) as Record<string, unknown>;
-        for (const val of Object.values(withProps)) {
-          const w = val && typeof val === 'object' ? val as Record<string, unknown> : null;
-          if (w && w.verb === VerbType.VARY_BY && Array.isArray(w.value)) {
-            const vals = w.value as number[];
-            if (!totals) {
-              totals = new Array(vals.length).fill(0);
-            }
-            for (let i = 0; i < vals.length && i < totals.length; i++) {
-              totals[i] += vals[i];
-            }
+        const valProp = withProps.value;
+        const w = valProp && typeof valProp === 'object' ? valProp as Record<string, unknown> : null;
+        if (w && w.verb === VerbType.VARY_BY && Array.isArray(w.value)) {
+          const vals = w.value as number[];
+          if (!totals) {
+            totals = new Array(vals.length).fill(0);
+          }
+          for (let i = 0; i < vals.length && i < totals.length; i++) {
+            totals[i] += vals[i];
           }
         }
       }
@@ -1298,7 +1361,6 @@ export function normalizedDefToData(def: NormalizedEffectDef): Record<string, un
     ...(def.cooldownSeconds ? { cooldownSeconds: def.cooldownSeconds } : {}),
     ...(def.eventIdType ? { eventIdType: def.eventIdType } : {}),
     ...(def.usageLimit ? { usageLimit: def.usageLimit } : {}),
-    ...(def.statusValue != null ? { statusValue: def.statusValue } : {}),
   };
   return {
     clause: def.clause ?? [],

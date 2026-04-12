@@ -165,7 +165,10 @@ export class ConfigDrivenStatusColumn implements EventColumn {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
       if (source.sourceEventUid) this.host.linkTransition(ev.uid, source.sourceEventUid);
-      ev.stacks = allActive.length;
+      // When restacking (remaining > 0), stamp the pre-consume count so the
+      // view shows the descending sequence (V → IV → III). When fully consumed
+      // (remaining === 0), preserve the event's original stacks value.
+      if (remaining > 0) ev.stacks = allActive.length;
     }
 
     if (remaining > 0 && maxRemainingDuration > 0) {

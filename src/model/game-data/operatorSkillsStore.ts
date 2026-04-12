@@ -7,7 +7,7 @@
  */
 import { EventType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
-import { checkKeys, validateEffect, validateSegmentShape } from './validationUtils';
+import { checkKeys, validateEffect, validateInteraction, validateSegmentShape } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -70,11 +70,20 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
     errors.push(`${path}.onExitClause: must be an array`);
   }
 
-  // Walk effects in clauses, segments, and frames to warn about missing targets
+  // Walk effects and conditions in clauses, segments, and frames. Effects go
+  // through the full semantic check; conditions run the shape-only
+  // `validateInteraction` pass (catches e.g. `objectId: ELECTRIFICATION` where
+  // `objectQualifier: ELECTRIFICATION` is meant).
   const walkEffects = (clauses: unknown[], clausePath: string) => {
     if (!Array.isArray(clauses)) return;
     for (let ci = 0; ci < clauses.length; ci++) {
       const clause = clauses[ci] as Record<string, unknown>;
+      const conditions = clause.conditions as Record<string, unknown>[] | undefined;
+      if (Array.isArray(conditions)) {
+        for (let ki = 0; ki < conditions.length; ki++) {
+          errors.push(...validateInteraction(conditions[ki], `${clausePath}[${ci}].conditions[${ki}]`));
+        }
+      }
       const effects = clause.effects as Record<string, unknown>[] | undefined;
       if (!Array.isArray(effects)) continue;
       for (let ei = 0; ei < effects.length; ei++) {

@@ -39,7 +39,7 @@ function getOrCreateFrame(segment: SegmentOverride, frameIdx: number): FrameOver
 
 /** Remove empty leaf objects to keep the store clean. */
 function isFrameOverrideEmpty(fo: FrameOverride): boolean {
-  return fo.isCritical === undefined && fo.offsetFrame === undefined;
+  return fo.isCritical === undefined && fo.isChance === undefined && fo.offsetFrame === undefined;
 }
 
 function isSegmentOverrideEmpty(so: SegmentOverride): boolean {
@@ -180,6 +180,93 @@ export function clearCritPin(store: OverrideStore, event: TimelineEvent, segIdx:
   const frame = { ...getOrCreateFrame(seg, frameIdx) };
   delete frame.isCritical;
   return setEntry(store, key, withSegment(entry, segIdx, withFrame(seg, frameIdx, frame)));
+}
+
+// ── Frame-keyed CHANCE pin ───────────────────────────────────────────
+// Frames whose clauses carry a CHANCE compound can be pinned to hit/miss.
+// Mirrors the isCritical pattern — `setFrameChancePin` writes `isChance`
+// onto FrameOverride at `segments[si].frames[fi]`. Frames without a CHANCE
+// wrapper never get the UI option, so the field stays undefined for them.
+
+export function getFrameChancePin(
+  store: OverrideStore, event: TimelineEvent, segIdx: number, frameIdx: number,
+): boolean | undefined {
+  return store[buildOverrideKey(event)]?.segments?.[segIdx]?.frames?.[frameIdx]?.isChance;
+}
+
+export function setFrameChancePin(
+  store: OverrideStore, event: TimelineEvent, segIdx: number, frameIdx: number, value: boolean,
+): OverrideStore {
+  const key = buildOverrideKey(event);
+  const entry = getOrCreateOverride(store, key);
+  const seg = getOrCreateSegment(entry, segIdx);
+  const frame = { ...getOrCreateFrame(seg, frameIdx), isChance: value };
+  return setEntry(store, key, withSegment(entry, segIdx, withFrame(seg, frameIdx, frame)));
+}
+
+export function clearFrameChancePin(
+  store: OverrideStore, event: TimelineEvent, segIdx: number, frameIdx: number,
+): OverrideStore {
+  const key = buildOverrideKey(event);
+  const entry = getOrCreateOverride(store, key);
+  const seg = getOrCreateSegment(entry, segIdx);
+  const frame = { ...getOrCreateFrame(seg, frameIdx) };
+  delete frame.isChance;
+  return setEntry(store, key, withSegment(entry, segIdx, withFrame(seg, frameIdx, frame)));
+}
+
+/** Remove every frame-keyed CHANCE pin across the store. */
+export function clearAllFrameChancePins(store: OverrideStore): OverrideStore {
+  let next: OverrideStore = store;
+  let mutated = false;
+  for (const key of Object.keys(store)) {
+    const entry = store[key];
+    const entrySegments = entry.segments;
+    if (!entrySegments) continue;
+    let entryChanged = false;
+    const newSegments: Record<number, SegmentOverride> = { ...entrySegments };
+    for (const segKey of Object.keys(entrySegments)) {
+      const si = Number(segKey);
+      const seg: SegmentOverride = entrySegments[si];
+      const segFrames = seg.frames;
+      if (!segFrames) continue;
+      let segChanged = false;
+      const newFrames: Record<number, FrameOverride> = { ...segFrames };
+      for (const frameKey of Object.keys(segFrames)) {
+        const fi = Number(frameKey);
+        const f: FrameOverride = segFrames[fi];
+        if (f.isChance === undefined) continue;
+        segChanged = true;
+        const cleaned: FrameOverride = { ...f };
+        delete cleaned.isChance;
+        if (isFrameOverrideEmpty(cleaned)) {
+          delete newFrames[fi];
+        } else {
+          newFrames[fi] = cleaned;
+        }
+      }
+      if (!segChanged) continue;
+      entryChanged = true;
+      const nextSeg: SegmentOverride = {
+        ...seg,
+        frames: Object.keys(newFrames).length > 0 ? newFrames : undefined,
+      };
+      if (isSegmentOverrideEmpty(nextSeg)) {
+        delete newSegments[si];
+      } else {
+        newSegments[si] = nextSeg;
+      }
+    }
+    if (!entryChanged) continue;
+    mutated = true;
+    if (next === store) next = { ...store };
+    const nextEntry: EventOverride = {
+      ...entry,
+      segments: Object.keys(newSegments).length > 0 ? newSegments : undefined,
+    };
+    next = setEntry(next, key, nextEntry);
+  }
+  return mutated ? next : store;
 }
 
 export function setChancePin(store: OverrideStore, event: TimelineEvent, clausePath: string, outcome: boolean): OverrideStore {

@@ -11,6 +11,9 @@ export interface FrameCondition {
   objectQualifier?: string;
   object?: string;
   objectId?: string;
+  /** Determiner on the object side (THIS / TRIGGER / SOURCE / etc.) — used by
+   * entity-equality checks like `THIS OPERATOR IS TRIGGER OPERATOR`. */
+  objectDeterminer?: string;
   cardinalityConstraint?: string;
   value?: unknown;
   with?: Record<string, unknown>;

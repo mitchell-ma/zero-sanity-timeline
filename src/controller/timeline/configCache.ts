@@ -21,7 +21,7 @@ import { getAllOperatorStatuses } from '../gameDataStore';
 import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
 import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
-import { PERMANENT_DURATION } from '../../consts/enums';
+import { PERMANENT_DURATION, SegmentType } from '../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 
 /** Resolved status config used by doApply / column strategies at runtime. */
@@ -60,13 +60,32 @@ function buildCaches(): void {
       ? (typeof stackLimit === 'number' ? stackLimit : resolveValueNode(stackLimit as any, DEFAULT_VALUE_CONTEXT) ?? undefined)
       : undefined;
     const cdSecs = (s as unknown as { cooldownSeconds?: number }).cooldownSeconds;
+    // Two sources for cooldownFrames:
+    //   (1) Explicit `cooldownSeconds` property on the status (legacy path)
+    //   (2) An IMMEDIATE_COOLDOWN segment in the status's segment list — the
+    //       segment's duration is treated as the re-trigger cooldown window.
+    //       This lets talent/status JSON carry the cooldown as a first-class
+    //       segment (visual on the timeline + gates doApply re-spawning) without
+    //       a parallel `cooldownSeconds` field.
+    let cooldownFrames: number | undefined = cdSecs && cdSecs > 0 ? Math.round(cdSecs * FPS) : undefined;
+    if (cooldownFrames == null) {
+      // Only OperatorStatus exposes a segments array (WeaponStatus / GearStatus
+      // are clause-only). Duck-type the read so we don't narrow the union.
+      const statusSegments = (s as unknown as { segments?: EventSegmentData[] }).segments;
+      const cdSeg = statusSegments?.find((seg: EventSegmentData) =>
+        seg.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN),
+      );
+      if (cdSeg && cdSeg.properties.duration > 0) {
+        cooldownFrames = cdSeg.properties.duration;
+      }
+    }
     const cfg: StatusConfig = {
       duration: durationFrames,
       ...(s.duration?.value ? { durationNode: s.duration.value as ValueNode } : {}),
       stackingMode: s.stacks?.interactionType,
       maxStacks: typeof maxStacks === 'number' ? maxStacks : undefined,
       ...(isExpression ? { maxStacksNode: stackLimit } : {}),
-      cooldownFrames: cdSecs && cdSecs > 0 ? Math.round(cdSecs * FPS) : undefined,
+      ...(cooldownFrames != null ? { cooldownFrames } : {}),
     };
     _configCache.set(s.id, cfg);
 

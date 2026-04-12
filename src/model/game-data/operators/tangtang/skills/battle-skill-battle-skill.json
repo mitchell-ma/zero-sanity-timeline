@@ -201,7 +201,6 @@
                 },
                 {
                   "verb": "APPLY",
-                  "objectQualifier": "ARTS",
                   "object": "STATUS",
                   "objectId": "SUSCEPTIBILITY",
                   "to": "ENEMY",
@@ -269,7 +268,8 @@
                       },
                       "unit": "SECOND"
                     }
-                  }
+                  },
+                  "objectQualifier": "ARTS"
                 },
                 {
                   "verb": "RETURN",

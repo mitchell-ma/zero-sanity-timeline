@@ -190,11 +190,20 @@ export function translateCondition(c: Record<string, unknown>): string {
   if (c.objectQualifier) {
     parts.push(translateDslToken(String(c.objectQualifier)));
   }
+  if (c.objectDeterminer) parts.push(translateDslToken(String(c.objectDeterminer)).toLowerCase());
   if (c.objectId) {
     parts.push(titleCase(String(c.objectId)));
     if (c.object) parts.push(translateDslToken(String(c.object)).toLowerCase());
   } else if (c.object) {
     parts.push(translateDslToken(String(c.object)));
+  }
+  if (c.of) {
+    const ofC = c.of as Record<string, unknown>;
+    parts.push('of');
+    if (ofC.determiner) parts.push(translateDslToken(String(ofC.determiner)).toLowerCase());
+    if (ofC.objectQualifier) parts.push(translateDslToken(String(ofC.objectQualifier)));
+    if (ofC.objectId) parts.push(titleCase(String(ofC.objectId)));
+    if (ofC.object) parts.push(translateDslToken(String(ofC.object)));
   }
   if (c.to || c.toDeterminer) {
     parts.push('to');
@@ -258,6 +267,26 @@ export function translateEffectParts(ef: Record<string, unknown>): {
   if (ef.fromDeterminer) fromParts.push(translateDslToken(String(ef.fromDeterminer)).toLowerCase());
   if (ef.fromObject ?? ef.from) fromParts.push(translateDslToken(String(ef.fromObject ?? ef.from)));
   const fromTarget = fromParts.length > 0 ? `from ${fromParts.join(' ')}` : '';
+
+  // Of (possession: "REDUCE COOLDOWN OF COMBO SKILL")
+  if (ef.of) {
+    const ofC = ef.of as Record<string, unknown>;
+    const ofParts: string[] = [];
+    if (ofC.determiner) ofParts.push(translateDslToken(String(ofC.determiner)).toLowerCase());
+    if (ofC.objectQualifier) ofParts.push(translateDslToken(String(ofC.objectQualifier)));
+    if (ofC.objectId) ofParts.push(titleCase(String(ofC.objectId)));
+    if (ofC.object) ofParts.push(translateDslToken(String(ofC.object)));
+    if (ofParts.length > 0) objectStr += ` of ${ofParts.join(' ')}`;
+  }
+
+  // By (amount: "REDUCE COOLDOWN BY 2 SECOND")
+  if (ef.by) {
+    const byC = ef.by as Record<string, unknown>;
+    const byVal = byC.value;
+    const byUnit = byC.unit ? String(byC.unit).toLowerCase() : '';
+    const byStr = byVal != null ? `${displayValue(byVal)}${byUnit ? ' ' + byUnit : ''}` : '';
+    if (byStr) objectStr += ` by ${byStr}`;
+  }
 
   return { verb, object: objectStr, target, fromTarget };
 }

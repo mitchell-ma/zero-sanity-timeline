@@ -67,7 +67,8 @@
             "offset": {
               "value": 0.9,
               "unit": "SECOND"
-            }
+            },
+            "element": "PHYSICAL"
           },
           "clause": [
             {
@@ -121,6 +122,112 @@
                         "determiner": "THIS"
                       }
                     }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "INFLICTION",
+                  "objectQualifier": "CRYO"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RECOVER",
+                  "object": "SKILL_POINT",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "IS",
+                            "object": "STACKS",
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "INFLICTION",
+                              "objectQualifier": "CRYO",
+                              "of": {
+                                "object": "ENEMY",
+                                "determiner": "THIS"
+                              }
+                            }
+                          },
+                          "right": {
+                            "verb": "IS",
+                            "value": 10
+                          }
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            5,
+                            5,
+                            5
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          0,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "SOLIDIFICATION",
+                  "to": "ENEMY",
+                  "with": {
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "INFLICTION",
+                  "objectQualifier": "CRYO",
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
                   }
                 }
               ]

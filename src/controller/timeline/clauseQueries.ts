@@ -10,7 +10,7 @@
 import { NounType, VerbType, AdjectiveType } from '../../dsl/semantics';
 import type { Effect, ValueNode } from '../../dsl/semantics';
 import type { FrameClausePredicate, FrameClauseEffect } from '../../model/event-frames/skillEventFrame';
-import type { DamageScalingStatType } from '../../consts/enums';
+import { CritMode, type DamageScalingStatType } from '../../consts/enums';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from '../calculation/valueResolver';
 
 /**
@@ -30,6 +30,34 @@ export interface DealDamageInfo {
   multipliers: number[];
   mainStat?: DamageScalingStatType;
   multiplierNode?: unknown;
+  /**
+   * True when this DEAL DAMAGE was found nested inside a CHANCE compound. The
+   * damage builder gates row emission on the frame's `isChance` pin (via
+   * `shouldFireChance`) when this flag is set. The probability ValueNode on
+   * the CHANCE wrapper is display-only and does NOT weight the damage.
+   */
+  insideChance?: boolean;
+}
+
+/**
+ * Policy helper — decides whether a CHANCE-wrapped effect should fire given
+ * the active crit mode and the per-frame pin. Used by the interpretor to
+ * choose between hit / else branches and by the damage builder to gate
+ * CHANCE-wrapped damage rows.
+ *
+ *   ALWAYS  — always hit
+ *   NEVER   — always miss
+ *   MANUAL  — per-frame pin, default miss when unpinned
+ *   EXPECTED — same as MANUAL (CHANCE is not expectation-weighted; the
+ *              EXPECTED mode has no special behavior for CHANCE)
+ */
+export function shouldFireChance(
+  critMode: CritMode,
+  pin: boolean | undefined,
+): boolean {
+  if (critMode === CritMode.ALWAYS) return true;
+  if (critMode === CritMode.NEVER) return false;
+  return pin ?? false;
 }
 
 /**
@@ -289,43 +317,81 @@ export function findDealDamageInClauses(
   for (const pred of clauses) {
     for (const ef of pred.effects) {
       const dsl = ef.dslEffect as Effect | undefined;
-      if (!dsl || dsl.verb !== VerbType.DEAL || dsl.object !== NounType.DAMAGE) continue;
-
-      const wp = dsl.with as { value?: unknown; mainStat?: { objectId?: string } } | undefined;
-      const valueNode = wp?.value as
-        | { verb?: string; value?: number | number[]; operation?: string }
-        | undefined;
-      const elementQualifier = dsl.objectQualifier && ELEMENT_QUALIFIERS.has(dsl.objectQualifier as string)
-        ? (dsl.objectQualifier as string) : undefined;
-      const mainStat = wp?.mainStat?.objectId as DamageScalingStatType | undefined;
-
-      let multipliers: number[] = [];
-      let multiplierNode: unknown = undefined;
-      if (valueNode != null) {
-        if (Array.isArray(valueNode.value)) {
-          multipliers = valueNode.value as number[];
-        } else if (typeof valueNode.value === 'number') {
-          multipliers = [valueNode.value];
-        } else if (valueNode.operation) {
-          // Compound expression — defer resolution to the calc site
-          multiplierNode = valueNode;
-        } else if (valueNode.verb === 'IS' && typeof valueNode.value === 'number') {
-          multipliers = [valueNode.value];
-        }
-      }
-
-      return {
-        ...(elementQualifier ? { element: elementQualifier } : {}),
-        multipliers,
-        ...(mainStat ? { mainStat } : {}),
-        ...(multipliers.length === 0 && multiplierNode ? { multiplierNode } : {}),
-      };
+      if (!dsl) continue;
+      // Descend into CHANCE wrappers: the wrapped DEAL DAMAGE inherits the
+      // wrapper's probability as a chanceNode for the damage builder to resolve.
+      const found = extractDealDamageFromEffect(dsl);
+      if (found) return found;
     }
   }
   return null;
 }
 
-/** True when any clause effect on this frame is a DEAL DAMAGE. */
+/**
+ * Walk an Effect tree looking for a DEAL DAMAGE leaf. Descends through CHANCE,
+ * ALL, and ANY compound wrappers. When the DEAL DAMAGE is found nested inside
+ * a CHANCE, the returned info carries `insideChance: true` so the damage
+ * builder gates row emission on the frame's pin. Returns null if no DEAL
+ * DAMAGE is found.
+ */
+function extractDealDamageFromEffect(
+  dsl: Effect,
+  insideChance = false,
+): DealDamageInfo | null {
+  if (dsl.verb === VerbType.CHANCE) {
+    for (const child of dsl.effects ?? []) {
+      const res = extractDealDamageFromEffect(child, true);
+      if (res) return res;
+    }
+    return null;
+  }
+  if (dsl.verb === VerbType.ALL || dsl.verb === VerbType.ANY) {
+    for (const child of dsl.effects ?? []) {
+      const res = extractDealDamageFromEffect(child, insideChance);
+      if (res) return res;
+    }
+    for (const pred of dsl.predicates ?? []) {
+      for (const child of pred.effects) {
+        const res = extractDealDamageFromEffect(child as Effect, insideChance);
+        if (res) return res;
+      }
+    }
+    return null;
+  }
+  if (dsl.verb !== VerbType.DEAL || dsl.object !== NounType.DAMAGE) return null;
+
+  const wp = dsl.with as { value?: unknown; mainStat?: { objectId?: string } } | undefined;
+  const valueNode = wp?.value as
+    | { verb?: string; value?: number | number[]; operation?: string }
+    | undefined;
+  const elementQualifier = dsl.objectQualifier && ELEMENT_QUALIFIERS.has(dsl.objectQualifier as string)
+    ? (dsl.objectQualifier as string) : undefined;
+  const mainStat = wp?.mainStat?.objectId as DamageScalingStatType | undefined;
+
+  let multipliers: number[] = [];
+  let multiplierNode: unknown = undefined;
+  if (valueNode != null) {
+    if (Array.isArray(valueNode.value)) {
+      multipliers = valueNode.value as number[];
+    } else if (typeof valueNode.value === 'number') {
+      multipliers = [valueNode.value];
+    } else if (valueNode.operation) {
+      multiplierNode = valueNode;
+    } else if (valueNode.verb === 'IS' && typeof valueNode.value === 'number') {
+      multipliers = [valueNode.value];
+    }
+  }
+
+  return {
+    ...(elementQualifier ? { element: elementQualifier } : {}),
+    multipliers,
+    ...(mainStat ? { mainStat } : {}),
+    ...(multipliers.length === 0 && multiplierNode ? { multiplierNode } : {}),
+    ...(insideChance ? { insideChance: true } : {}),
+  };
+}
+
+/** True when any clause effect on this frame is a DEAL DAMAGE (including CHANCE-wrapped ones). */
 export function hasDealDamageClause(
   clauses: readonly FrameClausePredicate[] | undefined,
 ): boolean {
@@ -333,7 +399,56 @@ export function hasDealDamageClause(
   for (const pred of clauses) {
     for (const ef of pred.effects) {
       const dsl = ef.dslEffect as Effect | undefined;
-      if (dsl?.verb === VerbType.DEAL && dsl.object === NounType.DAMAGE) return true;
+      if (dsl && effectContainsDealDamage(dsl)) return true;
+    }
+  }
+  return false;
+}
+
+function effectContainsDealDamage(dsl: Effect): boolean {
+  if (dsl.verb === VerbType.DEAL && dsl.object === NounType.DAMAGE) return true;
+  if (dsl.verb === VerbType.CHANCE || dsl.verb === VerbType.ALL || dsl.verb === VerbType.ANY) {
+    for (const child of dsl.effects ?? []) {
+      if (effectContainsDealDamage(child)) return true;
+    }
+    for (const pred of dsl.predicates ?? []) {
+      for (const child of pred.effects) {
+        if (effectContainsDealDamage(child as Effect)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * True when any clause effect on this frame is (or wraps) a CHANCE compound.
+ * Used by the context menu to decide whether to show the "pin CHANCE" option,
+ * and by the view layer to draw an indicator on the frame diamond.
+ */
+export function hasChanceClause(
+  clauses: readonly FrameClausePredicate[] | undefined,
+): boolean {
+  if (!clauses) return false;
+  for (const pred of clauses) {
+    for (const ef of pred.effects) {
+      const dsl = ef.dslEffect as Effect | undefined;
+      if (!dsl) continue;
+      if (effectContainsChance(dsl)) return true;
+    }
+  }
+  return false;
+}
+
+function effectContainsChance(dsl: Effect): boolean {
+  if (dsl.verb === VerbType.CHANCE) return true;
+  if (dsl.verb === VerbType.ALL || dsl.verb === VerbType.ANY) {
+    for (const child of dsl.effects ?? []) {
+      if (effectContainsChance(child)) return true;
+    }
+    for (const pred of dsl.predicates ?? []) {
+      for (const child of pred.effects) {
+        if (effectContainsChance(child as Effect)) return true;
+      }
     }
   }
   return false;

@@ -404,8 +404,6 @@
   "dsl.with.stagger": "Stagger",
   "dsl.with.healBase": "Heal Base",
   "dsl.with.willAdditive": "WILL Additive",
-  "dsl.with.poiseExtra": "Extra Stagger",
-  "dsl.with.damageMultiplierIncrement": "DMG Multiplier Increment",
 
   "dsl.clauseType.clause": "Clause",
   "dsl.clauseType.onTriggerClause": "Trigger Clause",

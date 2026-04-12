@@ -94,7 +94,6 @@
               "effects": [
                 {
                   "verb": "APPLY",
-                  "objectQualifier": "CRYO",
                   "object": "STATUS",
                   "objectId": "AMP",
                   "to": "TEAM",
@@ -209,11 +208,11 @@
                       },
                       "unit": "SECOND"
                     }
-                  }
+                  },
+                  "objectQualifier": "CRYO"
                 },
                 {
                   "verb": "APPLY",
-                  "objectQualifier": "NATURE",
                   "object": "STATUS",
                   "objectId": "AMP",
                   "to": "TEAM",
@@ -328,7 +327,8 @@
                       },
                       "unit": "SECOND"
                     }
-                  }
+                  },
+                  "objectQualifier": "NATURE"
                 }
               ]
             },

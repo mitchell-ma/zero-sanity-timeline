@@ -1,4 +1,66 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "EVENT",
+          "subjectDeterminer": "THIS",
+          "verb": "BECOME",
+          "object": "STACKS",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [
+                3,
+                3,
+                3,
+                3,
+                3,
+                2
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "objectDeterminer": "THIS",
+          "object": "EVENT",
+          "with": {
+            "stacks": {
+              "verb": "VARY_BY",
+              "object": "POTENTIAL",
+              "value": [
+                3,
+                3,
+                3,
+                3,
+                3,
+                2
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "WILDLAND_TREKKER_BUFF",
+          "to": "TEAM"
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "WILDLAND_TREKKER_TALENT",
     "maxLevel": {
@@ -8,6 +70,14 @@
     "name": "Wildland Trekker (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "element": "ELECTRIC",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "interactionType": "NONE"
+    },
     "eventType": "STATUS",
     "eventIdType": "TALENT",
     "description": "Battle skill Tempestuous Arc improved: Triggering the additional effect 3 time(s) grants the team Electric DMG Dealt +0.05% for every point of Arclight's Intellect. This effect has a 15s duration and cannot stack."

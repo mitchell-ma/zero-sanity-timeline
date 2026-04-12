@@ -82,7 +82,6 @@
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "SUSCEPTIBILITY",
-                  "objectQualifier": "PHYSICAL",
                   "to": "ENEMY",
                   "with": {
                     "value": {
@@ -137,13 +136,13 @@
                       "verb": "IS",
                       "value": 1
                     }
-                  }
+                  },
+                  "objectQualifier": "PHYSICAL"
                 },
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "SUSCEPTIBILITY",
-                  "objectQualifier": "ARTS",
                   "to": "ENEMY",
                   "with": {
                     "value": {
@@ -198,7 +197,8 @@
                       "verb": "IS",
                       "value": 1
                     }
-                  }
+                  },
+                  "objectQualifier": "ARTS"
                 }
               ]
             },
