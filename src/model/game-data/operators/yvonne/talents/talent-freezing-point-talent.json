@@ -13,8 +13,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "FREEZING_POINT_CRYO",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
@@ -23,66 +23,194 @@
     {
       "conditions": [
         {
+          "subject": "ENEMY",
+          "verb": "BECOME",
+          "negated": true,
+          "object": "CRYO_INFLICTED"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "SOLIDIFICATION",
+          "cardinalityConstraint": "EXACTLY",
+          "value": {
+            "verb": "IS",
+            "value": 0
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "EVENT",
+          "objectDeterminer": "THIS"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
           "subjectDeterminer": "ANY",
           "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "SOLIDIFICATION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "BECOME",
+          "negated": true,
+          "object": "SOLIDIFIED"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "CRYO",
+          "cardinalityConstraint": "EXACTLY",
+          "value": {
+            "verb": "IS",
+            "value": 0
+          }
+        }
+      ],
+      "effects": [
+        {
           "verb": "CONSUME",
-          "object": "INFLICTION",
+          "object": "EVENT",
+          "objectDeterminer": "THIS"
+        }
+      ]
+    }
+  ],
+  "clause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "objectQualifier": "SOLIDIFICATION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "CRITICAL_DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "ADD",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0,
+                  0.2,
+                  0.4
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  0,
+                  0,
+                  0.2,
+                  0.2,
+                  0.2
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
           "objectQualifier": "CRYO"
         }
       ],
       "effects": [
         {
-          "verb": "CONSUME",
-          "object": "STATUS",
-          "objectId": "FREEZING_POINT_CRYO",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "ANY",
-          "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "REACTION",
-          "objectQualifier": "SOLIDIFICATION"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "FREEZING_POINT_SOLIDIFICATION",
+          "object": "STAT",
+          "objectId": "CRITICAL_DAMAGE",
           "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "ANY",
-          "subject": "OPERATOR",
-          "verb": "CONSUME",
-          "object": "STATUS",
-          "objectId": "REACTION",
-          "objectQualifier": "SOLIDIFICATION"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "STATUS",
-          "objectId": "FREEZING_POINT_SOLIDIFICATION",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "operation": "ADD",
+              "left": {
+                "verb": "VARY_BY",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0,
+                  0.1,
+                  0.2
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
+              },
+              "right": {
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  0,
+                  0,
+                  0,
+                  0.1,
+                  0.1,
+                  0.1
+                ],
+                "of": {
+                  "object": "OPERATOR",
+                  "determiner": "THIS"
+                }
+              }
+            }
+          }
         }
       ]
     }
   ],
+  "clauseType": "FIRST_MATCH",
   "properties": {
     "id": "FREEZING_POINT_TALENT",
     "maxLevel": {
@@ -92,6 +220,20 @@
     "name": "Freezing Point (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
     "eventType": "STATUS",
     "eventIdType": "TALENT",
     "description": "Against enemies with active Cryo Infliction, gains Critical DMG Dealt +{inflict_up:0%}. Effect is doubled against enemies with Solidification."

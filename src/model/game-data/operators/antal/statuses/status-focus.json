@@ -4,8 +4,20 @@
       "properties": {
         "duration": {
           "value": {
-            "verb": "IS",
-            "value": 60
+            "verb": "VARY_BY",
+            "object": "POTENTIAL",
+            "value": [
+              60,
+              60,
+              60,
+              60,
+              60,
+              20
+            ],
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "SOURCE"
+            }
           },
           "unit": "SECOND"
         },
@@ -81,6 +93,100 @@
         }
       ],
       "clauseType": "ALL"
+    },
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "VARY_BY",
+            "object": "POTENTIAL",
+            "value": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              40
+            ],
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "SOURCE"
+            }
+          },
+          "unit": "SECOND"
+        },
+        "name": "Empowered Focus"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "SUSCEPTIBILITY",
+              "to": "ENEMY",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.09,
+                    0.09,
+                    0.1,
+                    0.1,
+                    0.11,
+                    0.11,
+                    0.12,
+                    0.12,
+                    0.12,
+                    0.13,
+                    0.13,
+                    0.14
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectQualifier": "ELECTRIC"
+            },
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "SUSCEPTIBILITY",
+              "to": "ENEMY",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.09,
+                    0.09,
+                    0.1,
+                    0.1,
+                    0.11,
+                    0.11,
+                    0.12,
+                    0.12,
+                    0.12,
+                    0.13,
+                    0.13,
+                    0.14
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectQualifier": "HEAT"
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -103,7 +209,7 @@
     },
     "eventType": "STATUS",
     "eventIdType": "SKILL_STATUS",
-    "description": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time."
+    "description": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time. At P5, the last 40s of Focus applies a stronger Susceptibility effect (Empowered Focus)."
   },
   "metadata": {
     "originId": "SPECIFIED_RESEARCH_SUBJECT",

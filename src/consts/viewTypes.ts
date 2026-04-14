@@ -338,7 +338,7 @@ export interface MicroColumn {
   id: string;         // used as columnId for events in this micro-column
   label: string;      // short display label (e.g. "HEAT", "1")
   color: string;      // render color for events in this micro-column
-  /** Status category type (TALENT, TALENT_STATUS, GEAR_STATUS, WEAPON_STATUS, etc.). */
+  /** Status category type (TALENT, GEAR_STATUS, WEAPON_STATUS, etc.). */
   statusType?: string;
   /** Whether this status has permanent/infinite duration (99999 frames). */
   permanent?: boolean;

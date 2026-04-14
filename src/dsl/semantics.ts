@@ -191,8 +191,6 @@ export enum NounType {
   PHYSICAL_INFLICTION = "PHYSICAL_INFLICTION",
   PHYSICAL_STATUS = "PHYSICAL_STATUS",
   TALENT = "TALENT",
-  TALENT_STATUS = "TALENT_STATUS",
-  POTENTIAL_STATUS = "POTENTIAL_STATUS",
   SKILL_STATUS = "SKILL_STATUS",
   WEAPON_STATUS = "WEAPON_STATUS",
   GEAR_STATUS = "GEAR_STATUS",
@@ -332,6 +330,20 @@ export enum AdjectiveType {
   SOLIDIFIED = "SOLIDIFIED",
   BREACHED = "BREACHED",
 
+  // Element-infliction state adjectives — entity has an active infliction event on the given element column.
+  CRYO_INFLICTED = "CRYO_INFLICTED",
+  HEAT_INFLICTED = "HEAT_INFLICTED",
+  NATURE_INFLICTED = "NATURE_INFLICTED",
+  ELECTRIC_INFLICTED = "ELECTRIC_INFLICTED",
+  /**
+   * Entity has any arts-element infliction active (any of the four element columns).
+   * Multi-column state — requires STATE_TO_COLUMNS (plural) support in the trigger index
+   * and condition evaluator before first use.
+   */
+  ARTS_INFLICTED = "ARTS_INFLICTED",
+  /** Entity has an active Vulnerable physical infliction. */
+  VULNERABLE_INFLICTED = "VULNERABLE_INFLICTED",
+
   // Physical reaction adjectives (APPLY 1 <adj> REACTION TO ENEMY)
   LIFT = "LIFT",
   KNOCK_DOWN = "KNOCK_DOWN",
@@ -391,9 +403,9 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.ENABLE]:     [ObjectType.SKILL],
   [VerbType.DISABLE]:    [ObjectType.SKILL],
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
-  [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP, ObjectType.POTENTIAL],
-  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.SLOWED, ObjectType.STAGGERED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED, ObjectType.STACKS],
-  [VerbType.BECOME]:     [ObjectType.STACKS, ObjectType.ACTIVE, ObjectType.STAGGERED, ObjectType.SLOWED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
+  [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP, ObjectType.POTENTIAL, ObjectType.CHARGE],
+  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.SLOWED, ObjectType.STAGGERED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.CRYO_INFLICTED, ObjectType.HEAT_INFLICTED, ObjectType.NATURE_INFLICTED, ObjectType.ELECTRIC_INFLICTED, ObjectType.ARTS_INFLICTED, ObjectType.VULNERABLE_INFLICTED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED, ObjectType.STACKS],
+  [VerbType.BECOME]:     [ObjectType.STACKS, ObjectType.ACTIVE, ObjectType.STAGGERED, ObjectType.SLOWED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.CRYO_INFLICTED, ObjectType.HEAT_INFLICTED, ObjectType.NATURE_INFLICTED, ObjectType.ELECTRIC_INFLICTED, ObjectType.ARTS_INFLICTED, ObjectType.VULNERABLE_INFLICTED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
   [VerbType.RECEIVE]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STAGGER],
   [VerbType.OVERHEAL]:   [ObjectType.HP],
   [VerbType.REDUCE]:     [ObjectType.COOLDOWN],

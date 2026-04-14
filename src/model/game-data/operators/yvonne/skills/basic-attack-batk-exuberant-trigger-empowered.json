@@ -38,13 +38,20 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "CRIT_STACKS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
                     "stacks": {
                       "verb": "IS",
                       "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
                     }
                   }
                 },
@@ -111,6 +118,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -172,6 +199,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -257,13 +304,20 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "CRIT_STACKS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
                     "stacks": {
                       "verb": "IS",
                       "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
                     }
                   }
                 },
@@ -330,6 +384,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -391,6 +465,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -454,6 +548,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -515,6 +629,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -578,6 +712,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -640,6 +794,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -701,6 +875,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -786,13 +980,20 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "CRIT_STACKS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
                     "stacks": {
                       "verb": "IS",
                       "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
                     }
                   }
                 },
@@ -859,6 +1060,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -920,6 +1141,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -983,6 +1224,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -1044,6 +1305,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -1107,6 +1388,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -1168,6 +1469,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -1231,6 +1552,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -1292,6 +1633,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -1355,6 +1716,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -1416,6 +1797,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -1479,6 +1880,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -1540,6 +1961,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -1603,6 +2044,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -1664,6 +2125,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -1727,6 +2208,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -1788,6 +2289,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -1851,6 +2372,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -1912,6 +2453,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -1975,6 +2536,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -2036,6 +2617,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -2099,6 +2700,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -2160,6 +2781,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -2223,6 +2864,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -2284,6 +2945,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -2347,6 +3028,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -2408,6 +3109,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -2471,6 +3192,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -2532,6 +3273,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -2595,6 +3356,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -2656,6 +3437,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -2719,6 +3520,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -2780,6 +3601,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -2843,6 +3684,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -2904,6 +3765,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -2967,6 +3848,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -3028,6 +3929,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -3091,6 +4012,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -3152,6 +4093,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -3215,6 +4176,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -3276,6 +4257,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -3339,6 +4340,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -3400,6 +4421,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -3463,6 +4504,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -3524,6 +4585,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -3587,6 +4668,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -3648,6 +4749,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -3711,6 +4832,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -3772,6 +4913,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -3835,6 +4996,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -3896,6 +5077,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -3959,6 +5160,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -4020,6 +5241,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -4083,6 +5324,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -4144,6 +5405,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -4207,6 +5488,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -4268,6 +5569,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -4331,6 +5652,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -4392,6 +5733,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -4455,6 +5816,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -4516,6 +5897,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
@@ -4579,6 +5980,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -4641,6 +6062,26 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
+                {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",
                   "object": "DAMAGE",
@@ -4702,6 +6143,26 @@
             {
               "conditions": [],
               "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  },
+                  "until": {
+                    "object": "END",
+                    "of": {
+                      "object": "EVENT",
+                      "determiner": "THIS"
+                    }
+                  }
+                },
                 {
                   "verb": "DEAL",
                   "objectQualifier": "CRYO",

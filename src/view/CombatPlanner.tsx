@@ -177,13 +177,11 @@ const STATUS_TYPE_LABELS: Record<string, string> = {
   'STATUS': 'Combat Status',
   [NounType.SKILL_STATUS]: 'Skill Status',
   [NounType.TALENT]: 'Talent',
-  [NounType.TALENT_STATUS]: 'Talent Status',
   [NounType.WEAPON_STATUS]: 'Weapon Status',
   [NounType.GEAR_STATUS]: 'Gear Status',
   [NounType.GEAR_SET_EFFECT]: 'Gear Set Effect',
   [NounType.GEAR_SET_STATUS]: 'Gear Set Status',
   [NounType.POTENTIAL]: 'Potential',
-  [NounType.POTENTIAL_STATUS]: 'Potential Status',
   [NounType.CONSUMABLE]: 'Consumable',
   [NounType.TACTICAL]: 'Tactical',
 };
@@ -194,7 +192,7 @@ const PERMANENT_FILTER_KEY = 'PERMANENT';
 /** Groups of status types for the filter menu, with display order. */
 const STATUS_FILTER_GROUPS: { label: string; types: string[]; permanent?: boolean }[] = [
   { label: 'Passive', types: [], permanent: true },
-  { label: 'Skills', types: [NounType.SKILL_STATUS, NounType.TALENT, NounType.TALENT_STATUS, NounType.POTENTIAL, NounType.POTENTIAL_STATUS] },
+  { label: 'Skills', types: [NounType.SKILL_STATUS, NounType.TALENT, NounType.POTENTIAL] },
   { label: 'Weapons', types: [NounType.WEAPON_STATUS] },
   { label: 'Gears', types: [NounType.GEAR_STATUS, NounType.GEAR_SET_EFFECT, NounType.GEAR_SET_STATUS] },
   { label: 'Consumables', types: [NounType.CONSUMABLE] },
@@ -302,11 +300,16 @@ export default React.memo(function CombatPlanner({
     segmentIndex: number;
     frameIndex: number;
     startMouseFrame: number; // mouse coordinate along frame axis at drag start
-    startOffsetFrame: number;
-    /** Minimum allowed offsetFrame (0 or prev frame's offset + 1). */
-    minOffset: number;
-    /** Maximum allowed offsetFrame (segDuration - 1 or next frame's offset - 1). */
-    maxOffset: number;
+    /** Frame's starting real-time offset within the segment (derivedOffsetFrame). */
+    startRealOffset: number;
+    /** Segment's absolute start frame (for time-stop contraction). */
+    segAbsStart: number;
+    /** Segment's real-time (time-stop-extended) duration — upper bound for the drag in px-space. */
+    realDuration: number;
+    /** Segment's raw (game-time) duration — upper bound for stored offsetFrame. */
+    rawDuration: number;
+    /** Snapshot of time-stop regions at drag start. */
+    stops: readonly { startFrame: number; durationFrames: number }[];
   } | null>(null);
   const segResizeDragRef = useRef<{
     eventUid: string;
@@ -1300,9 +1303,15 @@ export default React.memo(function CombatPlanner({
     // Frame diamond drag
     if (frameDragRef.current) {
       dragMovedRef.current = true;
-      const { eventUid, segmentIndex, frameIndex, startMouseFrame: startMouseF, startOffsetFrame, minOffset, maxOffset } = frameDragRef.current;
+      const { eventUid, segmentIndex, frameIndex, startMouseFrame: startMouseF,
+        startRealOffset, segAbsStart, realDuration, rawDuration, stops } = frameDragRef.current;
       const deltaFrames = Math.round((e[axis.clientFrame] - startMouseF) / getPxPerFrame(zoomRef.current));
-      const newOffset = Math.max(minOffset, Math.min(maxOffset, startOffsetFrame + deltaFrames));
+      // Mouse delta is in real-time (screen) frames. Clamp the new real-time
+      // offset to the visible segment bounds, then contract through time-stops
+      // to get the raw offsetFrame that the engine stores.
+      const newRealOffset = Math.max(0, Math.min(realDuration, startRealOffset + deltaFrames));
+      const rawOffset = contractByTimeStops(segAbsStart, newRealOffset, stops);
+      const newOffset = Math.max(0, Math.min(rawDuration, rawOffset));
       throttledDragAction.current(() => onMoveFrameRef.current?.(eventUid, segmentIndex, frameIndex, newOffset));
       return;
     }
@@ -1545,9 +1554,14 @@ export default React.memo(function CombatPlanner({
     const frame = seg.frames[frameIndex];
     if (!frame) return;
 
-    // Compute bounds: must stay within segment [0, segDuration-1]
-    const prevOffset = 0;
-    const nextOffset = seg.properties.duration - 1;
+    // Compute bounds: must stay within segment [0, segDuration].
+    // seg.properties.duration is real-time (time-stop-extended); frame.offsetFrame
+    // is raw game-time. Capture both so the drag can clamp visually in real-time
+    // and store the corresponding raw offset via contractByTimeStops.
+    const segAbsStart = seg.absoluteStartFrame ?? ev.startFrame;
+    const realDuration = seg.properties.duration;
+    const rawDuration = contractByTimeStops(segAbsStart, realDuration, timeStopRegions);
+    const startRealOffset = frame.derivedOffsetFrame ?? frame.offsetFrame;
 
     onBatchStart?.();
     frameDragRef.current = {
@@ -1555,12 +1569,15 @@ export default React.memo(function CombatPlanner({
       segmentIndex,
       frameIndex,
       startMouseFrame: e[axis.clientFrame],
-      startOffsetFrame: frame.offsetFrame,
-      minOffset: prevOffset,
-      maxOffset: nextOffset,
+      startRealOffset,
+      segAbsStart,
+      realDuration,
+      rawDuration,
+      stops: timeStopRegions,
     };
     dragMovedRef.current = false;
-  }, [readOnly, events, onBatchStart, axis]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, events, onBatchStart, axis, timeStopRegions]);
 
   const handleFrameClickGuarded = useCallback((e: React.MouseEvent, eid: string, si: number, fi: number) => {
     if (!dragMovedRef.current) onFrameClick?.(e, eid, si, fi);

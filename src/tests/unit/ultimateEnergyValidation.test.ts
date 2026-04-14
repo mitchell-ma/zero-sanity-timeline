@@ -452,9 +452,9 @@ describe('UE ultimate energy gains — natural SP consumption via controllers', 
     spController.setUltimateEnergyController(ueController);
     ueController.configureSlot(SLOT, { max: 300, startValue: 0, chargePerFrame: 0, efficiency: 0 });
 
-    // First battle skill: costs 100 SP (all natural), returns 50 SP
+    // First battle skill: costs 100 SP (all natural), RETURNS 50 SP (refund → returned pool)
     spController.addCost('battle-1', 0, 100, SLOT, 0);
-    spController.addRecovery(100, 50, SLOT, 'B1');
+    spController.addRecovery(100, 50, SLOT, 'B1', /* isReturn */ true);
     // Second battle skill: costs 100 SP — 50 from returned pool, 50 from natural
     spController.addCost('battle-2', 200, 100, SLOT, 200);
 

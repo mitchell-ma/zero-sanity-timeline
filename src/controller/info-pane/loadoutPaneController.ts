@@ -1,4 +1,4 @@
-import { StatType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
+import { StatType, StatOwnerType, STAT_ATTRIBUTION, PERMANENT_DURATION } from '../../consts/enums';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
@@ -65,6 +65,12 @@ export function formatPct(value: number): string {
 export function formatFlat(value: number): string {
   const { decimalPlaces: dp } = loadSettings();
   return value.toFixed(dp).replace(/\.?0+$/, '');
+}
+
+/** Format a duration in seconds for display. Renders `PERMANENT_DURATION` as "Infinite". */
+export function formatDurationSeconds(seconds: number): string {
+  if (seconds >= PERMANENT_DURATION) return 'Infinite';
+  return `${seconds}s`;
 }
 
 // ── Stat labels ────────────────────────────────────────────────────────────

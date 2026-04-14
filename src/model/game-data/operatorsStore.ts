@@ -4,7 +4,7 @@
  *
  * Auto-discovers operators/*-operator.json via require.context.
  */
-import { checkKeys, VALID_METADATA_KEYS, validateTalentLevelArrays } from './validationUtils';
+import { checkKeys, VALID_METADATA_KEYS, validateTalentLevelArrays, validateNonNegativeValues } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -51,6 +51,7 @@ const VALID_LEVEL_ENTRY_KEYS = new Set(['level', 'operatorPromotionStage', 'attr
 /** Validate a raw operator JSON entry. Returns an array of error messages (empty = valid). */
 export function validateOperator(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
+  errors.push(...validateNonNegativeValues(json, 'root'));
 
   if (typeof json.id !== 'string') errors.push('root.id: must be a string');
   if (typeof json.name !== 'string') errors.push('root.name: must be a string');

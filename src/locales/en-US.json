@@ -38,6 +38,9 @@
   "settings.label.numberFormat": "Number Format",
   "settings.numberFormat.decimal": "DECIMAL",
   "settings.numberFormat.percentage": "PERCENT",
+  "settings.label.debugMode": "Debug Mode",
+  "settings.debugMode.on": "ON",
+  "settings.debugMode.off": "OFF",
 
   "keyboard.title": "KEYBOARD CONTROLS",
   "keyboard.header.action": "Action",

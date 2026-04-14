@@ -121,6 +121,11 @@ export class InflictionColumn implements EventColumn {
         setEventDuration(act, newEnd - act.startFrame);
         act.eventStatus = EventStatusType.EXTENDED;
         if (source.sourceEventUid) this.host.linkTransition(act.uid, source.sourceEventUid);
+        // Move the queued EVENT_END hook so IS_NOT fires at the new end,
+        // not the old (shorter) end. Without this, BECOME-NOT talents
+        // (e.g. Freezing Point) consume early when the first infliction's
+        // original end hook fires even though the state is still active.
+        this.host.rescheduleEventEnd(act.uid, newEnd);
       }
     }
 

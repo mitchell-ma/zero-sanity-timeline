@@ -152,8 +152,8 @@
                   "object": "SKILL",
                   "objectId": "BASIC_ATTACK",
                   "objectQualifier": "EXUBERANT_TRIGGER_BATK_EMPOWERED",
-                  "toDeterminer": "THIS",
-                  "to": "OPERATOR"
+                  "fromDeterminer": "THIS",
+                  "from": "OPERATOR"
                 },
                 {
                   "verb": "DEAL",
@@ -206,6 +206,38 @@
                   "object": "SKILL",
                   "objectId": "FINAL_STRIKE",
                   "to": "ENEMY"
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "SOLIDIFICATION",
+                  "cardinalityConstraint": "EXACTLY",
+                  "value": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "fromDeterminer": "THIS",
+                  "from": "OPERATOR"
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_DAMAGE",
+                  "fromDeterminer": "THIS",
+                  "from": "OPERATOR"
                 }
               ]
             }
@@ -287,6 +319,20 @@
                   "objectId": "REACTION",
                   "from": "ENEMY",
                   "objectQualifier": "SOLIDIFICATION"
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+                  "fromDeterminer": "THIS",
+                  "from": "OPERATOR"
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "CRYOBLASTING_PISTOLIER_CRIT_DAMAGE",
+                  "fromDeterminer": "THIS",
+                  "from": "OPERATOR"
                 }
               ]
             }

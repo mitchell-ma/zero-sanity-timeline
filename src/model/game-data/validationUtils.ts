@@ -294,6 +294,89 @@ export const KNOWN_AMBIGUOUS_TALENT_LEVEL_FILES = new Set<string>([
 ]);
 
 /**
+ * Walk a parsed config JSON and flag negative numeric values inside `duration`
+ * and `stacks` blocks. Both are semantically non-negative: durations are
+ * time spans (use `PERMANENT_DURATION` / 99999 for infinite), and stack counts
+ * are `0..limit` (use `UNLIMITED_STACKS` for no cap).
+ *
+ * Negative values used to be a silent sentinel for "permanent duration" or
+ * "inherit from source"; that is no longer supported — the engine rejects
+ * negatives and callers must use the explicit permanent constant or an
+ * `until: { object: END }` predicate instead.
+ *
+ * Checks both flat values (`{"verb": "IS", "value": -1}`) and VARY_BY arrays
+ * (`{"verb": "VARY_BY", "value": [..., -1, ...]}`) inside these fields.
+ */
+export function validateNonNegativeValues(json: unknown, rootPath = ''): string[] {
+  const errors: string[] = [];
+
+  /**
+   * Check a single ValueNode-shaped object for negative resolved values.
+   *
+   * Only inspects leaf forms (`IS` and `VARY_BY`). Arithmetic nodes
+   * (`{operation, left, right}`) are intentionally NOT recursed into — it is
+   * valid for a component of an arithmetic duration/stacks expression to be
+   * negative (e.g. `duration = base + VARY_BY SKILL_LEVEL [0, 0, -1, -2]` for
+   * a cooldown reduction). What matters is the resolved value at runtime,
+   * which is a property of the whole expression, not its leaves.
+   */
+  function checkValueNode(node: unknown, fieldPath: string): void {
+    if (node === null || typeof node !== 'object') return;
+    const obj = node as Record<string, unknown>;
+    const verb = obj.verb;
+    if (verb === VerbType.IS && typeof obj.value === 'number' && obj.value < 0) {
+      errors.push(
+        `${fieldPath}.value: ${obj.value} — duration/stacks values cannot be negative `
+        + `(use PERMANENT_DURATION=99999 for infinite, or express "until source ends" via `
+        + `an "until": { "object": "END" } predicate).`,
+      );
+      return;
+    }
+    if (verb === VerbType.VARY_BY && Array.isArray(obj.value)) {
+      for (let i = 0; i < obj.value.length; i++) {
+        const v = obj.value[i];
+        if (typeof v === 'number' && v < 0) {
+          errors.push(
+            `${fieldPath}.value[${i}]: ${v} — duration/stacks VARY_BY entries cannot be negative.`,
+          );
+        }
+      }
+    }
+  }
+
+  function walk(node: unknown, path: string): void {
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i++) walk(node[i], `${path}[${i}]`);
+      return;
+    }
+    if (node === null || typeof node !== 'object') return;
+    const obj = node as Record<string, unknown>;
+    // `duration: { value: ValueNode, unit: ... }` and `stacks: { value: ValueNode, ... }`
+    // are the two DSL containers that carry non-negative quantities.
+    if ('duration' in obj && obj.duration !== null && typeof obj.duration === 'object') {
+      const durValue = (obj.duration as Record<string, unknown>).value;
+      checkValueNode(durValue, `${path}.duration`);
+    }
+    if ('stacks' in obj && obj.stacks !== null && typeof obj.stacks === 'object') {
+      const stacks = obj.stacks as Record<string, unknown>;
+      // `stacks.value` (apply/consume/compare quantity) and `stacks.limit` (max).
+      if (stacks.value !== undefined) checkValueNode(stacks.value, `${path}.stacks`);
+      if (stacks.limit !== undefined) checkValueNode(stacks.limit, `${path}.stacks.limit`);
+      // Flat ValueNode form: `stacks: { verb: IS, value: 3 }`.
+      if (stacks.verb !== undefined) checkValueNode(stacks, `${path}.stacks`);
+    }
+    for (const [k, v] of Object.entries(obj)) {
+      // Skip the keys we already inspected to avoid double-reporting.
+      if (k === 'duration' || k === 'stacks') continue;
+      walk(v, `${path}.${k}`);
+    }
+  }
+
+  walk(json, rootPath);
+  return errors;
+}
+
+/**
  * Validate a segment's shape (metadata + properties keys + frames). Walks
  * frames via `validateFrameShape`.
  */

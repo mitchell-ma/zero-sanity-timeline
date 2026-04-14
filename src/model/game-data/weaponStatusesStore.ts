@@ -10,7 +10,7 @@ import { UnitType, EventType } from '../../consts/enums';
 import { VerbType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
 
 // ── DSL value types ─────────────────────────────────────────────────────────
 
@@ -82,6 +82,7 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
 /** Validate a raw weapon status JSON entry. Returns an array of error messages (empty = valid). */
 export function validateWeaponStatus(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
+  errors.push(...validateNonNegativeValues(json, 'root'));
 
   if (json.clause) {
     if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');

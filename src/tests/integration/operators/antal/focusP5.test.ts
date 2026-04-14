@@ -5,12 +5,15 @@
 /**
  * Antal — Focus P5 Empowered Integration Test
  *
- * At P5, Antal's battle skill applies FOCUS_EMPOWERED (2 segments: Focus 20s + Empowered Focus 40s).
- * At P0-P4, it applies regular FOCUS (single 60s segment).
+ * The FOCUS status has two segments whose durations depend on the source operator's Potential:
+ *   - Segment 1 (Focus):           60s at P0-P4, 20s at P5
+ *   - Segment 2 (Empowered Focus): 0s at P0-P4, 40s at P5
+ *
+ * Zero-duration segments are pruned by the engine, so at P0-P4 only one segment remains.
  *
  * Three-layer verification:
  * - Controller: correct status ID on processed events
- * - Controller: correct segment structure (count, names, durations)
+ * - Controller: correct segment structure (count, durations)
  * - View: status appears in enemy status column
  */
 
@@ -54,12 +57,12 @@ function placeBattleSkill(result: { current: AppResult }) {
 }
 
 describe('Antal — Focus P5 Empowered', () => {
-  it('P5: battle skill applies FOCUS_EMPOWERED with 2 segments (Focus 20s + Empowered 40s)', () => {
+  it('P5: battle skill applies FOCUS with 2 segments (Focus 20s + Empowered 40s)', () => {
     const { result } = setupAntal(5);
     placeBattleSkill(result);
 
     const focusEvents = result.current.allProcessedEvents.filter(
-      ev => ev.ownerEntityId === ENEMY_ID && ev.id === StatusType.FOCUS_EMPOWERED,
+      ev => ev.ownerEntityId === ENEMY_ID && ev.id === StatusType.FOCUS,
     );
     expect(focusEvents).toHaveLength(1);
     const ev = focusEvents[0];
@@ -70,7 +73,7 @@ describe('Antal — Focus P5 Empowered', () => {
     expect(ev.segments[1].properties.duration).toBe(40 * FPS);
   });
 
-  it('P0: battle skill applies regular FOCUS with single 60s segment', () => {
+  it('P0: battle skill applies FOCUS with single 60s segment (empowered segment pruned)', () => {
     const { result } = setupAntal(0);
     placeBattleSkill(result);
 
@@ -80,7 +83,7 @@ describe('Antal — Focus P5 Empowered', () => {
     expect(focusEvents).toHaveLength(1);
     const ev = focusEvents[0];
 
-    // Single segment: Focus (60s)
+    // Single segment: Focus (60s) — empowered segment has duration 0 at P0 and is pruned
     expect(ev.segments).toHaveLength(1);
     expect(ev.segments[0].properties.duration).toBe(60 * FPS);
   });

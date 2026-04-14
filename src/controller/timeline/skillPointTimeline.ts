@@ -4,6 +4,13 @@ import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { eventDuration } from '../../consts/viewTypes';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 
+/** Synthetic event id for a battle-skill SP cost event — consumes from pools. */
+export const SP_COST_EVENT_ID = 'SP_COST';
+/** Synthetic event id for natural SP gain (RECOVER verb) — adds to natural pool. */
+export const SP_RECOVER_EVENT_ID = 'SP_RECOVER';
+/** Synthetic event id for refunded SP gain (RETURN verb) — adds to returned pool. */
+export const SP_RETURN_EVENT_ID = 'SP_RETURN';
+
 /** A frame range where a resource is below the required threshold. */
 export type ResourceZone = { start: number; end: number };
 
@@ -76,13 +83,21 @@ export class SkillPointTimeline extends ResourceTimeline {
         natPoints.push({ frame: ev.startFrame, value: naturalPool });
       }
 
-      if (ev.id === 'sp-return') {
-        // Return event: add to returned pool, capped so total ≤ max
+      if (ev.id === SP_RETURN_EVENT_ID) {
+        // RETURN: add to returned pool (red fill), capped so total ≤ max.
         const returnAmount = eventDuration(ev);
         const headroom = Math.max(0, this.max - naturalPool - returnedPool);
         const actualReturn = Math.min(returnAmount, headroom);
         wasted += returnAmount - actualReturn;
         returnedPool += actualReturn;
+      } else if (ev.id === SP_RECOVER_EVENT_ID) {
+        // RECOVER: add to natural pool (yellow fill) — battle skills consuming
+        // this SP later generate ultimate energy. Capped so total ≤ max.
+        const recoverAmount = eventDuration(ev);
+        const headroom = Math.max(0, this.max - naturalPool - returnedPool);
+        const actualRecover = Math.min(recoverAmount, headroom);
+        wasted += recoverAmount - actualRecover;
+        naturalPool += actualRecover;
       } else {
         // Cost event: consume returned first, then natural
         const cost = this.getCost(ev);

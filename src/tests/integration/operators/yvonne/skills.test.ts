@@ -45,6 +45,9 @@ const CRIT_STACKS_ID: string = CRIT_STACKS_JSON.properties.id;
 
 const BARRAGE_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-barrage-of-technology.json');
 const BARRAGE_ID: string = BARRAGE_JSON.properties.id;
+
+const FREEZING_POINT_JSON = require('../../../../model/game-data/operators/yvonne/talents/talent-freezing-point-talent.json');
+const FREEZING_POINT_ID: string = FREEZING_POINT_JSON.properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_YVONNE = 'slot-0';
@@ -243,7 +246,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
   });
 
   // =========================================================================
-  // E. Crit Stacks Talent
+  // E. Cryoblasting Pistolier (Crit) Talent
   // =========================================================================
 
   it('crit stacks and barrage of technology status configs exist with correct IDs', () => {
@@ -350,7 +353,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     expect(vm!.events.some(ev => ev.id === BARRAGE_ID)).toBe(true);
   });
 
-  it('Freezing Point Cryo visible in view with correct duration after cryo infliction placed', () => {
+  it('Freezing Point visible in view with correct duration after cryo infliction placed', () => {
     const { result } = setupYvonne();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => {
@@ -360,14 +363,14 @@ describe('Yvonne Skills -- integration through useApp', () => {
       );
     });
 
-    const fpCryo = result.current.allProcessedEvents.find(
-      ev => ev.id === 'FREEZING_POINT_CRYO' && ev.ownerEntityId === SLOT_YVONNE,
+    const fp = result.current.allProcessedEvents.find(
+      ev => ev.id === FREEZING_POINT_ID && ev.ownerEntityId === SLOT_YVONNE,
     );
-    expect(fpCryo).toBeDefined();
-    const dur = fpCryo!.segments.reduce(
+    expect(fp).toBeDefined();
+    const dur = fp!.segments.reduce(
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
-    // Cryo infliction is 5s, status should be consumed when infliction expires
+    // Cryo infliction is 5s, talent event should be consumed when infliction expires
     // so duration should be <= 5s
     expect(dur).toBeLessThanOrEqual(5 * FPS);
     // Should be visible in view
@@ -378,7 +381,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const statusCol = findColumn(result.current, SLOT_YVONNE, 'operator-status');
     const vm = viewModels.get(statusCol!.key);
     expect(vm).toBeDefined();
-    expect(vm!.events.some(ev => ev.id === 'FREEZING_POINT_CRYO')).toBe(true);
+    expect(vm!.events.some(ev => ev.id === FREEZING_POINT_ID)).toBe(true);
   });
 
   it('Expert Mechcrafter visible in view with 7s duration at P5', () => {

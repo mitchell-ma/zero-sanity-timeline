@@ -104,6 +104,25 @@ export default function SettingsModal({ open, onClose, settings, onUpdate }: Set
             </div>
           </div>
 
+          {/* Debug Mode */}
+          <div className="settings-row">
+            <span className="settings-label">{t('settings.label.debugMode')}</span>
+            <div className="settings-toggle-group">
+              <button
+                className={`settings-toggle-btn${!settings.debugMode ? ' active' : ''}`}
+                onClick={() => onUpdate('debugMode', false)}
+              >
+                {t('settings.debugMode.off')}
+              </button>
+              <button
+                className={`settings-toggle-btn${settings.debugMode ? ' active' : ''}`}
+                onClick={() => onUpdate('debugMode', true)}
+              >
+                {t('settings.debugMode.on')}
+              </button>
+            </div>
+          </div>
+
           {/* Performance Mode */}
           <div className="settings-row">
             <span className="settings-label">Performance</span>

@@ -1,7 +1,34 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "verb": "BECOME",
+          "object": "STACKS",
+          "cardinalityConstraint": "EXACTLY",
+          "value": "MAX"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "CRYOBLASTING_PISTOLIER_CRIT_DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "stacks": {
+              "verb": "IS",
+              "value": 1
+            }
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "CRIT_STACKS",
-    "name": "Crit Stacks",
+    "id": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
+    "name": "Cryoblasting Pistolier (Crit Rate)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "element": "CRYO",
@@ -15,7 +42,7 @@
     "duration": {
       "value": {
         "verb": "IS",
-        "value": 7
+        "value": 99999
       },
       "unit": "SECOND"
     },
@@ -35,56 +62,8 @@
           "to": "OPERATOR",
           "with": {
             "value": {
-              "operation": "MULT",
-              "left": {
-                "verb": "IS",
-                "value": 0.03
-              },
-              "right": {
-                "verb": "IS",
-                "object": "STACKS",
-                "of": {
-                  "object": "STATUS",
-                  "objectId": "CRIT_STACKS",
-                  "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HAVE",
-          "object": "STATUS",
-          "objectId": "CRIT_STACKS",
-          "cardinalityConstraint": "GREATER_THAN_EQUAL",
-          "with": {
-            "stacks": {
               "verb": "IS",
-              "value": 10
-            }
-          }
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "CRITICAL_DAMAGE",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.6
+              "value": 0.03
             }
           }
         }

@@ -147,15 +147,34 @@ Post-pipeline (app layer):
 
 ---
 
-## Priority Queue
+## Status Clause Effects — Per-Status, Not Per-Stack
 
-Entries ordered by `(frame, priority)`. Lower priority fires first at the same frame.
+Status `clause` effects describe the **status's total contribution**, not a per-stack delta. `MULT(0.03, STACKS)` means the status contributes `0.03 × currentStackCount` in total — evaluated once against the current stack count, not accumulated per event instance.
 
-| Priority | Type | Handler |
-|----------|------|---------|
-| 5 | `PROCESS_FRAME` | Unified frame processing — DSL clause interpretation for skill events, freeform event creation (inflictions, reactions, statuses) via step 3b for non-skill events. Post-hook: reactive trigger evaluation. |
-| 22 | `ENGINE_TRIGGER` | Evaluate HAVE conditions + create derived statuses. Seeded from input events (PERFORM), from reactive post-hooks (APPLY/CONSUME/lifecycle), and from TriggerIndex. Fires before COMBO_RESOLVE so trigger effects (e.g. Scorching Heart infliction absorption) resolve first. |
-| 25 | `COMBO_RESOLVE` | Deferred combo trigger resolution. Fires after ENGINE_TRIGGER so that trigger-consumed inflictions are gone before combo HAVE conditions are checked. |
+**Dispatch path:** All clause effects (unconditional and HAVE-gated) are registered in the TriggerIndex's `lifecycleIndex`. When a status is applied or stacked, `checkReactiveTriggers` queues an `ENGINE_TRIGGER` which `handleLifecycleTrigger` processes. There is no inline clause dispatch in `runStatusCreationLifecycle`.
+
+**Replace-semantics:** Each lifecycle fire reverses the previous total contribution and applies the new total. This means the status always has exactly one net contribution in the stat accumulator, regardless of how many stacks or lifecycle fires occurred.
+
+**One evaluation per entity:** For NONE-stacking statuses with multiple independent events on the same slot, the lifecycle evaluates once per `ownerEntityId` (not per event instance). The clause describes the status's aggregate effect — individual events are implementation details of the stacking model.
+
+**Multi-target statuses:** For ALL/ALL\_OTHER operator-targeted statuses (e.g. SF Minor on each teammate), the lifecycle finds one representative instance per entity and processes each independently.
+
+---
+
+## Queue Ordering and Inline Dispatch
+
+The queue is a stable min-heap ordered by `frame`. Equal-frame entries pop in insertion order (FIFO). There is no priority system — ordering within a frame is determined by the user's event creation order, which naturally preserves causal dependencies (the combo is placed after the BS that triggers it).
+
+**Inline dispatch:** When `processQueueFrame` returns same-frame entries (reactive triggers from `checkReactiveTriggers`), they are processed inline as part of the same causal chain — not re-inserted into the queue. This ensures effects and their triggered consequences resolve in FIFO order within a single frame. Only future-frame entries (EVENT_END, deferred segment frames, onExitClause) return to the queue.
+
+**Queue entry types:**
+
+| Type | Description |
+|------|-------------|
+| `PROCESS_FRAME` | Frame marker processing — DSL clause interpretation, freeform event creation, reactive trigger evaluation. |
+| `PROCESS_FRAME` + `ON_TRIGGER` | Engine trigger — evaluates HAVE/IS conditions, dispatches trigger effects. Produced as reactive trigger results and processed inline (same frame). |
+| `COMBO_RESOLVE` | Deferred combo trigger resolution. Pre-queued by `flattenEvents` at `combo.startFrame`. Fires in insertion order after BS frame markers because the combo event is registered after the BS events. |
+| `STATUS_EXIT` | Status exit clause effects. Fires at the status's end frame. |
 
 ---
 

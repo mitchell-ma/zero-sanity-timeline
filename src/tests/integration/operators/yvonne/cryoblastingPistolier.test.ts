@@ -33,7 +33,11 @@ const ULT_JSON = require('../../../../model/game-data/operators/yvonne/skills/ul
 const ULT_ID: string = ULT_JSON.properties.id;
 const EBATK_ID: string = require('../../../../model/game-data/operators/yvonne/skills/basic-attack-batk-exuberant-trigger-empowered.json').properties.id;
 const BATK_ID: string = require('../../../../model/game-data/operators/yvonne/skills/basic-attack-batk-exuberant-trigger.json').properties.id;
+const CRIT_RATE_ID: string = require('../../../../model/game-data/operators/yvonne/statuses/status-crit-stacks.json').properties.id;
+const CRIT_DAMAGE_ID: string = require('../../../../model/game-data/operators/yvonne/statuses/status-crit-damage.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+import { REACTION_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 
 const SLOT = 'slot-0';
 
@@ -261,5 +265,141 @@ describe('D. Pipeline placement and EBATK gating', () => {
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
     expect(totalDuration).toBe(Math.round(7 * FPS));
+  });
+});
+
+// =============================================================================
+// E. Conditional Frame — Solidification clause skipping
+// =============================================================================
+
+describe('E. Conditional frame (Solidification) skipping', () => {
+  it('E1: without Solidification, the conditional frame is skipped', () => {
+    const { result } = setup();
+    addUlt(result.current, 0);
+
+    const ult = result.current.allProcessedEvents.find(
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
+    )!;
+    // Active segment (index 1) should have 2 frames
+    const activeSeg = ult.segments[1];
+    expect(activeSeg.frames).toBeDefined();
+    expect(activeSeg.frames!.length).toBe(2);
+
+    // Frame I (unconditional: DEAL DAMAGE + PERFORM FINAL_STRIKE) should NOT be skipped
+    expect(activeSeg.frames![0].frameSkipped).toBeFalsy();
+
+    // Frame II (conditional: requires Solidification) SHOULD be skipped
+    expect(activeSeg.frames![1].frameSkipped).toBe(true);
+  });
+
+  it('E2: skipped conditional frame has narrowed clauses (empty after filtering)', () => {
+    const { result } = setup();
+    addUlt(result.current, 0);
+
+    const ult = result.current.allProcessedEvents.find(
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
+    )!;
+    const conditionalFrame = ult.segments[1].frames![1];
+
+    // Clauses should be narrowed to empty (conditions not met → all filtered out)
+    expect(conditionalFrame.clauses).toBeDefined();
+    expect(conditionalFrame.clauses!.length).toBe(0);
+  });
+});
+
+// =============================================================================
+// F. CRIT_RATE / CRIT_DAMAGE consumption at ult end
+// =============================================================================
+
+function placeSolidification(app: AppResult) {
+  act(() => {
+    app.handleAddEvent(
+      ENEMY_ID, REACTION_COLUMNS.SOLIDIFICATION, 0,
+      { name: REACTION_COLUMNS.SOLIDIFICATION, segments: [{ properties: { duration: 20 * FPS } }] },
+    );
+  });
+}
+
+function placeEbatkDuringUlt(app: AppResult, ultFrame: number) {
+  const activeStart = ultFrame + Math.round(2.03 * FPS);
+  const col = findColumn(app, SLOT, NounType.BASIC_ATTACK)!;
+  const menu = buildContextMenu(app, col, activeStart);
+  const ebatkItem = menu!.find(
+    i => i.actionId === 'addEvent'
+      && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === EBATK_ID,
+  )!;
+  const payload = ebatkItem.actionPayload as {
+    ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Record<string, unknown>;
+  };
+  act(() => {
+    app.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
+  });
+}
+
+describe('F. CRIT_RATE / CRIT_DAMAGE consumption at ult end', () => {
+  const ULT_FRAME = 5 * FPS;
+  // Active starts after the 2.03s TIME_STOP animation; last ult frame fires at offset 7s.
+  const ULT_CONSUME_FRAME = ULT_FRAME + Math.round(2.03 * FPS) + 7 * FPS;
+
+  function eventEnd(ev: { startFrame: number; segments: { properties: { duration: number } }[] }) {
+    return ev.startFrame + ev.segments.reduce((s, x) => s + x.properties.duration, 0);
+  }
+
+  it('F1: without Solidification, ult end consumes CRIT_RATE and CRIT_DAMAGE', () => {
+    const { result } = setup();
+    addUlt(result.current, ULT_FRAME);
+    placeEbatkDuringUlt(result.current, ULT_FRAME);
+
+    const critRate = result.current.allProcessedEvents.filter(
+      ev => ev.id === CRIT_RATE_ID && ev.ownerEntityId === SLOT,
+    );
+    const critDamage = result.current.allProcessedEvents.filter(
+      ev => ev.id === CRIT_DAMAGE_ID && ev.ownerEntityId === SLOT,
+    );
+    expect(critRate.length).toBeGreaterThan(0);
+    expect(critDamage.length).toBeGreaterThan(0);
+    // Every CRIT buff must end at or before the ult consume frame — duration
+    // truncation is the observable signal of CONSUME.
+    expect(critRate.every(ev => eventEnd(ev) <= ULT_CONSUME_FRAME)).toBe(true);
+    expect(critDamage.every(ev => eventEnd(ev) <= ULT_CONSUME_FRAME)).toBe(true);
+  });
+
+  it('F2: with Solidification, ult end still consumes CRIT_RATE and CRIT_DAMAGE (via frame 2)', () => {
+    const { result } = setup();
+    placeSolidification(result.current);
+    addUlt(result.current, ULT_FRAME);
+    placeEbatkDuringUlt(result.current, ULT_FRAME);
+
+    const critRate = result.current.allProcessedEvents.filter(
+      ev => ev.id === CRIT_RATE_ID && ev.ownerEntityId === SLOT,
+    );
+    const critDamage = result.current.allProcessedEvents.filter(
+      ev => ev.id === CRIT_DAMAGE_ID && ev.ownerEntityId === SLOT,
+    );
+    expect(critRate.length).toBeGreaterThan(0);
+    expect(critDamage.length).toBeGreaterThan(0);
+    expect(critRate.every(ev => eventEnd(ev) <= ULT_CONSUME_FRAME)).toBe(true);
+    expect(critDamage.every(ev => eventEnd(ev) <= ULT_CONSUME_FRAME)).toBe(true);
+  });
+
+  it('F3: with no crit buffs built up (no EBATK placed), ult completes without error', () => {
+    const { result } = setup();
+    addUlt(result.current, ULT_FRAME);
+
+    const critRate = result.current.allProcessedEvents.filter(
+      ev => ev.id === CRIT_RATE_ID && ev.ownerEntityId === SLOT,
+    );
+    const critDamage = result.current.allProcessedEvents.filter(
+      ev => ev.id === CRIT_DAMAGE_ID && ev.ownerEntityId === SLOT,
+    );
+    expect(critRate).toHaveLength(0);
+    expect(critDamage).toHaveLength(0);
+
+    // Ult still placed and ran to completion
+    const ult = result.current.allProcessedEvents.find(
+      ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
+    );
+    expect(ult).toBeDefined();
+    expect(ult!.segments).toHaveLength(2);
   });
 });

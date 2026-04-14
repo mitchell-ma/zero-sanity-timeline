@@ -979,7 +979,6 @@ function parseDurationFrames(props: Record<string, unknown> | undefined): number
   if (!props?.duration) return undefined;
   const dur = props.duration as { value: ValueNode; unit: string };
   const val = resolveValueNode(dur.value, DEFAULT_VALUE_CONTEXT);
-  if (val < 0) return undefined;
   return dur.unit === UnitType.SECOND ? Math.round(val * FPS) : val;
 }
 

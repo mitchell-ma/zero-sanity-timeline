@@ -4,11 +4,11 @@ import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelP
 import { formatPct, formatFlat } from '../../controller/info-pane/loadoutPaneController';
 import { parseMathInput } from '../../utils/mathExpr';
 import { getAllSkillLabels, getAllStatusLabels } from '../../controller/gameDataStore';
-import { ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
+import { ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, SegmentType, StatusType } from '../../consts/enums';
 import { getStatusElementMap, getStatusById, getAnyStatusSerialized } from '../../controller/gameDataStore';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import type { LoadoutProperties } from '../InformationPane';
-import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain } from '../../controller/info-pane/eventPaneController';
+import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, applyCardOverrides } from '../../controller/info-pane/eventPaneController';
 import { getOperatorSkill } from '../../controller/gameDataStore';
 import { DataCardBody, FrameCritState, EditState, EditableValue } from '../custom/DataCardComponents';
 import type { OverrideStore } from '../../consts/overrideTypes';
@@ -37,7 +37,7 @@ interface EventPaneProps {
   readOnly?: boolean;
   isDerived?: boolean;
   editContext?: string | null;
-  interactionMode?: InteractionModeType;
+  debugMode?: boolean;
   rawEvents?: readonly TimelineEvent[];
   allProcessedEvents?: readonly TimelineEvent[];
   loadoutProperties?: Record<string, LoadoutProperties>;
@@ -64,7 +64,7 @@ function EventPane({
   readOnly,
   isDerived,
   editContext,
-  interactionMode,
+  debugMode,
   rawEvents,
   allProcessedEvents,
   loadoutProperties,
@@ -93,14 +93,19 @@ function EventPane({
   if (event.segments.length === 0 && processedEvent?.segments.length) {
     event = { ...event, segments: processedEvent.segments };
   }
-  // Raw serialized skill data for verbose DataCardBody rendering
+  // Serialized skill data with runtime overrides (frame offsets, segment durations)
+  // applied so the DataCardBody reflects live drag edits.
   const skillCardData = useMemo(() => {
     if (verbose < InfoLevel.DETAILED) return null;
     const slot = slots.find((s) => s.slotId === event.ownerEntityId);
     if (!slot?.operator?.id) return null;
     const skillObj = getOperatorSkill(slot.operator.id, event.name);
-    return skillObj ? skillObj.serialize() as Record<string, unknown> : null;
-  }, [event.ownerEntityId, event.name, slots, verbose]);
+    if (!skillObj) return null;
+    const data = skillObj.serialize() as Record<string, unknown>;
+    const key = buildOverrideKey(event);
+    const entry = overrides?.[key];
+    return entry ? applyCardOverrides(data, entry) : data;
+  }, [event, slots, verbose, overrides]);
 
   // Raw serialized status data for verbose DataCardBody rendering
   const statusCardData = useMemo(() => {
@@ -292,7 +297,7 @@ function EventPane({
       </div>
 
       <div className="edit-panel-body" onFocus={handleFocus}>
-        {interactionMode && interactionMode !== InteractionModeType.STRICT && processedEvent && (
+        {debugMode && processedEvent && (
           <DebugPane event={event} processedEvent={processedEvent} rawEvents={rawEvents} allProcessedEvents={allProcessedEvents} />
         )}
 

@@ -13,7 +13,7 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calcul
 import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
 
 import { FPS } from '../../utils/timeline';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, collectThisOperatorInValueNode } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectThisOperatorInValueNode } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -100,6 +100,7 @@ function validateTriggerClause(clause: Record<string, unknown>, path: string): s
 /** Validate a raw operator status JSON entry. Returns an array of error messages (empty = valid). */
 export function validateOperatorStatus(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
+  errors.push(...validateNonNegativeValues(json, 'root'));
 
   if (json.clause) {
     if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
@@ -122,6 +123,20 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
   if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
+
+  // eventIdType must be a known category. TALENT_STATUS / POTENTIAL_STATUS are
+  // no longer valid — use TALENT / POTENTIAL instead. A TALENT or POTENTIAL is
+  // not inherently passive; the engine decides based on whether other events
+  // trigger it (onTriggerClause with APPLY/CONSUME EVENT THIS).
+  if (typeof props.eventIdType === 'string') {
+    // eslint-disable-next-line no-restricted-syntax
+    if (props.eventIdType === 'TALENT_STATUS') {
+      errors.push(`properties.eventIdType: "TALENT_STATUS" is invalid — use "TALENT" instead`);
+    // eslint-disable-next-line no-restricted-syntax
+    } else if (props.eventIdType === 'POTENTIAL_STATUS') {
+      errors.push(`properties.eventIdType: "POTENTIAL_STATUS" is invalid — use "POTENTIAL" instead`);
+    }
+  }
 
   // Status configs must specify a target — this determines default routing
   if (!props.to && !props.target) errors.push('properties.to: required (TEAM, OPERATOR, or ENEMY)');
@@ -283,6 +298,32 @@ export class OperatorStatus {
   resolveDurationSeconds(potential: number): number {
     if (!this.duration) return 0;
     return resolveValueNode(this.duration.value, { ...DEFAULT_VALUE_CONTEXT, potential });
+  }
+
+  /**
+   * Resolve segment durations with a specific potential level. Returns a cloned
+   * segments array with durations re-resolved from the raw ValueNode configs.
+   * Segments without a raw duration node fall back to the parse-time resolved
+   * duration. Zero-duration segments are pruned — a segment whose duration
+   * resolves to 0 (e.g. VARY_BY POTENTIAL returning 0 for a locked potential)
+   * is conceptually absent at that potential.
+   */
+  resolveSegments(potential: number): EventSegmentData[] {
+    const ctx = { ...DEFAULT_VALUE_CONTEXT, potential };
+    return this.segments
+      .map((seg, i) => {
+        const rawProps = this._rawSegments[i]?.properties as Record<string, unknown> | undefined;
+        const rawDur = rawProps?.duration as { value: unknown; unit: string } | undefined;
+        const durationFrames = rawDur
+          ? Math.round(resolveValueNode(rawDur.value as import('../../dsl/semantics').ValueNode, ctx) * FPS)
+          : seg.properties.duration;
+        return {
+          ...seg,
+          properties: { ...seg.properties, duration: durationFrames },
+          ...(seg.frames ? { frames: seg.frames.map(f => ({ ...f })) } : {}),
+        };
+      })
+      .filter(seg => seg.properties.duration > 0);
   }
 
   get maxStacks(): number {

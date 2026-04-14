@@ -12,7 +12,7 @@ import type { Interaction } from '../../dsl/semantics';
 import type { ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -52,6 +52,7 @@ const VALID_SET_EFFECT_PROPS_KEYS = new Set(['id', 'name', 'rarity', 'piecesRequ
 /** Validate a raw gear set effect JSON entry. */
 export function validateGearSetEffect(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_SET_EFFECT_TOP_KEYS, 'root');
+  errors.push(...validateNonNegativeValues(json, 'root'));
 
   if (json.onTriggerClause) {
     if (!Array.isArray(json.onTriggerClause)) errors.push('root.onTriggerClause: must be an array');
@@ -85,6 +86,7 @@ const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 /** Validate a raw gear status JSON entry. */
 export function validateGearStatus(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_STATUS_TOP_KEYS, 'root');
+  errors.push(...validateNonNegativeValues(json, 'root'));
 
   if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
   else (json.clause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `clause[${i}]`)));

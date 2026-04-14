@@ -10,10 +10,10 @@
  * A. Operator status columns
  *    - Laevatain: MELTING_FLAME + SCORCHING_HEART (OPERATOR/THIS)
  *    - Wulfgard: WULFGARD_TALENT1_SCORCHING_FANGS (OPERATOR/THIS)
- *    - Yvonne: CRIT_STACKS (OPERATOR/THIS)
+ *    - Yvonne: CRYOBLASTING_PISTOLIER_CRIT_RATE (OPERATOR/THIS)
  *
  * B. Enemy-targeted statuses do NOT create operator status columns
- *    - Antal: FOCUS / FOCUS_EMPOWERED (ENEMY target)
+ *    - Antal: FOCUS (ENEMY target)
  *    - Endministrator: REALSPACE_STASIS (ENEMY target)
  *
  * C. Talent columns
@@ -32,9 +32,8 @@ const MF_ID: string = require('../../model/game-data/operators/laevatain/statuse
 const SH_ID: string = require('../../model/game-data/operators/laevatain/statuses/status-scorching-heart.json').properties.id;
 const SH_TALENT_ID: string = require('../../model/game-data/operators/laevatain/talents/talent-scorching-heart.json').properties.id;
 const SCORCHING_FANGS_ID: string = require('../../model/game-data/operators/wulfgard/talents/talent-1-scorching-fangs.json').properties.id;
-const CRIT_STACKS_ID: string = require('../../model/game-data/operators/yvonne/statuses/status-crit-stacks.json').properties.id;
+const CRYOBLASTING_PISTOLIER_CRIT_RATE_ID: string = require('../../model/game-data/operators/yvonne/statuses/status-crit-stacks.json').properties.id;
 const FOCUS_ID: string = require('../../model/game-data/operators/antal/statuses/status-focus.json').properties.id;
-const FOCUS_EMPOWERED_ID: string = require('../../model/game-data/operators/antal/statuses/status-focus-empowered.json').properties.id;
 const REALSPACE_STASIS_ID: string = require('../../model/game-data/operators/endministrator/talents/talent-realspace-stasis.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -110,14 +109,14 @@ describe('buildColumns — operator status columns', () => {
     expect(microIds).toContain(SCORCHING_FANGS_ID);
   });
 
-  it('creates status column for Yvonne with CRIT_STACKS', () => {
+  it('creates status column for Yvonne with CRYOBLASTING_PISTOLIER_CRIT_RATE', () => {
     const op = findOperator('YVONNE');
     const slot = makeSlot('slot1', op);
     const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
     const statusCol = findStatusColumn(columns, 'slot1');
     expect(statusCol).toBeDefined();
     const microIds = statusCol!.microColumns!.map(mc => mc.id);
-    expect(microIds).toContain(CRIT_STACKS_ID);
+    expect(microIds).toContain(CRYOBLASTING_PISTOLIER_CRIT_RATE_ID);
   });
 });
 
@@ -129,7 +128,6 @@ describe('buildColumns — enemy-targeted statuses excluded from operator status
     const statusCol = findStatusColumn(columns, 'slot1');
     const microIds = statusCol?.microColumns?.map(mc => mc.id) ?? [];
     expect(microIds).not.toContain(FOCUS_ID);
-    expect(microIds).not.toContain(FOCUS_EMPOWERED_ID);
   });
 
   it('does not include REALSPACE_STASIS in operator status column for Endministrator (targets ENEMY)', () => {

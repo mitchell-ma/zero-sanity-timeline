@@ -17,8 +17,35 @@ import { collectTimeStopRanges } from '../timeline/processTimeStop';
 import { FPS } from '../../utils/timeline';
 import { TEAM_ID, COMMON_COLUMN_IDS } from './commonSlotController';
 import { findStaggerInClauses } from '../timeline/clauseQueries';
+import type { LoadoutProperties } from '../../view/InformationPane';
+import { buildContextForSkillColumn, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext, type TalentSlot } from '../calculation/valueResolver';
+import { getOperatorBase } from '../../model/game-data/operatorsStore';
 
 export type { StaggerBreak };
+
+/**
+ * Build a ValueResolutionContext for a stagger-emitting event so VARY_BY
+ * nodes inside DEAL STAGGER clauses resolve against the source operator's
+ * loadout. Talent slot is inferred from the event's columnId matching the
+ * operator's talent one/two IDs (e.g. MOMENTUM_BREAKER_TALENT → slot two).
+ */
+function buildStaggerCtx(
+  ev: TimelineEvent,
+  loadoutProperties?: Record<string, LoadoutProperties>,
+  slotOperatorMap?: Record<string, string>,
+): ValueResolutionContext {
+  const slotId = ev.sourceEntityId;
+  const props = slotId && loadoutProperties ? loadoutProperties[slotId] : undefined;
+  if (!props) return DEFAULT_VALUE_CONTEXT;
+  const operatorId = slotOperatorMap?.[slotId!];
+  let talentSlot: TalentSlot | undefined;
+  if (operatorId) {
+    const base = getOperatorBase(operatorId);
+    if (base?.talents?.two?.id && ev.columnId === base.talents.two.id) talentSlot = 'two';
+    else if (base?.talents?.one?.id && ev.columnId === base.talents.one.id) talentSlot = 'one';
+  }
+  return buildContextForSkillColumn(props, ev.columnId, undefined, talentSlot);
+}
 
 export interface StaggerEnemyStats {
   staggerNodes: number;
@@ -67,6 +94,8 @@ export class StaggerController {
   sync(
     processedEvents: ReadonlyArray<TimelineEvent>,
     enemyStats: StaggerEnemyStats,
+    loadoutProperties?: Record<string, LoadoutProperties>,
+    slotOperatorMap?: Record<string, string>,
   ): void {
     // Extract and apply time-stops from processed events
     this.timeline.setTimeStops(collectTimeStopRanges(processedEvents));
@@ -85,12 +114,16 @@ export class StaggerController {
       const animOffset = (ev.columnId === NounType.COMBO || ev.columnId === NounType.ULTIMATE)
         ? getAnimationDuration(ev) : 0;
       let segOffset = 0;
+      // Build a resolution context once per event so VARY_BY TALENT_LEVEL /
+      // SKILL_LEVEL / POTENTIAL stagger values resolve against the source
+      // operator's loadout (e.g. Chen's Momentum Breaker talent).
+      const ctx = buildStaggerCtx(ev, loadoutProperties, slotOperatorMap);
       for (const seg of ev.segments) {
         // Skip ANIMATION segments — their offset is already in animOffset
         if (seg.properties.segmentTypes?.includes(SegmentType.ANIMATION)) continue;
         if (seg.frames) {
           for (const f of seg.frames) {
-            const stagger = findStaggerInClauses(f.clauses);
+            const stagger = findStaggerInClauses(f.clauses, ctx);
             if (stagger && stagger > 0) {
               const frame = f.absoluteFrame ?? (ev.startFrame + animOffset + segOffset + f.offsetFrame);
               staggerEvents.push({

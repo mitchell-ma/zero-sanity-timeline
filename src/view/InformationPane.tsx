@@ -3,7 +3,7 @@ import { TimelineEvent, Operator, Enemy, SelectedFrame, ResourceConfig, Column, 
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { EnemyStats } from '../controller/appStateController';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
-import { InfoLevel, InfoPaneMode, type InteractionModeType } from '../consts/enums';
+import { InfoLevel, InfoPaneMode } from '../consts/enums';
 import EventPane from './info-pane/EventPane';
 import LoadoutPane from './info-pane/LoadoutPane';
 import EnemyPane from './info-pane/EnemyPane';
@@ -102,7 +102,7 @@ type InformationPaneProps = {
   verbose?: InfoLevel;
   onToggleVerbose?: () => void;
   triggerClose?: boolean;
-  interactionMode?: InteractionModeType;
+  debugMode?: boolean;
 } & (
   | {
       mode: InfoPaneMode.EVENT;
@@ -245,7 +245,7 @@ export default function InformationPane(props: InformationPaneProps) {
           readOnly={props.readOnly}
           isDerived={props.isDerived}
           editContext={props.editContext}
-          interactionMode={props.interactionMode}
+          debugMode={props.debugMode}
           rawEvents={props.rawEvents}
           allProcessedEvents={props.allProcessedEvents}
           loadoutProperties={props.loadoutProperties}

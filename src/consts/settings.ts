@@ -12,6 +12,7 @@ export interface GlobalSettings {
   decimalPlaces: number;
   numberFormat: NumberFormatType;
   performanceMode: PerformanceMode;
+  debugMode: boolean;
 }
 
 export const DEFAULT_SETTINGS: GlobalSettings = {
@@ -21,6 +22,7 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
   decimalPlaces: 2,
   numberFormat: NumberFormatType.DECIMAL,
   performanceMode: PerformanceMode.BALANCED,
+  debugMode: false,
 };
 
 /** Maps PerformanceMode to throttleByRAF `every` parameter (frames to skip). */
@@ -46,6 +48,7 @@ export function loadSettings(): GlobalSettings {
             ? parsed.decimalPlaces : DEFAULT_SETTINGS.decimalPlaces,
           numberFormat: Object.values(NumberFormatType).includes(parsed.numberFormat) ? parsed.numberFormat : DEFAULT_SETTINGS.numberFormat,
           performanceMode: Object.values(PerformanceMode).includes(parsed.performanceMode) ? parsed.performanceMode : DEFAULT_SETTINGS.performanceMode,
+          debugMode: typeof parsed.debugMode === 'boolean' ? parsed.debugMode : DEFAULT_SETTINGS.debugMode,
         };
       }
     }

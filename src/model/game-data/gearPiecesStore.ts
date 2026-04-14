@@ -9,7 +9,7 @@ import { VerbType, type ValueNode } from '../../dsl/semantics';
 import { StatType } from '../enums/stats';
 import { resolveEffectStat } from '../enums/stats';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'gearType', 'gearSet']);
@@ -38,6 +38,7 @@ function validateLocalEffect(ef: Record<string, unknown>, path: string): string[
 /** Validate a raw gear piece JSON entry. Returns an array of error messages (empty = valid). */
 export function validateGearPiece(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
+  errors.push(...validateNonNegativeValues(json, 'root'));
 
   if (json.clause) {
     if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');

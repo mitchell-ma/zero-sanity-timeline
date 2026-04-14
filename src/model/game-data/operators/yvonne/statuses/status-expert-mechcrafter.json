@@ -45,7 +45,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT_STATUS",
+    "eventIdType": "TALENT",
     "description": "During Cryoblasting Pistolier, ATK +10% and Critical DMG Dealt +30%."
   },
   "metadata": {

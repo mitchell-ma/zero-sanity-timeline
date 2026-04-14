@@ -12,6 +12,8 @@ import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCal
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
 import { getOperatorSkill, getSkillTypeMap, getComboTriggerInfo } from '../gameDataStore';
 import { getLastController } from '../timeline/eventQueueController';
+import type { EventOverride } from '../../consts/overrideTypes';
+import { FPS } from '../../utils/timeline';
 
 /** Resolve a ValueNode to a number using default context. Returns undefined if node is falsy. */
 function resolveValue(node: ValueNode | typeof THRESHOLD_MAX | undefined): number | undefined {
@@ -869,4 +871,76 @@ export function resolveEventTiming(
     animation: baseAnimation != null ? mkPhase(baseAnimation, extAnimation ?? baseAnimation) : null,
     total: mkPhase(baseTotal, extTotal),
   };
+}
+
+// ── Card data with runtime overrides ────────────────────────────────────────
+
+/** Serialized frame shape within DataCardBody data. */
+interface CardFrame {
+  properties?: { offset?: { value: number; unit: string } };
+  [key: string]: unknown;
+}
+
+/** Serialized segment shape within DataCardBody data. */
+interface CardSegment {
+  properties?: { duration?: { value: number; unit?: string } };
+  frames?: CardFrame[];
+  [key: string]: unknown;
+}
+
+/**
+ * Apply runtime overrides (frame offset drags, segment duration resizes) to
+ * serialized skill/status card data. Returns a new object with patched values;
+ * the original `data` is not mutated.
+ *
+ * Used by the combat planner EventPane so the DataCardBody reflects live
+ * edits. The customizer passes static data and never calls this.
+ */
+export function applyCardOverrides(
+  data: Record<string, unknown>,
+  entry: EventOverride,
+): Record<string, unknown> {
+  if (!entry.segments) return data;
+  const segs = data.segments as CardSegment[] | undefined;
+  if (!segs) return data;
+
+  let patched = false;
+  const patchedSegs = [...segs];
+
+  for (const [siStr, segOverride] of Object.entries(entry.segments)) {
+    const si = Number(siStr);
+    if (!patchedSegs[si]) continue;
+    let segPatched = false;
+    let seg = patchedSegs[si];
+
+    // Segment duration override
+    if (segOverride.duration != null && seg.properties?.duration) {
+      seg = { ...seg, properties: { ...seg.properties, duration: { ...seg.properties.duration, value: segOverride.duration / FPS } } };
+      segPatched = true;
+    }
+
+    // Frame offset overrides
+    if (segOverride.frames && seg.frames) {
+      const patchedFrames = [...seg.frames];
+      for (const [fiStr, frameOverride] of Object.entries(segOverride.frames)) {
+        const fi = Number(fiStr);
+        const frame = patchedFrames[fi];
+        if (frameOverride?.offsetFrame != null && frame?.properties?.offset) {
+          patchedFrames[fi] = {
+            ...frame,
+            properties: { ...frame.properties, offset: { ...frame.properties.offset, value: frameOverride.offsetFrame / FPS } },
+          };
+          segPatched = true;
+        }
+      }
+      if (segPatched) seg = { ...seg, frames: patchedFrames };
+    }
+
+    if (segPatched) {
+      patchedSegs[si] = seg;
+      patched = true;
+    }
+  }
+
+  return patched ? { ...data, segments: patchedSegs } : data;
 }

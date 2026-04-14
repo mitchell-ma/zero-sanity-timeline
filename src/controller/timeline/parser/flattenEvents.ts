@@ -9,7 +9,7 @@
 import { TimelineEvent, activeEndFrame } from '../../../consts/viewTypes';
 import { NounType } from '../../../dsl/semantics';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from '../processTimeStop';
-import { PRIORITY, QueueFrameType, FrameHookType } from '../eventQueueTypes';
+import { QueueFrameType, FrameHookType } from '../eventQueueTypes';
 import type { QueueFrame } from '../eventQueueTypes';
 import { SKILL_COLUMN_ORDER } from '../../../model/channels';
 import type { SkillType } from '../../../consts/viewTypes';
@@ -49,7 +49,7 @@ export function flattenEventsToQueueFrames(
     // Seed an event-start entry at the event's start frame
     const start = allocQueueFrame();
     start.frame = event.startFrame;
-    start.priority = PRIORITY.PROCESS_FRAME;
+
     start.type = QueueFrameType.PROCESS_FRAME;
     start.hookType = FrameHookType.EVENT_START;
     start.statusId = event.id;
@@ -75,7 +75,7 @@ export function flattenEventsToQueueFrames(
       const segStartFrame = absoluteFrame(event.startFrame, cumulativeOffset, 0, fStops);
       const segStart = allocQueueFrame();
       segStart.frame = segStartFrame;
-      segStart.priority = PRIORITY.PROCESS_FRAME;
+
       segStart.type = QueueFrameType.PROCESS_FRAME;
       segStart.hookType = FrameHookType.SEGMENT_START;
       segStart.statusId = event.id;
@@ -99,7 +99,7 @@ export function flattenEventsToQueueFrames(
 
           const qf = allocQueueFrame();
           qf.frame = absFrame;
-          qf.priority = PRIORITY.PROCESS_FRAME;
+
           qf.type = QueueFrameType.PROCESS_FRAME;
           qf.statusId = event.id;
           qf.columnId = event.columnId;
@@ -123,7 +123,7 @@ export function flattenEventsToQueueFrames(
       if (segEndFrame > segStartFrame) {
         const segEnd = allocQueueFrame();
         segEnd.frame = segEndFrame;
-        segEnd.priority = PRIORITY.PROCESS_FRAME;
+
         segEnd.type = QueueFrameType.PROCESS_FRAME;
         segEnd.hookType = FrameHookType.SEGMENT_END;
         segEnd.statusId = event.id;
@@ -144,10 +144,13 @@ export function flattenEventsToQueueFrames(
     // Synthesize a frame entry for non-skill events with no frame markers.
     // This routes freeform inflictions, reactions, and statuses through the same
     // PROCESS_FRAME → interpret path as engine-created events.
-    if (!hasFrames && !SKILL_COLUMN_SET.has(event.columnId as SkillType) && !getResourceColumnSet().has(event.columnId)) {
+    const isFreeformNonSkill = !hasFrames
+      && !SKILL_COLUMN_SET.has(event.columnId as SkillType)
+      && !getResourceColumnSet().has(event.columnId);
+    if (isFreeformNonSkill) {
       const synth = allocQueueFrame();
       synth.frame = event.startFrame;
-      synth.priority = PRIORITY.PROCESS_FRAME;
+
       synth.type = QueueFrameType.PROCESS_FRAME;
       synth.statusId = event.id;
       synth.columnId = event.columnId;
@@ -164,12 +167,20 @@ export function flattenEventsToQueueFrames(
       entries.push(synth);
     }
 
-    // Seed an event-end entry at the active end frame (before cooldown segments)
+    // Seed an event-end entry at the active end frame (before cooldown segments).
+    // Skip for freeform non-skill events — the visible event is created later
+    // via `applyEvent` → `runStatusCreationLifecycle`, which schedules its own
+    // EVENT_END using the (possibly time-stop-extended) duration of the
+    // applied event. Seeding here would emit a duplicate EVENT_END at the raw
+    // unextended end, causing IS_NOT to fire twice (once at raw end, once at
+    // extended end), which consumes BECOME-NOT talents (e.g. Freezing Point)
+    // prematurely.
+    if (isFreeformNonSkill) continue;
     const endFrame = activeEndFrame(event);
     if (endFrame > event.startFrame) {
       const end = allocQueueFrame();
       end.frame = endFrame;
-      end.priority = PRIORITY.PROCESS_FRAME;
+
       end.type = QueueFrameType.PROCESS_FRAME;
       end.hookType = FrameHookType.EVENT_END;
       end.statusId = event.id;
@@ -190,7 +201,7 @@ export function flattenEventsToQueueFrames(
     if (event.columnId === NounType.COMBO && !event.comboTriggerColumnId) {
       const combo = allocQueueFrame();
       combo.frame = event.startFrame;
-      combo.priority = PRIORITY.COMBO_RESOLVE;
+
       combo.type = QueueFrameType.COMBO_RESOLVE;
       combo.statusId = event.id;
       combo.columnId = event.columnId;

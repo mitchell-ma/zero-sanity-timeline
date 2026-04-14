@@ -1,49 +1,4 @@
 {
-  "onTriggerClause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "DEAL",
-          "object": "DAMAGE",
-          "to": "ENEMY"
-        }
-      ],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "HP",
-          "to": "TEAM",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                63,
-                63,
-                63
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            },
-            "mainStat": {
-              "verb": "IS",
-              "object": "STAT",
-              "objectId": "WILL",
-              "value": 0.53,
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "id": "FRIENDLY_PRESENCE_TALENT",
     "maxLevel": {

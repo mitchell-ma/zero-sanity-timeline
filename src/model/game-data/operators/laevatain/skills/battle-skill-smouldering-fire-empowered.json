@@ -544,25 +544,44 @@
                   "to": "ENEMY",
                   "with": {
                     "value": {
-                      "verb": "VARY_BY",
-                      "object": "SKILL_LEVEL",
-                      "value": [
-                        3.42,
-                        3.76,
-                        4.1,
-                        4.45,
-                        4.79,
-                        5.13,
-                        5.47,
-                        5.81,
-                        6.16,
-                        6.58,
-                        7.1,
-                        7.7
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.42,
+                          3.76,
+                          4.1,
+                          4.45,
+                          4.79,
+                          5.13,
+                          5.47,
+                          5.81,
+                          6.16,
+                          6.58,
+                          7.1,
+                          7.7
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.2,
+                          1.2,
+                          1.2,
+                          1.2,
+                          1.2
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
                       }
                     },
                     "mainStat": {
@@ -607,6 +626,28 @@
                     "value": {
                       "verb": "IS",
                       "value": 100
+                    }
+                  }
+                },
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "POTENTIAL",
+                      "value": [
+                        0,
+                        20,
+                        20,
+                        20,
+                        20,
+                        20
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }

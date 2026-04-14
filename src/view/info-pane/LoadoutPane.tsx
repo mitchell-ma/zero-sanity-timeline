@@ -15,7 +15,7 @@ import { GearCategory } from '../../consts/enums';
 import { LoadoutProperties } from '../InformationPane';
 import { StatField } from './SharedFields';
 import {
-  formatStatValue, formatFlat, formatPct,
+  formatStatValue, formatFlat, formatPct, formatDurationSeconds,
   resolveWeaponBreakdown,
   buildLoadoutBreakdownEntries,
   resolveGearBreakdown,
@@ -621,7 +621,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 )}
                 {eff.buffs.map((b, bi) => (
                   <div key={`eff-${ei}-${bi}`} style={statRowStyle}>
-                    <span style={statLabelStyle}>{getStatLabel(b.statLabel as StatType)} ({eff.durationSeconds}s)</span>
+                    <span style={statLabelStyle}>{getStatLabel(b.statLabel as StatType)} ({formatDurationSeconds(eff.durationSeconds)})</span>
                     <span style={statValueStyle}>{b.valueStr}{b.perStack ? eff.stackSuffix : ''}</span>
                   </div>
                 ))}

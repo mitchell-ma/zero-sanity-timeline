@@ -5,12 +5,16 @@
  * Maps observable events (verb + object) to the trigger defs that care about
  * them, enabling O(1) lookup during queue processing.
  *
+ * Each trigger def stores a flat `conditions: Predicate[]` array — all
+ * conditions are order-agnostic AND'd predicates. Observable conditions
+ * (PERFORM, APPLY, CONSUME, etc.) produce index keys; state-check
+ * conditions (HAVE, IS) are evaluated at trigger time. A single entry
+ * may be registered under multiple keys (one per observable condition).
+ *
  * Indexes three types of triggers:
  * - onTriggerClause: event-driven triggers (PERFORM, APPLY, CONSUME, etc.)
  * - clause: lifecycle triggers (HAVE STACKS conditions, e.g. MF → SH)
  * - TALENT: permanent presence events created on first encounter
- *
- * Replaces the pre-queue collectEngineTriggerEntries scan.
  */
 import { StackInteractionType, UnitType, UNLIMITED_STACKS } from '../../consts/enums';
 import type { LoadoutProperties } from '../../view/InformationPane';
@@ -20,11 +24,11 @@ import type { ValueNode } from '../../dsl/semantics';
 import { VerbType, NounType, ObjectType, DeterminerType, THRESHOLD_MAX } from '../../dsl/semantics';
 import { ELEMENT_TO_INFLICTION_COLUMN as ELEMENT_TO_INFLICTION } from './columnResolution';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
-import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills } from '../gameDataStore';
+import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills, getAllOperatorStatuses } from '../gameDataStore';
 import { getWeaponTriggerDefs, getWeaponStatusTriggerDefs, getGearTriggerDefs, getGearStatusTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import { getStatusDef } from './configCache';
 import type { NormalizedEffectDef } from '../gameDataStore';
-import { ENEMY_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { ENEMY_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { TEAM_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
 import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
@@ -48,12 +52,26 @@ export const STATE_TO_COLUMN: Record<string, string> = {
   [ObjectType.KNOCKED_DOWN]: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
   [ObjectType.CRUSHED]: PHYSICAL_STATUS_COLUMNS.CRUSH,
   [ObjectType.BREACHED]: PHYSICAL_STATUS_COLUMNS.BREACH,
+  // Element inflictions
+  [ObjectType.CRYO_INFLICTED]: INFLICTION_COLUMNS.CRYO,
+  [ObjectType.HEAT_INFLICTED]: INFLICTION_COLUMNS.HEAT,
+  [ObjectType.NATURE_INFLICTED]: INFLICTION_COLUMNS.NATURE,
+  [ObjectType.ELECTRIC_INFLICTED]: INFLICTION_COLUMNS.ELECTRIC,
+  // Physical inflictions
+  [ObjectType.VULNERABLE_INFLICTED]: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
   // Stagger states
   [ObjectType.NODE_STAGGERED]: NODE_STAGGER_COLUMN_ID,
   [ObjectType.FULL_STAGGERED]: FULL_STAGGER_COLUMN_ID,
 };
 
 // Element → infliction column mapping imported from `./columnResolution.ts` above.
+
+/** Observable event verbs that produce index keys. State-check verbs (HAVE, IS) are not indexed. */
+export const INDEX_VERBS = new Set<string>([
+  VerbType.PERFORM, VerbType.APPLY, VerbType.CONSUME,
+  VerbType.DEAL, VerbType.HIT, VerbType.DEFEAT,
+  VerbType.RECEIVE, VerbType.BECOME, VerbType.RECOVER,
+]);
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -65,14 +83,8 @@ export interface TriggerDefEntry {
   operatorSlotMap: Record<string, string>;
   loadoutProperties?: LoadoutProperties;
   isEquip: boolean;
-  /** The primary verb that activates this trigger. */
-  primaryVerb: string;
-  /** The primary condition from the onTriggerClause. */
-  primaryCondition: Predicate;
-  /** Non-primary, non-HAVE conditions checked at evaluation time. */
-  secondaryConditions: Predicate[];
-  /** HAVE conditions deferred to queue-time evaluation. */
-  haveConditions: Predicate[];
+  /** All conditions from the onTriggerClause, normalized. Order-agnostic AND'd predicates. */
+  conditions: Predicate[];
   /** Effects from the onTriggerClause. */
   triggerEffects?: TriggerEffect[];
   /** Clause index within the def's onTriggerClause array (for FIRST_MATCH dedup). */
@@ -81,14 +93,21 @@ export interface TriggerDefEntry {
   usageLimit?: number;
 }
 
+export interface LifecycleClauseGroup {
+  /** HAVE conditions resolved to concrete form (STACKS → STATUS with max value). Empty = unconditional. */
+  haveConditions: Predicate[];
+  /** Effects from the clause (APPLY STAT, IGNORE ULTIMATE_ENERGY, APPLY STATUS, etc.). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  effects: any[];
+}
+
 export interface LifecycleDefEntry {
   def: StatusEventDef;
   operatorId: string;
-  /** HAVE conditions resolved to concrete form (STACKS → STATUS with max value). */
-  haveConditions: Predicate[];
-  /** Effects from the clause (e.g. APPLY STATUS SCORCHING_HEART). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  effects: any[];
+  /** All clause groups for this status — each has its own HAVE conditions and effects. */
+  clauseGroups: LifecycleClauseGroup[];
+  /** Clause evaluation mode: "ALL" (default) evaluates every matching group; "FIRST_MATCH" stops at the first. */
+  clauseType?: string;
   /** Full serialized def for ENGINE_TRIGGER context. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fullDef: any;
@@ -103,12 +122,6 @@ export interface TalentDefEntry {
   talentEvent: TimelineEvent | null;
 }
 
-// ── Priority registry (mirrors triggerMatch.ts) ─────────────────────────────
-
-const VERB_PRIORITIES: Record<string, number> = {
-  [VerbType.PERFORM]: 10, [VerbType.APPLY]: 20, [VerbType.CONSUME]: 25, [VerbType.DEAL]: 30, [VerbType.HIT]: 35,
-  [VerbType.DEFEAT]: 40, [VerbType.RECEIVE]: 50, [VerbType.BECOME]: 55, [VerbType.RECOVER]: 60, [VerbType.HAVE]: 70, [VerbType.IS]: 80,
-};
 
 // ── Equip def normalization ─────────────────────────────────────────────────
 
@@ -184,7 +197,6 @@ function getDurationFrames(duration: { value: ValueNode; unit: string }): number
   const val = Array.isArray(raw) ? (raw as number[])[0] ?? 0
     : typeof raw === 'number' ? raw
     : resolveValueNode(raw, DEFAULT_VALUE_CONTEXT);
-  if (val < 0) return TOTAL_FRAMES;
   if (duration.unit === UnitType.SECOND) return Math.round(val * FPS);
   return val;
 }
@@ -444,7 +456,80 @@ export class TriggerIndex {
       }
     }
 
+    // ── Register lifecycle entries for generic/unowned statuses ──────────
+    // Generic statuses (SLOW, stagger-node, stagger-full, etc.) are not
+    // attached to any operator slot, so they are never passed to
+    // processDefsForSlot. Scan all status defs and register lifecycle entries
+    // for any status with clause effects that isn't already in the index.
+    for (const status of getAllOperatorStatuses()) {
+      if (!status.id || idx.lifecycleIndex.has(status.id)) continue;
+      const def = getStatusDef(status.id);
+      if (def) idx.registerLifecycleFromDef(def, '');
+    }
+
     return idx;
+  }
+
+  /**
+   * Register a lifecycle entry for a status def that wasn't processed through
+   * processDefsForSlot (e.g. generic/freeform statuses with no operator owner).
+   *
+   * Passive definition: a def is passive only when it has no triggers managing its
+   * lifecycle (no onTriggerClause with APPLY/CONSUME EVENT THIS) AND has infinite/
+   * missing duration. Passive talents/potentials apply their clause via a
+   * presence event created at frame 0, so skip lifecycle registration for those.
+   * Triggered talents/potentials (even with 99999s duration) need lifecycle
+   * registration because their clauses only apply while actively APPLYed.
+   */
+  private registerLifecycleFromDef(def: StatusEventDef, operatorId: string) {
+    if (!def.clause || !Array.isArray(def.clause)) return;
+    const ect = def.properties.eventIdType ?? def.properties.type;
+    const isTalentOrPotential = ect === NounType.TALENT || ect === NounType.POTENTIAL;
+    const talentDur = def.properties.duration;
+    const isInfiniteDuration = !talentDur || getDurationFrames(talentDur) >= TOTAL_FRAMES;
+    const hasSelfApplyConsume = (def.onTriggerClause ?? []).some(
+      (tc: { effects?: { verb?: string; object?: string }[] }) => tc.effects?.some(
+        e => (e.verb === VerbType.APPLY || e.verb === VerbType.CONSUME) && e.object === NounType.EVENT,
+      ),
+    );
+    const isPassive = isTalentOrPotential && isInfiniteDuration && !hasSelfApplyConsume;
+    if (isPassive) return;
+
+    const maxStacks = def.properties.stacks?.limit
+      ? getMaxStacks(def.properties.stacks.limit)
+      : 1;
+    const clauseGroups: LifecycleClauseGroup[] = [];
+    for (const c of def.clause) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clause = c as any;
+      const conditions = clause.conditions ?? [];
+      const effects = clause.effects ?? [];
+      if (effects.length === 0) continue;
+      const haveConds = conditions.filter((p: { verb?: string }) => p.verb === VerbType.HAVE);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const resolvedConds = haveConds.map((cond: any) => {
+        if (cond.object === NounType.STACKS) {
+          return {
+            ...cond,
+            object: NounType.STATUS,
+            objectId: def.properties.id,
+            value: cond.value === THRESHOLD_MAX ? { verb: VerbType.IS, value: maxStacks } : cond.value,
+          };
+        }
+        return cond;
+      });
+      clauseGroups.push({ haveConditions: resolvedConds, effects });
+    }
+    if (clauseGroups.length > 0) {
+      this.lifecycleIndex.set(def.properties.id, {
+        def: def as StatusEventDef,
+        operatorId,
+        clauseGroups,
+        ...(def.clauseType ? { clauseType: def.clauseType } : {}),
+        fullDef: def,
+        maxStacks,
+      });
+    }
   }
 
   // ── Internal ────────────────────────────────────────────────────────────
@@ -482,11 +567,9 @@ export class TriggerIndex {
         // falsely satisfy HAVE STATUS conditions.
         // A talent is trigger-only if its triggers fire APPLY EVENT (self-creating) or
         // CONSUME EVENT (self-removing) — indicating lifecycle is managed by triggers.
-        const hasNegativeDuration = talentDuration && getDurationFrames(talentDuration) === TOTAL_FRAMES
-          && resolveValueNode(talentDuration.value, DEFAULT_VALUE_CONTEXT) < 0;
         const hasSelfApplyConsume = hasTrigger && def.onTriggerClause?.some((tc: { effects?: { verb?: string; object?: string }[] }) =>
           tc.effects?.some(e => (e.verb === VerbType.APPLY || e.verb === VerbType.CONSUME) && e.object === NounType.EVENT));
-        const isPassive = talentDurationFrames >= TOTAL_FRAMES && !hasNegativeDuration && !hasSelfApplyConsume;
+        const isPassive = talentDurationFrames >= TOTAL_FRAMES && !hasSelfApplyConsume;
         if (hasTrigger && !isPassive) {
           const existing = this.talentsBySlot.get(slotId) ?? [];
           existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent: null });
@@ -573,48 +656,8 @@ export class TriggerIndex {
         }
       }
 
-      // ── Lifecycle clauses (clause with HAVE conditions) ──────────────
-      // Skip lifecycle indexing for passive talents — they're pre-registered as permanent
-      // presence events and shouldn't be re-created by the lifecycle trigger system.
-      const isTalentType = ect === NounType.TALENT;
-      const talentDur = def.properties.duration;
-      const isPassiveTalent = isTalentType && (!talentDur || getDurationFrames(talentDur) >= TOTAL_FRAMES);
-      if (!isPassiveTalent && def.clause && Array.isArray(def.clause)) {
-        for (const c of def.clause) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const clause = c as any;
-          const conditions = clause.conditions ?? [];
-          const effects = clause.effects ?? [];
-          const haveConds = conditions.filter((p: { verb?: string }) => p.verb === VerbType.HAVE);
-          if (haveConds.length > 0 && effects.length > 0) {
-            // Resolve abstract STACKS → concrete STATUS conditions
-            const maxStacks = def.properties.stacks?.limit
-              ? getMaxStacks(def.properties.stacks.limit)
-              : 1;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const resolvedConds = haveConds.map((cond: any) => {
-              if (cond.object === NounType.STACKS) {
-                return {
-                  ...cond,
-                  object: NounType.STATUS,
-                  objectId: def.properties.id,
-                  value: cond.value === THRESHOLD_MAX ? { verb: VerbType.IS, value: maxStacks } : cond.value,
-                };
-              }
-              return cond;
-            });
-            this.lifecycleIndex.set(def.properties.id, {
-              def: def as StatusEventDef,
-              operatorId,
-              haveConditions: resolvedConds,
-              effects,
-              fullDef: def,
-              maxStacks,
-            });
-            break; // one lifecycle clause per status
-          }
-        }
-      }
+      // ── Lifecycle clauses (all clause effects registered for trigger dispatch) ──
+      this.registerLifecycleFromDef(def, operatorId);
 
       // ── onTriggerClause defs ─────────────────────────────────────────
       if (!def.onTriggerClause || def.onTriggerClause.length === 0) continue;
@@ -625,59 +668,15 @@ export class TriggerIndex {
 
       for (let ci = 0; ci < def.onTriggerClause.length; ci++) {
         const clause = def.onTriggerClause[ci];
-        // Find primary verb (lowest priority)
-        let primaryVerb: string | undefined;
-        let bestPriority = Infinity;
-        for (const cond of clause.conditions) {
-          const priority = VERB_PRIORITIES[cond.verb as string];
-          if (priority != null && priority < bestPriority) {
-            bestPriority = priority;
-            primaryVerb = cond.verb as string;
-          }
-        }
-        if (!primaryVerb) continue;
+        if (!clause.conditions.length) continue;
 
-        // HAVE-only clauses with HP PERCENTAGE: collect separately for inline
-        // evaluation after every PROCESS_FRAME (HP changes from cumulative damage,
-        // and inline skill damage doesn't fire DEAL:DAMAGE reactive triggers).
-        if (primaryVerb === VerbType.HAVE && clause.conditions.some((c: Predicate) => {
-          if (c.object !== NounType.HP) return false;
-          const w = (c as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
-          const v = w?.value as Record<string, unknown> | undefined;
-          return v?.unit === UnitType.PERCENTAGE;
-        })) {
-          this.hpThresholdDefs.push({
-            def,
-            operatorId,
-            operatorSlotId: slotId,
-            potential,
-            operatorSlotMap: opSlotMap,
-            loadoutProperties: props,
-            isEquip,
-            primaryVerb: VerbType.HAVE,
-            primaryCondition: clause.conditions[0],
-            secondaryConditions: [],
-            haveConditions: clause.conditions as Predicate[],
-            triggerEffects: clause.effects,
-            clauseIndex: ci,
-          });
-          continue;
-        }
-
-        let primaryCond = clause.conditions.find(c => c.verb === primaryVerb)!;
-        const rawDeferredConds = clause.conditions.filter((c: Predicate) =>
-          c.verb === VerbType.HAVE || c.verb === VerbType.BECOME,
-        );
-        const secondaryConds = clause.conditions.filter(c =>
-          c !== primaryCond && !rawDeferredConds.includes(c),
-        );
-
-        // Resolve abstract STACKS → concrete STATUS <self-id> for deferred conditions
+        // ── Normalize all conditions ─────────────────────────────────────
         const maxStacks = def.properties.stacks?.limit
           ? getMaxStacks(def.properties.stacks.limit)
           : 1;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const haveConds = rawDeferredConds.map((cond: any) => {
+        const conditions: Predicate[] = (clause.conditions as any[]).map((cond) => {
+          // Resolve abstract STACKS → concrete STATUS <self-id>
           if (cond.object === NounType.STACKS) {
             const rawValue = cond.value ?? cond.with?.value;
             return {
@@ -690,32 +689,68 @@ export class TriggerIndex {
           return cond;
         });
 
-        // BECOME STACKS: index under APPLY:{status-column} so it fires when the
-        // status receives a new stack. For self-referential (MF watching own stacks),
-        // use def.properties.id. For external (combo watching another status), use
-        // the condition's subjectId.
-        if (primaryVerb === VerbType.BECOME && primaryCond.object === NounType.STACKS) {
-          const targetStatusId = primaryCond.subjectId ?? def.properties.id;
-          primaryVerb = VerbType.APPLY;
-          primaryCond = { verb: VerbType.APPLY, object: NounType.STATUS, objectId: targetStatusId } as Predicate;
+        // ── HP threshold routing ─────────────────────────────────────────
+        // Clauses with HAVE HP PERCENTAGE conditions are collected separately
+        // for inline evaluation after every PROCESS_FRAME (HP changes from
+        // cumulative damage, and inline skill damage doesn't fire reactive triggers).
+        const hasHpPercentage = conditions.some((c: Predicate) => {
+          if (c.verb !== VerbType.HAVE || c.object !== NounType.HP) return false;
+          const w = (c as unknown as Record<string, unknown>).with as Record<string, unknown> | undefined;
+          const v = w?.value as Record<string, unknown> | undefined;
+          return v?.unit === UnitType.PERCENTAGE;
+        });
+        const hasObservable = conditions.some(c => INDEX_VERBS.has(c.verb as string));
+        if (hasHpPercentage && !hasObservable) {
+          this.hpThresholdDefs.push({
+            def,
+            operatorId,
+            operatorSlotId: slotId,
+            potential,
+            operatorSlotMap: opSlotMap,
+            loadoutProperties: props,
+            isEquip,
+            conditions,
+            triggerEffects: clause.effects,
+            clauseIndex: ci,
+          });
+          continue;
         }
 
-        // BECOME <state> (LIFTED, COMBUSTED, etc.) fires when the corresponding
-        // status is applied. Remap to APPLY:<column> so reactive triggers match.
-        if (primaryVerb === VerbType.BECOME && primaryCond.object !== NounType.STACKS) {
-          const stateCol = STATE_TO_COLUMN[primaryCond.object as string];
-          if (stateCol) {
-            primaryVerb = VerbType.APPLY;
-            primaryCond = { ...primaryCond, verb: VerbType.APPLY, object: NounType.STATUS, objectId: stateCol } as Predicate;
+        // ── Derive index keys from all observable conditions ─────────────
+        const keys: string[] = [];
+        for (const cond of conditions) {
+          if (!INDEX_VERBS.has(cond.verb as string)) continue;
+          let keyVerb = cond.verb as string;
+          let keyCond = cond;
+
+          // BECOME STACKS (normalized to BECOME STATUS <id>) → index under APPLY:{status-column}
+          // Detect by: verb=BECOME, object=STATUS/STACKS, has objectId (the status column)
+          if (keyVerb === VerbType.BECOME && (cond.object === NounType.STACKS || (cond.object === NounType.STATUS && cond.objectId))) {
+            const targetStatusId = cond.objectId ?? cond.subjectId ?? def.properties.id;
+            keyVerb = VerbType.APPLY;
+            keyCond = { verb: VerbType.APPLY, object: NounType.STATUS, objectId: targetStatusId } as Predicate;
           }
-        }
+          // BECOME <state> → remap to APPLY:<column> (fires at event start).
+          // BECOME NOT <state> → remap to IS_NOT:<column> (fires at event end via
+          // the EVENT_END handler's IS_NOT:<column> reactive trigger).
+          if (keyVerb === VerbType.BECOME && cond.object !== NounType.STACKS) {
+            const stateCol = STATE_TO_COLUMN[cond.object as string];
+            if (stateCol) {
+              if (cond.negated) {
+                keyVerb = VerbType.IS;
+                // Keep cond as-is so resolveTriggerKey's IS/BECOME branch applies
+                // STATE_TO_COLUMN + `_NOT` negation → `IS_NOT:<col>`.
+              } else {
+                keyVerb = VerbType.APPLY;
+                keyCond = { ...cond, verb: VerbType.APPLY, object: NounType.STATUS, objectId: stateCol } as Predicate;
+              }
+            }
+          }
 
-        const key = resolveTriggerKey(primaryVerb, primaryCond);
-        if (!key) continue;
-        // Negated IS/BECOME conditions (IS NOT SLOWED, BECOME NOT STAGGERED) need
-        // re-evaluation at execution time to handle overlapping sources
-        const allHaveConds = primaryCond.negated && (primaryVerb === VerbType.IS || primaryVerb === VerbType.BECOME)
-          ? [primaryCond, ...haveConds] : haveConds;
+          const key = resolveTriggerKey(keyVerb, keyCond);
+          if (key && !keys.includes(key)) keys.push(key);
+        }
+        if (keys.length === 0) continue;
 
         const entry: TriggerDefEntry = {
           def,
@@ -725,10 +760,7 @@ export class TriggerIndex {
           operatorSlotMap: opSlotMap,
           loadoutProperties: props,
           isEquip,
-          primaryVerb,
-          primaryCondition: primaryCond,
-          secondaryConditions: secondaryConds,
-          haveConditions: allHaveConds,
+          conditions,
           triggerEffects: clause.effects,
           clauseIndex: ci,
           ...((def as unknown as { usageLimit?: number }).usageLimit != null
@@ -736,20 +768,20 @@ export class TriggerIndex {
             : {}),
         };
 
-        // If this status is applied via CONTROLLED (e.g. Auxiliary Crystal),
-        // create trigger entries for ALL operator slots since the status can
-        // live on any slot. Each entry gets its own operatorSlotId so THIS
-        // resolves to the correct status owner.
+        // CONTROLLED statuses: register for all operator slots
         const targetSlots = isControlledAppliedStatus(operatorId, def.properties.id)
           ? Object.values(opSlotMap).filter(s => s !== slotId)
           : [];
 
-        const existing = this.index.get(key) ?? [];
-        existing.push(entry);
-        for (const targetSlot of targetSlots) {
-          existing.push({ ...entry, operatorSlotId: targetSlot });
+        // Register entry under every derived key
+        for (const key of keys) {
+          const existing = this.index.get(key) ?? [];
+          existing.push(entry);
+          for (const targetSlot of targetSlots) {
+            existing.push({ ...entry, operatorSlotId: targetSlot });
+          }
+          this.index.set(key, existing);
         }
-        this.index.set(key, existing);
       }
     }
   }

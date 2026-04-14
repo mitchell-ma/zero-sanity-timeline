@@ -85,6 +85,12 @@ export interface ColumnHost {
    * extend, clamp) on a target event.
    */
   linkTransition(targetEventUid: string, sourceEventUid: string): void;
+  /**
+   * Move the queued EVENT_END hook for `eventUid` to `newEndFrame`. Used when
+   * an event's duration is extended in-place (e.g. infliction refresh/extend)
+   * so downstream IS_NOT / BECOME-NOT triggers fire at the real end frame.
+   */
+  rescheduleEventEnd(eventUid: string, newEndFrame: number): void;
 }
 
 // ── EventColumn ──────────────────────────────────────────────────────────────

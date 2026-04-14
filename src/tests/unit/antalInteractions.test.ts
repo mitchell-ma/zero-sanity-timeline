@@ -242,12 +242,11 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B4: Focus duration is 60s (from status config)', () => {
-    // Duration is defined on the FOCUS status config, not inlined on the skill effect
+    // Duration is defined on the FOCUS status config, not inlined on the skill effect.
+    // Two segments: segment 1 (Focus) + segment 2 (Empowered Focus), total 60s at all potentials.
     const focusStatus = require('../../model/game-data/operators/antal/statuses/status-focus.json');
     expect(durVal(focusStatus.properties.duration.value)).toBe(60);
-    // Empowered variant also has 60s total (20s Focus + 40s Empowered)
-    const empoweredStatus = require('../../model/game-data/operators/antal/statuses/status-focus-empowered.json');
-    expect(durVal(empoweredStatus.properties.duration.value)).toBe(60);
+    expect(focusStatus.segments).toHaveLength(2);
   });
 
   test('B5: Susceptibility rate scales from 0.05 (lv1) to 0.10 (lv12)', () => {
@@ -284,9 +283,9 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('C. Combo Skill (EMP Test Site)', () => {
-  test('C1: Combo trigger has four clauses (Physical Status OR Arts Infliction while Focus/Focus Empowered)', () => {
+  test('C1: Combo trigger has two clauses (Physical Status OR Arts Infliction while Focus)', () => {
     const comboSkill = mockAntalJson.skills.COMBO;
-    expect(comboSkill.activationWindow.onTriggerClause.length).toBe(4);
+    expect(comboSkill.activationWindow.onTriggerClause.length).toBe(2);
   });
 
   test('C2: First clause — ANY_OPERATOR APPLY Physical Status + ENEMY HAVE FOCUS', () => {

@@ -7,7 +7,7 @@
  */
 import { EventType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
-import { checkKeys, validateEffect, validateInteraction, validateSegmentShape } from './validationUtils';
+import { checkKeys, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -45,6 +45,7 @@ const VALID_SKILL_METADATA_KEYS = new Set(['originId', 'eventComponentType', 'da
 export function validateOperatorSkill(json: Record<string, unknown>, skillId: string): string[] {
   const path = `skill[${skillId}]`;
   const errors = checkKeys(json, VALID_SKILL_ENTRY_KEYS, path);
+  errors.push(...validateNonNegativeValues(json, path));
 
   if (json.segments && !Array.isArray(json.segments)) {
     errors.push(`${path}.segments: must be an array`);

@@ -483,11 +483,15 @@ export function renderEvent(
     // Skip frames in 0-duration segments (conditional segments like Vajra Impact without LINK)
     if (seg.frames && seg.properties.duration > 0) {
       // Pre-compute lateral offsets for co-located frames (same offset → adjacent diamonds)
+      // Skip frameSkipped frames so they don't push visible frames aside
       const frameLateralOffsets: number[] = [];
       for (let fi = 0; fi < seg.frames.length; fi++) {
-        const offset = seg.frames[fi].derivedOffsetFrame ?? seg.frames[fi].offsetFrame;
+        const f = seg.frames[fi];
+        if (f.frameSkipped) { frameLateralOffsets.push(0); continue; }
+        const offset = f.derivedOffsetFrame ?? f.offsetFrame;
         let groupIdx = 0;
         for (let pfi = 0; pfi < fi; pfi++) {
+          if (seg.frames[pfi].frameSkipped) continue;
           const prevOffset = seg.frames[pfi].derivedOffsetFrame ?? seg.frames[pfi].offsetFrame;
           if (prevOffset === offset) groupIdx++;
         }
@@ -500,6 +504,12 @@ export function renderEvent(
         const lateralShift = frameLateralOffsets[fi] * DIAMOND_HALF * 2;
         const dg = obj.diamonds[diamondIdx];
         dg.clear();
+        // Hide frame markers for conditional frames whose conditions were not met
+        if (f.frameSkipped) {
+          dg.visible = false;
+          diamondIdx++;
+          continue;
+        }
         dg.cursor = presentation.notDraggable ? 'default' : 'pointer';
         dg.visible = true;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -115,6 +115,83 @@ describe('Micro-column greedy width expansion', () => {
     expect(mpB.widthFrac).toBe(1);
   });
 
+  // ─── visualActivationDuration-aware expansion ─────────────────────────
+  // Status events with infinite raw duration but visually-truncated via
+  // visualActivationDuration should not block greedy expansion for time
+  // ranges where they are not rendered.
+
+  it('visually-truncated stacking events allow later event to expand', () => {
+    // 2-slot column: type 'a' gets 3 events (stacking status, each 99999s raw).
+    // The first two are visually truncated (tile sequentially). The third
+    // keeps its full duration. Type 'b' has 1 short event at the start.
+    //
+    // Without the fix, 'b' at 0-2s blocks all 'a' events from expanding
+    // because their raw 99999s duration overlaps 'b'. With the fix, the
+    // first two 'a' events use their visual duration for overlap checks,
+    // and the third 'a' event (starting after 'b' ends) can expand.
+    const INFINITY = 99999 * FPS;
+    const col = makeColumn(['a', 'b']);
+    const events = [
+      makeEvent('a1', 'a', 0, INFINITY),
+      makeEvent('a2', 'a', 2 * FPS, INFINITY),
+      makeEvent('a3', 'a', 4 * FPS, INFINITY),
+      makeEvent('b1', 'b', 0, 2 * FPS),
+    ];
+    const vms = computeTimelinePresentation(events, [col]);
+    const vm = vms.get('test-col')!;
+
+    // a1 (0–2s visual) overlaps b1 (0–2s) → can't expand, stays 1/2 width
+    const mpA1 = vm.microPositions.get('a1')!;
+    expect(mpA1.widthFrac).toBeCloseTo(0.5);
+
+    // a2 (2–4s visual) doesn't overlap b1 (0–2s) → expands to full width
+    const mpA2 = vm.microPositions.get('a2')!;
+    expect(mpA2.widthFrac).toBe(1);
+
+    // a3 (4s–∞, last event, full visual duration) doesn't overlap b1 → expands
+    const mpA3 = vm.microPositions.get('a3')!;
+    expect(mpA3.widthFrac).toBe(1);
+  });
+
+  it('last stacking event expands when it is the only status type with events', () => {
+    // 2-slot column: only type 'a' has events (3 stacking, each 99999s).
+    // Type 'b' declared but no events. Only 1 slot allocated → all events
+    // should be full width regardless.
+    const INFINITY = 99999 * FPS;
+    const col = makeColumn(['a', 'b']);
+    const events = [
+      makeEvent('a1', 'a', 0, INFINITY),
+      makeEvent('a2', 'a', 2 * FPS, INFINITY),
+      makeEvent('a3', 'a', 4 * FPS, INFINITY),
+    ];
+    const vms = computeTimelinePresentation(events, [col]);
+    const vm = vms.get('test-col')!;
+
+    // Only 1 slot in use → all events full width
+    expect(vm.microPositions.get('a1')!.widthFrac).toBe(1);
+    expect(vm.microPositions.get('a2')!.widthFrac).toBe(1);
+    expect(vm.microPositions.get('a3')!.widthFrac).toBe(1);
+  });
+
+  it('visual truncation does not cause events to expand into occupied slots', () => {
+    // 2-slot column: 'a' has stacking events, 'b' has a long event that
+    // spans the entire timeline. No expansion possible — 'b' blocks 'a'.
+    const INFINITY = 99999 * FPS;
+    const col = makeColumn(['a', 'b']);
+    const events = [
+      makeEvent('a1', 'a', 0, INFINITY),
+      makeEvent('a2', 'a', 2 * FPS, INFINITY),
+      makeEvent('b1', 'b', 0, INFINITY),
+    ];
+    const vms = computeTimelinePresentation(events, [col]);
+    const vm = vms.get('test-col')!;
+
+    // Both slots occupied for the full timeline → no expansion
+    expect(vm.microPositions.get('a1')!.widthFrac).toBeCloseTo(0.5);
+    expect(vm.microPositions.get('a2')!.widthFrac).toBeCloseTo(0.5);
+    expect(vm.microPositions.get('b1')!.widthFrac).toBeCloseTo(0.5);
+  });
+
   it('constraint: leftFrac + widthFrac ≤ 1 for every event', () => {
     const col = makeColumn(['a', 'b', 'c', 'd']);
     const events = [

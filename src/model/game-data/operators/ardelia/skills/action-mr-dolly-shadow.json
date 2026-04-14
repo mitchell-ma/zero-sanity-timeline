@@ -46,30 +46,48 @@
                   "toDeterminer": "CONTROLLED",
                   "to": "OPERATOR",
                   "with": {
-                    "healBase": {
-                      "verb": "VARY_BY",
-                      "object": "TALENT_LEVEL",
-                      "value": [
-                        45,
-                        63,
-                        90
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
-                      }
-                    },
-                    "willAdditive": {
-                      "verb": "VARY_BY",
-                      "object": "TALENT_LEVEL",
-                      "value": [
-                        0.38,
-                        0.53,
-                        0.75
-                      ],
-                      "of": {
-                        "object": "OPERATOR",
-                        "determiner": "THIS"
+                    "unit": "FLAT",
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          45,
+                          63,
+                          90
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.38,
+                            0.53,
+                            0.75
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "object": "STAT",
+                          "objectId": "WILL",
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
                       }
                     }
                   }

@@ -511,7 +511,7 @@ export function useApp() {
       const pass1 = runPipeline(validEvents);
 
       // Sync stagger HP graph from pass 1 output → generates frailty events
-      combatLoadout.commonSlot.stagger.sync(pass1, enemyStats);
+      combatLoadout.commonSlot.stagger.sync(pass1, enemyStats, loadoutProperties, slotOperatorMap);
       const frailty = combatLoadout.commonSlot.stagger.frailtyEvents;
 
       // Pass 2: if stagger generated frailty events, re-run pipeline with them
@@ -536,9 +536,9 @@ export function useApp() {
 
   // ─── Stagger sync (config + events + frailty, all in one controller call) ─
   useMemo(() => {
-    combatLoadout.commonSlot.stagger.sync(processedEvents, enemyStats);
+    combatLoadout.commonSlot.stagger.sync(processedEvents, enemyStats, loadoutProperties, slotOperatorMap);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processedEvents, combatLoadout, enemyStats]);
+  }, [processedEvents, combatLoadout, enemyStats, loadoutProperties, slotOperatorMap]);
 
   const staggerFrailtyEvents = combatLoadout.commonSlot.stagger.frailtyEvents;
   const staggerBreaks = combatLoadout.commonSlot.stagger.breaks;
@@ -574,13 +574,12 @@ export function useApp() {
         return out;
       });
     }
-    // Slow path: apply full overrides only to freeform events
-    const freeformOnly = allProcessedEventsRaw.filter(ev => ev.creationInteractionMode != null);
-    const overriddenFreeform = freeformOnly.length > 0 ? applyEventOverrides(freeformOnly, overrides) : freeformOnly;
-    const freeformMap = new Map(overriddenFreeform.map(ev => [ev.uid, ev]));
+    // Slow path: apply property + json overrides post-pipeline. Structural
+    // segment/frame overrides (duration, offset, add/delete) are already
+    // applied pre-pipeline via `validEvents`, and the pipeline reads them as
+    // raw inputs and extends by time-stops. Re-applying structural overrides
+    // here would overwrite the time-stop extension with the raw value.
     return allProcessedEventsRaw.map((ev) => {
-      const overridden = freeformMap.get(ev.uid);
-      if (overridden) return overridden;
       const key = buildOverrideKey(ev);
       const override = overrides[key];
       if (!override) return ev;
@@ -595,6 +594,17 @@ export function useApp() {
 
   const processedEventsRef = useRef(allProcessedEvents);
   processedEventsRef.current = allProcessedEvents;
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const presMod = require('../controller/timeline/eventPresentationController');
+    (window as unknown as { __dbg: unknown }).__dbg = {
+      events: allProcessedEvents,
+      rawEvents: events,
+      overrides,
+      columns,
+      computeTimelinePresentation: presMod.computeTimelinePresentation,
+    };
+  }
 
   // Purge orphaned override keys (e.g. derived events that no longer exist after pipeline re-run)
   useEffect(() => {

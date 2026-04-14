@@ -1,7 +1,7 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
 import { DeterminerType, NounType, VerbType, isQualifiedId, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
+import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
 import { ENEMY_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, ENEMY_ACTION_LABELS } from '../../consts/timelineColumnLabels';
@@ -118,7 +118,7 @@ function buildStatusMicroColumn(
   const cfg = getStatusById(statusId);
   const label = overrides?.label ?? getAllStatusLabels()[statusId] ?? cfg?.name ?? statusId;
   const durSec = overrides?.durationSeconds ?? cfg?.durationSeconds ?? 10;
-  const durFrames = durSec > 0 ? Math.round(durSec * FPS) : TOTAL_FRAMES;
+  const durFrames = durSec === PERMANENT_DURATION || durSec === 0 ? TOTAL_FRAMES : Math.round(durSec * FPS);
   const target = cfg?.to ?? NounType.OPERATOR;
   const toDeterminer = cfg?.toDeterminer;
   const applyEffect: Partial<Effect> = {
@@ -152,7 +152,11 @@ function buildStatusMicroColumn(
       || ((cfg?.eventIdType === NounType.TALENT
         || cfg?.eventIdType === NounType.POTENTIAL)
         && !(cfg?.stacks?.interactionType === StackInteractionType.NONE && cfg?.maxStacks >= UNLIMITED_STACKS)
-        && !cfg?.onTriggerClause?.length)
+        && !cfg?.onTriggerClause?.length
+        // Self-trigger talents with finite durations (Fluorite Unpredictable T2)
+        // are transient; not passive. `durationSeconds` is 0 for always-on
+        // talents and >=PERMANENT_DURATION for explicitly permanent ones.
+        && !(durSec > 0 && durSec < PERMANENT_DURATION))
       ? { permanent: true } : {}),
     defaultEvent: {
       id: statusId,
@@ -210,7 +214,7 @@ export function buildColumns(
         if (se.id in ATTRIBUTE_INCREASE_LOOKUP) continue;
         if (se.target === NounType.OPERATOR && (!se.targetDeterminer || se.targetDeterminer === DeterminerType.THIS) && se.id) {
           const durSec = s.potential != null ? se.resolveDurationSeconds(s.potential) : se.durationSeconds;
-          const durationFrames = durSec <= 0 ? TOTAL_FRAMES : Math.round(durSec * FPS);
+          const durationFrames = durSec === PERMANENT_DURATION || durSec === 0 ? TOTAL_FRAMES : Math.round(durSec * FPS);
           const colId = (OPERATOR_COLUMNS as Record<string, string>)[se.id]
             ?? se.id;
           const defs = operatorStatusMap.get(s.slotId) ?? [];
@@ -345,14 +349,15 @@ export function buildColumns(
       const cDef = getConsumablePassiveDef(s.consumableId);
       if (cDef && cDef.target === NounType.OPERATOR) {
         const durVal = (cDef.properties?.duration?.value as { value?: number })?.value ?? 0;
-        const durationFrames = durVal > 0 ? Math.round(durVal * FPS) : TOTAL_FRAMES;
+        const isPermanent = durVal === PERMANENT_DURATION || durVal === 0;
+        const durationFrames = isPermanent ? TOTAL_FRAMES : Math.round(durVal * FPS);
         const defs = operatorStatusMap.get(s.slotId) ?? [];
         defs.push({
           statusId: cDef.id,
           label: cDef.name ?? cDef.id,
           columnId: NounType.CONSUMABLE,
           duration: durationFrames,
-          durationSec: durVal > 0 ? durVal : TOTAL_FRAMES / FPS,
+          durationSec: isPermanent ? TOTAL_FRAMES / FPS : durVal,
           color: s.operator!.color,
           source: 'other',
         });
@@ -365,14 +370,15 @@ export function buildColumns(
       const tDef = getTacticalTriggerDef(s.tacticalId);
       if (tDef && tDef.target === NounType.OPERATOR) {
         const durVal = (tDef.properties?.duration?.value as { value?: number })?.value ?? 0;
-        const durationFrames = durVal > 0 ? Math.round(durVal * FPS) : TOTAL_FRAMES;
+        const isPermanent = durVal === PERMANENT_DURATION || durVal === 0;
+        const durationFrames = isPermanent ? TOTAL_FRAMES : Math.round(durVal * FPS);
         const defs = operatorStatusMap.get(s.slotId) ?? [];
         defs.push({
           statusId: tDef.id,
           label: tDef.name ?? tDef.id,
           columnId: NounType.TACTICAL,
           duration: durationFrames,
-          durationSec: durVal > 0 ? durVal : TOTAL_FRAMES / FPS,
+          durationSec: isPermanent ? TOTAL_FRAMES / FPS : durVal,
           color: s.operator!.color,
           source: 'other',
         });
@@ -864,7 +870,16 @@ export function buildColumns(
       for (const def of ownDefs) {
         const cfg = getStatusById(def.statusId);
         const isCounter = cfg?.stacks?.interactionType === StackInteractionType.NONE && (cfg?.maxStacks ?? 0) >= UNLIMITED_STACKS;
+        // A talent/potential is "permanent" (always-active passive) only if it
+        // has no finite duration. Trigger-only talents like Fluorite's
+        // Unpredictable (T2) carry a 10s duration — the talent event exists
+        // transiently when the onTriggerClause fires, so they are NOT passive.
+        // `durationSeconds` is 0 for always-active talents (no `duration` field)
+        // and >=PERMANENT_DURATION for explicitly-permanent statuses.
+        const durSec = cfg?.durationSeconds ?? 0;
+        const hasFiniteDuration = durSec > 0 && durSec < PERMANENT_DURATION;
         const isPermanent = !isCounter
+          && !hasFiniteDuration
           && (cfg?.eventIdType === NounType.TALENT
             || cfg?.eventIdType === NounType.POTENTIAL);
         const mc = buildStatusMicroColumn(def.statusId, def.color, { label: def.label, permanent: isPermanent });

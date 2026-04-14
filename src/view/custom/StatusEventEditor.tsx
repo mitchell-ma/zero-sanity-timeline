@@ -25,12 +25,10 @@ type StatusJson = Record<string, JsonValue>;
 const TYPE_OPTIONS = [
   { value: '', label: '\u2014' },
   { value: 'TALENT', label: t('eventViewer.type.talent') },
-  { value: 'TALENT_STATUS', label: t('eventViewer.type.talentStatus') },
   { value: 'SKILL_STATUS', label: t('eventViewer.type.skillStatus') },
   { value: 'GEAR_STATUS', label: t('eventViewer.type.gearStatus') },
   { value: 'WEAPON_STATUS', label: t('eventViewer.type.weaponStatus') },
   { value: 'POTENTIAL', label: t('eventViewer.type.potential') },
-  { value: 'POTENTIAL_STATUS', label: t('eventViewer.type.potentialStatus') },
 ];
 
 const ELEMENT_OPTIONS = [

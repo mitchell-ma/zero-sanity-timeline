@@ -38,7 +38,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "POTENTIAL_STATUS",
+    "eventIdType": "POTENTIAL",
     "description": "After Alesh catches a Rare Fin via Auger Angling, the entire team gains ATK +15% for 10s. Does not stack."
   },
   "metadata": {

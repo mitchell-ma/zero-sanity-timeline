@@ -121,16 +121,31 @@ function buildSourceSubEntries(
   const format: 'flat' | 'percent' = FLAT_STAT_TYPES.has(statType) ? 'flat' : 'percent';
   const contributions = sub.statContributions;
 
-  return sources
-    .filter((s) => Math.abs(s.value) > 0.00001)
-    .map((s) => {
-      const entry = makeSubEntry(s.source, s.value, '', format);
-      // Use contributionIndex for exact matching (avoids label collisions)
-      if (s.contributionIndex != null && contributions?.[s.contributionIndex]) {
-        entry.subEntries = buildContributionSubEntries(contributions[s.contributionIndex], sub.critMode ?? CritMode.EXPECTED);
-      }
-      return entry;
-    });
+  // Consolidate sources with the same label (e.g. 10 crit stack events each
+  // contributing 0.03 → one entry "Cryoblasting Pistolier (Crit) ×10: 0.30").
+  const filtered = sources.filter((s) => Math.abs(s.value) > 0.00001);
+  const grouped = new Map<string, { total: number; count: number; contributionIndex?: number }>();
+  const order: string[] = [];
+  for (const s of filtered) {
+    const existing = grouped.get(s.source);
+    if (existing) {
+      existing.total += s.value;
+      existing.count++;
+    } else {
+      grouped.set(s.source, { total: s.value, count: 1, contributionIndex: s.contributionIndex });
+      order.push(s.source);
+    }
+  }
+
+  return order.map((label) => {
+    const g = grouped.get(label)!;
+    const displayLabel = g.count > 1 ? `${label} ×${g.count}` : label;
+    const entry = makeSubEntry(displayLabel, g.total, '', format);
+    if (g.contributionIndex != null && contributions?.[g.contributionIndex]) {
+      entry.subEntries = buildContributionSubEntries(contributions[g.contributionIndex], sub.critMode ?? CritMode.EXPECTED);
+    }
+    return entry;
+  });
 }
 
 /** Order: Physical, Arts, Heat, Cryo, Nature, Electric */

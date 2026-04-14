@@ -8,6 +8,7 @@
 import React, { useState, useCallback } from 'react';
 import { VerbType, NounType } from '../../dsl/semantics';
 import { translateCondition, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
+import { PERMANENT_DURATION } from '../../consts/enums';
 import { formatFlat } from '../../controller/info-pane/loadoutPaneController';
 import ClauseEditor from './ClauseEditor';
 import type { JsonSkillData } from './OperatorEventEditor';
@@ -162,6 +163,7 @@ function formatDuration(dur: { value: unknown; unit: string } | undefined): stri
   if (!dur) return '';
   const val = resolveLeaf(dur.value);
   if (val == null) return '';
+  if (val >= PERMANENT_DURATION) return 'Infinite';
   const unit = dur.unit === 'FRAME' ? 'f' : 's';
   return `${formatFlat(val)}${unit}`;
 }
@@ -194,6 +196,10 @@ export function formatPropertyValue(val: unknown): string {
     const obj = val as Record<string, unknown>;
     if ('verb' in obj) return formatWithValue(obj);
     if ('value' in obj && 'unit' in obj) {
+      // `{value, unit}` is the duration/time container shape. If the resolved
+      // scalar is PERMANENT_DURATION, show "Infinite" instead of "99999 second".
+      const leaf = resolveLeaf(obj.value);
+      if (typeof leaf === 'number' && leaf >= PERMANENT_DURATION) return 'Infinite';
       const inner = formatPropertyValue(obj.value);
       return `${inner} ${String(obj.unit).replace(/_/g, ' ').toLowerCase()}`;
     }
@@ -1236,8 +1242,17 @@ export function TabbedSegmentView({ entry, critState, editState }: {
                   </div>
                 );
               }
-              // Scalar duration — editable leaf.
+              // Scalar duration — editable leaf. PERMANENT_DURATION (99999) renders
+              // as the text label "Infinite" instead of an editable field.
               const scalarVal = range && range.length > 0 ? range[0] : null;
+              if (scalarVal != null && scalarVal >= PERMANENT_DURATION) {
+                return (
+                  <div className="ops-frame-prop">
+                    <span className="ops-frame-prop-label">Duration</span>
+                    <span className="ops-frame-prop-value">Infinite</span>
+                  </div>
+                );
+              }
               if (scalarVal != null && editState) {
                 const durObj = segDur as Record<string, unknown>;
                 const durValue = durObj.value;

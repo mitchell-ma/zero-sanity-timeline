@@ -108,6 +108,11 @@ export function runEventQueue(
     for (const slotId of Object.keys(slotOperatorMap)) {
       for (const talent of triggerIdx.getTalents(slotId)) {
         if (!talent.def.clause?.length) continue;
+        // Triggered talents (talentEvent === null) manage their own lifecycle
+        // via onTriggerClause APPLY/CONSUME EVENT THIS. Their clause effects
+        // must NOT fire at pipeline start — they fire only when the event is
+        // actually active, via the lifecycle trigger path.
+        if (talent.talentEvent === null) continue;
         for (const clause of talent.def.clause as unknown as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[]) {
           if (!clause.effects?.length) continue;
           for (const raw of clause.effects) {

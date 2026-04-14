@@ -10,9 +10,10 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueRes
 import { StatusType, UnitType } from '../../consts/enums';
 import { StatType } from '../../model/enums/stats';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { ENEMY_ID, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER } from '../../model/channels';
+import { ENEMY_ID, PHYSICAL_STATUS_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, REACTION_COLUMNS, INFLICTION_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
+import { EnemyActionType } from '../../consts/enums';
 import { TEAM_ID } from '../slot/commonSlotController';
-import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
+import { activeEventsAtFrame, activeCountAtFrame, isActiveAtFrame } from './timelineQueries';
 import { resolveColumnIds } from './columnResolution';
 
 // Stat-based state adjective mapping — single source of truth lives in
@@ -220,6 +221,19 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     return ctx.getLinkStacks(ctx.sourceEventUid) > 0;
   }
 
+  // ENEMY HAVE CHARGE: check whether an enemy-action CHARGE event is active
+  // at the query frame. CHARGE events live on the enemy-action column with
+  // `ev.id === "CHARGE"`, not on a dedicated status column, so they aren't
+  // reachable via the generic column-id path below.
+  if (cond.subject === NounType.ENEMY && cond.object === NounType.CHARGE) {
+    return ctx.events.some(ev =>
+      ev.ownerEntityId === ENEMY_ID
+      && ev.columnId === ENEMY_ACTION_COLUMN_ID
+      && ev.id === EnemyActionType.CHARGE
+      && isActiveAtFrame(ev, ctx.frame),
+    );
+  }
+
   // Resolve the condition's `{object, objectId, objectQualifier}` triple to
   // a set of matching column IDs via `resolveColumnIds`, which handles
   // umbrella expansions (INFLICTION/ARTS fan-out, REACTION wildcard,
@@ -234,11 +248,10 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     count += activeCountAtFrame(ctx.events, colId, ownerEntityId, ctx.frame);
   }
 
-  // For LESS_THAN / LESS_THAN_EQUAL, count=0 is a valid result (0 ≤ N).
-  // Only early-exit when no cardinality constraint accepts 0.
-  const hasLessThanConstraint = cond.cardinalityConstraint === CardinalityConstraintType.LESS_THAN
-    || cond.cardinalityConstraint === CardinalityConstraintType.LESS_THAN_EQUAL;
-  if (count === 0 && !hasLessThanConstraint) return false;
+  // Without a cardinalityConstraint, `HAVE X` defaults to count ≥ 1 — bail early
+  // when count is 0. With a constraint, count=0 may still satisfy (e.g. EXACTLY 0,
+  // LESS_THAN 1, GREATER_THAN_EQUAL 0) — fall through to the switch below.
+  if (count === 0 && !cond.cardinalityConstraint) return false;
 
   const condValue = cond.value ?? (cond as unknown as { with?: { value?: ValueNode } }).with?.value;
   if (condValue != null) {
@@ -284,6 +297,11 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
     LIFTED: PHYSICAL_STATUS_COLUMNS.LIFT,
     KNOCKED_DOWN: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     CRUSHED: PHYSICAL_STATUS_COLUMNS.CRUSH,
+    CRYO_INFLICTED: INFLICTION_COLUMNS.CRYO,
+    HEAT_INFLICTED: INFLICTION_COLUMNS.HEAT,
+    NATURE_INFLICTED: INFLICTION_COLUMNS.NATURE,
+    ELECTRIC_INFLICTED: INFLICTION_COLUMNS.ELECTRIC,
+    VULNERABLE_INFLICTED: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     NODE_STAGGERED: NODE_STAGGER_COLUMN_ID,
     FULL_STAGGERED: FULL_STAGGER_COLUMN_ID,
   };
@@ -397,6 +415,11 @@ function evaluateBecome(cond: Interaction, ctx: ConditionContext): boolean {
     LIFTED: PHYSICAL_STATUS_COLUMNS.LIFT,
     KNOCKED_DOWN: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
     CRUSHED: PHYSICAL_STATUS_COLUMNS.CRUSH,
+    CRYO_INFLICTED: INFLICTION_COLUMNS.CRYO,
+    HEAT_INFLICTED: INFLICTION_COLUMNS.HEAT,
+    NATURE_INFLICTED: INFLICTION_COLUMNS.NATURE,
+    ELECTRIC_INFLICTED: INFLICTION_COLUMNS.ELECTRIC,
+    VULNERABLE_INFLICTED: PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
     NODE_STAGGERED: NODE_STAGGER_COLUMN_ID,
     FULL_STAGGERED: FULL_STAGGER_COLUMN_ID,
   };

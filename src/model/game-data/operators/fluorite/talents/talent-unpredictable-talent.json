@@ -38,10 +38,39 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "UNPREDICTABLE",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0.1,
+                0.2
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
         }
       ]
     }
@@ -55,6 +84,20 @@
     "name": "Unpredictable (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
     "eventType": "STATUS",
     "eventIdType": "TALENT",
     "description": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack."
@@ -65,6 +108,7 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/fluorite_talent_2_icon.png",
-    "dataStatus": "VERIFIED"
-  }
+    "dataStatus": "RECONCILED"
+  },
+  "clauseType": "ALL"
 }

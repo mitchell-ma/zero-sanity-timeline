@@ -46,43 +46,10 @@
             },
             "element": "ELECTRIC"
           },
-          "clauseType": "FIRST_MATCH",
+          "clauseType": "ALL",
           "clause": [
             {
-              "conditions": [
-                {
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "object": "POTENTIAL",
-                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              ],
-              "effects": [
-                {
-                  "verb": "APPLY",
-                  "object": "STATUS",
-                  "objectId": "FOCUS_EMPOWERED",
-                  "to": "ENEMY"
-                }
-              ]
-            },
-            {
-              "conditions": [
-                {
-                  "subject": "OPERATOR",
-                  "verb": "HAVE",
-                  "object": "POTENTIAL",
-                  "cardinalityConstraint": "LESS_THAN_EQUAL",
-                  "value": {
-                    "verb": "IS",
-                    "value": 4
-                  }
-                }
-              ],
+              "conditions": [],
               "effects": [
                 {
                   "verb": "APPLY",

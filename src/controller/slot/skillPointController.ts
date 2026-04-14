@@ -12,14 +12,20 @@ import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
 import type { TimeStopRegion } from '../timeline/processTimeStop';
 import { Subtimeline } from '../timeline/subtimeline';
-import { SkillPointTimeline, ResourceZone, SkillPointConsumptionHistory } from '../timeline/skillPointTimeline';
+import {
+  SkillPointTimeline,
+  ResourceZone,
+  SkillPointConsumptionHistory,
+  SP_COST_EVENT_ID,
+  SP_RECOVER_EVENT_ID,
+  SP_RETURN_EVENT_ID,
+} from '../timeline/skillPointTimeline';
 import { ResourceGraphListener, ResourcePoint } from '../timeline/resourceTimeline';
 import { TEAM_ID, COMMON_COLUMN_IDS } from './commonSlotController';
 import type { UltimateEnergyController } from '../timeline/ultimateEnergyController';
 
 export type { ResourceZone, SkillPointConsumptionHistory };
-
-const SP_COST_EVENT_ID = 'sp-cost';
+export { SP_COST_EVENT_ID, SP_RECOVER_EVENT_ID, SP_RETURN_EVENT_ID };
 
 export class SkillPointController {
   private readonly subtimeline: Subtimeline;
@@ -151,17 +157,32 @@ export class SkillPointController {
 
   /**
    * Called per frame or event that recovers/returns SP.
+   *
+   * The two verbs are engine-distinct:
+   *  - RECOVER (isReturn=false) → natural SP pool (yellow fill). Battle skills
+   *    consuming this SP later generate ultimate energy.
+   *  - RETURN  (isReturn=true)  → returned SP pool (red fill). Consumed first
+   *    on subsequent SP costs and does NOT contribute to ultimate energy.
+   *
    * @param frame Absolute frame of the recovery.
    * @param amount SP amount recovered (positive).
    * @param sourceEntityId Owner of the skill that produced this recovery.
    * @param sourceSkillName Skill name that produced this recovery.
+   * @param isReturn True if this is a RETURN refund; false for natural RECOVER.
    */
-  addRecovery(frame: number, amount: number, sourceEntityId: string, sourceSkillName: string) {
+  addRecovery(
+    frame: number,
+    amount: number,
+    sourceEntityId: string,
+    sourceSkillName: string,
+    isReturn: boolean = false,
+  ) {
     if (amount <= 0) return;
+    const eventId = isReturn ? SP_RETURN_EVENT_ID : SP_RECOVER_EVENT_ID;
     this.pendingSpEvents.push({
-      uid: `sp-return-${frame}-${this.pendingSpEvents.length}`,
-      id: 'sp-return',
-      name: 'sp-return',
+      uid: `${eventId}-${frame}-${this.pendingSpEvents.length}`,
+      id: eventId,
+      name: eventId,
       ownerEntityId: TEAM_ID,
       columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
       startFrame: frame,

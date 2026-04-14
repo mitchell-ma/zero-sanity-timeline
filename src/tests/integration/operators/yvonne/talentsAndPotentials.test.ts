@@ -10,13 +10,13 @@
  *   T2 Freezing Point: FIRST_MATCH Solidification doubling, P3 baked in
  *   P2 Flawless Creation: INT +20, Crit Rate +7% stat clauses
  *   P5 Expert Mechcrafter: talent status applied by ult at P5
- *   Crit Stacks: APPLY CRIT_STACKS on first frame of each EBATK segment
+ *   Crit Stacks: APPLY CRYOBLASTING_PISTOLIER_CRIT_RATE on first frame of each EBATK segment
  */
 
 import { renderHook, act } from '@testing-library/react';
 import {
   NounType, VerbType,
-  ValueOperation, CardinalityConstraintType,
+  ValueOperation,
 } from '../../../../dsl/semantics';
 import { InteractionModeType } from '../../../../consts/enums';
 import { useApp } from '../../../../app/useApp';
@@ -33,6 +33,7 @@ const P2_JSON = require('../../../../model/game-data/operators/yvonne/potentials
 const P5_JSON = require('../../../../model/game-data/operators/yvonne/potentials/potential-5-expert-mechcrafter.json');
 const EXPERT_STATUS_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-expert-mechcrafter.json');
 const CRIT_STACKS_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-crit-stacks.json');
+const CRIT_DAMAGE_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-crit-damage.json');
 const EBATK_JSON = require('../../../../model/game-data/operators/yvonne/skills/basic-attack-batk-exuberant-trigger-empowered.json');
 const EBATK_ID: string = EBATK_JSON.properties.id;
 const EXPERT_ID: string = EXPERT_STATUS_JSON.properties.id;
@@ -89,11 +90,8 @@ describe('A. Barrage DAMAGE_BONUS scoped to BASIC_ATTACK', () => {
 // B. T2 Freezing Point — Solidification doubling + P3 baked in
 // =============================================================================
 
-describe('B. Freezing Point — two-part status system', () => {
-  const CRYO_STATUS_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-freezing-point-cryo.json');
-  const SOLID_STATUS_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-freezing-point-solidification.json');
-  const CRYO_STATUS_ID: string = CRYO_STATUS_JSON.properties.id;
-  const SOLID_STATUS_ID: string = SOLID_STATUS_JSON.properties.id;
+describe('B. Freezing Point — unified talent event with FIRST_MATCH clause', () => {
+  const FP_ID: string = FREEZING_POINT_JSON.properties.id;
 
   function placeCryoInfliction(app: AppResult, atFrame: number) {
     app.handleAddEvent(
@@ -111,52 +109,61 @@ describe('B. Freezing Point — two-part status system', () => {
 
   // -- JSON structure --
 
-  it('B1: Cryo status has CRITICAL_DAMAGE with base values (TL [0, 0.1, 0.2] + P3 [0..0.1])', () => {
-    const effect = CRYO_STATUS_JSON.clause[0].effects[0];
+  it('B1: FIRST_MATCH clause uses Solidification branch first, Cryo branch second', () => {
+    expect(FREEZING_POINT_JSON.clauseType).toBe('FIRST_MATCH');
+    expect(FREEZING_POINT_JSON.clause).toHaveLength(2);
+    expect(FREEZING_POINT_JSON.clause[0].conditions[0].objectQualifier).toBe('SOLIDIFICATION');
+    expect(FREEZING_POINT_JSON.clause[1].conditions[0].objectQualifier).toBe('CRYO');
+  });
+
+  it('B1b: Cryo branch applies CRITICAL_DAMAGE with base values (TL [0, 0.1, 0.2] + P3 [0..0.1])', () => {
+    const effect = FREEZING_POINT_JSON.clause[1].effects[0];
     expect(effect.objectId).toBe('CRITICAL_DAMAGE');
     expect(effect.with.value.operation).toBe(ValueOperation.ADD);
     expect(effect.with.value.left.value).toEqual([0, 0.1, 0.2]);
     expect(effect.with.value.right.value).toEqual([0, 0, 0, 0.1, 0.1, 0.1]);
   });
 
-  it('B2: Solidification status has CRITICAL_DAMAGE with doubled values (TL [0, 0.2, 0.4] + P3 [0..0.2])', () => {
-    const effect = SOLID_STATUS_JSON.clause[0].effects[0];
+  it('B2: Solidification branch applies CRITICAL_DAMAGE with doubled values (TL [0, 0.2, 0.4] + P3 [0..0.2])', () => {
+    const effect = FREEZING_POINT_JSON.clause[0].effects[0];
     expect(effect.objectId).toBe('CRITICAL_DAMAGE');
     expect(effect.with.value.operation).toBe(ValueOperation.ADD);
     expect(effect.with.value.left.value).toEqual([0, 0.2, 0.4]);
     expect(effect.with.value.right.value).toEqual([0, 0, 0, 0.2, 0.2, 0.2]);
   });
 
-  it('B3: talent has 4 trigger clauses (apply/consume cryo, apply/consume solid)', () => {
+  it('B3: talent has 4 trigger clauses (apply cryo, become-not cryo, apply solid, become-not solid)', () => {
     expect(FREEZING_POINT_JSON.onTriggerClause).toHaveLength(4);
     expect(FREEZING_POINT_JSON.onTriggerClause[0].conditions[0].verb).toBe(VerbType.APPLY);
-    expect(FREEZING_POINT_JSON.onTriggerClause[1].conditions[0].verb).toBe(VerbType.CONSUME);
+    expect(FREEZING_POINT_JSON.onTriggerClause[1].conditions[0].verb).toBe(VerbType.BECOME);
+    expect(FREEZING_POINT_JSON.onTriggerClause[1].conditions[0].negated).toBe(true);
     expect(FREEZING_POINT_JSON.onTriggerClause[2].conditions[0].verb).toBe(VerbType.APPLY);
-    expect(FREEZING_POINT_JSON.onTriggerClause[3].conditions[0].verb).toBe(VerbType.CONSUME);
+    expect(FREEZING_POINT_JSON.onTriggerClause[3].conditions[0].verb).toBe(VerbType.BECOME);
+    expect(FREEZING_POINT_JSON.onTriggerClause[3].conditions[0].negated).toBe(true);
   });
 
   // -- Pipeline: Cryo status --
 
-  it('B4: cryo infliction on enemy triggers FREEZING_POINT_CRYO status on Yvonne', () => {
+  it('B4: cryo infliction on enemy triggers Freezing Point talent event on Yvonne', () => {
     const { result } = setup();
     act(() => { placeCryoInfliction(result.current, 1 * FPS); });
 
-    const cryo = result.current.allProcessedEvents.filter(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
+    const fp = result.current.allProcessedEvents.filter(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
     );
-    expect(cryo.length).toBeGreaterThanOrEqual(1);
+    expect(fp.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('B5: no cryo infliction → no FREEZING_POINT_CRYO status', () => {
+  it('B5: no cryo infliction or solidification → no Freezing Point talent event', () => {
     const { result } = setup();
 
-    const cryo = result.current.allProcessedEvents.filter(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
+    const fp = result.current.allProcessedEvents.filter(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
     );
-    expect(cryo).toHaveLength(0);
+    expect(fp).toHaveLength(0);
   });
 
-  it('B6: heat infliction does NOT trigger FREEZING_POINT_CRYO', () => {
+  it('B6: heat infliction does NOT trigger Freezing Point talent event', () => {
     const { result } = setup();
     act(() => {
       result.current.handleAddEvent(
@@ -165,27 +172,27 @@ describe('B. Freezing Point — two-part status system', () => {
       );
     });
 
-    const cryo = result.current.allProcessedEvents.filter(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
+    const fp = result.current.allProcessedEvents.filter(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
     );
-    expect(cryo).toHaveLength(0);
+    expect(fp).toHaveLength(0);
   });
 
-  // -- Pipeline: Solidification status --
+  // -- Pipeline: solidification also triggers the unified event --
 
-  it('B7: solidification on enemy triggers FREEZING_POINT_SOLIDIFICATION status on Yvonne', () => {
+  it('B7: solidification on enemy triggers Freezing Point talent event on Yvonne', () => {
     const { result } = setup();
     act(() => { placeSolidification(result.current, 1 * FPS); });
 
-    const solid = result.current.allProcessedEvents.filter(
-      ev => ev.id === SOLID_STATUS_ID && ev.ownerEntityId === SLOT,
+    const fp = result.current.allProcessedEvents.filter(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
     );
-    expect(solid.length).toBeGreaterThanOrEqual(1);
+    expect(fp.length).toBeGreaterThanOrEqual(1);
   });
 
   // -- Pipeline: despawn on infliction/reaction end --
 
-  it('B8: cryo infliction and FREEZING_POINT_CRYO have same duration', () => {
+  it('B8: cryo infliction and Freezing Point talent event have same duration', () => {
     const { result } = setup();
     act(() => {
       result.current.handleAddEvent(
@@ -197,46 +204,46 @@ describe('B. Freezing Point — two-part status system', () => {
     const infliction = result.current.allProcessedEvents.find(
       ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     )!;
-    const status = result.current.allProcessedEvents.find(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
+    const fp = result.current.allProcessedEvents.find(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
     )!;
     expect(infliction).toBeDefined();
-    expect(status).toBeDefined();
+    expect(fp).toBeDefined();
 
     const inflictionDur = infliction.segments.reduce(
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
-    const statusDur = status.segments.reduce(
+    const fpDur = fp.segments.reduce(
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
-    // Status should end exactly when infliction ends
-    expect(status.startFrame + statusDur).toBe(infliction.startFrame + inflictionDur);
+    // Event should end exactly when infliction ends
+    expect(fp.startFrame + fpDur).toBe(infliction.startFrame + inflictionDur);
   });
 
-  it('B8b: solidification and FREEZING_POINT_SOLIDIFICATION have same duration', () => {
+  it('B8b: solidification and Freezing Point talent event have same duration', () => {
     const { result } = setup();
     act(() => { placeSolidification(result.current, 1 * FPS); });
 
     const reaction = result.current.allProcessedEvents.find(
       ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerEntityId === ENEMY_ID,
     )!;
-    const status = result.current.allProcessedEvents.find(
-      ev => ev.id === SOLID_STATUS_ID && ev.ownerEntityId === SLOT,
+    const fp = result.current.allProcessedEvents.find(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
     )!;
     expect(reaction).toBeDefined();
-    expect(status).toBeDefined();
+    expect(fp).toBeDefined();
 
     const reactionDur = reaction.segments.reduce(
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
-    const statusDur = status.segments.reduce(
+    const fpDur = fp.segments.reduce(
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
-    // Status should end exactly when reaction ends
-    expect(status.startFrame + statusDur).toBe(reaction.startFrame + reactionDur);
+    // Event should end exactly when reaction ends
+    expect(fp.startFrame + fpDur).toBe(reaction.startFrame + reactionDur);
   });
 
-  it('B8c: different cryo infliction durations produce matching status durations', () => {
+  it('B8c: different cryo infliction durations produce matching talent event durations', () => {
     const { result } = setup();
     act(() => {
       result.current.handleAddEvent(
@@ -248,20 +255,20 @@ describe('B. Freezing Point — two-part status system', () => {
     const infliction = result.current.allProcessedEvents.find(
       ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     )!;
-    const status = result.current.allProcessedEvents.find(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
+    const fp = result.current.allProcessedEvents.find(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
     )!;
 
     const inflictionEnd = infliction.startFrame + infliction.segments.reduce(
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
-    const statusEnd = status.startFrame + status.segments.reduce(
+    const fpEnd = fp.startFrame + fp.segments.reduce(
       (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
     );
-    expect(statusEnd).toBe(inflictionEnd);
+    expect(fpEnd).toBe(inflictionEnd);
   });
 
-  it('B8d: cryo infliction during TIME_STOP — status has same game-time duration as infliction', () => {
+  it('B8d: cryo infliction during TIME_STOP — talent event has same game-time duration as infliction', () => {
     const { result } = setup();
     // Place ult at 3s (creates TIME_STOP during 2.03s animation)
     act(() => { setUltimateEnergyToMax(result.current, SLOT, 0); });
@@ -282,28 +289,104 @@ describe('B. Freezing Point — two-part status system', () => {
     const infliction = result.current.allProcessedEvents.find(
       ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerEntityId === ENEMY_ID,
     )!;
-    const status = result.current.allProcessedEvents.find(
-      ev => ev.id === CRYO_STATUS_ID && ev.ownerEntityId === SLOT,
+    const fp = result.current.allProcessedEvents.find(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
     )!;
     expect(infliction).toBeDefined();
-    expect(status).toBeDefined();
+    expect(fp).toBeDefined();
 
     // Both have the same game-time duration (before TIME_STOP extension).
     // TIME_STOP extends them by different amounts based on column ownership,
     // but the underlying game-time duration is identical.
-    // Status game-time duration before extension should match infliction's 5s
-    // (The actual displayed durations may differ due to TIME_STOP owner differences)
-    expect(status).toBeDefined();
-    expect(status.startFrame).toBe(infliction.startFrame); // both start at same frame
+    expect(fp).toBeDefined();
+    expect(fp.startFrame).toBe(infliction.startFrame); // both start at same frame
   });
 
-  it('B9: no solidification → no FREEZING_POINT_SOLIDIFICATION status', () => {
+  it('B8e: solidification consumed mid-duration → Freezing Point talent event ends at consume frame (not original end)', () => {
+    // Reproduces the BECOME_NOT-on-consume bug: BECOME NOT SOLIDIFIED must fire
+    // when the reaction is consumed (e.g. by Yvonne ult EBATK frames), not only
+    // when it expires at its natural end frame.
+    const { result } = setup();
+    // Place a 20s SOLIDIFICATION at 1s. Natural end = 21s.
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, REACTION_COLUMNS.SOLIDIFICATION, 1 * FPS,
+        { name: REACTION_COLUMNS.SOLIDIFICATION, segments: [{ properties: { duration: 20 * FPS } }] },
+      );
+    });
+    // Place Yvonne ult at 2s — its EBATK frames emit CONSUME STATUS REACTION SOLIDIFICATION,
+    // which clamps the SOLIDIFICATION event's duration well before 21s.
+    addUlt(result.current, 2 * FPS);
+
+    const solid = result.current.allProcessedEvents.find(
+      ev => ev.columnId === REACTION_COLUMNS.SOLIDIFICATION && ev.ownerEntityId === ENEMY_ID,
+    )!;
+    const fp = result.current.allProcessedEvents.find(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
+    )!;
+    expect(solid).toBeDefined();
+    expect(fp).toBeDefined();
+
+    const solidEnd = solid.startFrame + solid.segments.reduce(
+      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+    );
+    // Consumed before natural end
+    expect(solidEnd).toBeLessThan(1 * FPS + 20 * FPS);
+
+    const fpEnd = fp.startFrame + fp.segments.reduce(
+      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+    );
+    // Event ends at the CONSUME frame, not at SOLIDIFICATION's original 21s end.
+    expect(fpEnd).toBe(solidEnd);
+  });
+
+  it('B8f: consumed solidification\'s original expiry must not fire IS_NOT — later solidification\'s talent event must survive past that frame', () => {
+    // Scenario: solidification A is consumed mid-duration. A later solidification B
+    // overlaps its original expiry frame. The pre-scheduled EVENT_END for A must NOT
+    // fire IS_NOT at A's original end (since A is CONSUMED) — otherwise it would
+    // spuriously consume B's Freezing Point talent event.
+    const { result } = setup();
+    // A: 0s start, 20s duration. Natural end 20s.
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, REACTION_COLUMNS.SOLIDIFICATION, 0,
+        { name: REACTION_COLUMNS.SOLIDIFICATION, segments: [{ properties: { duration: 20 * FPS } }] },
+      );
+    });
+    // Ult at 2s consumes A around ~11s (from B8e: 1324 frames).
+    addUlt(result.current, 2 * FPS);
+    // B: 15s start, 10s duration. B's natural end = 25s. B overlaps A's original 20s expiry.
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_ID, REACTION_COLUMNS.SOLIDIFICATION, 15 * FPS,
+        { name: REACTION_COLUMNS.SOLIDIFICATION, segments: [{ properties: { duration: 10 * FPS } }] },
+      );
+    });
+
+    // Find the Freezing Point talent event that starts at B's application frame.
+    const fps = result.current.allProcessedEvents.filter(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
+    ).sort((a, b) => a.startFrame - b.startFrame);
+    expect(fps.length).toBeGreaterThanOrEqual(2);
+
+    const fpFromB = fps[fps.length - 1];
+    const fpFromBEnd = fpFromB.startFrame + fpFromB.segments.reduce(
+      (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
+    );
+    // Event from B must extend past A's original expiry (20s = 2400 frames) —
+    // A's pre-scheduled EVENT_END must not fire IS_NOT for a CONSUMED event.
+    expect(fpFromBEnd).toBeGreaterThan(20 * FPS);
+    // And end at B's natural end (25s = 3000 frames).
+    expect(fpFromBEnd).toBe(25 * FPS);
+  });
+
+  it('B9: no solidification → no Freezing Point talent event', () => {
     const { result } = setup();
 
-    const solid = result.current.allProcessedEvents.filter(
-      ev => ev.id === SOLID_STATUS_ID && ev.ownerEntityId === SLOT,
+    const fp = result.current.allProcessedEvents.filter(
+      ev => ev.id === FP_ID && ev.ownerEntityId === SLOT,
     );
-    expect(solid).toHaveLength(0);
+    expect(fp).toHaveLength(0);
   });
 });
 
@@ -477,52 +560,44 @@ describe('D. P5 Expert Mechcrafter', () => {
 });
 
 // =============================================================================
-// E. Crit Stacks — EBATK frames apply CRIT_STACKS
+// E. Cryoblasting Pistolier (Crit) — EBATK frames apply CRYOBLASTING_PISTOLIER_CRIT_RATE
 // =============================================================================
 
-describe('E. Crit Stacks on EBATK', () => {
-  it('E1: first frame of each EBATK segment has APPLY STATUS CRIT_STACKS', () => {
+describe('E. Cryoblasting Pistolier (Crit) on EBATK', () => {
+  it('E1: every frame of each EBATK segment has APPLY STATUS CRYOBLASTING_PISTOLIER_CRIT_RATE', () => {
     for (let si = 0; si < EBATK_JSON.segments.length; si++) {
       const seg = EBATK_JSON.segments[si];
-      const firstFrame = seg.frames[0];
-      const applyCrit = firstFrame.clause[0].effects.find(
-        (e: { verb: string; objectId?: string }) =>
-          e.verb === VerbType.APPLY && e.objectId === CRIT_STACKS_JSON.properties.id,
-      );
-      expect(applyCrit).toBeDefined();
-      expect(applyCrit.object).toBe(NounType.STATUS);
-      expect(applyCrit.with.stacks.value).toBe(1);
-    }
-  });
-
-  it('E2: non-first frames do NOT have APPLY CRIT_STACKS', () => {
-    for (const seg of EBATK_JSON.segments) {
-      for (let fi = 1; fi < seg.frames.length; fi++) {
+      for (let fi = 0; fi < seg.frames.length; fi++) {
         const frame = seg.frames[fi];
         const applyCrit = frame.clause[0].effects.find(
           (e: { verb: string; objectId?: string }) =>
             e.verb === VerbType.APPLY && e.objectId === CRIT_STACKS_JSON.properties.id,
         );
-        expect(applyCrit).toBeUndefined();
+        expect(applyCrit).toBeDefined();
+        expect(applyCrit.object).toBe(NounType.STATUS);
+        expect(applyCrit.with.stacks.value).toBe(1);
       }
     }
   });
 
-  it('E3: CRIT_STACKS status has max 10 stacks, 3% crit rate per stack, 60% crit DMG at max', () => {
+  it('E3: CRYOBLASTING_PISTOLIER_CRIT_RATE gives 3% crit rate per stack (max 10) and applies CRIT_DAMAGE status at max', () => {
     expect(CRIT_STACKS_JSON.properties.stacks.limit.value).toBe(10);
-    // Crit rate clause: MULT(0.03, STACKS)
+    // Crit rate clause: 0.03 per stack (per-stack evaluation)
     const critRateEffect = CRIT_STACKS_JSON.clause[0].effects[0];
     expect(critRateEffect.objectId).toBe('CRITICAL_RATE');
-    expect(critRateEffect.with.value.operation).toBe(ValueOperation.MULT);
-    expect(critRateEffect.with.value.left.value).toBe(0.03);
-    // Crit DMG clause: at 10 stacks, +0.6
-    const critDmgClause = CRIT_STACKS_JSON.clause[1];
-    expect(critDmgClause.conditions[0].cardinalityConstraint).toBe(CardinalityConstraintType.GREATER_THAN_EQUAL);
-    expect(critDmgClause.effects[0].objectId).toBe('CRITICAL_DAMAGE');
-    expect(critDmgClause.effects[0].with.value.value).toBe(0.6);
+    expect(critRateEffect.with.value.value).toBe(0.03);
+    // onTriggerClause at MAX stacks applies the separate CRIT_DAMAGE status
+    const trigger = CRIT_STACKS_JSON.onTriggerClause[0];
+    expect(trigger.conditions[0].verb).toBe(VerbType.BECOME);
+    expect(trigger.conditions[0].value).toBe('MAX');
+    expect(trigger.effects[0].objectId).toBe(CRIT_DAMAGE_JSON.properties.id);
+    // CRIT_DAMAGE status applies +0.6 CRITICAL_DAMAGE
+    const critDmgEffect = CRIT_DAMAGE_JSON.clause[0].effects[0];
+    expect(critDmgEffect.objectId).toBe('CRITICAL_DAMAGE');
+    expect(critDmgEffect.with.value.value).toBe(0.6);
   });
 
-  it('E4: pipeline — placing EBATK during ult produces CRIT_STACKS events', () => {
+  it('E4: pipeline — placing EBATK during ult produces CRYOBLASTING_PISTOLIER_CRIT_RATE events', () => {
     const { result } = setup();
     addUlt(result.current, 3 * FPS);
 

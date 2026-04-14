@@ -465,8 +465,8 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
-            interactionMode={app.interactionMode}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.settings.debugMode ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
+            debugMode={app.settings.debugMode}
             rawEvents={app.events}
             allProcessedEvents={app.allProcessedEvents}
             loadoutProperties={app.loadoutProperties}
@@ -491,7 +491,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.settings.debugMode ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
             allProcessedEvents={app.allProcessedEvents}
             allOperators={app.allOperators}
             onSelectOperator={(opId) => app.handleSwapOperator(app.editingSlot!.slotId, opId)}
@@ -508,7 +508,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.settings.debugMode ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
           />
         ) : app.editingResourceCol && app.editingResourceConfig ? (
           <InformationPane
@@ -522,7 +522,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.settings.debugMode ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
             wasted={app.editingResourceKey ? app.resourceGraphs?.get(app.editingResourceKey)?.wasted : undefined}
           />
         ) : app.editingDamageRow ? (
@@ -544,7 +544,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.settings.debugMode ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
           />
         ) : null}
 

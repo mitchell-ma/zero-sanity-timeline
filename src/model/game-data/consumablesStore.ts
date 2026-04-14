@@ -8,7 +8,7 @@
 import { StatType, UnitType, EventType, StackInteractionType } from '../../consts/enums';
 import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
-import { checkKeys, VALID_CLAUSE_KEYS } from './validationUtils';
+import { checkKeys, VALID_CLAUSE_KEYS, validateNonNegativeValues } from './validationUtils';
 
 // ── Shared duration type (matches weapon/operator status stores) ────────────
 
@@ -52,6 +52,7 @@ function validateProperties(props: Record<string, unknown>, validKeys: Set<strin
 
 export function validateConsumable(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_CONSUMABLE_TOP_KEYS, 'root');
+  errors.push(...validateNonNegativeValues(json, 'root'));
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...validateProperties(props, VALID_CONSUMABLE_PROPERTIES_KEYS));
@@ -65,6 +66,7 @@ export function validateConsumable(json: Record<string, unknown>): string[] {
 
 export function validateTactical(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TACTICAL_TOP_KEYS, 'root');
+  errors.push(...validateNonNegativeValues(json, 'root'));
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...validateProperties(props, VALID_TACTICAL_PROPERTIES_KEYS));

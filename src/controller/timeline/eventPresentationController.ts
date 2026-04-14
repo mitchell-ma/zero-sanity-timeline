@@ -569,6 +569,16 @@ function computeMicroPositions(
     // order. This prevents micro-columns from visually swapping during drag.
     const sorted = [...colEvents].sort((a, b) => a.startFrame - b.startFrame);
 
+    // Visual end frame: use visualActivationDuration when present so visually-
+    // truncated status events (e.g. stacking statuses tiled sequentially) don't
+    // block greedy expansion for time ranges where they're not rendered.
+    const visualEndFrame = (ev: TimelineEvent) => {
+      const override = statusOverrides.get(ev.uid);
+      return override?.visualActivationDuration != null
+        ? ev.startFrame + override.visualActivationDuration
+        : eventEndFrame(ev);
+    };
+
     // typeKey resolution: events whose columnId matches a declared micro-column
     // use the columnId as their typeKey (so all instances of the same declared
     // type share one slot). Events whose columnId isn't declared fall back to uid.
@@ -596,7 +606,7 @@ function computeMicroPositions(
       const typeKey = typeKeyOf(ev);
       const preSlot = typeSlots.get(typeKey);
       if (preSlot != null) {
-        slots[preSlot].push({ type: typeKey, start: ev.startFrame, end: eventEndFrame(ev) });
+        slots[preSlot].push({ type: typeKey, start: ev.startFrame, end: visualEndFrame(ev) });
       }
     }
 
@@ -605,7 +615,7 @@ function computeMicroPositions(
 
     for (const ev of sorted) {
       const evStart = ev.startFrame;
-      const evEnd = eventEndFrame(ev);
+      const evEnd = visualEndFrame(ev);
       const typeKey = typeKeyOf(ev);
 
       // Use pre-assigned slot if available
@@ -661,7 +671,7 @@ function computeMicroPositions(
     for (const ev of sorted) {
       const s = eventSlots.get(ev.uid) ?? 0;
       const evStart = ev.startFrame;
-      const evEnd = eventEndFrame(ev);
+      const evEnd = visualEndFrame(ev);
 
       // Expand left into contiguous empty slots (respecting visual buffer).
       let leftBound = s;

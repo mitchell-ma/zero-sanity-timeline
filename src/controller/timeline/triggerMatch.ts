@@ -2,10 +2,12 @@
  * Trigger clause matching utility.
  *
  * Evaluates onTriggerClause conditions against timeline events using a
- * verb-handler registry. Each clause's conditions are grouped by verb,
- * the highest-priority verb is selected as primary, and its handler scans
- * events for trigger frames. Remaining conditions are checked as secondary
- * predicates at each candidate frame.
+ * verb-handler registry. Conditions are order-agnostic AND'd predicates.
+ * The first scannable condition (verb with a registered handler) drives event
+ * scanning via its handler. All other scannable conditions are checked
+ * as secondary predicates at each candidate frame. Conditions requiring
+ * full engine context (HAVE TALENT_LEVEL, HAVE HP, etc.) are skipped
+ * and deferred to handleEngineTrigger.
  */
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
@@ -112,8 +114,6 @@ interface VerbHandlerContext {
 type VerbHandlerFn = (primaryCond: Predicate, ctx: VerbHandlerContext) => TriggerMatch[];
 
 interface VerbHandler {
-  /** Lower = higher priority when selecting the primary verb from a clause. */
-  priority: number;
   findMatches: VerbHandlerFn;
 }
 
@@ -654,27 +654,46 @@ function generatePeriodicTriggers(_primaryCond: Predicate, ctx: VerbHandlerConte
 // ── Registry ─────────────────────────────────────────────────────────────────
 
 const VERB_HANDLER_REGISTRY = new Map<string, VerbHandler>([
-  [VerbType.PERFORM, { priority: 10, findMatches: handlePerform }],
-  [VerbType.APPLY,   { priority: 20, findMatches: handleApply }],
-  [VerbType.CONSUME, { priority: 25, findMatches: handleConsume }],
-  [VerbType.DEAL,    { priority: 30, findMatches: handleDeal }],
-  [VerbType.HIT,     { priority: 35, findMatches: handleHit }],
-  [VerbType.DEFEAT,  { priority: 40, findMatches: handleDefeat }],
-  [VerbType.RECEIVE, { priority: 50, findMatches: handleReceive }],
-  [VerbType.BECOME,  { priority: 55, findMatches: handleBecome }],
-  [VerbType.RECOVER, { priority: 60, findMatches: handleRecover }],
-  [VerbType.HAVE,    { priority: 70, findMatches: handleHave }],
-  [VerbType.IS,      { priority: 80, findMatches: handleIs }],
+  [VerbType.PERFORM, { findMatches: handlePerform }],
+  [VerbType.APPLY,   { findMatches: handleApply }],
+  [VerbType.CONSUME, { findMatches: handleConsume }],
+  [VerbType.DEAL,    { findMatches: handleDeal }],
+  [VerbType.HIT,     { findMatches: handleHit }],
+  [VerbType.DEFEAT,  { findMatches: handleDefeat }],
+  [VerbType.RECEIVE, { findMatches: handleReceive }],
+  [VerbType.BECOME,  { findMatches: handleBecome }],
+  [VerbType.RECOVER, { findMatches: handleRecover }],
+  [VerbType.HAVE,    { findMatches: handleHave }],
+  [VerbType.IS,      { findMatches: handleIs }],
 ]);
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
 /**
+ * Returns true if the condition requires full engine context (talent level, HP,
+ * stats) and cannot be evaluated at scan time with only events + frame.
+ * These conditions are skipped by findClauseTriggerMatches and deferred to
+ * handleEngineTrigger which has the full ConditionContext.
+ */
+function needsEngineContext(cond: Predicate): boolean {
+  if (cond.verb !== VerbType.HAVE && cond.verb !== VerbType.IS) return false;
+  // HAVE STATUS / HAVE INFLICTION — evaluable at scan time (checks event presence)
+  if (cond.object === NounType.STATUS || cond.object === NounType.INFLICTION) return false;
+  // IS/HAVE with state adjectives (ELECTRIFIED, STAGGERED, etc.) — evaluable at scan time
+  // via STATE_TO_COLUMN mapping and the IS/BECOME verb handlers
+  if (cond.object && STATE_TO_COLUMN[cond.object]) return false;
+  // STACKS as subject or object — evaluable at scan time (checks event count)
+  if (cond.object === NounType.STACKS || cond.subject === NounType.STACKS) return false;
+  // HAVE TALENT_LEVEL, HAVE HP, HAVE POTENTIAL — need full context
+  return true;
+}
+
+/**
  * Find all trigger matches for a set of trigger clauses against timeline events.
- * Uses a verb-handler registry: each trigger clause's conditions are grouped
- * by verb, the highest-priority verb is selected as primary, and its handler
- * scans events for trigger frames. Remaining conditions are checked as
- * secondary predicates at each candidate frame.
+ * Conditions are order-agnostic AND'd predicates. The first scannable condition
+ * (any verb with a registered handler, excluding engine-context) drives event scanning. All other
+ * scannable conditions are checked as secondary predicates at each candidate frame.
+ * Conditions requiring full engine context are skipped (deferred to handleEngineTrigger).
  */
 export function findClauseTriggerMatches(
   onTriggerClauses: readonly { conditions: Predicate[]; effects?: TriggerEffect[] }[],
@@ -688,32 +707,43 @@ export function findClauseTriggerMatches(
   if (onTriggerClauses.length === 0) return matches;
 
   for (const clause of onTriggerClauses) {
-    // Find the primary verb — the one with the lowest priority number
-    let primaryVerb: string | undefined;
-    let bestPriority = Infinity;
-    for (const cond of clause.conditions) {
-      const handler = VERB_HANDLER_REGISTRY.get(cond.verb as string);
-      if (handler && handler.priority < bestPriority) {
-        bestPriority = handler.priority;
-        primaryVerb = cond.verb as string;
-      }
-    }
+    if (!clause.conditions.length) continue;
 
-    if (!primaryVerb) continue;
-    const handler = VERB_HANDLER_REGISTRY.get(primaryVerb)!;
-    const primaryCond = clause.conditions.find(c => c.verb === primaryVerb)!;
-    const secondaryConditions = clause.conditions.filter(c => c !== primaryCond);
+    // Find the best driver condition. Prefer event-scanning verbs (PERFORM, DEAL,
+    // APPLY, etc.) over state-check verbs (HAVE, IS) because state checks work as
+    // secondary predicates via evaluateInteraction, but event verbs (DEAL, PERFORM)
+    // have no evaluateInteraction handler and can only drive scanning.
+    // Within each tier, take the first matching condition (order-agnostic within tier).
+    let driverIdx = clause.conditions.findIndex(c =>
+      VERB_HANDLER_REGISTRY.has(c.verb as string) && !needsEngineContext(c)
+      && c.verb !== VerbType.HAVE && c.verb !== VerbType.IS
+    );
+    // Fallback: HAVE/IS as driver when no event verb exists
+    if (driverIdx === -1) {
+      driverIdx = clause.conditions.findIndex(c =>
+        VERB_HANDLER_REGISTRY.has(c.verb as string) && !needsEngineContext(c)
+      );
+    }
+    if (driverIdx === -1) continue; // no scannable condition
+    const driverCond = clause.conditions[driverIdx];
+    const verb = driverCond.verb as string;
+    const handler = VERB_HANDLER_REGISTRY.get(verb);
+    if (!handler) continue;
+
+    // All other conditions become secondary filters, except those needing engine context
+    const otherConditions = clause.conditions.filter((_, i) => i !== driverIdx);
+    const scannableConditions = otherConditions.filter(c => !needsEngineContext(c));
 
     const ctx: VerbHandlerContext = {
       events,
       operatorSlotId,
-      secondaryConditions,
+      secondaryConditions: scannableConditions,
       clauseEffects: clause.effects,
       stops,
       controlledSlotId,
     };
 
-    matches.push(...handler.findMatches(primaryCond, ctx));
+    matches.push(...handler.findMatches(driverCond, ctx));
   }
 
   // Deduplicate by frame (if multiple clauses match the same frame)

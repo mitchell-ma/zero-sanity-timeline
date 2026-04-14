@@ -25,6 +25,7 @@ import {
   DamageParams,
   DamageSubComponents,
   getAmpMultiplier,
+  getAttributeBonus,
   getDamageBonus,
   getDefenseMultiplier,
   getDmgReductionMultiplier,
@@ -51,6 +52,14 @@ import type { CritExpectationModel, CritFrameSnapshot, StatusStatContribution } 
 import { getLastTriggerIndex, getLastStatAccumulator } from '../timeline/eventQueueController';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Maps flat attribute stat types to their percentage bonus counterparts. */
+const ATTR_TO_BONUS: Partial<Record<StatType, StatType>> = {
+  [StatType.STRENGTH]: StatType.STRENGTH_BONUS,
+  [StatType.AGILITY]: StatType.AGILITY_BONUS,
+  [StatType.INTELLECT]: StatType.INTELLECT_BONUS,
+  [StatType.WILL]: StatType.WILL_BONUS,
+};
 
 /** Merge two partial stat delta maps, summing values for shared keys. */
 function mergeStatDeltas(
@@ -224,6 +233,36 @@ function mergeRuntimeStatSources(
   return merged;
 }
 
+/**
+ * Merge stat accumulator per-frame sources into the stat sources map.
+ * Covers runtime status effects (e.g. Freezing Point CRITICAL_DAMAGE,
+ * SF Minor HEAT_DAMAGE_BONUS) that are tracked by the accumulator but
+ * not by the crit expectation model.
+ */
+function mergeAccumulatorStatSources(
+  base: Partial<Record<StatType, StatSourceEntry[]>>,
+  accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
+  frameKey: string,
+  entityIds: string[],
+  statusDeltas: Partial<Record<StatType, number>> | undefined,
+): Partial<Record<StatType, StatSourceEntry[]>> {
+  if (!accumulator || !statusDeltas) return base;
+  let merged: Partial<Record<StatType, StatSourceEntry[]>> | undefined;
+  for (const stat of Object.keys(statusDeltas) as StatType[]) {
+    for (const entityId of entityIds) {
+      const sources = accumulator.getFrameStatSources(frameKey, entityId, stat);
+      if (!sources?.length) continue;
+      if (!merged) merged = { ...base };
+      if (!merged[stat]) merged[stat] = [...(base[stat] ?? [])];
+      else if (merged[stat] === base[stat]) merged[stat] = [...(base[stat] ?? [])];
+      for (const s of sources) {
+        merged[stat]!.push({ source: s.label, value: s.value });
+      }
+    }
+  }
+  return merged ?? base;
+}
+
 // ── Cached model data per operator ───────────────────────────────────────────
 
 interface OperatorCalcData {
@@ -330,7 +369,7 @@ function buildAllAmpSources(
   frame: number,
   activeElement: ElementType,
   query: EventsQueryService | undefined,
-  rd: Partial<Record<StatType, number>> | undefined,
+  statusDeltas: Partial<Record<StatType, number>> | undefined,
   accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
   frameKey: string,
   ownerEntityId: string,
@@ -346,7 +385,7 @@ function buildAllAmpSources(
     if (eventSources.length > 0) result[el] = eventSources;
   }
   // Runtime stat AMP (not element-qualified) shown under the active element
-  const statSources = buildAmpSources([], rd, ampStatSources);
+  const statSources = buildAmpSources([], statusDeltas, ampStatSources);
   if (statSources.length > 0) {
     result[activeElement] = [...(result[activeElement] ?? []), ...statSources];
   }
@@ -541,6 +580,13 @@ export function buildDamageTableRows(
           const maxFrames = defaultSegs?.[si]?.frames?.length ?? seg.frames.length;
           for (let fi = 0; fi < seg.frames.length; fi++) {
             const frame = seg.frames[fi];
+            // Combat-sheet rows only track damage-producing frames. Skip frames
+            // whose clauses contain no DEAL DAMAGE effect (e.g. frames that only
+            // RECOVER SP, APPLY STATUS, DEAL STAGGER, etc.) — they would otherwise
+            // render as empty rows with no damage data.
+            // Keep `frameSkipped` frames: their DEAL DAMAGE clause exists but
+            // evaluated to a miss (condition failed); the row shows "-" damage.
+            if (!frame.frameSkipped && !hasDealDamageClause(frame.clauses)) continue;
             const absFrame = frame.absoluteFrame ?? (ev.startFrame + segmentFrameOffset + frame.offsetFrame);
 
             // Look up multiplier
@@ -654,9 +700,9 @@ export function buildDamageTableRows(
                 // so the deltas already reflect the correct stack accumulation per mode.
                 const critDeltas = earlySnapshot?.expectedStatDeltas;
 
-                // Runtime stat helper: base + runtime deltas from status effects
-                const rd = runtimeDeltas;
-                const stat = (s: StatType) => (opData.stats[s] ?? 0) + (rd?.[s] ?? 0);
+                // Runtime stat helper: base + runtime deltas (status accumulator + crit model)
+                const statusDeltas = runtimeDeltas;
+                const stat = (s: StatType) => (opData.stats[s] ?? 0) + (statusDeltas?.[s] ?? 0) + (critDeltas?.[s] ?? 0);
 
                 // Damage Bonus sub-components
                 const allElementDmgBonuses = {
@@ -667,33 +713,12 @@ export function buildDamageTableRows(
                   [ElementType.NATURE]: stat(StatType.NATURE_DAMAGE_BONUS),
                   [ElementType.ELECTRIC]: stat(StatType.ELECTRIC_DAMAGE_BONUS),
                 } as Record<ElementType, number>;
-                // Add crit-dependent element DMG deltas to the per-element map
-                if (critDeltas) {
-                  const elementStatMap: Partial<Record<ElementType, StatType>> = {
-                    [ElementType.PHYSICAL]: StatType.PHYSICAL_DAMAGE_BONUS,
-                    [ElementType.NONE]: StatType.PHYSICAL_DAMAGE_BONUS,
-                    [ElementType.HEAT]: StatType.HEAT_DAMAGE_BONUS,
-                    [ElementType.CRYO]: StatType.CRYO_DAMAGE_BONUS,
-                    [ElementType.NATURE]: StatType.NATURE_DAMAGE_BONUS,
-                    [ElementType.ELECTRIC]: StatType.ELECTRIC_DAMAGE_BONUS,
-                  };
-                  for (const [el, stat] of Object.entries(elementStatMap)) {
-                    const delta = critDeltas[stat as StatType] ?? 0;
-                    if (delta > 0) {
-                      allElementDmgBonuses[el as ElementType] = (allElementDmgBonuses[el as ElementType] ?? 0) + delta;
-                    }
-                  }
-                }
 
                 // Element and skill damage bonuses (with runtime + crit-dependent deltas)
-                const critElementDelta = critDeltas?.[elementBonusStat] ?? 0;
-                const subElementDmg = stat(elementBonusStat) + critElementDelta;
-                const critSkillTypeDelta = critDeltas?.[skillTypeBonusStat] ?? 0;
-                const subSkillTypeDmg = stat(skillTypeBonusStat) + critSkillTypeDelta;
-                const critSkillDelta = critDeltas?.[StatType.SKILL_DAMAGE_BONUS] ?? 0;
-                const subSkillDmg = stat(StatType.SKILL_DAMAGE_BONUS) + critSkillDelta;
-                const critArtsDelta = isArts ? (critDeltas?.[StatType.ARTS_DAMAGE_BONUS] ?? 0) : 0;
-                const subArtsDmg = isArts ? stat(StatType.ARTS_DAMAGE_BONUS) + critArtsDelta : 0;
+                const subElementDmg = stat(elementBonusStat);
+                const subSkillTypeDmg = stat(skillTypeBonusStat);
+                const subSkillDmg = stat(StatType.SKILL_DAMAGE_BONUS);
+                const subArtsDmg = isArts ? stat(StatType.ARTS_DAMAGE_BONUS) : 0;
                 const subStaggerDmg = isStaggered ? stat(StatType.STAGGER_DAMAGE_BONUS) : 0;
                 const isFinalStrike = frame.frameTypes?.includes(EventFrameType.FINAL_STRIKE) ?? false;
                 const subFinalStrikeDmg = isFinalStrike ? stat(StatType.FINAL_STRIKE_DAMAGE_BONUS) : 0;
@@ -742,8 +767,10 @@ export function buildDamageTableRows(
                   }
 
                   // Unified: critMultiplier = 1 + critDamage × expectation
-                  const expectation = getFrameExpectation(resolvedCritMode, critSnapshot, frameCrit, opData.critRate);
-                  expectedCrit = 1 + opData.critDamage * expectation;
+                  const runtimeCritDmg = stat(StatType.CRITICAL_DAMAGE);
+                  const runtimeCritRate = Math.min(Math.max(stat(StatType.CRITICAL_RATE), 0), 1);
+                  const expectation = getFrameExpectation(resolvedCritMode, critSnapshot, frameCrit, runtimeCritRate);
+                  expectedCrit = 1 + runtimeCritDmg * expectation;
                 }
 
                 // Finisher: applies when the event is a finisher attack during stagger break
@@ -761,15 +788,22 @@ export function buildDamageTableRows(
                 const subProtectionEffects = statusQuery?.getProtectionEffects(absFrame) ?? [];
                 const subFragilityBonus = statusQuery?.getFragilityBonus(absFrame, element) ?? 0;
 
+                // Recompute attribute bonus with runtime deltas
+                const mainBonusStat = ATTR_TO_BONUS[opData.mainAttrType];
+                const secBonusStat = ATTR_TO_BONUS[opData.secondaryAttrType];
+                const runtimeMainAttr = Math.floor(stat(opData.mainAttrType) * (1 + (mainBonusStat ? stat(mainBonusStat) : 0)));
+                const runtimeSecAttr = Math.floor(stat(opData.secondaryAttrType) * (1 + (secBonusStat ? stat(secBonusStat) : 0)));
+                const runtimeAttributeBonus = getAttributeBonus(runtimeMainAttr, runtimeSecAttr);
+
                 const sub: DamageSubComponents = {
                   operatorBaseAttack: opData.operatorBaseAttack,
                   weaponBaseAttack: opData.weaponBaseAttack,
-                  atkBonusPct: opData.atkBonusPct + (rd?.[StatType.ATTACK_BONUS] ?? 0) + (critDeltas?.[StatType.ATTACK_BONUS] ?? 0),
+                  atkBonusPct: stat(StatType.ATTACK_BONUS),
                   flatAtkBonuses: opData.flatAtkBonuses,
                   mainAttrType: opData.mainAttrType,
-                  mainAttrValue: opData.mainAttrValue,
+                  mainAttrValue: runtimeMainAttr,
                   secondaryAttrType: opData.secondaryAttrType,
-                  secondaryAttrValue: opData.secondaryAttrValue,
+                  secondaryAttrValue: runtimeSecAttr,
                   element,
                   elementDmgBonus: subElementDmg,
                   allElementDmgBonuses,
@@ -777,8 +811,8 @@ export function buildDamageTableRows(
                   skillDmgBonus: subSkillDmg,
                   artsDmgBonus: subArtsDmg,
                   staggerDmgBonus: subStaggerDmg,
-                  critRate: opData.critRate,
-                  critDamage: opData.critDamage,
+                  critRate: Math.min(Math.max(stat(StatType.CRITICAL_RATE), 0), 1),
+                  critDamage: stat(StatType.CRITICAL_DAMAGE),
                   critMode: critMode ?? CritMode.EXPECTED,
                   isCrit: frameCrit,
                   critSnapshot,
@@ -790,8 +824,8 @@ export function buildDamageTableRows(
                   allFragilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'fragility') : {},
                   susceptibilitySources: statusQuery?.getSusceptibilitySources(absFrame, element) ?? [],
                   allSusceptibilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'susceptibility') : {},
-                  ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame, element) ?? [], rd, mergeStatSources(accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP), accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, StatType.AMP))),
-                  allAmpSources: buildAllAmpSources(absFrame, element, statusQuery, rd, accumulator, currentFrameKey, ev.ownerEntityId),
+                  ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame, element) ?? [], statusDeltas, mergeStatSources(accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP), accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, StatType.AMP))),
+                  allAmpSources: buildAllAmpSources(absFrame, element, statusQuery, statusDeltas, accumulator, currentFrameKey, ev.ownerEntityId),
                   weaknessStatValue,
                   weaknessSources: (accumulator?.getFrameStatSources(currentFrameKey, ENEMY_ID, StatType.WEAKNESS) ?? []).map(s => ({
                     label: s.label,
@@ -805,19 +839,21 @@ export function buildDamageTableRows(
                   segmentMultiplier: segmentMultiplier ?? undefined,
                   segmentFrameCount: (segmentMultiplier != null && maxFrames > 1) ? maxFrames : undefined,
                   isPerTickMultiplier: isPerTick,
-                  statSources: critSnapshot?.statContributions
-                    ? mergeRuntimeStatSources(opData.statSources, critSnapshot.statContributions)
-                    : opData.statSources,
+                  statSources: mergeAccumulatorStatSources(
+                    critSnapshot?.statContributions
+                      ? mergeRuntimeStatSources(opData.statSources, critSnapshot.statContributions)
+                      : opData.statSources,
+                    accumulator, currentFrameKey,
+                    [ev.ownerEntityId, TEAM_ID], statusDeltas,
+                  ),
                   statContributions: critSnapshot?.statContributions,
                   skillTypeDmgBonusStat: skillTypeBonusStat,
                 };
 
                 // Compute attack with runtime + crit-dependent ATK% adjustment
-                const runtimeAtkDelta = rd?.[StatType.ATTACK_BONUS] ?? 0;
-                const critAtkDelta = critDeltas?.[StatType.ATTACK_BONUS] ?? 0;
-                const totalAtkDelta = runtimeAtkDelta + critAtkDelta;
-                const effectiveAttack = totalAtkDelta > 0
-                  ? getTotalAttack(opData.operatorBaseAttack, opData.weaponBaseAttack, opData.atkBonusPct + totalAtkDelta, opData.flatAtkBonuses)
+                const runtimeAtkBonus = stat(StatType.ATTACK_BONUS);
+                const effectiveAttack = runtimeAtkBonus !== opData.atkBonusPct
+                  ? getTotalAttack(opData.operatorBaseAttack, opData.weaponBaseAttack, runtimeAtkBonus, opData.flatAtkBonuses)
                   : opData.totalAttack;
                 const mainStatValue = dealInfo?.mainStat === DamageScalingStatType.DEFENSE ? opData.totalDefense
                   : dealInfo?.mainStat === DamageScalingStatType.HP ? opData.effectiveHp
@@ -836,10 +872,10 @@ export function buildDamageTableRows(
                 params = {
                   attack: mainStatValue,
                   baseMultiplier: multiplier,
-                  attributeBonus: opData.attributeBonus,
+                  attributeBonus: runtimeAttributeBonus,
                   multiplierGroup,
                   critMultiplier: expectedCrit,
-                  ampMultiplier: getAmpMultiplier((statusQuery?.getAmpBonus(absFrame, element) ?? 0) + (rd?.[StatType.AMP] ?? 0)),
+                  ampMultiplier: getAmpMultiplier((statusQuery?.getAmpBonus(absFrame, element) ?? 0) + (statusDeltas?.[StatType.AMP] ?? 0)),
                   staggerMultiplier: getStaggerMultiplier(isStaggered),
                   finisherMultiplier: getFinisherMultiplier(enemyTier, isFinisher),
                   linkMultiplier: getLinkMultiplier(linkBonus, linkBonus > 0),

@@ -8,7 +8,7 @@ import type { ClausePredicate } from './weaponStatusesStore';
 import { VerbType } from '../../dsl/semantics';
 import { StatType } from '../enums/stats';
 import { resolveEffectStat } from '../enums/stats';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'rarity']);
@@ -38,6 +38,7 @@ function validateLocalEffect(ef: Record<string, unknown>, path: string): string[
 /** Validate a raw weapon JSON entry. Returns an array of error messages (empty = valid). */
 export function validateWeapon(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
+  errors.push(...validateNonNegativeValues(json, 'root'));
 
   if (!Array.isArray(json.skills)) errors.push('root.skills: must be an array');
   else if (json.skills.some(s => typeof s !== 'string')) errors.push('root.skills: all entries must be strings');

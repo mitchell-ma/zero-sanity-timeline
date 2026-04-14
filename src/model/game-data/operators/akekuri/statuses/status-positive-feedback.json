@@ -70,7 +70,7 @@
       "interactionType": "REFRESH"
     },
     "eventType": "STATUS",
-    "eventIdType": "POTENTIAL_STATUS",
+    "eventIdType": "POTENTIAL",
     "description": "After recovering SP with skills, Akekuri gains ATK +10% for 10s. This effect can reach 5 stacks."
   },
   "metadata": {

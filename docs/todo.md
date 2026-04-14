@@ -1,5 +1,13 @@
 # TODO
 
+## TriggerIndex: order-agnostic conditions (DONE)
+
+Completed. `TriggerDefEntry` now stores a flat `conditions: Predicate[]` array.
+All observable conditions produce index keys (multi-key registration with dedup).
+`findClauseTriggerMatches` uses `needsEngineContext()` to route conditions to the
+right evaluator. `handleEngineTrigger` evaluates state conditions (HAVE, IS, BECOME)
+with full context; event-presence verbs are skipped (already validated by index).
+
 ## DSL: IGNORE INFLICTION + elemental MITIGATE
 
 CHANCE is implemented (used by Alesh combo skill). Two primitives remain:
@@ -264,34 +272,6 @@ The following deeper mechanic-specific tests remain:
 ### Engine blockers for some deeper tests
 - Strict-mode combo triggering requires the engine to evaluate `onTriggerClause` conditions against pipeline state
 - HP threshold conditions not supported (affects Alesh P5, Chen Qianyu P1, Catcher combo trigger)
-- Remove priority registry from `triggerMatch.ts` — predicates are independent bools evaluated left-to-right, not primary/secondary. Each condition should produce candidate frames independently, then ALL conditions are AND'd at each candidate. The current priority-based system couples conditions and has caused bugs where the "primary" handler's scanning logic doesn't match secondary condition semantics.
-
-## Fix laevatainDamageCalc.test.ts — broken after gameDataController mock removal
-
-35 tests failing in `src/tests/unit/laevatainDamageCalc.test.ts`. Two root causes:
-
-### 1. Bare loadout ATK values inflated (1136 vs expected 943)
-
-The old `gameDataController` mock was removed but the real `configStore`/`gameDataStore` returns
-different weapon stats for Tarr 11. The old mock had a special case for `getNamedSkillPassiveStats`
-that returned `ASSAULT_ARMAMENT_PREP` values as flat `BASE_ATTACK` bonuses. The real store likely
-handles them differently, inflating effective ATK by ~1.205×.
-
-All bare loadout damage values are wrong by the same ratio — the ATK calculation is the sole issue.
-Need to reverify against in-game values and either fix the store's Tarr 11 handling or restore an
-equivalent mock.
-
-**Affected tests (13):** effective ATK, segments 1-5 frames, combo (Seethe), empowered additional
-hit, forced combustion DOT.
-
-### 2. `getFrameMultiplier` returns null for SMOULDERING_FIRE
-
-`jsonMultiplierEngine.getFrameMultiplier` only supports `DAMAGE_MULTIPLIER_INCREMENT`-based ramping.
-SMOULDERING_FIRE uses individual per-frame `DAMAGE_MULTIPLIER` values (1.4 base + 0.14 × 10 ticks
-at level 12). The function needs a fallback to return `perFrameMultipliers[segIdx][frameIndex]` when
-`perFrameScale2` is absent.
-
-**Affected tests (22):** Smouldering Fire ticks 0-10 (full loadout), battle skill ticks 0-10 (bare loadout).
 
 ## Unimplemented mechanics — Ardelia T1
 

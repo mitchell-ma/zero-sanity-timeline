@@ -53,7 +53,7 @@ const ULTIMATE_ID: string = require(
 ).properties.id;
 
 const UNPREDICTABLE_ID: string = require(
-  '../../../../model/game-data/operators/fluorite/statuses/status-unpredictable.json',
+  '../../../../model/game-data/operators/fluorite/talents/talent-unpredictable-talent.json',
 ).properties.id;
 
 const IMPROVISED_EXPLOSIVE_ID: string = require(

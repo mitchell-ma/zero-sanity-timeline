@@ -3,6 +3,13 @@
     {
       "conditions": [
         {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "SKILL",
+          "objectId": "BATTLE"
+        },
+        {
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "CHARGE"
@@ -15,24 +22,132 @@
           "from": "ENEMY"
         },
         {
-          "verb": "DEAL",
-          "object": "STAGGER",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                5,
-                10
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "SKILL",
+          "objectId": "COMBO"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "CHARGE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "CHARGE",
+          "from": "ENEMY"
+        },
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "SKILL",
+          "objectId": "ULTIMATE"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "CHARGE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "CHARGE",
+          "from": "ENEMY"
+        },
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "name": "Momentum Breaker",
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "ENDFIELD_WIKI"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
             }
-          }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [
+                        0,
+                        5,
+                        10
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
         }
       ]
     }
@@ -48,6 +163,20 @@
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventIdType": "TALENT",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 2
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "NONE"
+    },
     "description": "Interrupting the enemy's charge up deals another 10 Stagger."
   },
   "metadata": {

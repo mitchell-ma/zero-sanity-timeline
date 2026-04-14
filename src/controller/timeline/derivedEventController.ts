@@ -32,6 +32,7 @@ import {
 import { PriorityQueue } from './priorityQueue';
 import type { QueueFrame } from './eventQueueTypes';
 import type { SlotTriggerWiring } from './eventQueueTypes';
+import { FrameHookType } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import type { TriggerAssociation } from '../gameDataStore';
@@ -88,7 +89,7 @@ export class DerivedEventController implements ColumnHost {
   private rawSegmentDurations = new Map<string, number[]>();
   private comboStops: ComboStopEntry[] = [];
   private queue = new PriorityQueue<QueueFrame>(
-    (a, b) => a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority,
+    (a, b) => a.frame - b.frame,
   );
   // state.output removed — registeredEvents is the single source of storage.
   private triggerAssociations: TriggerAssociation[] = [];
@@ -156,9 +157,15 @@ export class DerivedEventController implements ColumnHost {
   // application has a single hub. These methods are no-ops if the resource
   // controller hasn't been wired in (e.g. cheap test setups).
 
-  recordSkillPointRecovery(frame: number, amount: number, sourceEntityId: string, sourceSkillName: string) {
+  recordSkillPointRecovery(
+    frame: number,
+    amount: number,
+    sourceEntityId: string,
+    sourceSkillName: string,
+    isReturn: boolean = false,
+  ) {
     if (this.spController && amount > 0) {
-      this.spController.addRecovery(frame, amount, sourceEntityId, sourceSkillName);
+      this.spController.addRecovery(frame, amount, sourceEntityId, sourceSkillName, isReturn);
     }
   }
 
@@ -808,6 +815,25 @@ export class DerivedEventController implements ColumnHost {
   /** Register a raw (pre-extension) duration for later re-extension. */
   trackRawDuration(uid: string, rawDuration: number) {
     this.rawDurations.set(uid, rawDuration);
+  }
+
+  /**
+   * Move the queued EVENT_END hook for a given event to a new frame.
+   * Called when an infliction is extended by a co-active sibling: the original
+   * EVENT_END scheduled at creation time needs to reflect the new end so
+   * IS_NOT:<col> fires only when the state actually ends.
+   */
+  rescheduleEventEnd(eventUid: string, newEndFrame: number) {
+    const entries = this.queue.toArray();
+    let changed = false;
+    for (const e of entries) {
+      if (e.sourceEvent?.uid !== eventUid) continue;
+      if (e.hookType !== FrameHookType.EVENT_END) continue;
+      if (e.frame === newEndFrame) continue;
+      e.frame = newEndFrame;
+      changed = true;
+    }
+    if (changed) this.queue.reheapify();
   }
 
   /**

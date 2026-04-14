@@ -5,6 +5,7 @@ import type { TimelineEvent, EventFrameMarker } from '../../consts/viewTypes';
 import type { ValueNode } from '../../dsl/semantics';
 import type { ClauseEvaluationType } from '../../dsl/semantics';
 import type { Predicate, TriggerEffect } from './triggerMatch';
+import type { LifecycleClauseGroup } from './triggerIndex';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import { QueueFrameType, FrameHookType } from '../../consts/enums';
 export { QueueFrameType, FrameHookType };
@@ -101,8 +102,13 @@ export interface EngineTriggerContext {
   potential: number;
   operatorSlotMap: Record<string, string>;
   loadoutProperties?: LoadoutProperties;
-  haveConditions: Predicate[];
+  /** All conditions from the trigger clause, evaluated at trigger time. */
+  conditions: Predicate[];
   triggerEffects?: TriggerEffect[];
+  /** Lifecycle clause groups — when present, this is a lifecycle trigger (not onTriggerClause). */
+  clauseGroups?: LifecycleClauseGroup[];
+  /** Clause evaluation mode: "FIRST_MATCH" stops after the first group whose HAVE conditions match. Default: evaluate all matching groups. */
+  clauseType?: string;
 }
 
 export interface EngineTriggerEntry {
@@ -127,28 +133,8 @@ export const MAX_INFLICTION_STACKS = 4;
 
 // ── Queue entry types ──────────────────────────────────────────────────────
 
-/**
- * Priority values — lower fires first at the same frame.
- *
- * Engine triggers (formerly `QueueFrameType.ENGINE_TRIGGER`) now ride
- * `PROCESS_FRAME` with `hookType: ON_TRIGGER` and use `ENGINE_TRIGGER`
- * priority value here. The constant is keyed by string so both queue
- * types and hook types can register a priority side-by-side.
- */
-export const PRIORITY: Record<string, number> = {
-  /** Unified frame processing — all frame marker effects in config order. */
-  [QueueFrameType.PROCESS_FRAME]: 5,
-  /** Engine triggers seeded reactively by PROCESS_FRAME or lifecycle clauses. */
-  ENGINE_TRIGGER: 22,
-  /** Combo trigger resolution — fires after engine triggers so absorption resolves first. */
-  [QueueFrameType.COMBO_RESOLVE]: 25,
-  /** Status exit clause — fires after all frame processing at the exit frame. */
-  [QueueFrameType.STATUS_EXIT]: 30,
-};
-
 export interface QueueFrame {
   frame: number;
-  priority: number;
   type: QueueFrameType;
   /** Lifecycle hook type for synthetic start/end entries. Undefined = normal frame marker. */
   hookType?: FrameHookType;
