@@ -35,7 +35,7 @@ jest.mock('../../view/InformationPane', () => ({
 
 function makeInterpretor() {
   const ctrl = new DerivedEventController();
-  return new EventInterpretorController(ctrl, []);
+  return new EventInterpretorController(ctrl);
 }
 
 function makeCtx(_interp: EventInterpretorController, overrides?: Partial<InterpretContext>): InterpretContext {
@@ -625,7 +625,7 @@ describe('EventInterpretorController: APPLY LIFT STATUS (PHYSICAL)', () => {
     expect(segments![0].frames!.length).toBe(1);
     expect(segments![0].frames![0].offsetFrame).toBe(0);
     expect(segments![0].frames![0].damageElement).toBe(ElementType.PHYSICAL);
-    expect(findDealDamageInClauses(segments![0].frames![0].clauses)!.multipliers[0]).toBe(1.2);
+    expect(findDealDamageInClauses(segments![0].frames![0].clauses)!.values[0]).toBe(1.2);
   });
 
   test('forced Lift → Vulnerable + Lift status even without existing Vulnerable', () => {
@@ -742,7 +742,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     );
     expect(kdEvents.length).toBe(1);
     expect(eventDuration(kdEvents[0])).toBe(120);
-    expect(findDealDamageInClauses(kdEvents[0].segments![0].frames![0].clauses)!.multipliers[0]).toBe(1.2);
+    expect(findDealDamageInClauses(kdEvents[0].segments![0].frames![0].clauses)!.values[0]).toBe(1.2);
   });
 
   test('forced Knock Down bypasses Vulnerable check', () => {
@@ -782,7 +782,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN STATUS (PHYSICAL)', () =>
     expect(segments![0].frames!.length).toBe(1);
     expect(segments![0].frames![0].offsetFrame).toBe(0);
     expect(segments![0].frames![0].damageElement).toBe(ElementType.PHYSICAL);
-    expect(findDealDamageInClauses(segments![0].frames![0].clauses)!.multipliers[0]).toBe(1.2);
+    expect(findDealDamageInClauses(segments![0].frames![0].clauses)!.values[0]).toBe(1.2);
   });
 
   test('second Knock Down resets previous (RESET stacking)', () => {
@@ -892,7 +892,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(crushEvents.length).toBe(1);
-    expect(findDealDamageInClauses(crushEvents[0].segments![0].frames![0].clauses)!.multipliers[0]).toBe(3.0);
+    expect(findDealDamageInClauses(crushEvents[0].segments![0].frames![0].clauses)!.values[0]).toBe(3.0);
     expect(crushEvents[0].stacks).toBe(1);
   });
 
@@ -912,7 +912,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(crushEvents.length).toBe(1);
-    expect(findDealDamageInClauses(crushEvents[0].segments![0].frames![0].clauses)!.multipliers[0]).toBe(4.5);
+    expect(findDealDamageInClauses(crushEvents[0].segments![0].frames![0].clauses)!.values[0]).toBe(4.5);
     expect(crushEvents[0].stacks).toBe(2);
   });
 
@@ -932,7 +932,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(crushEvents.length).toBe(1);
-    expect(findDealDamageInClauses(crushEvents[0].segments![0].frames![0].clauses)!.multipliers[0]).toBe(6.0);
+    expect(findDealDamageInClauses(crushEvents[0].segments![0].frames![0].clauses)!.values[0]).toBe(6.0);
     expect(crushEvents[0].stacks).toBe(3);
   });
 
@@ -952,7 +952,7 @@ describe('EventInterpretorController: APPLY CRUSH STATUS (PHYSICAL)', () => {
       ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
     );
     expect(crushEvents.length).toBe(1);
-    expect(findDealDamageInClauses(crushEvents[0].segments![0].frames![0].clauses)!.multipliers[0]).toBe(7.5);
+    expect(findDealDamageInClauses(crushEvents[0].segments![0].frames![0].clauses)!.values[0]).toBe(7.5);
     expect(crushEvents[0].stacks).toBe(4);
   });
 
@@ -1056,7 +1056,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     expect(breachEvents[0].stacks).toBe(1);
     expect(eventDuration(breachEvents[0])).toBe(1440); // 12s
     expect(breachEvents[0].segments![0].properties.duration).toBe(1440);
-    expect(findDealDamageInClauses(breachEvents[0].segments![0].frames![0].clauses)!.multipliers[0]).toBe(1.0);
+    expect(findDealDamageInClauses(breachEvents[0].segments![0].frames![0].clauses)!.values[0]).toBe(1.0);
   });
 
   test('2 Vulnerable → 150% multiplier and 18s duration', () => {
@@ -1076,7 +1076,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     );
     expect(breachEvents[0].stacks).toBe(2);
     expect(eventDuration(breachEvents[0])).toBe(2160); // 18s
-    expect(findDealDamageInClauses(breachEvents[0].segments![0].frames![0].clauses)!.multipliers[0]).toBe(1.5);
+    expect(findDealDamageInClauses(breachEvents[0].segments![0].frames![0].clauses)!.values[0]).toBe(1.5);
   });
 
   test('3 Vulnerable → 200% multiplier and 24s duration', () => {
@@ -1096,7 +1096,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     );
     expect(breachEvents[0].stacks).toBe(3);
     expect(eventDuration(breachEvents[0])).toBe(2880); // 24s
-    expect(findDealDamageInClauses(breachEvents[0].segments![0].frames![0].clauses)!.multipliers[0]).toBe(2.0);
+    expect(findDealDamageInClauses(breachEvents[0].segments![0].frames![0].clauses)!.values[0]).toBe(2.0);
   });
 
   test('4 Vulnerable → 250% multiplier and 30s duration', () => {
@@ -1116,7 +1116,7 @@ describe('EventInterpretorController: APPLY BREACH STATUS (PHYSICAL)', () => {
     );
     expect(breachEvents[0].stacks).toBe(4);
     expect(eventDuration(breachEvents[0])).toBe(3600); // 30s
-    expect(findDealDamageInClauses(breachEvents[0].segments![0].frames![0].clauses)!.multipliers[0]).toBe(2.5);
+    expect(findDealDamageInClauses(breachEvents[0].segments![0].frames![0].clauses)!.values[0]).toBe(2.5);
   });
 
   test('consumes all Vulnerable, does not add new stacks', () => {

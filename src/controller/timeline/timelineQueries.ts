@@ -45,6 +45,26 @@ export function activeCountAtFrame(
 }
 
 /**
+ * Sum the `stacks` of all active events on the given column + owner at a frame.
+ * Single authority for "how many stacks of STATUS X does OWNER have at FRAME".
+ * Events with no explicit `stacks` field count as 1 each.
+ */
+export function countActiveStatusStacks(
+  events: readonly TimelineEvent[],
+  frame: number,
+  ownerEntityId: string,
+  statusId: string,
+): number {
+  let n = 0;
+  for (const ev of events) {
+    if (ev.ownerEntityId !== ownerEntityId || ev.columnId !== statusId) continue;
+    if (!isActiveAtFrame(ev, frame)) continue;
+    n += ev.stacks ?? 1;
+  }
+  return n;
+}
+
+/**
  * Get active infliction events of a given element at a given frame.
  * Element is mapped to column ID externally.
  */

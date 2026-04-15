@@ -107,9 +107,14 @@ describe('Ardelia — Mr. Dolly Shadow ACTION', () => {
     expect(jsonEffect!.toDeterminer).toBe(DeterminerType.CONTROLLED);
     expect(jsonEffect!.to).toBe(NounType.OPERATOR);
 
-    const withBlock = jsonEffect!.with as Record<string, { value: number[] }>;
-    expect(withBlock.healBase.value).toEqual([45, 63, 90]);
-    expect(withBlock.willAdditive.value).toEqual([0.38, 0.53, 0.75]);
+    // Heal value is an ADD(healBase, MULT(willAdditive, WILL)) expression.
+    // healBase: VARY_BY TALENT_LEVEL [0, 45, 63, 90] (index 0 = no benefit)
+    // willAdditive: VARY_BY TALENT_LEVEL [0, 0.38, 0.53, 0.75]
+    const withBlock = jsonEffect!.with as { value: { operation: string; left: { value: number[] }; right: { operation: string; left: { value: number[] } } } };
+    expect(withBlock.value.operation).toBe('ADD');
+    expect(withBlock.value.left.value).toEqual([0, 45, 63, 90]);
+    expect(withBlock.value.right.operation).toBe('MULT');
+    expect(withBlock.value.right.left.value).toEqual([0, 0.38, 0.53, 0.75]);
 
     // ── View layer: event appears in INPUT column ───────────────────────
     const viewModels = computeTimelinePresentation(

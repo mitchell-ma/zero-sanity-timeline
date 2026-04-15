@@ -465,8 +465,8 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
     const dealInfo = findDealDamageInClauses([unconditional!]);
     expect(dealInfo).toBeDefined();
 
-    // multiplierNode: MULT(VARY_BY SL, ADD(1, MULT(VARY_BY POTENTIAL [0..0.15], MIN(1, STACKS))))
-    const node = dealInfo!.multiplierNode as Record<string, unknown>;
+    // valueNode: MULT(VARY_BY SL, ADD(1, MULT(VARY_BY POTENTIAL [0..0.15], MIN(1, STACKS))))
+    const node = dealInfo!.valueNode as Record<string, unknown>;
     expect(node).toBeDefined();
     expect(node.operation).toBe('MULT');
     const right = node.right as Record<string, unknown>;
@@ -765,11 +765,11 @@ describe('I. Combo skill — damage multipliers and stagger', () => {
     const damageInfo = findDealDamageInClauses(damageFrame!.clauses)!;
     expect(damageInfo.element).toBe(AdjectiveType.ELECTRIC);
 
-    // Multipliers should be the 12-entry skill level array
-    const multipliers = damageInfo.multipliers;
-    expect(multipliers).toHaveLength(12);
-    expect(multipliers[0]).toBe(1.69);   // SL1
-    expect(multipliers[11]).toBe(3.8);   // SL12
+    // Values should be the 12-entry skill level array
+    const values = damageInfo.values;
+    expect(values).toHaveLength(12);
+    expect(values[0]).toBe(1.69);   // SL1
+    expect(values[11]).toBe(3.8);   // SL12
 
     // View layer: combo visible in presentation
     const viewModels = computeTimelinePresentation(
@@ -840,11 +840,11 @@ describe('J. Ultimate skill — damage multipliers and stagger', () => {
     const damageInfo = findDealDamageInClauses(damageFrame!.clauses)!;
     expect(damageInfo.element).toBe(AdjectiveType.ELECTRIC);
 
-    // Multipliers should be the 12-entry skill level array
-    const multipliers = damageInfo.multipliers;
-    expect(multipliers).toHaveLength(12);
-    expect(multipliers[0]).toBe(4.22);   // SL1
-    expect(multipliers[11]).toBe(9.5);   // SL12
+    // Values should be the 12-entry skill level array
+    const values = damageInfo.values;
+    expect(values).toHaveLength(12);
+    expect(values[0]).toBe(4.22);   // SL1
+    expect(values[11]).toBe(9.5);   // SL12
 
     // View layer: ult visible in presentation
     const viewModels = computeTimelinePresentation(

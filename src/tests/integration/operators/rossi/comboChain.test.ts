@@ -19,7 +19,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../../dsl/semantics';
+import { AdjectiveType, NounType, VerbType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import {
   COMBO_WINDOW_COLUMN_ID,
@@ -27,10 +27,12 @@ import {
   PHYSICAL_INFLICTION_COLUMNS,
   ENEMY_ID,
 } from '../../../../model/channels';
-import { InteractionModeType, EventStatusType, SegmentType } from '../../../../consts/enums';
+import { CritMode, ElementType, InteractionModeType, EventStatusType, SegmentType, StatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { getComboTriggerInfo } from '../../../../controller/gameDataStore';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
+import { runCalculation } from '../../../../controller/calculation/calculationController';
+import { buildMultiplierEntries } from '../../../../controller/info-pane/damageBreakdownController';
 import { eventEndFrame, computeSegmentsSpan } from '../../../../consts/viewTypes';
 import { findColumn, buildContextMenu, getMenuPayload, type AppResult } from '../../helpers';
 
@@ -420,19 +422,41 @@ const RAZOR_CLAWMARK_JSON = require('../../../../model/game-data/operators/rossi
 const RAZOR_CLAWMARK_ID: string = RAZOR_CLAWMARK_JSON.properties.id;
 
 describe('F. Razor Clawmark DOT ticks', () => {
-  it('F1: Razor Clawmark config has 25 DOT frame ticks at 1s intervals', () => {
+  it('F1: Razor Clawmark config has 26 frames (0s application + DoT, then 1s..25s DoT) each dealing PHYSICAL DAMAGE', () => {
     const seg = RAZOR_CLAWMARK_JSON.segments[0];
     expect(seg).toBeDefined();
-    expect(seg.frames.length).toBe(25);
-    // First tick at 1s, last at 25s
-    expect(seg.frames[0].properties.offset.value).toBe(1);
-    expect(seg.frames[24].properties.offset.value).toBe(25);
-    // Each frame has a DEAL PHYSICAL DAMAGE clause
+    expect(seg.frames.length).toBe(26);
+
+    // 0s frame applies PHYSICAL + HEAT FRAGILITY on status creation AND deals
+    // the first DoT tick.
+    expect(seg.frames[0].properties.offset.value).toBe(0);
+    const zeroEffects = seg.frames[0].clause[0].effects;
+    const applyEffects = zeroEffects.filter((e: { verb: string }) => e.verb === VerbType.APPLY);
+    expect(new Set(applyEffects.map((e: { objectQualifier: string }) => e.objectQualifier)))
+      .toEqual(new Set([AdjectiveType.PHYSICAL, AdjectiveType.HEAT]));
+    // APPLY STAT (not STATUS) — flows into the enemy stat accumulator as
+    // PHYSICAL_FRAGILITY / HEAT_FRAGILITY deltas; damage calc reads these
+    // via buildFragilityStatSources, no event-based fragility status spawned.
+    for (const ef of applyEffects) {
+      expect(ef.object).toBe(NounType.STAT);
+      expect(ef.objectId).toBe(StatusType.FRAGILITY);
+    }
+    const dealOnZero = zeroEffects.find((e: { verb: string; object: string }) =>
+      e.verb === VerbType.DEAL && e.object === NounType.DAMAGE);
+    expect(dealOnZero).toBeDefined();
+    expect(dealOnZero.objectQualifier).toBe(AdjectiveType.PHYSICAL);
+
+    // Subsequent DoT ticks at 1s..25s
+    expect(seg.frames[1].properties.offset.value).toBe(1);
+    expect(seg.frames[25].properties.offset.value).toBe(25);
+
+    // Every frame deals PHYSICAL DAMAGE (0s frame's DEAL is alongside the APPLY
+    // effects; later frames carry it alone).
     for (const frame of seg.frames) {
-      const dealEffect = frame.clause[0].effects[0];
-      expect(dealEffect.verb).toBe('DEAL');
-      expect(dealEffect.objectQualifier).toBe('PHYSICAL');
-      expect(dealEffect.object).toBe('DAMAGE');
+      const deal = frame.clause[0].effects.find((e: { verb: string; object: string }) =>
+        e.verb === VerbType.DEAL && e.object === NounType.DAMAGE);
+      expect(deal).toBeDefined();
+      expect(deal.objectQualifier).toBe(AdjectiveType.PHYSICAL);
     }
   });
 
@@ -454,6 +478,73 @@ describe('F. Razor Clawmark DOT ticks', () => {
       (ev) => ev.ownerEntityId === ENEMY_ID && (ev.name === RAZOR_CLAWMARK_ID || ev.columnId === RAZOR_CLAWMARK_ID),
     );
     expect(rcEvents.length).toBeGreaterThanOrEqual(1);
+  });
+
+  // E2E: APPLY STAT HEAT_FRAGILITY + PHYSICAL_FRAGILITY from Razor Clawmark's
+  // 0s frame must reach the damage formula AND surface in the breakdown pane.
+  // Triggered via the natural chain: place Vulnerable + Heat infliction so
+  // Crimson Shadow Empowered's activationClause passes, fire the empowered
+  // BS (which applies Razor Clawmark), inspect subsequent DoT damage.
+  it('F3: Rossi empowered BS applies Razor Clawmark; DoT damage + breakdown show fragility contribution', () => {
+    const { result } = setupRossi();
+    placeComboTriggers(result, 1, 30);
+
+    // Fire empowered Crimson Shadow (requires Vulnerable on enemy).
+    act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
+    const bsCol = findColumn(result.current, SLOT_ROSSI, NounType.BATTLE);
+    expect(bsCol).toBeDefined();
+    const bsPayload = getMenuPayload(result.current, bsCol!, 2 * FPS, 'Crimson Shadow (Empowered)');
+    act(() => {
+      result.current.handleAddEvent(bsPayload.ownerEntityId, bsPayload.columnId, bsPayload.atFrame, bsPayload.defaultSkill);
+    });
+    act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
+
+    // Razor Clawmark now exists on enemy.
+    const rcEv = result.current.allProcessedEvents.find(
+      ev => ev.ownerEntityId === ENEMY_ID && ev.id === RAZOR_CLAWMARK_ID,
+    );
+    expect(rcEv).toBeDefined();
+
+    // Run calc and pick a Razor Clawmark DoT row (PHYSICAL DEAL DAMAGE from
+    // the segment's tick frames). Default talent level 3 → fragility 0.12
+    // → 1.12× multiplier on physical ticks.
+    const app = result.current;
+    const calc = runCalculation(
+      app.allProcessedEvents, app.columns, app.slots, app.enemy,
+      app.loadoutProperties, app.loadouts, app.staggerBreaks, CritMode.NEVER, app.overrides,
+    );
+    const rcDotRows = calc.rows.filter(
+      r => r.eventUid === rcEv!.uid && r.params != null && r.params.fragilityMultiplier > 1.001,
+    );
+    expect(rcDotRows.length).toBeGreaterThan(0);
+
+    const physTick = rcDotRows.find(r => r.element === ElementType.PHYSICAL);
+    expect(physTick).toBeDefined();
+    expect(physTick!.params!.fragilityMultiplier).toBeCloseTo(1.12, 4);
+
+    // Breakdown pane: Fragility entry = 1.12 with a Razor Clawmark source
+    // attribution on the active PHYSICAL sub-entry, and a greyed-out HEAT
+    // sub-entry also carrying the source (non-applicable this hit).
+    const entries = buildMultiplierEntries(physTick!.params!);
+    const fragEntry = entries.find(e => e.label === 'Fragility');
+    expect(fragEntry).toBeDefined();
+    expect(fragEntry!.value).toBeCloseTo(1.12, 4);
+    const physSub = fragEntry!.subEntries?.find(s => s.label.toLowerCase() === 'physical');
+    expect(physSub).toBeDefined();
+    expect(physSub!.source).toBe('Active element');
+    const rcSrc = physSub!.subEntries?.find(
+      ss => ss.label.toUpperCase().includes('RAZOR') || ss.label.toUpperCase().includes('CLAWMARK'),
+    );
+    expect(rcSrc).toBeDefined();
+    expect(rcSrc!.value).toBeCloseTo(0.12, 4);
+
+    const heatSub = fragEntry!.subEntries?.find(s => s.label.toLowerCase() === 'heat');
+    expect(heatSub).toBeDefined();
+    expect(heatSub!.source).toBe('Does not apply to this hit');
+    expect(heatSub!.cssClass).toBe('dmg-breakdown-neutral');
+    expect(
+      heatSub!.subEntries?.some(ss => ss.label.toUpperCase().includes('RAZOR') || ss.label.toUpperCase().includes('CLAWMARK')),
+    ).toBe(true);
   });
 });
 

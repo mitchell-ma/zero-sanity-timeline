@@ -29,7 +29,7 @@
           "effects": [
             {
               "verb": "APPLY",
-              "object": "STATUS",
+              "object": "STAT",
               "objectId": "SUSCEPTIBILITY",
               "to": "ENEMY",
               "with": {
@@ -60,7 +60,7 @@
             },
             {
               "verb": "APPLY",
-              "object": "STATUS",
+              "object": "STAT",
               "objectId": "SUSCEPTIBILITY",
               "to": "ENEMY",
               "with": {
@@ -123,7 +123,7 @@
           "effects": [
             {
               "verb": "APPLY",
-              "object": "STATUS",
+              "object": "STAT",
               "objectId": "SUSCEPTIBILITY",
               "to": "ENEMY",
               "with": {
@@ -154,7 +154,7 @@
             },
             {
               "verb": "APPLY",
-              "object": "STATUS",
+              "object": "STAT",
               "objectId": "SUSCEPTIBILITY",
               "to": "ENEMY",
               "with": {

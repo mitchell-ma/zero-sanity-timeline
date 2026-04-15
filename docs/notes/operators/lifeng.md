@@ -44,9 +44,8 @@
 | ID | Type | Target | Effect |
 |----|------|--------|--------|
 | ILLUMINATION_TALENT | TALENT_STATUS | OPERATOR | ATK bonus = MULT(ADD(TL [0.001, 0.0015], POT [0,0,0,0.0005,0.0005,0.0005]), ADD(WILL, INTELLECT)) |
-| SUBDUER_OF_EVIL_TALENT | TALENT | — | Trigger: THIS OPERATOR APPLY PHYSICAL KNOCK_DOWN → DEAL PHYSICAL DAMAGE [0.5, 1.0] ATK |
-| SUBDUER_OF_EVIL_P5 | POTENTIAL_STATUS | ENEMY | Physical DMG 250% ATK + 5 stagger, 2s active + 13s COOLDOWN cycle |
-| SUBDUER_OF_EVIL_P5_TALENT | TALENT | — | Trigger: APPLY KNOCK_DOWN + HAVE POTENTIAL >= 5 → APPLY SUBDUER_OF_EVIL_P5 TO ENEMY |
+| SUBDUER_OF_EVIL_T2 | TALENT | OPERATOR | Trigger: THIS OPERATOR APPLY PHYSICAL KNOCK_DOWN → APPLY THIS EVENT (2s active, frame 0 DEALS PHYSICAL DAMAGE [0, 0.5, 1.0] ATK VARY_BY TALENT_LEVEL) |
+| UNREMITTING_P5 | POTENTIAL_STATUS | OPERATOR | Self-triggering potential event: APPLY KNOCK_DOWN + POTENTIAL >= 5 → 250% ATK Physical DMG + 5 stagger, 2s active + 13s COOLDOWN cycle |
 | LINK | SKILL_STATUS | TEAM | 20s, max 4 stacks REFRESH, consumed by BS/ULT at EVENT_START |
 
 ## Potentials
@@ -57,7 +56,7 @@
 | P2 | Self Refinement | All attributes +15 | Loadout aggregator |
 | P3 | Spiritual Cultivation | Illumination +0.05% per INT/WILL | Baked: VARY_BY POTENTIAL in T1 formula |
 | P4 | Brief Instant | UE cost -15% | Baked: VARY_BY POTENTIAL on UE cost (90 × 0.85 = 76.5) |
-| P5 | Unremitting | Every 15s, next Subduer of Evil +250% ATK + 5 stagger | SUBDUER_OF_EVIL_P5_TALENT + SUBDUER_OF_EVIL_P5 status, gated HAVE POTENTIAL >= 5 |
+| P5 | Unremitting | Every 15s, next Subduer of Evil +250% ATK + 5 stagger | Self-triggering potential `UNREMITTING_P5` (onTriggerClause on operator), gated HAVE POTENTIAL >= 5 |
 
 ## Talents
 

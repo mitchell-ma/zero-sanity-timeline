@@ -7,11 +7,25 @@
 import {
   NounType, VerbType, ValueNode, ValueOperation, DeterminerType,
   isValueLiteral, isValueVariable, isValueStat, isValueStatus, isValueExpression,
+  isQualifiedId,
 } from '../../dsl/semantics';
 import type { ValueVariable as ValueVariableType, ValueStat as ValueStatType } from '../../dsl/semantics';
+import { ElementType, StatusType } from '../../consts/enums';
+import { ENEMY_ID } from '../../model/channels';
 import type { LoadoutProperties } from '../../view/InformationPane';
 
 // ── Resolution context ──────────────────────────────────────────────────────
+
+/**
+ * Minimal interface the resolver needs to answer "STACKS of STATUS of ENEMY/OPERATOR" queries.
+ * EventsQueryService implements this naturally; lighter callers (e.g. the engine's
+ * interpret-time context) can implement it via `countActiveStatusStacks`.
+ */
+export interface StatusStacksQuery {
+  getActiveStatusStacks(frame: number, ownerEntityId: string, statusId: string): number;
+  /** Per-element susceptibility query — handles generic SUSCEPTIBILITY events carrying per-element values. Optional. */
+  getActiveSusceptibilityStacks?(frame: number, element: ElementType): number;
+}
 
 /** Static loadout context for resolving variable lookups. */
 export interface ValueResolutionContext {
@@ -25,10 +39,12 @@ export interface ValueResolutionContext {
   sourceContext?: ValueResolutionContext;
   /** User-supplied parameter values (e.g. { ENEMY_HIT: 2 }) for VARY_BY resolution. */
   suppliedParameters?: Record<string, number>;
-  /** Runtime query: active stack count for a status on the resolved operator (0 if not present). */
-  getStatusStacks?: (statusId: string) => number;
-  /** Runtime query: active stack count for a status on the enemy (0 if not present). */
-  getEnemyStatusStacks?: (statusId: string) => number;
+  /** Runtime query authority for active-stack lookups (0 if unset). */
+  statusQuery?: StatusStacksQuery;
+  /** Frame at which status queries resolve. */
+  frame?: number;
+  /** Entity ID for OPERATOR-side status queries (ENEMY-side resolves to ENEMY_ID via the of-chain). */
+  ownerEntityId?: string;
   /** Runtime query: consumed stack count for a status on the current event (e.g. LINK consumed by ult). */
   getEventStacks?: (statusId: string) => number;
   /** Runtime: number of stacks consumed by the triggering CONSUME effect (for STACKS of STATUS CONSUMED). */
@@ -56,8 +72,9 @@ function getVariableArrayIndex(object: string, ctx: ValueResolutionContext, obje
     case NounType.TALENT_LEVEL: return ctx.talentLevel ?? 0;
     default: {
       // VARY_BY STATUS <objectId>: active stack count of the status on the resolved operator
-      if (object === NounType.STATUS && objectId && ctx.getStatusStacks) {
-        return ctx.getStatusStacks(objectId);
+      if (object === NounType.STATUS && objectId
+          && ctx.statusQuery && ctx.frame != null && ctx.ownerEntityId) {
+        return ctx.statusQuery.getActiveStatusStacks(ctx.frame, ctx.ownerEntityId, objectId);
       }
       // Check user-supplied parameters (e.g. ENEMY_HIT from VARY_BY)
       const paramValue = ctx.suppliedParameters?.[object];
@@ -118,26 +135,31 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
       return ctx.consumedStacks;
     }
     const ofClause = node.of;
-    if (ofClause) {
-      // DSL grammar uses objectQualifier + objectId (e.g. ELECTRIC + SUSCEPTIBILITY).
-      // The storage column ID is the composed form (ELECTRIC_SUSCEPTIBILITY).
-      const qualifier = (ofClause as { objectQualifier?: string }).objectQualifier;
-      const statusId = ofClause.objectId && qualifier
-        ? `${qualifier}_${ofClause.objectId}`
-        : ofClause.objectId;
-      if (!statusId) return 0;
-      // STACKS of <STATUS> of EVENT → consumed stacks on the current event
-      if (ofClause.object === NounType.EVENT && ctx.getEventStacks) {
-        return ctx.getEventStacks(statusId);
-      }
-      // STACKS of <STATUS> of ENEMY → active stacks on the enemy
-      if (ofClause.of?.object === NounType.ENEMY && ctx.getEnemyStatusStacks) {
-        return ctx.getEnemyStatusStacks(statusId);
-      }
-      // STACKS of <STATUS> of OPERATOR → active stacks on the operator
-      if (ctx.getStatusStacks) return ctx.getStatusStacks(statusId);
+    if (!ofClause) return 0;
+    // DSL grammar uses objectQualifier + objectId (e.g. ELECTRIC + SUSCEPTIBILITY).
+    // The storage column ID is the composed form (ELECTRIC_SUSCEPTIBILITY).
+    const qualifier = (ofClause as { objectQualifier?: string }).objectQualifier;
+    const statusId = ofClause.objectId && qualifier
+      ? `${qualifier}_${ofClause.objectId}`
+      : ofClause.objectId;
+    if (!statusId) return 0;
+    // STACKS of <STATUS> of EVENT → consumed stacks on the current event
+    if (ofClause.object === NounType.EVENT && ctx.getEventStacks) {
+      return ctx.getEventStacks(statusId);
     }
-    return 0;
+    // All other paths go through the unified statusQuery.
+    if (!ctx.statusQuery || ctx.frame == null) return 0;
+    const owner = ofClause.of?.object === NounType.ENEMY ? ENEMY_ID : ctx.ownerEntityId;
+    if (!owner) return 0;
+    // Susceptibility is a specialization: generic SUSCEPTIBILITY events can carry
+    // per-element values, so the query expands qualified ids to element lookups.
+    if (owner === ENEMY_ID
+        && ctx.statusQuery.getActiveSusceptibilityStacks
+        && isQualifiedId(statusId, StatusType.SUSCEPTIBILITY)) {
+      const element = statusId.slice(0, -(StatusType.SUSCEPTIBILITY.length + 1)) as ElementType;
+      return ctx.statusQuery.getActiveSusceptibilityStacks(ctx.frame, element);
+    }
+    return ctx.statusQuery.getActiveStatusStacks(ctx.frame, owner, statusId);
   }
 
   if (isValueExpression(node)) {
@@ -262,7 +284,9 @@ export function buildContextForSkillColumn(
   stats?: Partial<Record<string, number>>,
   talentSlot?: TalentSlot,
 ): ValueResolutionContext {
-  if (!props) return { ...DEFAULT_VALUE_CONTEXT, stats: stats ?? {} };
+  if (!props || !props.skills || !props.operator) {
+    return { ...DEFAULT_VALUE_CONTEXT, stats: stats ?? {} };
+  }
   const levelKey = SKILL_COLUMN_LEVEL_KEY[skillColumn];
   return {
     skillLevel: levelKey ? props.skills[levelKey] : DEFAULT_VALUE_CONTEXT.skillLevel,

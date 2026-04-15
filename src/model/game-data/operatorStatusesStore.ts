@@ -9,10 +9,11 @@ import { EventType, UNLIMITED_STACKS } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
 import type { EventSegmentData, EventFrameMarker } from '../../consts/viewTypes';
 import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
-import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from '../../controller/calculation/valueResolver';
+import { PERMANENT_DURATION } from '../../consts/enums';
 import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
 
-import { FPS } from '../../utils/timeline';
+import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectThisOperatorInValueNode } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
@@ -141,12 +142,15 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
   // Status configs must specify a target — this determines default routing
   if (!props.to && !props.target) errors.push('properties.to: required (TEAM, OPERATOR, or ENEMY)');
 
-  // When the status itself targets TEAM (properties.to === TEAM), value
-  // resolution runs against the team entity which has no stats, skill level,
-  // talent level, or potential. Flag any value nodes using THIS OPERATOR —
-  // they should use SOURCE OPERATOR to resolve against the casting operator.
-  if (props.to === NounType.TEAM) {
-    const walkEffectsForTeamThis = (clauses: unknown[], clausePath: string) => {
+  // When the status targets TEAM or ENEMY (properties.to), value resolution
+  // runs against that non-operator entity — no stats, skill level, talent
+  // level, or potential. Flag any value nodes using THIS OPERATOR; they
+  // should use SOURCE OPERATOR to resolve against the casting operator.
+  // Walks every clause location: top-level, onTrigger/onEntry/onExit, and
+  // per-segment (seg.clause, seg.onEntry/onExit/onTrigger, seg.frames[*].clause).
+  if (props.to === NounType.TEAM || props.to === NounType.ENEMY) {
+    const ownerLabel = props.to === NounType.TEAM ? 'TEAM' : 'ENEMY';
+    const walkEffects = (clauses: unknown[], clausePath: string) => {
       if (!Array.isArray(clauses)) return;
       for (let ci = 0; ci < clauses.length; ci++) {
         const clause = clauses[ci] as Record<string, unknown>;
@@ -159,17 +163,34 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
           for (const key of Object.keys(w)) {
             if (w[key] && typeof w[key] === 'object') {
               errors.push(...collectThisOperatorInValueNode(
-                w[key], `${clausePath}[${ci}].effects[${ei}].with.${key}`,
+                w[key], `${clausePath}[${ci}].effects[${ei}].with.${key}`, ownerLabel,
               ));
             }
           }
         }
       }
     };
-    if (json.clause) walkEffectsForTeamThis(json.clause as unknown[], 'clause');
-    if (json.onTriggerClause) walkEffectsForTeamThis(json.onTriggerClause as unknown[], 'onTriggerClause');
-    if (json.onEntryClause) walkEffectsForTeamThis(json.onEntryClause as unknown[], 'onEntryClause');
-    if (json.onExitClause) walkEffectsForTeamThis(json.onExitClause as unknown[], 'onExitClause');
+    if (json.clause) walkEffects(json.clause as unknown[], 'clause');
+    if (json.onTriggerClause) walkEffects(json.onTriggerClause as unknown[], 'onTriggerClause');
+    if (json.onEntryClause) walkEffects(json.onEntryClause as unknown[], 'onEntryClause');
+    if (json.onExitClause) walkEffects(json.onExitClause as unknown[], 'onExitClause');
+    // Per-segment clauses + frame clauses inside segments.
+    if (Array.isArray(json.segments)) {
+      for (let si = 0; si < (json.segments as unknown[]).length; si++) {
+        const seg = (json.segments as Record<string, unknown>[])[si];
+        const segBase = `segments[${si}]`;
+        if (seg.clause) walkEffects(seg.clause as unknown[], `${segBase}.clause`);
+        if (seg.onTriggerClause) walkEffects(seg.onTriggerClause as unknown[], `${segBase}.onTriggerClause`);
+        if (seg.onEntryClause) walkEffects(seg.onEntryClause as unknown[], `${segBase}.onEntryClause`);
+        if (seg.onExitClause) walkEffects(seg.onExitClause as unknown[], `${segBase}.onExitClause`);
+        if (Array.isArray(seg.frames)) {
+          for (let fi = 0; fi < (seg.frames as unknown[]).length; fi++) {
+            const frame = (seg.frames as Record<string, unknown>[])[fi];
+            if (frame.clause) walkEffects(frame.clause as unknown[], `${segBase}.frames[${fi}].clause`);
+          }
+        }
+      }
+    }
   }
 
   if (props.duration) {
@@ -301,15 +322,29 @@ export class OperatorStatus {
   }
 
   /**
-   * Resolve segment durations with a specific potential level. Returns a cloned
-   * segments array with durations re-resolved from the raw ValueNode configs.
-   * Segments without a raw duration node fall back to the parse-time resolved
-   * duration. Zero-duration segments are pruned — a segment whose duration
-   * resolves to 0 (e.g. VARY_BY POTENTIAL returning 0 for a locked potential)
-   * is conceptually absent at that potential.
+   * Resolve the status's top-level `properties.duration` against the apply-time
+   * ValueResolutionContext (potential + talent level + skill level + stats).
+   * Returns a frame count, or `TOTAL_FRAMES` for permanent / zero-resolved
+   * durations (locked potentials / talent level 0). Returns `undefined` when
+   * the status has no `properties.duration` declared.
    */
-  resolveSegments(potential: number): EventSegmentData[] {
-    const ctx = { ...DEFAULT_VALUE_CONTEXT, potential };
+  resolveDurationFrames(ctx: ValueResolutionContext): number | undefined {
+    if (!this.duration) return undefined;
+    const secs = resolveValueNode(this.duration.value, ctx);
+    return secs === PERMANENT_DURATION || secs === 0 ? TOTAL_FRAMES : Math.round(secs * FPS);
+  }
+
+  /**
+   * Resolve per-segment durations against the apply-time ValueResolutionContext.
+   * Returns a cloned segments array with durations re-resolved from the raw
+   * ValueNode configs. Zero-duration segments are pruned — a segment whose
+   * duration resolves to 0 at the given context (e.g. VARY_BY POTENTIAL for a
+   * locked potential, VARY_BY TALENT_LEVEL at level 0) is conceptually absent.
+   *
+   * Callers must pass a populated context (potential, talentLevel, skillLevel,
+   * stats); otherwise talent-gated / potential-gated segments will be dropped.
+   */
+  resolveSegments(ctx: ValueResolutionContext): EventSegmentData[] {
     return this.segments
       .map((seg, i) => {
         const rawProps = this._rawSegments[i]?.properties as Record<string, unknown> | undefined;

@@ -84,6 +84,7 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
+import { withApplyFrame } from './_freeformEventHelpers';
 
 const MELTING_FLAME_ID = 'MELTING_FLAME';
 
@@ -540,16 +541,16 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     };
 
     // Focus on enemy (from Antal's battle skill)
-    const focus = makeEv({
+    const focus = withApplyFrame(makeEv({
       uid: 'focus-1', name: StatusType.FOCUS, ownerEntityId: ENEMY_ID,
       columnId: 'FOCUS', startFrame: 0, segments: [{ properties: { duration: 60 * FPS } }],
-    });
+    }), { statusId: StatusType.FOCUS, to: NounType.ENEMY });
     // Akekuri's heat infliction
-    const akekuriHeat = makeEv({
+    const akekuriHeat = withApplyFrame(makeEv({
       uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerEntityId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceEntityId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
-    });
+    }), { statusId: INFLICTION_COLUMNS.HEAT, to: NounType.ENEMY });
     // Antal combo with comboTriggerColumnId set (mirrors heat)
     const antalCombo = makeEv({
       uid: 'antal-combo-1', name: 'EMP_TEST_SITE', ownerEntityId: SLOT_ANTAL,
@@ -613,7 +614,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       [LAEV_SLOT]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
     };
 
-    const heat: TimelineEvent = {
+    const heat: TimelineEvent = withApplyFrame({
       uid: 'freeform-heat-l1',
       id: INFLICTION_COLUMNS.HEAT,
       name: INFLICTION_COLUMNS.HEAT,
@@ -623,7 +624,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       segments: [{ properties: { duration: 4800 } }],
       sourceEntityId: USER_ID,
       sourceSkillName: 'Freeform',
-    };
+    }, { statusId: INFLICTION_COLUMNS.HEAT, to: NounType.ENEMY });
 
     const basic: TimelineEvent = {
       uid: 'laev-basic-l1',

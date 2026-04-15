@@ -1,5 +1,90 @@
 # TODO
 
+## StackInteractionType NONE vs RESET semantics are backwards
+
+The current engine couples two independent concerns under one enum:
+1. **At-cap behavior** (what happens when `activeCount >= limit`)
+2. **Multi-stack APPLY dispatch** (what happens when a single APPLY carries
+   `stacks = N > 1`)
+
+Current mapping (see `eventInterpretorController.ts:1415-1419` and
+`configDrivenStatusColumn.ts:47-58`):
+- `NONE` → at-cap: reject. Multi-stack APPLY: collapse to 1 event with `stacks = N` (accumulator).
+- `RESET` → at-cap: evict oldest. Multi-stack APPLY: spawn N separate events.
+
+This is backwards from natural reading — "NONE" reads as "no interaction
+between instances", but the engine treats it as an accumulator that
+actively groups stacks into one event. "RESET" reads as "new replaces old",
+but at high limits it's actually the knob that produces separate
+independent events.
+
+Concrete pain: Tangtang's Waterspout needs N distinct events per BS cast
+(1 + whirlpool count). The natural config is `NONE` + unlimited limit,
+but that gives one grouped event. We have to use `RESET` + 99999 limit
+to get the distinct-events behavior, even though no reset ever happens.
+
+**Cleanup:**
+- Split the two concerns: one field for at-cap behavior, a separate
+  field for multi-stack APPLY dispatch (or infer dispatch from the
+  APPLY expression shape).
+- Visual separation of grouped stacks is already achievable in the
+  view layer — the view can split an `ev.stacks = N` accumulator event
+  into N visually distinct segments without requiring N underlying events.
+  Move visual separation out of the model semantic and into the view.
+- Rename enum values so the names match behavior.
+- Migrate all existing statuses and update docs/tests.
+
+## Freezing Point talent ends one time-stop short of its source infliction (FIXED 2026-04-14)
+
+**Bug:** freeform CRYO infliction placements caused Yvonne's Freezing Point
+talent to end at the raw (unextended) CRYO end frame instead of the
+time-stop-extended end. The BECOME-NOT trigger fired twice — once at raw
+end (wrongly), once at extended end — consuming FP prematurely.
+
+**Root cause:** `flattenEventsToQueueFrames` emitted a duplicate `EVENT_END`
+queue frame at the raw unextended end of non-skill wrapper events. The
+original guard meant to skip this required `!hasFrames`, but freeform
+wrappers carry a synthesized APPLY-clause frame from
+`buildStatusMicroColumn`, so the guard never triggered. The wrapper's
+raw-end `EVENT_END` fired first, BECOME-NOT routed through FP's CONSUME
+condition and clamped FP before the applied event's own `EVENT_END` fired
+at the extended end.
+
+**Full refactor (completed alongside the fix):** the freeform and natural
+(skill-triggered) infliction/reaction/status paths now share a single
+codepath from the APPLY-clause PROCESS_FRAME onward. Freeform wrappers
+emit only their clause-carrying PROCESS_FRAME; `doApply → applyEvent →
+runStatusCreationLifecycle` owns the entire applied-event lifecycle.
+
+Key changes:
+- `flattenEventsToQueueFrames`: split into `emitSkillLifecycle` (full
+  EVENT_START / SEGMENT / EVENT_END lifecycle) and `emitNonSkillFrames`
+  (clause-carrying PROCESS_FRAMEs only). Non-skill wrappers never emit
+  lifecycle hooks — the applied event owns them.
+- `handleProcessFrame` section 3b (freeform creation fallback) deleted.
+- `buildStatusMicroColumn`: every freeform-placeable non-skill column
+  ships an APPLY clause in its defaultEvent. Abstract `SUSCEPTIBILITY`
+  removed from the menu (only element-specific variants remain).
+  Physical statuses default to `isForced: 1` in the APPLY clause so
+  freeform placements bypass the Vulnerable gate.
+- `applyCrush` / `applyBreach` accept `isForced` and proceed to create
+  the status (with 1 default stack) when no Vulnerable is active.
+- `InterpretContext.sourceEvent` added so `doApply`'s generic
+  qualified-status path can thread runtime-user-edited `susceptibility`
+  from a qualified-susceptibility / FOCUS wrapper onto the applied event.
+- `attachDefaultSegments` normalizes non-skill events that arrive
+  without a frame (URL imports, session restores, programmatic adds).
+- Test fixtures updated via shared `_freeformEventHelpers.ts` helper.
+
+Regression tests: `src/tests/integration/freeform/freeformInflictionLifecycle.test.ts`
+(7 E2E tests). Invariant tests in `src/tests/unit/columnBuilder.test.ts`.
+
+**Follow-up (not done):** InfoPane "Time-stop adjusted" still hides the
+adjusted duration for derived events because `event === processedEvent`
+for them. For those, either expose DEC's `rawSegmentDurations` to the
+view or back-compute raw via `contractByTimeStops(processedDur, stops)`
+and always show both lines.
+
 ## TriggerIndex: order-agnostic conditions (DONE)
 
 Completed. `TriggerDefEntry` now stores a flat `conditions: Predicate[]` array.

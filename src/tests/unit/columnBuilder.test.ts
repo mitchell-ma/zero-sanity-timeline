@@ -23,9 +23,10 @@
  */
 
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
-import { NounType } from '../../dsl/semantics';
+import { NounType, AdjectiveType as DslAdjective, VerbType, isQualifiedId } from '../../dsl/semantics';
 import { buildColumns, Slot } from '../../controller/timeline/columnBuilder';
 import { Enemy, MiniTimeline, Operator, VisibleSkills } from '../../consts/viewTypes';
+import { StatusType } from '../../consts/enums';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const MF_ID: string = require('../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
@@ -150,3 +151,84 @@ describe('buildColumns — matchColumnIds includes raw status IDs', () => {
     expect(statusCol!.matchColumnIds).toContain(MF_ID);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// APPLY-clause invariant for freeform-placeable non-skill columns
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Every freeform-placeable non-skill column's `defaultEvent` must carry an
+// APPLY clause at `segments[0].frames[0].clauses[0].effects[0].dslEffect`.
+// At pipeline runtime, the wrapper's PROCESS_FRAME drives the unified
+// `interpret → doApply → applyEvent → runStatusCreationLifecycle` path —
+// no fallback branch exists. Runtime-user-edited fields (`susceptibility`
+// on qualified-susceptibility / FOCUS wrappers) are threaded onto the
+// applied event via `InterpretContext.sourceEvent` inside doApply's
+// generic qualified-status path. Any regression that adds a placeable
+// column without an APPLY clause will surface here.
+
+type MicroCol = NonNullable<MiniTimeline['microColumns']>[number];
+
+function hasApplyClause(mc: MicroCol): boolean {
+  const seg = mc.defaultEvent?.segments?.[0];
+  const frame = seg?.frames?.[0];
+  const clause = frame?.clauses?.[0];
+  const effect = (clause?.effects?.[0] as { type?: string; dslEffect?: { verb?: string } } | undefined);
+  return effect?.type === 'dsl' && effect?.dslEffect?.verb === VerbType.APPLY;
+}
+
+describe('buildColumns — APPLY-clause invariant on freeform-placeable columns', () => {
+  it('every enemy-status micro-column ships an APPLY clause', () => {
+    const op = findOperator('YVONNE');
+    const slot = makeSlot('slot1', op);
+    const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
+    const enemyStatusCol = columns.find(
+      (c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerEntityId === 'enemy' && c.columnId === 'enemy-status',
+    );
+    expect(enemyStatusCol).toBeDefined();
+    const micros = enemyStatusCol!.microColumns ?? [];
+    expect(micros.length).toBeGreaterThan(0);
+
+    const violations: { id: string }[] = [];
+    for (const mc of micros) {
+      if (!hasApplyClause(mc)) violations.push({ id: mc.id });
+    }
+    expect(violations).toEqual([]);
+  });
+
+  it('abstract SUSCEPTIBILITY is not a placeable micro-column (only element-specific variants)', () => {
+    const op = findOperator('YVONNE');
+    const slot = makeSlot('slot1', op);
+    const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
+    const enemyStatusCol = columns.find(
+      (c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerEntityId === 'enemy' && c.columnId === 'enemy-status',
+    );
+    const microIds = enemyStatusCol?.microColumns?.map(mc => mc.id) ?? [];
+    expect(microIds).not.toContain(StatusType.SUSCEPTIBILITY);
+    // Element-specific susceptibility IS still placeable
+    expect(microIds.some(id => isQualifiedId(id, StatusType.SUSCEPTIBILITY))).toBe(true);
+  });
+
+  it('physical-status micro-columns (LIFT, KNOCK_DOWN, CRUSH, BREACH) have APPLY clauses with objectId=PHYSICAL + isForced', () => {
+    const op = findOperator('YVONNE');
+    const slot = makeSlot('slot1', op);
+    const columns = buildColumns([slot], ENEMY, allSkillsVisible('slot1'));
+    const enemyStatusCol = columns.find(
+      (c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerEntityId === 'enemy' && c.columnId === 'enemy-status',
+    );
+    const micros = enemyStatusCol?.microColumns ?? [];
+    const physicalIds = ['LIFT', 'KNOCK_DOWN', 'CRUSH', 'BREACH'];
+    for (const id of physicalIds) {
+      const mc = micros.find(m => m.id === id);
+      expect(mc).toBeDefined();
+      const effect = (mc!.defaultEvent?.segments?.[0]?.frames?.[0]?.clauses?.[0]?.effects?.[0] as {
+        type?: string; dslEffect?: { verb?: string; objectId?: string; objectQualifier?: string; with?: { isForced?: { verb?: string; value?: number } } };
+      }).dslEffect;
+      expect(effect?.verb).toBe(VerbType.APPLY);
+      expect(effect?.objectId).toBe(DslAdjective.PHYSICAL);
+      expect(effect?.objectQualifier).toBe(id);
+      expect(effect?.with?.isForced?.verb).toBe(VerbType.IS);
+      expect(effect?.with?.isForced?.value).toBe(1);
+    }
+  });
+});
+

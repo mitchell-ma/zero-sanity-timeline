@@ -66,6 +66,7 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
+import { withApplyFrame } from './_freeformEventHelpers';
 
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
@@ -650,7 +651,7 @@ describe('J. Combo Activation Window Pipeline', () => {
   }
 
   function makeInflictionEvent(columnId: string, startFrame: number, durationFrames: number): TimelineEvent {
-    return makeEvent({
+    const bare = makeEvent({
       uid: `inflict-${columnId}-${startFrame}`,
       name: columnId,
       ownerEntityId: ENEMY_ID,
@@ -659,6 +660,7 @@ describe('J. Combo Activation Window Pipeline', () => {
       segments: [{ properties: { duration: durationFrames } }],
       sourceEntityId: SLOT_OTHER,
     });
+    return withApplyFrame(bare, { statusId: columnId, to: NounType.ENEMY });
   }
 
   test('J1: Combo window opens from basic attack final strike', () => {

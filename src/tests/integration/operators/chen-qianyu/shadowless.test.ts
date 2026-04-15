@@ -35,7 +35,7 @@ const CHEN_QIANYU_ID: string = require('../../../../model/game-data/operators/ch
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_CHEN = 'slot-0';
-const SHADOWLESS_ID = 'CHEN_QIANYU_POTENTIAL1_SHADOWLESS';
+const SHADOWLESS_ID = 'SHADOWLESS_P1';
 
 beforeEach(() => {
   localStorage.clear();

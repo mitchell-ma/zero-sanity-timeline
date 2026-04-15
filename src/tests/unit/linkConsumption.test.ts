@@ -10,7 +10,7 @@
  * controller can apply the Link multiplier to all frames of the consuming event.
  */
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
-import { NounType } from '../../dsl/semantics';
+import { NounType, VerbType } from '../../dsl/semantics';
 import { EventStatusType, StatusType } from '../../consts/enums';
 import { processCombatSimulation, getLastController } from '../../controller/timeline/eventQueueController';
 import { TEAM_ID } from '../../controller/slot/commonSlotController';
@@ -37,7 +37,11 @@ let eventIdCounter = 0;
 
 function resetIdCounter() { eventIdCounter = 0; }
 
-/** Create a Link team status as a derived event (simulates what the queue would create from a frame marker). */
+/** Create a freeform-shaped Link team status with the APPLY-clause frame
+ *  that `buildStatusMicroColumn` attaches to its defaultEvent — matches the
+ *  shape the app produces via `attachDefaultSegments` when a user places a
+ *  Link event freeform.
+ */
 function linkStatusEvent(startFrame: number, durationFrames: number): TimelineEvent {
   return {
     uid: `link-${eventIdCounter++}`,
@@ -46,7 +50,25 @@ function linkStatusEvent(startFrame: number, durationFrames: number): TimelineEv
     ownerEntityId: TEAM_ID,
     columnId: StatusType.LINK,
     startFrame,
-    segments: [{ properties: { duration: durationFrames } }],
+    segments: [{
+      properties: { duration: durationFrames },
+      frames: [{
+        offsetFrame: 0,
+        clauses: [{
+          conditions: [],
+          effects: [{
+            type: 'dsl',
+            dslEffect: {
+              verb: VerbType.APPLY,
+              object: NounType.STATUS,
+              objectId: StatusType.LINK,
+              to: NounType.TEAM,
+              inheritDuration: true,
+            },
+          }],
+        }],
+      }],
+    }],
     sourceSkillName: 'Test Link Source',
   };
 }

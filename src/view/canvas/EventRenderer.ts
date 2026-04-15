@@ -239,10 +239,18 @@ export function renderEvent(
   // Visual truncation: when the presentation specifies a clamped visual duration
   // (e.g. stacking statuses where later instances visually clamp earlier ones),
   // replace segments with a single segment of the clamped duration and skip layout.
+  // Preserve frame diamonds so DoT segment-frame statuses (e.g. Waterspout) still
+  // show their per-tick markers even when clamped by a subsequent instance.
   if (presentation.visualActivationDuration != null) {
+    const clampedDur = presentation.visualActivationDuration;
+    const preservedFrames: EventFrameMarker[] = [];
+    for (const s of segments) {
+      if (!s.frames) continue;
+      for (const f of s.frames) preservedFrames.push(f);
+    }
     segments = [{
-      properties: { duration: presentation.visualActivationDuration },
-      frames: [],
+      properties: { duration: clampedDur },
+      frames: preservedFrames,
     } as EventSegmentData];
     layout = undefined;
   }

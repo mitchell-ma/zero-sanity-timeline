@@ -242,10 +242,9 @@ describe('A. Aggregator — Darhoff 7 routes STR via MAIN_ATTRIBUTE alias, ATK v
     expect(strDelta).toBe(MAIN_BOOST_S_VALUES[4]);
     expect(strDelta).toBe(42);
 
-    // FLAT_ATTACK delta at L5 = ASSAULT_PREP_FLAT_ATK[4] = 42.
+    // FLAT_ATTACK delta at L5 = ASSAULT_PREP_FLAT_ATK[4] (sourced from JSON).
     const flatDelta = aggL5!.stats[StatType.FLAT_ATTACK] - aggBase!.stats[StatType.FLAT_ATTACK];
     expect(flatDelta).toBe(ASSAULT_PREP_FLAT_ATK_VALUES[4]);
-    expect(flatDelta).toBe(42);
   });
 });
 
@@ -321,8 +320,10 @@ describe('B. Info pane — weapon breakdown surfaces translated stat keys', () =
       c => c.stat === StatType.FLAT_ATTACK,
     );
     expect(flatAtkContrib).toBeDefined();
-    // Must be the flat value (79 at L9), not a fractional percentage like 0.336.
-    expect(flatAtkContrib!.value).toBe(79);
+    // Must be the flat value from the JSON table at L9, not a fractional
+    // percentage — regression guard against the old bug where the flat ATK
+    // leaked through as ATTACK_BONUS with a value like 0.336.
+    expect(flatAtkContrib!.value).toBe(ASSAULT_PREP_FLAT_ATK_VALUES[8]);
     expect(flatAtkContrib!.value).toBeGreaterThanOrEqual(1);
 
     // Regression guard: the same value MUST NOT show up as ATTACK_BONUS — that

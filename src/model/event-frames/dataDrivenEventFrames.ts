@@ -208,78 +208,48 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
       for (const ef of pred.effects) {
         const isSource = ef.objectDeterminer === DeterminerType.TRIGGER;
 
-        switch (ef.verb) {
-          case VerbType.RECOVER:
-          case VerbType.RETURN:
-            if (ef.object === NounType.SKILL_POINT) { clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect }); }
-            else if (ef.object === NounType.ULTIMATE_ENERGY) {
-              // Push as DSL clause so interpret() → doRecover routes UE through
-              // the single DEC.recordUltimateEnergyGain ingress.
-              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
-            }
-            else if (ef.object === NounType.HP) clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
-            break;
-
-          case VerbType.APPLY:
-            if (isSource && (ef.object === NounType.INFLICTION || ef.object === NounType.STATUS)) {
-              duplicateSource = true;
-            } else if (ef.object === NounType.INFLICTION || ef.object === NounType.SUSCEPTIBILITY) {
-              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
-            } else if (ef.object === NounType.STATUS || ef.objectType === NounType.STATUS) {
-              // Normalize: objectType=STATUS with object=<id> → object: STATUS, objectId: <id>
-              const normalizedEffect = ef.objectType === NounType.STATUS && ef.object !== NounType.STATUS
-                ? { ...ef, object: NounType.STATUS, objectId: ef.object } as unknown as Effect
-                : ef as unknown as Effect;
-              clauseEffects.push({ type: 'dsl', dslEffect: normalizedEffect });
-            }
-            break;
-
-          case VerbType.CONSUME:
-            if (ef.object === NounType.INFLICTION && ef.conversion) {
-              // Absorb/exchange — no engine handler yet, skip
-            } else if (ef.object === NounType.STATUS || ef.objectType === NounType.STATUS) {
-              const normalizedConsumeEffect = ef.objectType === NounType.STATUS && ef.object !== NounType.STATUS
-                ? { ...ef, object: NounType.STATUS, objectId: ef.object } as unknown as Effect
-                : ef as unknown as Effect;
-              clauseEffects.push({ type: 'dsl', dslEffect: normalizedConsumeEffect });
-            } else {
-              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
-            }
-            break;
-
-          case VerbType.DEAL:
-            if (ef.object === NounType.DAMAGE || ef.object === NounType.STAGGER) {
-              clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
-            }
-            break;
-
-          case VerbType.REDUCE:
-            // REDUCE COOLDOWN (and any other REDUCE effects) — pass through to interpret() at frame time
-            clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
-            break;
-
-          case VerbType.CHANCE:
-          case VerbType.ALL:
-          case VerbType.ANY:
-            // Compound wrappers — pushed through intact. Runtime interpret() walks their
-            // nested `effects`/`predicates`/`elseEffects`. clauseQueries helpers
-            // (findDealDamageInClauses / hasChanceClause / hasDealDamageClause) also
-            // descend into these wrappers to discover damage effects / chance gates.
-            clauseEffects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
-            break;
-
-          case VerbType.PERFORM: {
-            const PERFORM_TO_FRAME_TYPE: Record<string, EventFrameType> = {
-              [NounType.FINAL_STRIKE]: EventFrameType.FINAL_STRIKE,
-              [NounType.FINISHER]: EventFrameType.FINISHER,
-              [NounType.DIVE]: EventFrameType.DIVE,
-            };
-            const skillKey = ef.object === NounType.SKILL ? (ef.objectId ?? '') : (ef.object ?? '');
-            const ft = PERFORM_TO_FRAME_TYPE[skillKey];
-            if (ft && !frameTypes.includes(ft)) frameTypes.push(ft);
-            break;
-          }
+        // ── Parse-time side effects that don't produce a DSL clause ───────
+        // These verbs collect metadata during parse and do NOT push a clause
+        // effect — the interpreter reads the flags/frameTypes directly.
+        if (ef.verb === VerbType.APPLY && isSource
+            && (ef.object === NounType.INFLICTION || ef.object === NounType.STATUS)) {
+          // `OF TRIGGER` marker — the frame mirrors the triggering source's
+          // infliction/status onto the owner at runtime via duplicateTriggerSource.
+          duplicateSource = true;
+          continue;
         }
+        if (ef.verb === VerbType.PERFORM) {
+          // PERFORM FINAL_STRIKE / FINISHER / DIVE marks the frame type for
+          // downstream finisher/final-strike gating; no runtime effect to dispatch.
+          const PERFORM_TO_FRAME_TYPE: Record<string, EventFrameType> = {
+            [NounType.FINAL_STRIKE]: EventFrameType.FINAL_STRIKE,
+            [NounType.FINISHER]: EventFrameType.FINISHER,
+            [NounType.DIVE]: EventFrameType.DIVE,
+          };
+          const skillKey = ef.object === NounType.SKILL ? (ef.objectId ?? '') : (ef.object ?? '');
+          const ft = PERFORM_TO_FRAME_TYPE[skillKey];
+          if (ft && !frameTypes.includes(ft)) frameTypes.push(ft);
+          continue;
+        }
+        // ── Known-unsupported cases dropped explicitly (not silently) ─────
+        if (ef.verb === VerbType.CONSUME && ef.object === NounType.INFLICTION && ef.conversion) {
+          // Absorb/exchange conversion — no engine handler yet.
+          continue;
+        }
+
+        // ── Shape normalization: legacy `objectType: STATUS` JSON shape ──
+        const normalizedEffect = (ef.verb === VerbType.APPLY || ef.verb === VerbType.CONSUME)
+            && ef.objectType === NounType.STATUS && ef.object !== NounType.STATUS
+          ? { ...ef, object: NounType.STATUS, objectId: ef.object } as unknown as Effect
+          : ef as unknown as Effect;
+
+        // Default: pass through to interpret() at runtime. Any verb/object
+        // the interpreter understands (APPLY STAT / WEAKNESS / SLOW / SHIELD,
+        // DEAL * , RECOVER * , RETURN *, EXTEND, REDUCE, RESET, IGNORE,
+        // DISABLE, ENABLE, compound CHANCE/ALL/ANY, …) works at frame level
+        // without a parse-time allowlist. Unknown verbs fall through to
+        // interpret()'s default case and are harmlessly no-oped.
+        clauseEffects.push({ type: 'dsl', dslEffect: normalizedEffect });
       }
       // ── Parse-time optimizations ──────────────────────────────────────────
       // 1. Collapse constant ValueNode expressions in effect WITH blocks

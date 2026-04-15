@@ -426,7 +426,7 @@ describe('E. View Layer', () => {
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const SUBDUER_P5_STATUS_ID: string = require(
-  '../../../../model/game-data/operators/lifeng/statuses/status-subduer-of-evil-p5.json',
+  '../../../../model/game-data/operators/lifeng/potentials/potential-5-unremitting.json',
 ).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -485,7 +485,7 @@ describe('F. Subduer of Evil Talent Chain', () => {
     expect(knockDownEvents).toHaveLength(0);
   });
 
-  it('F3: P5 Subduer of Evil fires on Knock Down → status on ENEMY with Physical element', () => {
+  it('F3: P5 Unremitting fires on Knock Down → event on OPERATOR with Physical element', () => {
     const { result } = setupLifeng();
     act(() => { setPotential(result.current, 5); });
 
@@ -513,31 +513,31 @@ describe('F. Subduer of Evil Talent Chain', () => {
     );
     expect(knockDownEvents.length).toBeGreaterThanOrEqual(1);
 
-    // P5 Subduer of Evil status should appear on ENEMY
+    // P5 self-triggering potential event lives on Lifeng's slot (not enemy).
     const p5Events = result.current.allProcessedEvents.filter(
-      ev => ev.ownerEntityId === ENEMY_ID
+      ev => ev.ownerEntityId === SLOT_LIFENG
         && ev.columnId === SUBDUER_P5_STATUS_ID
         && ev.startFrame > 0,
     );
     expect(p5Events.length).toBeGreaterThanOrEqual(1);
 
-    // Status should have frames with Physical damage element
+    // Event should have frames with Physical damage element
     const p5Seg = p5Events[0].segments[0];
     expect(p5Seg).toBeDefined();
     expect(p5Seg.frames).toBeDefined();
     expect(p5Seg.frames!.length).toBeGreaterThanOrEqual(1);
     expect(p5Seg.frames![0].damageElement).toBe(ElementType.PHYSICAL);
 
-    // View: P5 status visible on enemy
+    // View: P5 event visible on Lifeng's status lane
     const viewModels = computeTimelinePresentation(
       result.current.allProcessedEvents,
       result.current.columns,
     );
-    const enemyStatusCols = result.current.columns.filter(
+    const lifengStatusCols = result.current.columns.filter(
       c => c.type === ColumnType.MINI_TIMELINE
-        && (c as MiniTimeline).ownerEntityId === ENEMY_ID,
+        && (c as MiniTimeline).ownerEntityId === SLOT_LIFENG,
     );
-    const p5InView = enemyStatusCols.some(col => {
+    const p5InView = lifengStatusCols.some(col => {
       const vm = viewModels.get(col.key);
       return vm?.events.some(ev => ev.name === SUBDUER_P5_STATUS_ID);
     });

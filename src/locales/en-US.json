@@ -640,5 +640,6 @@
 
   "breakdown.varyBy.SKILL_LEVEL": "Base",
   "breakdown.varyBy.POTENTIAL": "Potential {level}",
-  "breakdown.varyBy.TALENT_LEVEL": "Talent Level"
+  "breakdown.varyBy.TALENT_LEVEL": "Talent Level",
+  "breakdown.value": "Value"
 }

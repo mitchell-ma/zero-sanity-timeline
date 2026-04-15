@@ -5,8 +5,9 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
+          "object": "STAT",
           "objectId": "FRAGILITY",
+          "objectQualifier": "PHYSICAL",
           "to": "ENEMY",
           "with": {
             "value": {
@@ -19,11 +20,10 @@
               ],
               "of": {
                 "object": "OPERATOR",
-                "determiner": "THIS"
+                "determiner": "SOURCE"
               }
             }
-          },
-          "objectQualifier": "PHYSICAL"
+          }
         }
       ]
     }

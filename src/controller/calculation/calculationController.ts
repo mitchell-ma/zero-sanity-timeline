@@ -9,20 +9,22 @@
  * `buildDamageOpCache`) used by the interpreter to push incremental
  * enemy damage ticks to `hpController` during the queue drain.
  */
-import { CritMode, DamageScalingStatType, ElementType, PhysicalStatusType, StatType } from '../../consts/enums';
+import { CritMode, DamageScalingStatType, ElementType, PhysicalStatusType, StatType, StatusType } from '../../consts/enums';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { NounType } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode } from './valueResolver';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
-import { PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMN_IDS, REACTION_COLUMNS } from '../../model/channels';
+import { ENEMY_ID, PHYSICAL_STATUS_COLUMN_IDS, REACTION_COLUMN_IDS, REACTION_COLUMNS } from '../../model/channels';
 import {
   getPhysicalStatusStagger, getTotalAttack,
   getArtsReactionBaseMultiplier, getCombustionDotMultiplier, getShatterBaseMultiplier,
   getArtsIntensityMultiplier, getArtsHiddenMultiplier,
   getDefenseMultiplier as getDamageDefenseMultiplier, getResistanceMultiplier,
+  getSusceptibilityMultiplier, getFragilityMultiplier,
   calculateStatusDamage,
 } from '../../model/calculation/damageFormulas';
+import { getLastStatAccumulator } from '../timeline/eventQueueController';
 import { Enemy as ModelEnemy } from '../../model/enemies/enemy';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
@@ -117,11 +119,11 @@ export function computeFrameMarkerDamage(
   const maxFrames = seg.frames.length;
   let multiplier: number | null = null;
   const dealInfo = findDealDamageInClauses(f.clauses);
-  if (dealInfo && dealInfo.multipliers.length > 0) {
-    const idx = Math.min(skillLevel - 1, dealInfo.multipliers.length - 1);
-    multiplier = dealInfo.multipliers[idx];
-  } else if (dealInfo?.multiplierNode) {
-    const resolved = resolveValueNode(dealInfo.multiplierNode as ValueNode, { skillLevel, potential, stats: {} });
+  if (dealInfo && dealInfo.values.length > 0) {
+    const idx = Math.min(skillLevel - 1, dealInfo.values.length - 1);
+    multiplier = dealInfo.values[idx];
+  } else if (dealInfo?.valueNode) {
+    const resolved = resolveValueNode(dealInfo.valueNode as ValueNode, { skillLevel, potential, stats: {} });
     if (resolved != null && resolved > 0) multiplier = resolved;
   } else {
     const segMult = getSkillMultiplier(op.operatorId, ev.id, damageSegIdx, skillLevel, potential);
@@ -192,6 +194,19 @@ export function computeReactionFrameDamage(
     : ev.columnId === REACTION_COLUMNS.ELECTRIFICATION ? ElementType.ELECTRIC
     : ElementType.HEAT; // fallback
 
+  // Pick up APPLY STAT <ELEMENT>_SUSCEPTIBILITY / <ELEMENT>_FRAGILITY
+  // contributions (e.g. Antal FOCUS) from the enemy stat accumulator so the
+  // simplified reaction-damage HP estimate reflects them. Weakness and
+  // dmgReduction remain neutral (no element-qualified stat equivalents today).
+  const readEnemyStat = (suffix: StatusType): number => {
+    const key = `${element}_${suffix}`;
+    return (Object.values(StatType) as string[]).includes(key)
+      ? (getLastStatAccumulator()?.getStat(ENEMY_ID, key as StatType) ?? 0)
+      : 0;
+  };
+  const enemySusceptibility = readEnemyStat(StatusType.SUSCEPTIBILITY);
+  const enemyFragility = readEnemyStat(StatusType.FRAGILITY);
+
   const damage = calculateStatusDamage({
     attack: sourceOp.totalAttack,
     statusBaseMultiplier,
@@ -199,10 +214,9 @@ export function computeReactionFrameDamage(
     hiddenMultiplier: getArtsHiddenMultiplier(operatorLevel),
     defenseMultiplier: getDamageDefenseMultiplier(modelEnemy.getDef()),
     resistanceMultiplier: getResistanceMultiplier(modelEnemy, element),
-    // Runtime-dependent multipliers use neutral values in the simplified pipeline
-    susceptibilityMultiplier: 1,
+    susceptibilityMultiplier: getSusceptibilityMultiplier(enemySusceptibility),
     weaknessMultiplier: 1,
-    fragilityMultiplier: 1,
+    fragilityMultiplier: getFragilityMultiplier(enemyFragility),
     dmgReductionMultiplier: 1,
   });
 

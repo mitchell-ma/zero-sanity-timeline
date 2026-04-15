@@ -68,6 +68,13 @@ export enum StatType {
   NATURE_SUSCEPTIBILITY = "NATURE_SUSCEPTIBILITY",
   ELECTRIC_SUSCEPTIBILITY = "ELECTRIC_SUSCEPTIBILITY",
   PHYSICAL_SUSCEPTIBILITY = "PHYSICAL_SUSCEPTIBILITY",
+  /** Element-qualified fragility debuff on enemy (percentage increase to damage taken of that element). */
+  PHYSICAL_FRAGILITY = "PHYSICAL_FRAGILITY",
+  HEAT_FRAGILITY = "HEAT_FRAGILITY",
+  CRYO_FRAGILITY = "CRYO_FRAGILITY",
+  NATURE_FRAGILITY = "NATURE_FRAGILITY",
+  ELECTRIC_FRAGILITY = "ELECTRIC_FRAGILITY",
+  ARTS_FRAGILITY = "ARTS_FRAGILITY",
   // ── Debuff stats ─────────────────────────────────────────────────────────────
   /** Damage dealt reduction debuff on enemy (percentage). Damage formula uses (1 - WEAKNESS). */
   WEAKNESS = "WEAKNESS",
@@ -155,6 +162,12 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.NATURE_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   [StatType.ELECTRIC_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   [StatType.PHYSICAL_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
+  [StatType.PHYSICAL_FRAGILITY]: [StatOwnerType.ENEMY],
+  [StatType.HEAT_FRAGILITY]: [StatOwnerType.ENEMY],
+  [StatType.CRYO_FRAGILITY]: [StatOwnerType.ENEMY],
+  [StatType.NATURE_FRAGILITY]: [StatOwnerType.ENEMY],
+  [StatType.ELECTRIC_FRAGILITY]: [StatOwnerType.ENEMY],
+  [StatType.ARTS_FRAGILITY]: [StatOwnerType.ENEMY],
   // ── Enemy only ────────────────────────────────────────────────────────────
   [StatType.STAGGER_HP]: [StatOwnerType.ENEMY],
   [StatType.STAGGER_RECOVERY]: [StatOwnerType.ENEMY],

@@ -63,6 +63,12 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.NATURE_SUSCEPTIBILITY]: 0,
   [StatType.ELECTRIC_SUSCEPTIBILITY]: 0,
   [StatType.PHYSICAL_SUSCEPTIBILITY]: 0,
+  [StatType.PHYSICAL_FRAGILITY]: 0,
+  [StatType.HEAT_FRAGILITY]: 0,
+  [StatType.CRYO_FRAGILITY]: 0,
+  [StatType.NATURE_FRAGILITY]: 0,
+  [StatType.ELECTRIC_FRAGILITY]: 0,
+  [StatType.ARTS_FRAGILITY]: 0,
   // ── Enemy stats ──────────────────────────────────────────────────────────────
   [StatType.STAGGER_HP]: 0,
   [StatType.STAGGER_RECOVERY]: 0,

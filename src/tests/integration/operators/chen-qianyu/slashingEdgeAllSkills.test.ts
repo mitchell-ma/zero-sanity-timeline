@@ -32,7 +32,7 @@ import type { AppResult } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const CHEN_QIANYU_ID: string = require('../../../../model/game-data/operators/chen-qianyu/chen-qianyu.json').id;
-const SLASHING_EDGE_ID: string = require('../../../../model/game-data/operators/chen-qianyu/statuses/status-slashing-edge.json').properties.id;
+const SLASHING_EDGE_ID: string = require('../../../../model/game-data/operators/chen-qianyu/talents/talent-slashing-edge-talent.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_CHEN = 'slot-0';

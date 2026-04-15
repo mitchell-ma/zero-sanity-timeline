@@ -10,7 +10,7 @@
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "STRENGTH",
   "talents": {
-    "one": "SLASHING_EDGE_TALENT",
+    "one": "SLASHING_EDGE",
     "two": "MOMENTUM_BREAKER_TALENT",
     "attributeIncrease": {
       "id": "SKIRMISHER"

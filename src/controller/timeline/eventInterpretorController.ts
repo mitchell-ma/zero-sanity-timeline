@@ -41,7 +41,7 @@ import { buildOverrideKey } from '../overrideController';
 import {
   BREACH_DURATION, ENEMY_ID, ENEMY_ACTION_COLUMN_ID,
   INFLICTION_COLUMN_IDS, INFLICTION_DURATION,
-  PHYSICAL_INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
+  PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS,
   REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION,
   FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
   SHATTER_DURATION, SKILL_COLUMN_ORDER,
@@ -66,7 +66,7 @@ import { findClauseTriggerMatches } from './triggerMatch';
 import type { Predicate } from './triggerMatch';
 import { derivedEventUid } from './inputEventController';
 import { extendByTimeStops } from './processTimeStop';
-import { activeEventsAtFrame } from './timelineQueries';
+import { activeEventsAtFrame, countActiveStatusStacks } from './timelineQueries';
 import { getComboTriggerClause, getComboTriggerInfo } from '../gameDataStore';
 import { QueueFrameType, FrameHookType } from './eventQueueTypes';
 import { allocQueueFrame } from './objectPool';
@@ -278,6 +278,19 @@ export interface InterpretContext {
    *  Set by handleProcessFrame before clause dispatch so doChance reads it
    *  directly — same pattern as isCrit. */
   chancePin?: boolean;
+  /**
+   * Raw source event reference (the TimelineEvent whose frame produced this
+   * clause dispatch). Passed so doApply can copy runtime-user-edited fields
+   * (e.g. `susceptibility` on qualified-susceptibility / FOCUS wrappers)
+   * onto the applied child event — fields the static DSL clause can't carry.
+   * Only set for clause dispatches originating from a freeform wrapper's
+   * PROCESS_FRAME; undefined otherwise.
+   */
+  sourceEvent?: TimelineEvent;
+  /** When true, doApply's APPLY STAT branch skips pushStatSource + reversal
+   *  scheduling — the caller manages its own source attribution and replace-
+   *  semantics reversal (e.g. lifecycle clause path). Prevents double-counting. */
+  skipStatSourceAttribution?: boolean;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -580,7 +593,6 @@ function resolveClauseEffects(ev: TimelineEvent, def: StatusEventDef, ctx: Deriv
 
 export class EventInterpretorController {
   controller!: DerivedEventController;
-  private baseEvents: readonly TimelineEvent[] = [];
   private loadoutProperties?: Record<string, LoadoutProperties>;
   private slotOperatorMap?: Record<string, string>;
   private slotWirings?: SlotTriggerWiring[];
@@ -606,9 +618,6 @@ export class EventInterpretorController {
   private triggerUsageCount = new Map<string, number>();
 
   // ── Cached allEvents (avoids per-call array spread) ──────────────────────
-  private _cachedAllEvents: TimelineEvent[] = [];
-  private _cachedBaseLen = 0;
-  private _cachedOutputLen = 0;
 
   // ── Reusable output arrays (avoids per-call allocation) ─────────────────
   private _processFrameOut: QueueFrame[] = [];
@@ -773,30 +782,16 @@ export class EventInterpretorController {
     return { executedCount, anyMatched: accepted.length > 0, acceptedClauses: accepted };
   }
 
-  /**
-   * Return the merged baseEvents + output array, rebuilding only when either
-   * array has grown (both are append-only during a queue run).
-   */
+  /** All events in the pipeline — delegates to the single source of storage on DEC. */
   getAllEvents(): readonly TimelineEvent[] {
-    const baseLen = this.baseEvents.length;
-    const outLen = this.controller.getAllEvents().length;
-    if (baseLen !== this._cachedBaseLen || outLen !== this._cachedOutputLen) {
-      this._cachedAllEvents.length = 0;
-      for (let i = 0; i < baseLen; i++) this._cachedAllEvents.push(this.baseEvents[i]);
-      for (let i = 0; i < outLen; i++) this._cachedAllEvents.push(this.controller.getAllEvents()[i]);
-      this._cachedBaseLen = baseLen;
-      this._cachedOutputLen = outLen;
-    }
-    return this._cachedAllEvents;
+    return this.controller.getAllEvents();
   }
 
   constructor(
     controller?: DerivedEventController,
-    baseEvents?: readonly TimelineEvent[],
     options?: InterpretorOptions,
   ) {
     if (controller) this.controller = controller;
-    if (baseEvents) this.baseEvents = baseEvents;
     if (options) this.applyOptions(options);
   }
 
@@ -805,15 +800,11 @@ export class EventInterpretorController {
    */
   resetWith(
     controller: DerivedEventController,
-    baseEvents: readonly TimelineEvent[],
     options?: InterpretorOptions,
   ) {
     this.controller = controller;
-    this.baseEvents = baseEvents;
     this.firedHpThresholds.clear();
     this.triggerUsageCount.clear();
-    this._cachedBaseLen = 0;
-    this._cachedOutputLen = 0;
     this._statReversals = undefined;
     this._lifecycleStatTotals = undefined;
     this.applyOptions(options);
@@ -1255,17 +1246,39 @@ export class EventInterpretorController {
       const columnId = effect.objectId ?? '';
       const cfg = getStatusConfig(effect.objectId);
       const def = getStatusDef(effect.objectId);
+      const statusObj = effect.objectId ? getStatusById(effect.objectId) : undefined;
       const dv = this.resolveWith(effect.with?.duration, ctx);
       const remainingDuration = ctx.parentEventEndFrame != null
         ? Math.max(0, ctx.parentEventEndFrame - ctx.frame)
         : undefined;
-      // Resolve duration with operator's actual potential when available
-      const cfgDur = cfg?.durationNode && ctx.potential != null && ctx.potential > 0
-        ? (() => {
-          const resolved = resolveValueNode(cfg.durationNode, { ...DEFAULT_VALUE_CONTEXT, potential: ctx.potential });
-          return resolved === PERMANENT_DURATION || resolved === 0 ? TOTAL_FRAMES : Math.round(resolved * FPS);
-        })()
-        : cfg?.duration;
+
+      // Build a single apply-time ValueResolutionContext from the source
+      // operator's loadout. All downstream status-duration resolutions
+      // (top-level `properties.duration` and per-segment durations) read from
+      // this one context — no more narrow `{ ...DEFAULT_VALUE_CONTEXT,
+      // potential }` spreads that silently default talentLevel to 0.
+      const slotId = this.ctxSlot(ctx);
+      const operatorSlotMap: Record<string, string> = {};
+      if (this.slotOperatorMap) {
+        for (const [s, o] of Object.entries(this.slotOperatorMap)) operatorSlotMap[o] = s;
+      }
+      const deriveCtx: DeriveContext = {
+        events: this.getAllEvents(),
+        operatorId: ctx.sourceEntityId,
+        operatorSlotId: slotId,
+        potential: ctx.potential ?? 0,
+        operatorSlotMap,
+        loadoutProperties: this.loadoutProperties?.[slotId],
+      };
+      const talentLvl = def ? resolveTalentLevel(def, deriveCtx) : 0;
+      const valueCtx = this.buildValueContext(ctx);
+      valueCtx.talentLevel = talentLvl;
+
+      // Resolve the status's top-level duration with the full context. The
+      // old path resolved against `{ ...DEFAULT, potential }` and silently
+      // mis-resolved talent-dependent durations to 0 → TOTAL_FRAMES.
+      const cfgDur = statusObj?.resolveDurationFrames(valueCtx) ?? cfg?.duration;
+
       // UNTIL END OF THIS EVENT/SEGMENT — resolve to parent remaining duration
       const untilEnd = effect.until?.object === NounType.END;
       const duration = typeof dv === 'number' ? Math.round(dv * FPS)
@@ -1276,19 +1289,6 @@ export class EventInterpretorController {
       // Resolve clause effects (susceptibility, statusValue) from the status def
       const eventProps: Partial<TimelineEvent> = {};
       if (def) {
-        const slotId = this.ctxSlot(ctx);
-        const operatorSlotMap: Record<string, string> = {};
-        if (this.slotOperatorMap) {
-          for (const [s, o] of Object.entries(this.slotOperatorMap)) operatorSlotMap[o] = s;
-        }
-        const deriveCtx: DeriveContext = {
-          events: this.getAllEvents(),
-          operatorId: ctx.sourceEntityId,
-          operatorSlotId: slotId,
-          potential: ctx.potential ?? 0,
-          operatorSlotMap,
-          loadoutProperties: this.loadoutProperties?.[slotId],
-        };
         // Build a temp event to resolve clause effects onto
         const tempEv = { startFrame: ctx.frame } as TimelineEvent;
         resolveClauseEffects(tempEv, def, deriveCtx);
@@ -1309,22 +1309,17 @@ export class EventInterpretorController {
         //     to the single-segment placeholder set by column.add() — legacy
         //     behaviour for backwards compatibility; no status currently relies
         //     on both multi-segment shape AND runtime duration override.
-        const statusObj = effect.objectId ? getStatusById(effect.objectId) : undefined;
         if (statusObj && statusObj.segments.length > 0) {
-          // Resolve segment durations against the source operator's potential —
-          // segments can declare VARY_BY POTENTIAL for per-potential durations
-          // (e.g. Antal FOCUS: Empowered segment is 0s at P<5, 40s at P5).
-          const rawSegments = ctx.potential != null
-            ? statusObj.resolveSegments(ctx.potential)
-            : statusObj.segments.map(seg => ({
-              ...seg,
-              properties: { ...seg.properties },
-              ...(seg.frames ? { frames: seg.frames.map(f => ({ ...f })) } : {}),
-            }));
+          // Resolve segment durations against the full apply-time context.
+          // Segments can declare VARY_BY POTENTIAL or VARY_BY TALENT_LEVEL
+          // (Antal FOCUS Empowered = 40s at P5; Rossi Razor Clawmark DoT =
+          // 15s at T1-L1, 25s at T1-L2). Using `valueCtx` ensures talent-
+          // and potential-gated segments (and their frames) survive the
+          // zero-duration prune inside resolveSegments.
+          const rawSegments = statusObj.resolveSegments(valueCtx);
           // Bake level-dependent DEAL STAGGER values into IS literals so the
           // stagger pipeline (which uses a default ValueResolutionContext)
           // sees the actual resolved amount rather than VARY_BY index 0.
-          const talentLvl = resolveTalentLevel(def, deriveCtx);
           const resolvedSegments = bakeStaggerVaryByOnSegments(rawSegments, talentLvl, ctx.potential ?? 0);
           if (typeof dv !== 'number') {
             eventProps.segments = resolvedSegments;
@@ -1335,6 +1330,25 @@ export class EventInterpretorController {
             }];
           }
         }
+      }
+
+      // Adaptation: freeform wrappers carry runtime-user-edited `susceptibility`
+      // on the source TimelineEvent (per-element magnitudes edited via info
+      // pane jsonOverrides). Copy onto the applied event so damage calc reads
+      // the user's values. Only overrides config defaults when the source
+      // event's columnId matches the applied columnId (avoids cross-column
+      // bleed-through from side-effect chains).
+      if (ctx.sourceEvent?.susceptibility
+          && ctx.sourceEvent.columnId === columnId) {
+        eventProps.susceptibility = ctx.sourceEvent.susceptibility;
+      }
+      // Same adaptation for user-edited `statusValue` (e.g. freeform
+      // PHYSICAL_FRAGILITY / HEAT_FRAGILITY defaulted to 0, edited via info
+      // pane to a non-zero percentage). Column-match guard avoids bleed
+      // across side-effect chains.
+      if (ctx.sourceEvent?.statusValue != null
+          && ctx.sourceEvent.columnId === columnId) {
+        eventProps.statusValue = ctx.sourceEvent.statusValue;
       }
 
       // Intra-frame ordering: stamp status with the damage frame that created it
@@ -1452,10 +1466,27 @@ export class EventInterpretorController {
         } else {
           // value key → additive delta (standard stat buff)
           const v = this.resolveWith(effect.with?.value, ctx);
-          if (typeof v === 'number') {
+          if (typeof v === 'number' && v !== 0) {
             // Snapshot stat before delta to detect 0→positive transitions
             const statBefore = this.controller.getStat(ownerEntityId, statKey);
             this.controller.applyStatDelta(ownerEntityId, { [statKey]: v });
+            // Push a labelled StatSource for breakdown attribution + schedule
+            // reversal at the parent segment/event end so the delta is scoped
+            // to the lifetime of the dispatching clause.
+            // Skipped when the caller is a lifecycle-clause handler that
+            // manages its own source attribution + reversal (prevents double-count).
+            if (!ctx.skipStatSourceAttribution) {
+              const sourceLabel = ctx.sourceSkillName ?? ctx.parentStatusId ?? statKey;
+              this.controller.pushStatSource(
+                ownerEntityId, statKey,
+                buildStatSource(sourceLabel, v, effect as unknown as Record<string, unknown>, ctx),
+              );
+              const reverseAtFrame = ctx.parentSegmentEndFrame ?? ctx.parentEventEndFrame;
+              if (reverseAtFrame != null) {
+                if (!this._statReversals) this._statReversals = [];
+                this._statReversals.push({ frame: reverseAtFrame, entityId: ownerEntityId, stat: statKey, value: -v });
+              }
+            }
             // Fire BECOME state trigger on 0→positive transition (not when already active)
             const stateAdj = STAT_TO_STATE_ADJECTIVE[statKey];
             if (stateAdj && (statBefore ?? 0) <= 0) {
@@ -1697,7 +1728,7 @@ export class EventInterpretorController {
       if (!targetColumnId || !SKILL_COLUMN_SET.has(targetColumnId)) return true;
 
       const slotId = this.ctxSlot(ctx);
-      for (const ev of this.baseEvents) {
+      for (const ev of this.controller.getAllEvents()) {
         if (ev.ownerEntityId !== slotId) continue;
         if (ev.columnId !== targetColumnId) continue;
 
@@ -1733,13 +1764,12 @@ export class EventInterpretorController {
     if (ctx.talentLevel != null) baseCtx.talentLevel = ctx.talentLevel;
     if (ctx.suppliedParameters) baseCtx.suppliedParameters = ctx.suppliedParameters;
     const frame = ctx.frame;
-    baseCtx.getStatusStacks = (statusId: string) => {
-      const active = activeEventsAtFrame(this.getAllEvents(), statusId, ownerEntityId, frame);
-      if (active.length === 0) return 0;
-      // If the latest event has an explicit stacks field, use it; otherwise count events
-      const last = active[active.length - 1];
-      return last.stacks != null ? last.stacks : active.length;
+    const getAllEvents = () => this.getAllEvents();
+    baseCtx.statusQuery = {
+      getActiveStatusStacks: (f, owner, statusId) => countActiveStatusStacks(getAllEvents(), f, owner, statusId),
     };
+    baseCtx.frame = frame;
+    baseCtx.ownerEntityId = ownerEntityId;
     if (ctx.consumedStacks != null) baseCtx.consumedStacks = ctx.consumedStacks;
 
     // Populate sourceContext for DeterminerType.SOURCE resolution
@@ -1841,7 +1871,7 @@ export class EventInterpretorController {
 
     // Find same-owner events in the target column that are in cooldown phase at ctx.frame
     const slotId = this.ctxSlot(ctx);
-    for (const ev of this.baseEvents) {
+    for (const ev of this.controller.getAllEvents()) {
       if (ev.ownerEntityId !== slotId) continue;
       if (ev.columnId !== targetColumnId) continue;
 
@@ -2138,9 +2168,9 @@ export class EventInterpretorController {
       || physCol === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN) {
       result = this.applyLiftOrKnockDown(physCol, ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode);
     } else if (physCol === PHYSICAL_STATUS_COLUMNS.CRUSH) {
-      result = this.applyCrush(ctx.frame, source, parentUid, ctx.sourceCreationInteractionMode);
+      result = this.applyCrush(ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode);
     } else if (physCol === PHYSICAL_STATUS_COLUMNS.BREACH) {
-      result = this.applyBreach(ctx.frame, source, parentUid, ctx.sourceCreationInteractionMode);
+      result = this.applyBreach(ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode);
     }
 
     // Check if a physical status event was created (not just Vulnerable)
@@ -2228,6 +2258,7 @@ export class EventInterpretorController {
   private applyCrush(
     frame: number,
     source: EventSource,
+    isForced: boolean,
     parentEventUid?: string,
     creationInteractionMode?: InteractionModeType,
   ): boolean {
@@ -2237,22 +2268,28 @@ export class EventInterpretorController {
     );
 
     if (vulnerableCount === 0) {
-      // No Vulnerable → just add 1 stack
-      this.controller.applyEvent(
-        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
-        PHYSICAL_INFLICTION_DURATION, source,
-        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'crush'), parents,
-          ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
-        },
-      );
-      return true;
+      // No Vulnerable stacks active. Unless forced (e.g. freeform placement),
+      // just add 1 stack and skip creating a Crush.
+      if (!isForced) {
+        this.controller.applyEvent(
+          PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
+          PHYSICAL_INFLICTION_DURATION, source,
+          { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'crush'), parents,
+            ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
+          },
+        );
+        return true;
+      }
+      // Forced: proceed to create Crush as if 1 Vulnerable stack was consumed.
     }
 
-    // Consume all Vulnerable stacks
-    const consumed = this.controller.consumeEvent(
-      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
-      source, { count: vulnerableCount },
-    );
+    // Consume all Vulnerable stacks (or treat as 1 when forced with none active).
+    const consumed = vulnerableCount > 0
+      ? this.controller.consumeEvent(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
+        source, { count: vulnerableCount },
+      )
+      : 1;
 
     const damageMultiplier = getPhysicalStatusBaseMultiplier(PhysicalStatusType.CRUSH, consumed);
 
@@ -2295,6 +2332,7 @@ export class EventInterpretorController {
   private applyBreach(
     frame: number,
     source: EventSource,
+    isForced: boolean,
     parentEventUid?: string,
     creationInteractionMode?: InteractionModeType,
   ): boolean {
@@ -2304,20 +2342,25 @@ export class EventInterpretorController {
     );
 
     if (vulnerableCount === 0) {
-      this.controller.applyEvent(
-        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
-        PHYSICAL_INFLICTION_DURATION, source,
-        { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'breach'), parents,
-          ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
-        },
-      );
-      return true;
+      if (!isForced) {
+        this.controller.applyEvent(
+          PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
+          PHYSICAL_INFLICTION_DURATION, source,
+          { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'breach'), parents,
+            ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
+          },
+        );
+        return true;
+      }
+      // Forced: proceed to create Breach as if 1 Vulnerable stack was consumed.
     }
 
-    const consumed = this.controller.consumeEvent(
-      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
-      source, { count: vulnerableCount },
-    );
+    const consumed = vulnerableCount > 0
+      ? this.controller.consumeEvent(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
+        source, { count: vulnerableCount },
+      )
+      : 1;
 
     const stackCount = Math.min(consumed, 4);
     const damageMultiplier = getPhysicalStatusBaseMultiplier(PhysicalStatusType.BREACH, consumed);
@@ -2560,7 +2603,7 @@ export class EventInterpretorController {
 
       // Non-skill status events: clause processing (APPLY STAT, onEntryClause,
       // DISABLE/ENABLE propagation, segment frame markers) is handled by
-      // runStatusCreationLifecycle in the synthetic PROCESS_FRAME path (section 3b).
+      // runStatusCreationLifecycle on the applied event created by doApply.
       // Do NOT process clauses here — it would double-fire stat triggers.
 
       return newEntries;
@@ -2756,6 +2799,10 @@ export class EventInterpretorController {
         ...(resolvedChancePin != null ? { chancePin: resolvedChancePin } : {}),
         ...(hasSuppliedParams ? { suppliedParameters: resolvedParams } : {}),
         ...(event.consumedStacks != null ? { consumedStacks: event.consumedStacks } : {}),
+        // Freeform wrappers route runtime-user-edited fields (`susceptibility`)
+        // onto applied child events through this reference. Non-skill freeform
+        // only — skill events don't need to thread runtime state this way.
+        ...(propagateUid ? { sourceEvent: event } : {}),
       };
       const condCtx: ConditionContext = {
         events: this.getAllEvents(),
@@ -2787,95 +2834,6 @@ export class EventInterpretorController {
       }
     }
 
-    // ── 3b. Freeform event creation — synthetic frames on non-skill columns ──
-    // Events with no DSL clauses on infliction/reaction/status columns are freeform-placed.
-    // Route them through create* so they get the same stacking, segment building, etc.
-    // Only fires on the FIRST frame marker (si=0, fi=0) — subsequent frame markers are
-    // damage-tick visuals inside the existing event, not new event creation triggers.
-    //
-    // All branches propagate `creationInteractionMode` from the source raw
-    // event so the column-created event remains user-draggable. This is the
-    // canonical point where a freeform placement's identity flows into the
-    // engine-owned event — every branch must preserve it.
-    if (!frame.clauses && si === 0 && fi === 0) {
-      const dur = eventDuration(event);
-      // Base event overrides shared by all branches: carry forward source
-      // identity so the column-created event is recognized as user-placed.
-      const sourceEventOverrides: Partial<TimelineEvent> = {};
-      if (event.creationInteractionMode != null) {
-        sourceEventOverrides.creationInteractionMode = event.creationInteractionMode;
-      }
-      const hasSourceOverrides = Object.keys(sourceEventOverrides).length > 0;
-      if (INFLICTION_COLUMN_IDS.has(event.columnId) || PHYSICAL_INFLICTION_COLUMN_IDS.has(event.columnId)) {
-        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
-          uid: event.uid,
-          ...(hasSourceOverrides ? { event: sourceEventOverrides } : {}),
-        });
-        // Schedule EVENT_END for the applied (time-stop-extended) event so
-        // IS_NOT:<column> fires at the real end. Without this the infliction
-        // never emits an end trigger and BECOME-NOT talents (e.g. Freezing
-        // Point) never consume.
-        const inflCtx: InterpretContext = {
-          frame: absFrame,
-          sourceEntityId: this.slotToEntityId(event.ownerEntityId),
-          sourceSkillName: event.id,
-          potential: pot,
-        };
-        this.runStatusCreationLifecycle(event.id, event.ownerEntityId, inflCtx);
-        this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
-      } else if (REACTION_COLUMN_IDS.has(event.columnId)) {
-        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
-          stacks: event.stacks, isForced: event.isForced, uid: event.uid,
-          ...(hasSourceOverrides ? { event: sourceEventOverrides } : {}),
-        });
-        const reactCtx: InterpretContext = {
-          frame: absFrame,
-          sourceEntityId: this.slotToEntityId(event.ownerEntityId),
-          sourceSkillName: event.id,
-          potential: pot,
-        };
-        this.runStatusCreationLifecycle(event.id, event.ownerEntityId, reactCtx);
-        this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
-      } else if (PHYSICAL_STATUS_COLUMN_IDS.has(event.columnId)) {
-        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
-          statusId: event.id, stackingMode: StackInteractionType.RESET, maxStacks: 1,
-          uid: event.uid,
-          event: { segments: event.segments, ...sourceEventOverrides },
-        });
-        // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
-        // same as doApply → runStatusCreationLifecycle for skill-derived statuses.
-        const physCtx: InterpretContext = {
-          frame: absFrame, sourceEntityId: this.slotToEntityId(event.ownerEntityId),
-          sourceSkillName: event.id, potential: pot,
-        };
-        this.runStatusCreationLifecycle(event.id, event.ownerEntityId, physCtx);
-        this.checkReactiveTriggers(VerbType.APPLY, event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
-      } else if (event.ownerEntityId === ENEMY_ID || event.ownerEntityId === TEAM_ID) {
-        this.controller.applyEvent(event.columnId, event.ownerEntityId, absFrame, dur, source, {
-          statusId: event.id, uid: event.uid,
-          event: {
-            ...(event.susceptibility ? { susceptibility: event.susceptibility, segments: event.segments } : {}),
-            ...sourceEventOverrides,
-          },
-        });
-        // Process status lifecycle (APPLY STAT clauses, onEntryClause, segment frames)
-        // same as doApply → runStatusCreationLifecycle for skill-derived statuses.
-        // For derived TEAM/ENEMY statuses, use the event's sourceEntityId
-        // (the operator who created the status) so buildValueContext can
-        // resolve the source operator's slot for stat/talent/potential
-        // lookups. User-placed events (FOCUS, LINK, stagger) have no
-        // source operator — use ownerEntityId (ENEMY_ID/TEAM_ID) which
-        // gives an empty stat context (correct: no operator to reference).
-        const enemyCtx: InterpretContext = {
-          frame: absFrame,
-          sourceEntityId: event.sourceEntityId ?? event.ownerEntityId,
-          sourceSkillName: event.id, potential: pot,
-          sourceEventUid: event.uid,
-        };
-        this.runStatusCreationLifecycle(event.id, event.ownerEntityId, enemyCtx);
-        this.checkReactiveTriggers(VerbType.APPLY, event.id ?? event.columnId, absFrame, event.ownerEntityId, event.id, undefined, newEntries);
-      }
-    }
 
     // ── 3c. Snapshot stat deltas for damage frames (captures runtime APPLY STAT effects)
     if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clauses) && !frame.frameSkipped) {
@@ -3128,11 +3086,78 @@ export class EventInterpretorController {
       }
     }
 
+    // ── Segment-level clauses ──────────────────────────────────────────────
+    // `segments[i].clause` is the fundamental "effects active while this
+    // segment is running" — APPLY STATUS/STAT/etc. inside a segment clause
+    // dispatch at segment start with parentSegmentEndFrame scoped to the
+    // segment duration, so applied statuses inherit segment-scoped lifetime.
+    // Segment 0: inline at status creation. Segment i > 0: queued at segAbsStart.
+    const defSegsForClauses = statusDef?.segments;
+    const statusStops = this.controller.foreignStopsFor(statusEv);
+    let cumOffsetForClauses = 0;
+    if (defSegsForClauses) {
+      for (let si = 0; si < statusEv.segments.length; si++) {
+        const seg = statusEv.segments[si];
+        const segDur = seg.properties.duration ?? 0;
+        const defSegClauses = defSegsForClauses[si]?.clause as { conditions?: unknown[]; effects?: unknown[] }[] | undefined;
+        if (defSegClauses?.length) {
+          const segAbsStart = statusEv.startFrame + cumOffsetForClauses;
+          const segEnd = segAbsStart + segDur;
+          const routed = this.resolveRoutedSource(statusEv);
+          const segCtx: InterpretContext = {
+            frame: segAbsStart,
+            sourceEntityId: routed.sourceEntityId,
+            sourceSkillName: statusEv.name,
+            sourceEventUid: undefined,
+            potential: pot,
+            parentEventEndFrame: parentEventEnd,
+            parentSegmentEndFrame: segEnd,
+            parentStatusId: statusId,
+            ...(statusEv.consumedStacks != null ? { consumedStacks: statusEv.consumedStacks } : {}),
+            ...(statusEv.triggerEntityId != null ? { triggerEntityId: statusEv.triggerEntityId } : {}),
+          };
+          const segCondCtx: ConditionContext = {
+            events: this.getAllEvents(),
+            frame: segAbsStart,
+            sourceEntityId: statusEv.ownerEntityId,
+            potential: pot,
+            ...(statusEv.triggerEntityId != null ? { triggerEntityId: statusEv.triggerEntityId } : {}),
+          };
+          const parsedSegClauses = parseJsonClauseArray(defSegClauses);
+          if (si === 0) {
+            this.dispatchClauseFrame(
+              parsedSegClauses, undefined, segCtx, segCondCtx,
+              statusEv.ownerEntityId, statusEv.id, this._processFrameOut,
+              { fireReactiveTriggers: false, trackStatReversals: false },
+            );
+          } else {
+            const extOffset = statusStops.length > 0
+              ? extendByTimeStops(statusEv.startFrame, cumOffsetForClauses, statusStops)
+              : cumOffsetForClauses;
+            const qf = allocQueueFrame();
+            qf.frame = statusEv.startFrame + extOffset;
+            qf.type = QueueFrameType.PROCESS_FRAME;
+            qf.statusId = statusId;
+            qf.columnId = statusEv.columnId;
+            qf.ownerEntityId = statusEv.ownerEntityId;
+            qf.sourceEntityId = source.ownerEntityId;
+            qf.sourceSkillName = source.skillName;
+            qf.operatorSlotId = statusEv.ownerEntityId;
+            qf.sourceEvent = statusEv;
+            qf.segmentIndex = si;
+            qf.frameIndex = -1;
+            qf.frameMarker = { offsetFrame: 0, clauses: parsedSegClauses, clauseType: undefined } as unknown as EventFrameMarker;
+            this.pendingExitFrames.push(qf);
+          }
+        }
+        cumOffsetForClauses += segDur;
+      }
+    }
+
     // ── Segment frame markers ──────────────────────────────────────────────
     // Offset-0 frames: process inline (immediate effects at status creation).
     // Offset > 0 frames: defer to the queue so they fire at the correct time
     // and can be skipped if the status is consumed before they're reached.
-    const statusStops = this.controller.foreignStopsFor(statusEv);
     let cumOffset = 0;
     for (let si = 0; si < statusEv.segments.length; si++) {
       const seg = statusEv.segments[si];
@@ -3200,6 +3225,18 @@ export class EventInterpretorController {
               statusEv.ownerEntityId, statusEv.id, this._processFrameOut,
               { fireReactiveTriggers: false, trackStatReversals: false },
             );
+            // Snapshot stat deltas if this 0s frame also deals damage — the
+            // damage calc reads enemyRuntimeDeltas keyed by `${uid}:${si}:${fi}`
+            // and without a snapshot here, APPLY STAT effects that fire
+            // before DEAL DAMAGE in the same 0s frame (e.g. Razor Clawmark's
+            // PHYSICAL_FRAGILITY + PHYSICAL DEAL DAMAGE) would silently
+            // show 0 contribution to the first tick.
+            if (this.controller.hasStatAccumulator() && hasDealDamageClause(fm.clauses)) {
+              const frameKey = `${statusEv.uid}:${si}:${fi}`;
+              this.controller.snapshotStatDeltas(frameKey, statusEv.ownerEntityId);
+              this.controller.snapshotStatDeltas(frameKey, ENEMY_ID);
+              this.controller.snapshotStatDeltas(frameKey, TEAM_ID);
+            }
           }
         }
       }
@@ -3900,6 +3937,7 @@ export class EventInterpretorController {
       talentLevel: talentLvl,
       parentStatusId: statusId,
       parentEventEndFrame,
+      skipStatSourceAttribution: true,
     };
 
     // Track stat totals with replace-semantics: reverse previous total, apply new total

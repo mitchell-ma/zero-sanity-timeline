@@ -168,14 +168,14 @@ describe('Freeform Combustion Reaction', () => {
     const level = (ev.statusLevel ?? 1) as 1 | 2 | 3 | 4;
     const initialDmg = findDealDamageInClauses(segment.frames![0].clauses);
     expect(initialDmg).not.toBeNull();
-    expect(initialDmg!.multipliers[0]).toBeCloseTo(getArtsReactionBaseMultiplier(level), 6);
+    expect(initialDmg!.values[0]).toBeCloseTo(getArtsReactionBaseMultiplier(level), 6);
 
     // DoT ticks (offsets FPS..10*FPS): use getCombustionDotMultiplier
     const expectedDotMult = getCombustionDotMultiplier(level);
     for (let i = 1; i < EXPECTED_FRAME_COUNT; i++) {
       const dotDamage = findDealDamageInClauses(segment.frames![i].clauses);
       expect(dotDamage).not.toBeNull();
-      expect(dotDamage!.multipliers[0]).toBeCloseTo(expectedDotMult, 6);
+      expect(dotDamage!.values[0]).toBeCloseTo(expectedDotMult, 6);
     }
   });
 
@@ -255,14 +255,14 @@ describe('Freeform Combustion Reaction', () => {
     const initialDmg = findDealDamageInClauses(initialFrame.clauses);
     expect(initialDmg).not.toBeNull();
     const level = (ev.statusLevel ?? 1) as 1 | 2 | 3 | 4;
-    expect(initialDmg!.multipliers[0]).toBeCloseTo(getArtsReactionBaseMultiplier(level), 6);
+    expect(initialDmg!.values[0]).toBeCloseTo(getArtsReactionBaseMultiplier(level), 6);
 
     // Remaining frames are DoT ticks with DoT multiplier
     const dotMult = getCombustionDotMultiplier(level);
     for (let i = 1; i < segment.frames!.length; i++) {
       const dotDmg = findDealDamageInClauses(segment.frames![i].clauses);
       expect(dotDmg).not.toBeNull();
-      expect(dotDmg!.multipliers[0]).toBeCloseTo(dotMult, 6);
+      expect(dotDmg!.values[0]).toBeCloseTo(dotMult, 6);
     }
   });
 });

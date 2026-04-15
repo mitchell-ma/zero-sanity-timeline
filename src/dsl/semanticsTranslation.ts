@@ -476,6 +476,26 @@ export function formatSegmentShortName(segmentName: string | undefined, index: n
 }
 
 /**
+ * Append a `(P<level>)` or `(T<level>)` suffix to an event label when the
+ * config is a POTENTIAL/TALENT whose ID carries a `_P<digits>` or
+ * `_T<digits>` token (e.g. `UNREMITTING_P5` → "Unremitting (P5)",
+ * `SUBDUER_OF_EVIL_T2` → "Subduer of Evil (T2)"). Other event categories
+ * and labels that already include the marker are returned unchanged.
+ */
+export function formatEventLabel(baseName: string, id: string, eventIdType: string | undefined): string {
+  if (eventIdType !== NounType.POTENTIAL && eventIdType !== NounType.TALENT) return baseName;
+  for (const token of id.split('_')) {
+    if (token.length > 1 && (token[0] === 'P' || token[0] === 'T')) {
+      const rest = token.slice(1);
+      if (rest.length > 0 && Number.isInteger(Number(rest)) && !baseName.includes(token)) {
+        return `${baseName} (${token})`;
+      }
+    }
+  }
+  return baseName;
+}
+
+/**
  * Format a skill display name with enhancement type suffixes.
  * Uses the event's own name if provided, otherwise falls back to baseName.
  * e.g. ("Smouldering Fire", ["EMPOWERED", "ENHANCED"]) → "Smouldering Fire (Empowered + Enhanced)"

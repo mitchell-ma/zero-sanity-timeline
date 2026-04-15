@@ -12,7 +12,7 @@
  *               × FragilityMultiplier × DMGReductionMultiplier
  */
 
-import { DamageType, ElementType, StatType } from '../../consts/enums';
+import { DamageType, ElementType, StatType, StatusType } from '../../consts/enums';
 import { ENEMY_ID, REACTION_COLUMNS } from '../../model/channels';
 import { getLastStatAccumulator } from '../timeline/eventQueueController';
 import type { StatusLevel } from '../../consts/types';
@@ -86,6 +86,26 @@ export interface ReactionDamageTick {
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
 
+/** Read enemy's current per-element SUSCEPTIBILITY stat from the accumulator.
+ *  Mirrors the damageTableBuilder pattern so APPLY STAT <ELEMENT>_SUSCEPTIBILITY
+ *  contributions (e.g. Antal FOCUS) flow into reaction damage multipliers. */
+function getEnemySusceptibilityStat(element: ElementType): number {
+  const key = `${element}_${StatusType.SUSCEPTIBILITY}`;
+  if (!(Object.values(StatType) as string[]).includes(key)) return 0;
+  return getLastStatAccumulator()?.getStat(ENEMY_ID, key as StatType) ?? 0;
+}
+
+/** Read enemy's current per-element FRAGILITY stat from the accumulator.
+ *  Full element coverage (PHYSICAL/HEAT/CRYO/NATURE/ELECTRIC/ARTS); returns 0
+ *  for elements whose stat key isn't registered. Mirrors the susceptibility
+ *  shape so APPLY STAT <ELEMENT>_FRAGILITY (e.g. Razor Clawmark) flows into
+ *  reaction damage multipliers. */
+function getEnemyFragilityStat(element: ElementType): number {
+  const key = `${element}_${StatusType.FRAGILITY}`;
+  if (!(Object.values(StatType) as string[]).includes(key)) return 0;
+  return getLastStatAccumulator()?.getStat(ENEMY_ID, key as StatType) ?? 0;
+}
+
 /**
  * Build the shared base StatusDamageParams for a reaction, minus the
  * status-specific base multiplier (which differs for initial vs DoT/shatter).
@@ -120,13 +140,15 @@ function buildBaseParams(
       return res;
     })(),
     susceptibilityMultiplier: getSusceptibilityMultiplier(
-      statusQuery && frame != null ? statusQuery.getSusceptibilityBonus(frame, element) : 0,
+      (statusQuery && frame != null ? statusQuery.getSusceptibilityBonus(frame, element) : 0)
+      + getEnemySusceptibilityStat(element),
     ),
     weaknessMultiplier: getWeaknessMultiplier(
       getLastStatAccumulator()?.getStat(ENEMY_ID, StatType.WEAKNESS) ?? 1,
     ),
     fragilityMultiplier: getFragilityMultiplier(
-      statusQuery && frame != null ? statusQuery.getFragilityBonus(frame, element) : 0,
+      (statusQuery && frame != null ? statusQuery.getFragilityBonus(frame, element) : 0)
+      + getEnemyFragilityStat(element),
     ),
     dmgReductionMultiplier: getDmgReductionMultiplier(
       statusQuery && frame != null ? statusQuery.getDmgReductionEffects(frame) : [],

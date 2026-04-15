@@ -10,7 +10,6 @@ import { VerbType, NounType } from '../../dsl/semantics';
 import { translateCondition, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
 import { PERMANENT_DURATION } from '../../consts/enums';
 import { formatFlat } from '../../controller/info-pane/loadoutPaneController';
-import ClauseEditor from './ClauseEditor';
 import type { JsonSkillData } from './OperatorEventEditor';
 import type { NormalizedEffectDef } from '../../controller/gameDataStore';
 import { t } from '../../locales/locale';
@@ -1293,8 +1292,13 @@ export function TabbedSegmentView({ entry, critState, editState }: {
               return null;
             })()}
             {segClause && segClause.length > 0 && (
-              <div className="ops-seg-clause">
-                <ClauseEditor initialValue={segClause} onChange={() => {}} readOnly />
+              <div className="ops-prop-tree">
+                <span className="ops-prop-tree-label">{t('dsl.clauseType.clause')}</span>
+                <FrameClauseView
+                  clauses={segClause as unknown as Record<string, unknown>[]}
+                  editState={editState}
+                  basePath={`segments[${safeSeg}].clause`}
+                />
               </div>
             )}
             {segFrames.map((f, fi) => {

@@ -44,8 +44,7 @@
 |----|------|--------|--------|
 | REALSPACE_STASIS_TALENT | TALENT | ENEMY | Originium Crystals: APPLY PHYSICAL FRAGILITY [0.10, 0.20] by talent level. onTriggerClause: physical status/vulnerability → CONSUME + APPLY SHATTER |
 | ORIGINIUM_CRYSTALS_SHATTER | SKILL_STATUS | ENEMY | 2s duration, frame at 0s: DEAL PHYSICAL DAMAGE [1.78 → 4.00] |
-| ESSENCE_DISINTEGRATION_TALENT | TALENT | OPERATOR | Trigger: CONSUME REALSPACE_STASIS_TALENT → APPLY ESSENCE_DISINTEGRATION (P1 self only, P2+ self + team) |
-| ESSENCE_DISINTEGRATION | STATUS | THIS OPERATOR | ATK +15%/+30% by talent level, 15s, limit 1 RESET |
+| ESSENCE_DISINTEGRATION_TALENT | TALENT | THIS OPERATOR | ATK +15%/+30% by talent level, 15s, limit 1 RESET. Base trigger (any potential): CONSUME ORIGINIUM_CRYSTAL → APPLY THIS EVENT to self. P2+ add-on: CONSUME ORIGINIUM_CRYSTAL + HAVE POTENTIAL>=2 → APPLY THIS EVENT + APPLY ESSENCE_DISINTEGRATION_MINOR to ALL_OTHER |
 | ESSENCE_DISINTEGRATION_MINOR | POTENTIAL_STATUS | ALL_OTHER OPERATOR | ATK +7.5%/+15% by talent level, 15s, limit 1 RESET (P2 team share) |
 
 ## Potentials
@@ -53,7 +52,7 @@
 | P | Name | Effect | Implementation |
 |---|------|--------|----------------|
 | P1 | Final Awakening | BS consuming crystals returns 50 SP | RETURN SP VARY_BY POTENTIAL on BS frame |
-| P2 | Reflection of Authority | ATK buff shared to allies at 50% | Talent trigger P2 branch: APPLY ESSENCE_DISINTEGRATION_MINOR to ALL_OTHER |
+| P2 | Reflection of Authority | ATK buff shared to allies at 50% | Second talent trigger clause gated HAVE POTENTIAL>=2: adds APPLY ESSENCE_DISINTEGRATION_MINOR to ALL_OTHER on crystal consume |
 | P3 | ??? | Combo DAMAGE_MULTIPLIER_MODIFIER ×1.3 | Placeholder |
 | P4 | ??? | HP +10%, Aether RES -10%, AGI +25 | Placeholder |
 | P5 | ??? | Combo CD -2s | Placeholder |
@@ -69,7 +68,7 @@
 ## Key Mechanics
 - Originium Crystal (REALSPACE_STASIS_TALENT): attached by combo skill, limit 1 RESET
 - Crystal shatter: triggered reactively when ANY operator applies VULNERABLE/LIFT/CRUSH/KNOCK_DOWN/BREACH to enemy with crystals
-  - CONSUME crystals → talent trigger fires → ESSENCE_DISINTEGRATION (+ MINOR at P2+)
+  - CONSUME crystals → Essence Disintegration talent trigger → self ATK buff (as talent event itself) always; MINOR to teammates only at P2+
   - APPLY ORIGINIUM_CRYSTALS_SHATTER → 2s enemy status with Physical DMG [1.78 → 4.00]
 - BS applies CRUSH → triggers crystal shatter via REALSPACE_STASIS_TALENT onTriggerClause (no explicit CONSUME needed)
 - Ultimate directly CONSUME crystals + deals bonus DMG (no shatter status — bonus DMG baked into ult frame)

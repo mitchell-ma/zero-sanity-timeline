@@ -21,7 +21,7 @@ import { StackInteractionType } from '../../consts/enums';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
 import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
-import { formatSegmentShortName, translateDslToken } from '../../dsl/semanticsTranslation';
+import { formatSegmentShortName, translateDslToken, formatEventLabel } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
 import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
 import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
@@ -135,7 +135,7 @@ export function computeStatusViewOverrides(
       // with recorded stacks still need their stack label for display.
       const allSorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       if (allSorted.length === 0) continue;
-      const baseName = getAllInflictionLabels()[columnId] ?? getAllInflictionLabels()[allSorted[0].name] ?? getAllStatusLabels()[allSorted[0].name] ?? translateDslToken(allSorted[0].name);
+      const baseName = getAllInflictionLabels()[columnId] ?? resolveEventLabel(allSorted[0]);
 
       const statusInfo = getStatusStackInfo(allSorted[0].name);
       const singleInstance = isSingleInstanceStatus(allSorted[0].name);
@@ -166,9 +166,13 @@ export function computeStatusViewOverrides(
         // stacking events tile without overlapping wrappers.  Applies to all
         // events (including consumed) because consumed inflictions can be
         // extended before eviction and their tall wrappers overlap later events.
-        // Single-instance RESET statuses render independently (no tiling).
+        // Single-instance RESET statuses (limit<=1) render independently (no tiling).
+        // Multi-instance RESET statuses (limit>1, incl. INFINITE) DO clamp — new
+        // instances visually supersede earlier ones even when the engine doesn't
+        // reset-evict (unlimited cap never hit).
         // Single-instance NONE statuses with unlimited stacks (accumulators) DO clamp.
-        const isIndependentReset = singleInstance && statusInfo?.verb === StackInteractionType.RESET;
+        const isIndependentReset = (statusInfo?.instances ?? 1) <= 1
+          && statusInfo?.verb === StackInteractionType.RESET;
         const allIdx = allSorted.indexOf(ev);
         if (!isIndependentReset && allIdx >= 0 && allIdx < allSorted.length - 1) {
           const nextStart = allSorted[allIdx + 1].startFrame;
@@ -282,7 +286,7 @@ export function resolveEventLabel(ev: TimelineEvent): string {
     const level = ev.statusLevel ?? 1;
     return `${base} ${ROMAN[level - 1] ?? level}`;
   }
-  return base;
+  return formatEventLabel(base, ev.name, getStatusById(ev.name)?.eventIdType);
 }
 
 /**

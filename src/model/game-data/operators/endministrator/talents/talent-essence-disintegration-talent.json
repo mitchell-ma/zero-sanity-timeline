@@ -1,41 +1,34 @@
 {
-  "onTriggerClause": [
+  "clause": [
     {
-      "conditions": [
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "CONSUME",
-          "object": "STATUS",
-          "objectId": "ORIGINIUM_CRYSTAL",
-          "with": {
-            "stacks": "MAX"
-          }
-        },
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HAVE",
-          "object": "POTENTIAL",
-          "cardinalityConstraint": "EXACTLY",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 1
-            }
-          }
-        }
-      ],
+      "conditions": [],
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "ESSENCE_DISINTEGRATION",
+          "object": "STAT",
           "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0.15,
+                0.3
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          },
+          "objectId": "ATTACK_BONUS"
         }
       ]
-    },
+    }
+  ],
+  "onTriggerClause": [
     {
       "conditions": [
         {
@@ -65,8 +58,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "ESSENCE_DISINTEGRATION",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         },
@@ -78,8 +71,32 @@
           "to": "OPERATOR"
         }
       ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "STATUS",
+          "objectId": "ORIGINIUM_CRYSTAL",
+          "with": {
+            "stacks": "MAX"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
     }
   ],
+  "clauseType": "FIRST_MATCH",
   "properties": {
     "id": "ESSENCE_DISINTEGRATION_TALENT",
     "maxLevel": {
@@ -89,6 +106,20 @@
     "name": "Essence Disintegration (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 15
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
     "eventType": "STATUS",
     "eventIdType": "TALENT",
     "description": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack."
@@ -99,6 +130,6 @@
       "ENDFIELD_WIKI"
     ],
     "icon": "skills/endministrator_talent_1_icon.png",
-    "dataStatus": "VERIFIED"
+    "dataStatus": "RECONCILED"
   }
 }

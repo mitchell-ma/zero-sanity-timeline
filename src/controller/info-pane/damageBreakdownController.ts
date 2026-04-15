@@ -204,11 +204,20 @@ function buildPerElementSubEntries(
       total,
       isActive ? 'Active element' : 'Does not apply to this hit',
     );
-    if (isActive && sources.length > 0) {
+    // Surface per-source attribution for every element with deltas, regardless
+    // of whether it applies to the active hit — users want to see what FOCUS
+    // is contributing to ELECTRIC even while a HEAT frame is selected. Inactive
+    // elements grey out the entire subtree (entry + sub-entries + sub-sources)
+    // so the breakdown visually communicates "present but not contributing".
+    if (sources.length > 0) {
       entry.subEntries = sources.map((s) => {
         const sub = makeSubEntry(s.label, s.value, '');
         if (s.subSources?.length) {
           sub.subEntries = s.subSources.map((ss) => makeSubEntry(ss.label, ss.value, ''));
+        }
+        if (!isActive) {
+          sub.cssClass = 'dmg-breakdown-neutral';
+          sub.subEntries?.forEach(ss => { ss.cssClass = 'dmg-breakdown-neutral'; });
         }
         return sub;
       });

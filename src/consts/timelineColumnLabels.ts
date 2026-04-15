@@ -1,4 +1,4 @@
-import { EnemyActionType, PhysicalStatusType, StatusType, ELEMENT_COLORS, ElementType } from './enums';
+import { DamageFactorType, EnemyActionType, PhysicalStatusType, StatusType, ELEMENT_COLORS, ElementType } from './enums';
 import { NounType } from '../dsl/semantics';
 import { getAllSkillLabels, getAllStatusLabels } from '../controller/gameDataStore';
 import { t } from '../locales/locale';
@@ -67,6 +67,18 @@ const GAME_MECHANIC_STATUS_LABELS: Record<string, string> = {
 export const STATUS_LABELS: Record<string, string> = {
   ...GAME_MECHANIC_STATUS_LABELS,
   ...getAllStatusLabels(),
+};
+
+/** Display labels for damage formula factor types — used by the info-pane to
+ *  annotate an event's scalar `statusValue` (e.g. a HEAT_FRAGILITY event
+ *  labelled "Fragility 10%"). Falls through STATUS_LABELS for shared keys. */
+export const DAMAGE_FACTOR_LABELS: Partial<Record<DamageFactorType, string>> = {
+  [DamageFactorType.FRAGILITY]:     t('status.FRAGILITY'),
+  [DamageFactorType.AMP]:           t('status.ARTS_AMP'),
+  [DamageFactorType.WEAKNESS]:      t('status.WEAKNESS'),
+  [DamageFactorType.DMG_REDUCTION]: t('status.DMG_REDUCTION'),
+  [DamageFactorType.PROTECTION]:    t('status.PROTECTION'),
+  [DamageFactorType.SUSCEPTIBILITY]: t('status.SUSCEPTIBILITY'),
 };
 
 // ── Combat skill display names ──────────────────────────────────────────────

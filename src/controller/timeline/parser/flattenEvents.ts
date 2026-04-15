@@ -5,6 +5,20 @@
  * `createSkillEvent` for per-event ingress and from `runEventQueue`
  * for freeform derived events (inflictions/reactions/statuses that
  * bypass createSkillEvent).
+ *
+ * Skill events emit the full lifecycle: EVENT_START, per-segment
+ * SEGMENT_START / per-frame PROCESS_FRAME / SEGMENT_END, EVENT_END.
+ *
+ * Non-skill non-resource (freeform inflictions / reactions / physical
+ * statuses / statuses) emit only the PROCESS_FRAME queue entries that
+ * carry the APPLY clause that creates the applied event. Their
+ * lifecycle (EVENT_END, onEntry/onExit, offset>0 segment frames) is
+ * scheduled entirely by `runStatusCreationLifecycle` on the
+ * applyEvent-created event. Emitting skill-style EVENT_START /
+ * SEGMENT_* / EVENT_END hooks for the raw wrapper would duplicate the
+ * applied event's own hooks and cause IS_NOT to fire at the raw
+ * (unextended) end, prematurely consuming BECOME-NOT talents such as
+ * Yvonne's Freezing Point.
  */
 import { TimelineEvent, activeEndFrame } from '../../../consts/viewTypes';
 import { NounType } from '../../../dsl/semantics';
@@ -29,16 +43,6 @@ function getResourceColumnSet(): ReadonlySet<string> {
   return _resourceColumnSet;
 }
 
-/**
- * Flatten registered events into PROCESS_FRAME (and COMBO_RESOLVE) queue
- * entries. One EVENT_START hook, one SEGMENT_START / SEGMENT_END pair per
- * segment, one ON_FRAME per frame marker, one EVENT_END hook at the active
- * end. Freeform non-skill events without frame markers get a single synthetic
- * PROCESS_FRAME at their startFrame. Combo events without a resolved trigger
- * column get a deferred COMBO_RESOLVE entry.
- *
- * Uses the shared object pool so drag ticks stay allocation-free.
- */
 export function flattenEventsToQueueFrames(
   events: readonly TimelineEvent[],
   stops: readonly TimeStopRegion[],
@@ -46,156 +50,15 @@ export function flattenEventsToQueueFrames(
   const entries: QueueFrame[] = [];
 
   for (const event of events) {
-    // Seed an event-start entry at the event's start frame
-    const start = allocQueueFrame();
-    start.frame = event.startFrame;
-
-    start.type = QueueFrameType.PROCESS_FRAME;
-    start.hookType = FrameHookType.EVENT_START;
-    start.statusId = event.id;
-    start.columnId = event.columnId;
-    start.ownerEntityId = event.ownerEntityId;
-    start.sourceEntityId = event.ownerEntityId;
-    start.sourceSkillName = event.id;
-    start.maxStacks = 0;
-    start.durationFrames = 0;
-    start.operatorSlotId = event.ownerEntityId;
-    start.sourceEvent = event;
-    start.segmentIndex = -1;
-    start.frameIndex = -1;
-    entries.push(start);
-
-    const fStops = foreignStopsFor(event, stops);
-    let cumulativeOffset = 0;
-    let hasFrames = false;
-    for (let si = 0; si < event.segments.length; si++) {
-      const seg = event.segments[si];
-
-      // SEGMENT_START lifecycle hook
-      const segStartFrame = absoluteFrame(event.startFrame, cumulativeOffset, 0, fStops);
-      const segStart = allocQueueFrame();
-      segStart.frame = segStartFrame;
-
-      segStart.type = QueueFrameType.PROCESS_FRAME;
-      segStart.hookType = FrameHookType.SEGMENT_START;
-      segStart.statusId = event.id;
-      segStart.columnId = event.columnId;
-      segStart.ownerEntityId = event.ownerEntityId;
-      segStart.sourceEntityId = event.ownerEntityId;
-      segStart.sourceSkillName = event.id;
-      segStart.maxStacks = 0;
-      segStart.durationFrames = 0;
-      segStart.operatorSlotId = event.ownerEntityId;
-      segStart.sourceEvent = event;
-      segStart.segmentIndex = si;
-      segStart.frameIndex = -1;
-      entries.push(segStart);
-
-      if (seg.frames && seg.frames.length > 0) {
-        hasFrames = true;
-        for (let fi = 0; fi < seg.frames.length; fi++) {
-          const frame = seg.frames[fi];
-          const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
-
-          const qf = allocQueueFrame();
-          qf.frame = absFrame;
-
-          qf.type = QueueFrameType.PROCESS_FRAME;
-          qf.statusId = event.id;
-          qf.columnId = event.columnId;
-          qf.ownerEntityId = event.ownerEntityId;
-          qf.sourceEntityId = event.ownerEntityId;
-          qf.sourceSkillName = event.id;
-          qf.maxStacks = 0;
-          qf.durationFrames = 0;
-          qf.operatorSlotId = event.ownerEntityId;
-          qf.frameMarker = frame;
-          qf.sourceEvent = event;
-          qf.segmentIndex = si;
-          qf.frameIndex = fi;
-          entries.push(qf);
-        }
-      }
-      cumulativeOffset += seg.properties.duration;
-
-      // SEGMENT_END lifecycle hook
-      const segEndFrame = absoluteFrame(event.startFrame, cumulativeOffset, 0, fStops);
-      if (segEndFrame > segStartFrame) {
-        const segEnd = allocQueueFrame();
-        segEnd.frame = segEndFrame;
-
-        segEnd.type = QueueFrameType.PROCESS_FRAME;
-        segEnd.hookType = FrameHookType.SEGMENT_END;
-        segEnd.statusId = event.id;
-        segEnd.columnId = event.columnId;
-        segEnd.ownerEntityId = event.ownerEntityId;
-        segEnd.sourceEntityId = event.ownerEntityId;
-        segEnd.sourceSkillName = event.id;
-        segEnd.maxStacks = 0;
-        segEnd.durationFrames = 0;
-        segEnd.operatorSlotId = event.ownerEntityId;
-        segEnd.sourceEvent = event;
-        segEnd.segmentIndex = si;
-        segEnd.frameIndex = -1;
-        entries.push(segEnd);
-      }
-    }
-
-    // Synthesize a frame entry for non-skill events with no frame markers.
-    // This routes freeform inflictions, reactions, and statuses through the same
-    // PROCESS_FRAME → interpret path as engine-created events.
-    const isFreeformNonSkill = !hasFrames
-      && !SKILL_COLUMN_SET.has(event.columnId as SkillType)
+    const isNonSkillNonResource = !SKILL_COLUMN_SET.has(event.columnId as SkillType)
       && !getResourceColumnSet().has(event.columnId);
-    if (isFreeformNonSkill) {
-      const synth = allocQueueFrame();
-      synth.frame = event.startFrame;
 
-      synth.type = QueueFrameType.PROCESS_FRAME;
-      synth.statusId = event.id;
-      synth.columnId = event.columnId;
-      synth.ownerEntityId = event.ownerEntityId;
-      synth.sourceEntityId = event.ownerEntityId;
-      synth.sourceSkillName = event.id;
-      synth.maxStacks = 0;
-      synth.durationFrames = 0;
-      synth.operatorSlotId = event.ownerEntityId;
-      synth.frameMarker = { offsetFrame: 0 };
-      synth.sourceEvent = event;
-      synth.segmentIndex = 0;
-      synth.frameIndex = 0;
-      entries.push(synth);
+    if (isNonSkillNonResource) {
+      emitNonSkillFrames(event, stops, entries);
+      continue;
     }
 
-    // Seed an event-end entry at the active end frame (before cooldown segments).
-    // Skip for freeform non-skill events — the visible event is created later
-    // via `applyEvent` → `runStatusCreationLifecycle`, which schedules its own
-    // EVENT_END using the (possibly time-stop-extended) duration of the
-    // applied event. Seeding here would emit a duplicate EVENT_END at the raw
-    // unextended end, causing IS_NOT to fire twice (once at raw end, once at
-    // extended end), which consumes BECOME-NOT talents (e.g. Freezing Point)
-    // prematurely.
-    if (isFreeformNonSkill) continue;
-    const endFrame = activeEndFrame(event);
-    if (endFrame > event.startFrame) {
-      const end = allocQueueFrame();
-      end.frame = endFrame;
-
-      end.type = QueueFrameType.PROCESS_FRAME;
-      end.hookType = FrameHookType.EVENT_END;
-      end.statusId = event.id;
-      end.columnId = event.columnId;
-      end.ownerEntityId = event.ownerEntityId;
-      end.sourceEntityId = event.ownerEntityId;
-      end.sourceSkillName = event.id;
-      end.maxStacks = 0;
-      end.durationFrames = 0;
-      end.operatorSlotId = event.ownerEntityId;
-      end.sourceEvent = event;
-      end.segmentIndex = -1;
-      end.frameIndex = -1;
-      entries.push(end);
-    }
+    emitSkillLifecycle(event, stops, entries);
 
     // Seed COMBO_RESOLVE for combo events (fires after engine triggers)
     if (event.columnId === NounType.COMBO && !event.comboTriggerColumnId) {
@@ -217,4 +80,174 @@ export function flattenEventsToQueueFrames(
   }
 
   return entries;
+}
+
+/**
+ * Emit queue frames for a freeform non-skill wrapper event.
+ *
+ * Every freeform-placeable non-skill column ships an APPLY clause in its
+ * `defaultEvent` (via `buildStatusMicroColumn`); `attachDefaultSegments`
+ * attaches that frame to the raw event before the pipeline runs. So every
+ * non-skill event reaching flatten carries at least one clause-carrying
+ * frame — that's what gets emitted as a PROCESS_FRAME.
+ *
+ * No EVENT_START / SEGMENT_START / SEGMENT_END / EVENT_END are emitted —
+ * the wrapper has no lifecycle of its own; the applied event that
+ * `doApply` creates via `applyEvent` owns the lifecycle via
+ * `runStatusCreationLifecycle`.
+ */
+function emitNonSkillFrames(
+  event: TimelineEvent,
+  stops: readonly TimeStopRegion[],
+  entries: QueueFrame[],
+): void {
+  const fStops = foreignStopsFor(event, stops);
+  let cumulativeOffset = 0;
+
+  for (let si = 0; si < event.segments.length; si++) {
+    const seg = event.segments[si];
+    if (seg.frames && seg.frames.length > 0) {
+      for (let fi = 0; fi < seg.frames.length; fi++) {
+        const frame = seg.frames[fi];
+        const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
+
+        const qf = allocQueueFrame();
+        qf.frame = absFrame;
+
+        qf.type = QueueFrameType.PROCESS_FRAME;
+        qf.statusId = event.id;
+        qf.columnId = event.columnId;
+        qf.ownerEntityId = event.ownerEntityId;
+        qf.sourceEntityId = event.ownerEntityId;
+        qf.sourceSkillName = event.id;
+        qf.maxStacks = 0;
+        qf.durationFrames = 0;
+        qf.operatorSlotId = event.ownerEntityId;
+        qf.frameMarker = frame;
+        qf.sourceEvent = event;
+        qf.segmentIndex = si;
+        qf.frameIndex = fi;
+        entries.push(qf);
+      }
+    }
+    cumulativeOffset += seg.properties.duration;
+  }
+}
+
+/**
+ * Emit the full lifecycle of queue frames for a skill event:
+ * EVENT_START, per-segment SEGMENT_START / per-frame PROCESS_FRAME /
+ * SEGMENT_END, EVENT_END at the active end.
+ */
+function emitSkillLifecycle(
+  event: TimelineEvent,
+  stops: readonly TimeStopRegion[],
+  entries: QueueFrame[],
+): void {
+  const start = allocQueueFrame();
+  start.frame = event.startFrame;
+  start.type = QueueFrameType.PROCESS_FRAME;
+  start.hookType = FrameHookType.EVENT_START;
+  start.statusId = event.id;
+  start.columnId = event.columnId;
+  start.ownerEntityId = event.ownerEntityId;
+  start.sourceEntityId = event.ownerEntityId;
+  start.sourceSkillName = event.id;
+  start.maxStacks = 0;
+  start.durationFrames = 0;
+  start.operatorSlotId = event.ownerEntityId;
+  start.sourceEvent = event;
+  start.segmentIndex = -1;
+  start.frameIndex = -1;
+  entries.push(start);
+
+  const fStops = foreignStopsFor(event, stops);
+  let cumulativeOffset = 0;
+
+  for (let si = 0; si < event.segments.length; si++) {
+    const seg = event.segments[si];
+
+    const segStartFrame = absoluteFrame(event.startFrame, cumulativeOffset, 0, fStops);
+    const segStart = allocQueueFrame();
+    segStart.frame = segStartFrame;
+    segStart.type = QueueFrameType.PROCESS_FRAME;
+    segStart.hookType = FrameHookType.SEGMENT_START;
+    segStart.statusId = event.id;
+    segStart.columnId = event.columnId;
+    segStart.ownerEntityId = event.ownerEntityId;
+    segStart.sourceEntityId = event.ownerEntityId;
+    segStart.sourceSkillName = event.id;
+    segStart.maxStacks = 0;
+    segStart.durationFrames = 0;
+    segStart.operatorSlotId = event.ownerEntityId;
+    segStart.sourceEvent = event;
+    segStart.segmentIndex = si;
+    segStart.frameIndex = -1;
+    entries.push(segStart);
+
+    if (seg.frames && seg.frames.length > 0) {
+      for (let fi = 0; fi < seg.frames.length; fi++) {
+        const frame = seg.frames[fi];
+        const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
+
+        const qf = allocQueueFrame();
+        qf.frame = absFrame;
+        qf.type = QueueFrameType.PROCESS_FRAME;
+        qf.statusId = event.id;
+        qf.columnId = event.columnId;
+        qf.ownerEntityId = event.ownerEntityId;
+        qf.sourceEntityId = event.ownerEntityId;
+        qf.sourceSkillName = event.id;
+        qf.maxStacks = 0;
+        qf.durationFrames = 0;
+        qf.operatorSlotId = event.ownerEntityId;
+        qf.frameMarker = frame;
+        qf.sourceEvent = event;
+        qf.segmentIndex = si;
+        qf.frameIndex = fi;
+        entries.push(qf);
+      }
+    }
+    cumulativeOffset += seg.properties.duration;
+
+    const segEndFrame = absoluteFrame(event.startFrame, cumulativeOffset, 0, fStops);
+    if (segEndFrame > segStartFrame) {
+      const segEnd = allocQueueFrame();
+      segEnd.frame = segEndFrame;
+      segEnd.type = QueueFrameType.PROCESS_FRAME;
+      segEnd.hookType = FrameHookType.SEGMENT_END;
+      segEnd.statusId = event.id;
+      segEnd.columnId = event.columnId;
+      segEnd.ownerEntityId = event.ownerEntityId;
+      segEnd.sourceEntityId = event.ownerEntityId;
+      segEnd.sourceSkillName = event.id;
+      segEnd.maxStacks = 0;
+      segEnd.durationFrames = 0;
+      segEnd.operatorSlotId = event.ownerEntityId;
+      segEnd.sourceEvent = event;
+      segEnd.segmentIndex = si;
+      segEnd.frameIndex = -1;
+      entries.push(segEnd);
+    }
+  }
+
+  const endFrame = activeEndFrame(event);
+  if (endFrame > event.startFrame) {
+    const end = allocQueueFrame();
+    end.frame = endFrame;
+    end.type = QueueFrameType.PROCESS_FRAME;
+    end.hookType = FrameHookType.EVENT_END;
+    end.statusId = event.id;
+    end.columnId = event.columnId;
+    end.ownerEntityId = event.ownerEntityId;
+    end.sourceEntityId = event.ownerEntityId;
+    end.sourceSkillName = event.id;
+    end.maxStacks = 0;
+    end.durationFrames = 0;
+    end.operatorSlotId = event.ownerEntityId;
+    end.sourceEvent = event;
+    end.segmentIndex = -1;
+    end.frameIndex = -1;
+    entries.push(end);
+  }
 }

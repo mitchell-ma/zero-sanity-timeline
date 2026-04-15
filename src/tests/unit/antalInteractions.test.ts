@@ -65,6 +65,7 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
+import { withApplyFrame } from './_freeformEventHelpers';
 
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
@@ -672,7 +673,17 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
   }
 
   function makeFocus(startFrame: number, duration: number): TimelineEvent {
-    return makeEv({ uid: `focus-${startFrame}`, name: StatusType.FOCUS, ownerEntityId: ENEMY_ID, columnId: 'FOCUS', startFrame, segments: [{ properties: { duration: duration } }] });
+    const bare = makeEv({ uid: `focus-${startFrame}`, name: StatusType.FOCUS, ownerEntityId: ENEMY_ID, columnId: 'FOCUS', startFrame, segments: [{ properties: { duration: duration } }] });
+    return withApplyFrame(bare, { statusId: StatusType.FOCUS, to: NounType.ENEMY });
+  }
+
+  function makeHeatInfliction(uid: string, startFrame: number, duration: number, sourceSlot: string, sourceSkill: string): TimelineEvent {
+    const bare = makeEv({
+      uid, name: INFLICTION_COLUMNS.HEAT, ownerEntityId: ENEMY_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame, segments: [{ properties: { duration } }],
+      sourceEntityId: sourceSlot, sourceSkillName: sourceSkill,
+    });
+    return withApplyFrame(bare, { statusId: INFLICTION_COLUMNS.HEAT, to: NounType.ENEMY });
   }
 
   function makeLaevBattle(startFrame: number): TimelineEvent {
@@ -809,11 +820,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
   test('H6: Combo window appears when enemy has heat infliction and Focus active', () => {
     const focus = makeFocus(0, 120 * FPS);
     // Derived heat infliction on enemy (as if Laevatain's battle skill frame created it)
-    const heatInfliction = makeEv({
-      uid: 'heat-inf-1', name: INFLICTION_COLUMNS.HEAT, ownerEntityId: ENEMY_ID,
-      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 220, segments: [{ properties: { duration: 10 * FPS } }],
-      sourceEntityId: SLOT_LAEV, sourceSkillName: 'FLAMING_CINDERS_BATK',
-    });
+    const heatInfliction = makeHeatInfliction('heat-inf-1', 220, 10 * FPS, SLOT_LAEV, 'FLAMING_CINDERS_BATK');
     const wirings = [laevWiring(), antalWiring()];
 
     const processed = processCombatSimulation([focus, heatInfliction], undefined, undefined, wirings);
@@ -828,11 +835,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const SLOT_AKEKURI = 'slot-0';
     const focus = makeFocus(0, 120 * FPS);
     // Akekuri's battle skill applies heat infliction to enemy
-    const akekuriHeatInfliction = makeEv({
-      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerEntityId: ENEMY_ID,
-      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
-      sourceEntityId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
-    });
+    const akekuriHeatInfliction = makeHeatInfliction('akekuri-heat-1', 200, 20 * FPS, SLOT_AKEKURI, 'BURST_OF_PASSION');
     // Antal places combo within the activation window, with comboTriggerColumnId resolved
     const antalCombo = makeAntalCombo(300, INFLICTION_COLUMNS.HEAT);
 
@@ -866,11 +869,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
 
     // Focus exists (as if engine-derived) + Akekuri heat infliction on enemy
     const focus = makeFocus(0, 120 * FPS);
-    const akekuriHeat = makeEv({
-      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerEntityId: ENEMY_ID,
-      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
-      sourceEntityId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
-    });
+    const akekuriHeat = makeHeatInfliction('akekuri-heat-1', 200, 20 * FPS, SLOT_AKEKURI, 'BURST_OF_PASSION');
     // Antal combo placed WITHOUT comboTriggerColumnId (simulating first pass failing)
     const antalCombo = makeAntalCombo(300);
 
@@ -936,11 +935,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         }],
       }],
     });
-    const akekuriHeat = makeEv({
-      uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerEntityId: ENEMY_ID,
-      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
-      sourceEntityId: 'slot-0', sourceSkillName: 'BURST_OF_PASSION',
-    });
+    const akekuriHeat = makeHeatInfliction('akekuri-heat-1', 200, 20 * FPS, 'slot-0', 'BURST_OF_PASSION');
     const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'AKEKURI' };
     const wirings = [akekuriWiring, antalWiring()];
 

@@ -11,7 +11,7 @@
   "secondaryAttributeType": "STRENGTH",
   "talents": {
     "one": "ILLUMINATION_TALENT",
-    "two": "SUBDUER_OF_EVIL_TALENT",
+    "two": "SUBDUER_OF_EVIL_T2",
     "attributeIncrease": {
       "id": "SKIRMISHER"
     }

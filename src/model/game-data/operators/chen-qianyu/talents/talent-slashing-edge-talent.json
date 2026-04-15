@@ -13,8 +13,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "SLASHING_EDGE",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
@@ -33,8 +33,8 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "SLASHING_EDGE",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
@@ -53,17 +53,46 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "SLASHING_EDGE",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0.04,
+                0.08
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
   "clauseType": "ALL",
   "properties": {
-    "id": "SLASHING_EDGE_TALENT",
+    "id": "SLASHING_EDGE",
     "maxLevel": {
       "verb": "IS",
       "value": 2
@@ -71,9 +100,23 @@
     "name": "Slashing Edge (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 5
+      },
+      "interactionType": "RESET"
+    },
     "eventType": "STATUS",
     "eventIdType": "TALENT",
-    "description": "After hitting an enemy with skills, Chen gains ATK +4% for 10s. This effect can reach 5 stacks."
+    "description": "After hitting an enemy with skills, Chen gains ATK +4%/+8% (L1/L2) for 10s. This effect can reach 5 stacks."
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

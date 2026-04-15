@@ -53,7 +53,7 @@
                       ],
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     },
                     "mainStat": {
@@ -62,7 +62,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }

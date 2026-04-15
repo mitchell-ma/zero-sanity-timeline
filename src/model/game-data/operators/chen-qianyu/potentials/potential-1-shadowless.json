@@ -1,9 +1,85 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "HP",
+          "cardinalityConstraint": "LESS_THAN_EQUAL",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 50,
+              "unit": "PERCENTAGE"
+            }
+          }
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "value": {
+            "verb": "IS",
+            "value": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 0.2
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL",
   "properties": {
-    "id": "CHEN_QIANYU_POTENTIAL_1",
-    "name": "Shadowless (P1)",
+    "id": "SHADOWLESS_P1",
     "level": 1,
-    "eventType": "POTENTIAL_EVENT",
+    "name": "Shadowless (P1)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
     "eventIdType": "POTENTIAL",
     "description": "DMG Dealt +20% to enemies below 50% HP."
   },

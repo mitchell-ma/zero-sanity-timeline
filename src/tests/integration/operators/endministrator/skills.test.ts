@@ -71,7 +71,7 @@ const REALSPACE_STASIS_ID: string = require(
 ).properties.id;
 
 const ESSENCE_DISINTEGRATION_ID: string = require(
-  '../../../../model/game-data/operators/endministrator/statuses/status-essence-disintegration.json',
+  '../../../../model/game-data/operators/endministrator/talents/talent-essence-disintegration-talent.json',
 ).properties.id;
 
 const ORIGINIUM_CRYSTALS_SHATTER_ID: string = require(
@@ -389,7 +389,7 @@ describe('C. Ultimate', () => {
 
 describe('D. Talent-Derived Statuses', () => {
   it('D1: crystal consume via BS triggers Essence Disintegration on operator (P1)', () => {
-    // Essence Disintegration talent requires P1+ to activate
+    // Base trigger fires at all potentials — self buff always applies on crystal consume
     const { result } = setupEndministratorWithPotential(1);
 
     // Place combo to create crystal
@@ -488,6 +488,33 @@ describe('D. Talent-Derived Statuses', () => {
     }
   });
 
+  it('D0: P0 crystal consume still triggers self buff (base clause has no potential gate)', () => {
+    const { result } = setupEndministratorWithPotential(0);
+
+    const comboCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.COMBO);
+    const comboPayload = getMenuPayload(result.current, comboCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        comboPayload.ownerEntityId, comboPayload.columnId,
+        comboPayload.atFrame, comboPayload.defaultSkill,
+      );
+    });
+    const battleCol = findColumn(result.current, SLOT_ENDMINISTRATOR, NounType.BATTLE);
+    const battlePayload = getMenuPayload(result.current, battleCol!, 5 * FPS);
+    act(() => {
+      result.current.handleAddEvent(
+        battlePayload.ownerEntityId, battlePayload.columnId,
+        battlePayload.atFrame, battlePayload.defaultSkill,
+      );
+    });
+
+    const selfBuff = result.current.allProcessedEvents.filter(
+      ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
+        && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
+    );
+    expect(selfBuff.length).toBeGreaterThanOrEqual(1);
+  });
+
   it('D3: P1 does NOT share ATK buff to teammates', () => {
     const SLOT_TEAMMATE = 'slot-1';
     const { result } = setupEndministratorWithPotential(1);
@@ -510,14 +537,14 @@ describe('D. Talent-Derived Statuses', () => {
       );
     });
 
-    // P1: self buff exists
+    // P1: self buff exists (base trigger fires at any potential)
     const selfBuff = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
         && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
     );
     expect(selfBuff.length).toBeGreaterThanOrEqual(1);
 
-    // P1: NO team buff
+    // P1: no team buff (P2 potential gate prevents MINOR from firing)
     const teamBuff = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ESSENCE_DISINTEGRATION_MINOR_ID
         && ev.ownerEntityId === SLOT_TEAMMATE,

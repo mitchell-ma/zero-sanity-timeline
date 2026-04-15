@@ -577,7 +577,7 @@ function warnReactionPhysicalIdMisuse(shape: Record<string, unknown>, path: stri
  * `"determiner": "SOURCE"` so the resolver picks the casting operator's
  * context.
  */
-export function collectThisOperatorInValueNode(node: unknown, path: string): string[] {
+export function collectThisOperatorInValueNode(node: unknown, path: string, ownerLabel: string = 'owning'): string[] {
   if (node === null || typeof node !== 'object' || Array.isArray(node)) return [];
   const obj = node as Record<string, unknown>;
   const errors: string[] = [];
@@ -586,7 +586,7 @@ export function collectThisOperatorInValueNode(node: unknown, path: string): str
   const of = obj.of as Record<string, unknown> | undefined;
   if (of && of.determiner === DeterminerType.THIS && of.object === NounType.OPERATOR) {
     errors.push(
-      `${path}.of: "determiner": "THIS" resolves against the TEAM entity (no stats/levels). `
+      `${path}.of: "determiner": "THIS" resolves against the ${ownerLabel} entity (no operator stats/levels). `
       + `Use "determiner": "SOURCE" to resolve against the casting operator.`,
     );
   }
@@ -594,7 +594,7 @@ export function collectThisOperatorInValueNode(node: unknown, path: string): str
   // Recurse into expression children and nested of clauses
   for (const key of ['left', 'right', 'of'] as const) {
     if (obj[key] && typeof obj[key] === 'object') {
-      errors.push(...collectThisOperatorInValueNode(obj[key], `${path}.${key}`));
+      errors.push(...collectThisOperatorInValueNode(obj[key], `${path}.${key}`, ownerLabel));
     }
   }
   return errors;

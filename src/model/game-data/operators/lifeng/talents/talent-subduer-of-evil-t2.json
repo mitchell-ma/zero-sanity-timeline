@@ -9,14 +9,6 @@
           "object": "STATUS",
           "objectId": "PHYSICAL",
           "objectQualifier": "KNOCK_DOWN"
-        },
-        {
-          "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
-          "verb": "HAVE",
-          "object": "POTENTIAL",
-          "cardinalityConstraint": "GREATER_THAN_EQUAL",
-          "value": { "verb": "IS", "value": 5 }
         }
       ],
       "effects": [
@@ -35,7 +27,7 @@
       "metadata": { "eventComponentType": "SEGMENT" },
       "properties": {
         "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" },
-        "name": "Unremitting",
+        "name": "Subduer of Evil",
         "element": "PHYSICAL"
       },
       "frames": [
@@ -52,20 +44,25 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "value": { "verb": "IS", "value": 2.5 },
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "TALENT_LEVEL",
+                      "value": [0, 0.5, 1],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
-                },
-                {
-                  "verb": "DEAL",
-                  "object": "STAGGER",
-                  "to": "ENEMY",
-                  "with": { "value": { "verb": "IS", "value": 5 } }
                 }
               ]
             }
@@ -73,37 +70,31 @@
           "clauseType": "ALL"
         }
       ]
-    },
-    {
-      "metadata": { "eventComponentType": "SEGMENT" },
-      "properties": {
-        "segmentTypes": ["COOLDOWN", "IMMEDIATE_COOLDOWN"],
-        "name": "Cooldown",
-        "duration": { "value": { "verb": "IS", "value": 13 }, "unit": "SECOND" },
-        "timeDependency": "REAL_TIME"
-      },
-      "frames": []
     }
   ],
   "properties": {
-    "id": "UNREMITTING_P5",
-    "level": 5,
-    "name": "Unremitting",
+    "id": "SUBDUER_OF_EVIL_T2",
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
+    "name": "Subduer of Evil",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "POTENTIAL",
+    "eventIdType": "TALENT",
     "stacks": {
       "limit": { "verb": "IS", "value": 1 },
       "interactionType": "RESET"
     },
-    "description": "Talent Subduer of Evil improved: Every 15s, the next effect triggered deals another 250% ATK of Physical DMG and 5 Stagger."
+    "description": "Applying Knock Down also deals 100% ATK of Physical DMG."
   },
   "metadata": {
     "originId": "LIFENG",
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
+    "icon": "skills/lifeng_talent_2_icon.png",
     "dataStatus": "RECONCILED"
   }
 }

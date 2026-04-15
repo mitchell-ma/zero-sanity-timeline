@@ -75,7 +75,7 @@ function DamageBreakdownPane({ row, frame, onToggleCrit }: DamageBreakdownPanePr
             nf === NumberFormatType.DECIMAL ? m.toFixed(dp) : `${(m * 100).toFixed(dp)}%`;
           const singleMul = (() => {
             const dmg = findDealDamageInClauses(frame.clauses);
-            return dmg?.multipliers?.length === 1 ? dmg.multipliers[0] : undefined;
+            return dmg?.values?.length === 1 ? dmg.values[0] : undefined;
           })();
           const summedMul = isFolded
             ? folded!.reduce((s, r) => (r.multiplier != null ? s + r.multiplier : s), 0)

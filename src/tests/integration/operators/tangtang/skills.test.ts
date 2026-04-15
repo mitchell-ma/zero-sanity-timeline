@@ -695,8 +695,8 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     const rogueFrame = seg.frames![8];
     const dotInfo = findDealDamageInClauses(dotFrame.clauses);
     const rogueInfo = findDealDamageInClauses(rogueFrame.clauses);
-    const dotNode = dotInfo?.multiplierNode ?? dotInfo;
-    const rogueNode = rogueInfo?.multiplierNode ?? rogueInfo;
+    const dotNode = dotInfo?.valueNode ?? dotInfo;
+    const rogueNode = rogueInfo?.valueNode ?? rogueInfo;
     expect(dotNode).toBeDefined();
     expect(rogueNode).toBeDefined();
   });

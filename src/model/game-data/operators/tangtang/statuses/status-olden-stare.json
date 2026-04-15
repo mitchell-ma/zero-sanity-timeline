@@ -40,7 +40,7 @@
                     "objectId": "WHIRLPOOL",
                     "of": {
                       "object": "OPERATOR",
-                      "determiner": "THIS"
+                      "determiner": "SOURCE"
                     }
                   }
                 }
@@ -55,7 +55,7 @@
                 ],
                 "of": {
                   "object": "OPERATOR",
-                  "determiner": "THIS"
+                  "determiner": "SOURCE"
                 }
               }
             }
@@ -79,7 +79,7 @@
                     "objectId": "WHIRLPOOL",
                     "of": {
                       "object": "OPERATOR",
-                      "determiner": "THIS"
+                      "determiner": "SOURCE"
                     }
                   }
                 },
@@ -102,7 +102,7 @@
                     ],
                     "of": {
                       "object": "OPERATOR",
-                      "determiner": "THIS"
+                      "determiner": "SOURCE"
                     }
                   }
                 }
@@ -117,7 +117,7 @@
                 ],
                 "of": {
                   "object": "OPERATOR",
-                  "determiner": "THIS"
+                  "determiner": "SOURCE"
                 }
               }
             }
@@ -200,7 +200,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       },
                       "right": {
@@ -216,7 +216,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       }
                     },
@@ -226,7 +226,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }
@@ -292,7 +292,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       },
                       "right": {
@@ -308,7 +308,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       }
                     },
@@ -318,7 +318,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }
@@ -384,7 +384,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       },
                       "right": {
@@ -400,7 +400,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       }
                     },
@@ -410,7 +410,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }
@@ -476,7 +476,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       },
                       "right": {
@@ -492,7 +492,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       }
                     },
@@ -502,7 +502,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }
@@ -568,7 +568,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       },
                       "right": {
@@ -584,7 +584,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       }
                     },
@@ -594,7 +594,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }
@@ -660,7 +660,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       },
                       "right": {
@@ -676,7 +676,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       }
                     },
@@ -686,7 +686,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }
@@ -752,7 +752,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       },
                       "right": {
@@ -768,7 +768,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       }
                     },
@@ -778,7 +778,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }
@@ -844,7 +844,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       },
                       "right": {
@@ -860,7 +860,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       }
                     },
@@ -870,7 +870,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }
@@ -936,7 +936,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       },
                       "right": {
@@ -952,7 +952,7 @@
                         ],
                         "of": {
                           "object": "OPERATOR",
-                          "determiner": "THIS"
+                          "determiner": "SOURCE"
                         }
                       }
                     },
@@ -962,7 +962,7 @@
                       "objectId": "ATTACK",
                       "of": {
                         "object": "OPERATOR",
-                        "determiner": "THIS"
+                        "determiner": "SOURCE"
                       }
                     }
                   }

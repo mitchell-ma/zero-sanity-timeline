@@ -1,5 +1,5 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
-import { DeterminerType, NounType, VerbType, isQualifiedId, type Effect, type Predicate } from '../../dsl/semantics';
+import { AdjectiveType, DeterminerType, NounType, VerbType, isQualifiedId, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
 import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
 import { ENEMY_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
@@ -121,27 +121,34 @@ function buildStatusMicroColumn(
   const durFrames = durSec === PERMANENT_DURATION || durSec === 0 ? TOTAL_FRAMES : Math.round(durSec * FPS);
   const target = cfg?.to ?? NounType.OPERATOR;
   const toDeterminer = cfg?.toDeterminer;
-  const applyEffect: Partial<Effect> = {
-    verb: VerbType.APPLY, object: NounType.STATUS, objectId: statusId,
-    to: target, ...(toDeterminer ? { toDeterminer: toDeterminer as DeterminerType } : {}),
-    inheritDuration: true,
-  };
 
-  // Susceptibility events use plain segments (no APPLY frame) so the queue's
-  // section 3b handles them — it passes event.susceptibility through to the
-  // created event. With APPLY frames, section 3a would create a new event via
-  // doApply which doesn't carry susceptibility data.
-  const isSusceptibility = statusId === StatusType.SUSCEPTIBILITY
-    || statusId === StatusType.FOCUS
-    || isQualifiedId(statusId, StatusType.SUSCEPTIBILITY);
+  // Physical statuses (LIFT / KNOCK_DOWN / CRUSH / BREACH) route through
+  // `applyPhysicalStatus` via the `objectId: PHYSICAL, objectQualifier: <X>`
+  // DSL form. Freeform placements default `isForced=1` so the gate on
+  // Vulnerable stacks is bypassed — user can unset to require Vulnerable.
+  const isPhysicalStatus = Object.values(PHYSICAL_STATUS_COLUMNS).includes(statusId as typeof PHYSICAL_STATUS_COLUMNS[keyof typeof PHYSICAL_STATUS_COLUMNS]);
+  const applyEffect: Partial<Effect> = isPhysicalStatus
+    ? {
+      verb: VerbType.APPLY, object: NounType.STATUS,
+      objectId: AdjectiveType.PHYSICAL, objectQualifier: statusId as AdjectiveType,
+      to: target, ...(toDeterminer ? { toDeterminer: toDeterminer as DeterminerType } : {}),
+      with: { isForced: { verb: VerbType.IS, value: 1 } },
+      inheritDuration: true,
+    }
+    : {
+      verb: VerbType.APPLY, object: NounType.STATUS, objectId: statusId,
+      to: target, ...(toDeterminer ? { toDeterminer: toDeterminer as DeterminerType } : {}),
+      inheritDuration: true,
+    };
 
-  // Other freeform status events use a synthetic segment with only the APPLY clause.
-  // The APPLY creates the status via doApply → processNewStatusEvent, which handles
-  // the status's own frame markers inline. Including the status's real frames here
-  // would cause double processing (once by the queue's PROCESS_FRAME, once inline).
-  const segments = isSusceptibility
-    ? [{ properties: { duration: durFrames } }]
-    : syntheticSegments(durFrames, applyEffect);
+  // Every freeform-placeable non-skill column uses a synthetic segment with
+  // only the APPLY clause. When the wrapper's PROCESS_FRAME fires at pipeline
+  // runtime, that clause drives `doApply → applyEvent → runStatusCreationLifecycle`
+  // which creates the visible event with the config's real frames.
+  // Runtime-user-edited fields on the wrapper (e.g. `susceptibility` on
+  // qualified-susceptibility / FOCUS events) are threaded from the source
+  // event onto the applied child by doApply via `InterpretContext.sourceEvent`.
+  const segments = syntheticSegments(durFrames, applyEffect);
 
   return {
     id: statusId,
@@ -864,9 +871,30 @@ export function buildColumns(
       const statusMicroCols: import('../../consts/viewTypes').MicroColumn[] = [];
       const matchIds: string[] = [];
       const STATUS_SOURCE_ORDER: Record<string, number> = { talent: 0, weapon: 1, gear: 2, other: 3 };
+      // Passive statuses (always-active talents/potentials like Illumination or
+      // Catcher's potential) hug the left of the status column group so they
+      // stay visually anchored separate from transient statuses.
+      // A status is "truly passive" — and should hug the left of the status
+      // column group — if it's an always-on talent/potential with no trigger
+      // managing its lifecycle. Trigger-managed talents (onTriggerClause fires
+      // APPLY EVENT / CONSUME EVENT) are transient and should not hug left.
+      const isPassiveStatus = (def: OperatorStatusDef): boolean => {
+        const cfg = getStatusById(def.statusId);
+        if (cfg?.eventIdType !== NounType.TALENT && cfg?.eventIdType !== NounType.POTENTIAL) return false;
+        const isCounter = cfg?.stacks?.interactionType === StackInteractionType.NONE && (cfg?.maxStacks ?? 0) >= UNLIMITED_STACKS;
+        if (isCounter) return false;
+        const durSec = cfg?.durationSeconds ?? 0;
+        if (durSec > 0 && durSec < PERMANENT_DURATION) return false;
+        if ((cfg?.onTriggerClause?.length ?? 0) > 0) return false;
+        return true;
+      };
       const ownDefs = (operatorStatusMap.get(slot.slotId) ?? [])
         .slice()
-        .sort((a, b) => (STATUS_SOURCE_ORDER[a.source] ?? 3) - (STATUS_SOURCE_ORDER[b.source] ?? 3));
+        .sort((a, b) => {
+          const passiveDelta = Number(isPassiveStatus(b)) - Number(isPassiveStatus(a));
+          if (passiveDelta !== 0) return passiveDelta;
+          return (STATUS_SOURCE_ORDER[a.source] ?? 3) - (STATUS_SOURCE_ORDER[b.source] ?? 3);
+        });
       for (const def of ownDefs) {
         const cfg = getStatusById(def.statusId);
         const isCounter = cfg?.stacks?.interactionType === StackInteractionType.NONE && (cfg?.maxStacks ?? 0) >= UNLIMITED_STACKS;
@@ -1023,9 +1051,10 @@ export function buildColumns(
     buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN, ELEMENT_COLORS[ElementType.PHYSICAL]),
     buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.CRUSH, ELEMENT_COLORS[ElementType.PHYSICAL]),
     buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.BREACH, ELEMENT_COLORS[ElementType.PHYSICAL]),
-    // Debuff base types (catch-all for operator-specific susceptibility/fragility effects)
+    // Debuff base types (catch-all for operator-specific susceptibility/fragility effects).
+    // Abstract SUSCEPTIBILITY is not freeform-placeable — only element-specific susceptibility
+    // variants (CRYO_SUSCEPTIBILITY, HEAT_SUSCEPTIBILITY, …) are concrete placeable items.
     buildStatusMicroColumn(StatusType.FOCUS, '#55aadd'),
-    buildStatusMicroColumn(StatusType.SUSCEPTIBILITY, '#cc8866'),
     buildStatusMicroColumn(StatusType.FRAGILITY, '#cc6644'),
     // Stagger frailty — durations from enemy config, not static JSON defaults
     buildStatusMicroColumn(NODE_STAGGER_COLUMN_ID, '#dd8844', { durationSeconds: enemy.staggerNodeRecoverySeconds }),

@@ -41,20 +41,6 @@
           "metadata": {
             "eventComponentType": "FRAME",
             "dataSources": [
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0.77,
-              "unit": "SECOND"
-            }
-          }
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
               "ENDFIELD_WIKI"
             ]
           },

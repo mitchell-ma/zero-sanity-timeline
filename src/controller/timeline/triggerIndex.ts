@@ -548,10 +548,16 @@ export class TriggerIndex {
     const opSlotMap = operatorSlotMap ?? {};
 
     for (const def of defs) {
-      // ── Talent defs ──────────────────────────────────────────────────
-      if ((def.properties.eventIdType ?? def.properties.type) === NounType.TALENT) {
-        // Description-only talents (no trigger, no clause, no segments) are metadata-only — skip.
-        // Their effects are baked into skill frames; the talent JSON is just a label.
+      // ── Operator-intrinsic passive defs (TALENT, POTENTIAL) ─────────────
+      // Whether a def is "always-on" is config-driven (infinite duration +
+      // no trigger-managed lifecycle + not a counter), not type-driven —
+      // but only operator-intrinsic defs (talents, potentials) pass through
+      // this path to receive a frame-0 presence event. Equip-intrinsic
+      // passives are handled by the isEquip block below.
+      const defEventIdType = def.properties.eventIdType ?? def.properties.type;
+      if (defEventIdType === NounType.TALENT || defEventIdType === NounType.POTENTIAL) {
+        // Description-only defs (no trigger, no clause, no segments) are metadata-only — skip.
+        // Their effects are baked into skill frames; the def is just a label.
         const hasTrigger = def.onTriggerClause && def.onTriggerClause.length > 0;
         const hasClause = def.clause && def.clause.length > 0;
         const hasSegments = def.segments && def.segments.length > 0;
@@ -629,7 +635,7 @@ export class TriggerIndex {
       // clauses. Register these for passive stat interpretation at frame 0.
       // Consumables also get a presence event (they're active-at-start buffs).
       const ect = def.properties.eventIdType ?? def.properties.type;
-      if (isEquip && ect !== NounType.TALENT && def.clause && Array.isArray(def.clause)) {
+      if (isEquip && ect !== NounType.TALENT && ect !== NounType.POTENTIAL && def.clause && Array.isArray(def.clause)) {
         const hasPassiveStats = (def.clause as { conditions?: unknown[]; effects?: { verb?: string; object?: string }[] }[])
           .some(c => (!c.conditions || c.conditions.length === 0) && c.effects?.some(e => e.verb === VerbType.APPLY && e.object === NounType.STAT));
         if (hasPassiveStats) {
@@ -664,7 +670,8 @@ export class TriggerIndex {
 
       const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
       const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
-      if (!hasEffects && !hasClauseEffects && (def.properties.eventIdType ?? def.properties.type) !== NounType.TALENT) continue;
+      const ectForSkip = def.properties.eventIdType ?? def.properties.type;
+      if (!hasEffects && !hasClauseEffects && ectForSkip !== NounType.TALENT && ectForSkip !== NounType.POTENTIAL) continue;
 
       for (let ci = 0; ci < def.onTriggerClause.length; ci++) {
         const clause = def.onTriggerClause[ci];

@@ -19,17 +19,20 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } 
  * `frameCalculator`, view layer) expects when asking "does this frame deal
  * damage, and if so, with what element / multipliers / scaling stat?".
  *
- * `multipliers` is a per-skill-level array (12 entries when parser-provided
- * from a `VARY_BY SKILL_LEVEL` array) or a single-element array `[N]` when
- * the value comes from a runtime-attached clause (Crush/Breach/Shatter/Lift)
- * or from a constant `IS` literal. Compound expressions (`MULT`/`ADD` of
- * VARY_BY subtrees) use `multiplierNode` instead — resolved at the calc site.
+ * `values` is the parsed `with.value` — a per-skill-level array (12 entries
+ * when parser-provided from a `VARY_BY SKILL_LEVEL` array) or a single-element
+ * array `[N]` when the value comes from a runtime-attached clause
+ * (Crush/Breach/Shatter/Lift) or from a constant `IS` literal. Compound
+ * expressions (`MULT`/`ADD` of VARY_BY subtrees) and VARY_BY axes other than
+ * SKILL_LEVEL use `valueNode` instead — resolved at the calc site with the
+ * appropriate context. Named after the DSL key `with.value` (distinct from
+ * `with.multiplier`, which is a separate DSL preposition).
  */
 export interface DealDamageInfo {
   element?: string;
-  multipliers: number[];
+  values: number[];
   mainStat?: DamageScalingStatType;
-  multiplierNode?: unknown;
+  valueNode?: unknown;
   /**
    * True when this DEAL DAMAGE was found in the CHANCE hit branch (effects/predicates).
    * The damage builder skips this row when shouldFireChance returns false (miss).
@@ -436,32 +439,43 @@ function extractDealDamageFromEffect(
   if (dsl.verb !== VerbType.DEAL || dsl.object !== NounType.DAMAGE) return null;
 
   const wp = dsl.with as { value?: unknown; mainStat?: { objectId?: string } } | undefined;
-  const valueNode = wp?.value as
-    | { verb?: string; value?: number | number[]; operation?: string }
+  const withValue = wp?.value as
+    | { verb?: string; object?: string; value?: number | number[]; operation?: string }
     | undefined;
   const elementQualifier = dsl.objectQualifier && ELEMENT_QUALIFIERS.has(dsl.objectQualifier as string)
     ? (dsl.objectQualifier as string) : undefined;
   const mainStat = wp?.mainStat?.objectId as DamageScalingStatType | undefined;
 
-  let multipliers: number[] = [];
-  let multiplierNode: unknown = undefined;
-  if (valueNode != null) {
-    if (Array.isArray(valueNode.value)) {
-      multipliers = valueNode.value as number[];
-    } else if (typeof valueNode.value === 'number') {
-      multipliers = [valueNode.value];
-    } else if (valueNode.operation) {
-      multiplierNode = valueNode;
-    } else if (valueNode.verb === 'IS' && typeof valueNode.value === 'number') {
-      multipliers = [valueNode.value];
+  let values: number[] = [];
+  let valueNode: unknown = undefined;
+  if (withValue != null) {
+    if (Array.isArray(withValue.value)) {
+      // VARY_BY SKILL_LEVEL is the one axis the damage builder already has
+      // its `skillLevel` plumbed for — flatten it so callers can read
+      // `values[skillLevel-1]` directly and tests can assert on the table.
+      // Every other VARY_BY axis (TALENT_LEVEL, POTENTIAL, STACKS, …) goes
+      // through the runtime resolver: those need the caller's
+      // ValueResolutionContext (potential, talentSlot → talentLevel, etc.),
+      // which the fast-path doesn't provide.
+      if (withValue.verb === VerbType.VARY_BY && withValue.object && withValue.object !== NounType.SKILL_LEVEL) {
+        valueNode = withValue;
+      } else {
+        values = withValue.value as number[];
+      }
+    } else if (typeof withValue.value === 'number') {
+      values = [withValue.value];
+    } else if (withValue.operation) {
+      valueNode = withValue;
+    } else if (withValue.verb === 'IS' && typeof withValue.value === 'number') {
+      values = [withValue.value];
     }
   }
 
   return {
     ...(elementQualifier ? { element: elementQualifier } : {}),
-    multipliers,
+    values,
     ...(mainStat ? { mainStat } : {}),
-    ...(multipliers.length === 0 && multiplierNode ? { multiplierNode } : {}),
+    ...(values.length === 0 && valueNode ? { valueNode } : {}),
     ...(chanceBranch === ChanceBranch.HIT ? { insideChance: true } : {}),
     ...(chanceBranch === ChanceBranch.ELSE ? { insideChanceElse: true } : {}),
   };

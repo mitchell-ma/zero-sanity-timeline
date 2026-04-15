@@ -380,9 +380,24 @@ export function attachDefaultSegments(
 
     if (!defaults?.segments) return patched;
 
-    // Non-skill events (statuses, inflictions, reactions) keep their user-set segments.
-    // Only skill events get segment rebuilding (COOLDOWN/ANIMATION refresh from config).
-    if (!SKILL_COLUMN_SET.has(ev.columnId)) return patched;
+    // Non-skill events (statuses, inflictions, reactions) keep their user-set
+    // segment shape, but normalize to include the APPLY-clause frame that
+    // `buildStatusMicroColumn` puts on the column's defaultEvent. This
+    // normalization covers events that arrive without a frame attached:
+    // URL-imported sheets (codec may strip frames), saved session loads,
+    // and `handleAddEvent` callers that pass a bare `{segments: [{duration}]}`
+    // payload. After normalization, every freeform wrapper has the APPLY
+    // clause its interpret path relies on.
+    if (!SKILL_COLUMN_SET.has(ev.columnId)) {
+      const defFrame = defaults.segments[0]?.frames?.[0];
+      const userSeg0 = patched.segments[0];
+      const userHasFrame = userSeg0?.frames && userSeg0.frames.length > 0;
+      if (defFrame && userSeg0 && !userHasFrame) {
+        const patchedSeg0 = { ...userSeg0, frames: [{ ...defFrame }] };
+        return { ...patched, segments: [patchedSeg0, ...patched.segments.slice(1)] };
+      }
+      return patched;
+    }
 
     // Start from column defaults — always use resolved segment durations and frames.
     // This ensures VARY_BY expressions (POTENTIAL, SKILL_LEVEL) re-resolve on loadout change.

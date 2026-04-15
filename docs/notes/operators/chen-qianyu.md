@@ -38,15 +38,14 @@
 
 | ID | Type | Effect |
 |----|------|--------|
-| SLASHING_EDGE_TALENT | TALENT | Trigger: PERFORM BS/COMBO/ULT → APPLY STATUS SLASHING_EDGE |
-| SLASHING_EDGE | STATUS | ATTACK_BONUS [0.04, 0.08] by talent level, 10s, max 5 stacks, RESET |
+| SLASHING_EDGE | TALENT (STATUS) | Trigger: PERFORM BS/COMBO/ULT → APPLY THIS EVENT; self: ATTACK_BONUS [0.04, 0.08] by talent level, 10s, max 5 stacks, RESET |
 | MOMENTUM_BREAKER_TALENT | TALENT | Trigger: INTERRUPT ENEMY_CHARGE → DEAL STAGGER [5, 10] |
 
 ## Potentials
 
 | P | Name | Effect | Status |
 |---|------|--------|--------|
-| P1 | Shadowless | DMG +20% vs enemies <50% HP | Self-creating potential status (DAMAGE_BONUS +0.2, onTrigger: ENEMY HAVE HP LESS_THAN 0.5) |
+| P1 | Shadowless | DMG +20% vs enemies <50% HP | Merged potential+status (id SHADOWLESS_P1, DAMAGE_BONUS +0.2, self-triggers APPLY THIS EVENT on ENEMY HP ≤ 50%) |
 | P2 | Heirloom Martial Arts | AGI +15, Physical DMG +8% | |
 | P3 | Dual-Wielding Swordmancer | BS, Combo, Ult: DAMAGE ×1.1 | VARY_BY POTENTIAL [1,1,1,1.1,1.1,1.1] |
 | P4 | Improvised Chi Xiao | Blade Gale energy cost ×0.85 | VARY_BY POTENTIAL [1,1,1,1,0.85,0.85] |

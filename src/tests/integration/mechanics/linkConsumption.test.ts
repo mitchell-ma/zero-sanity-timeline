@@ -23,7 +23,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../dsl/semantics';
+import { NounType, VerbType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
 import { EventStatusType, InteractionModeType, StatusType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
@@ -43,7 +43,8 @@ const TEST_LINK_SOURCE = 'Test Link';
 
 let linkIdCounter = 0;
 
-/** Create a Link team status event. */
+/** Create a Link team status event with the APPLY-clause frame that the app
+ *  produces via `attachDefaultSegments` for freeform placements. */
 function linkEvent(startFrame: number, durationFrames: number): TimelineEvent {
   return {
     uid: `link-integ-${linkIdCounter++}`,
@@ -52,7 +53,25 @@ function linkEvent(startFrame: number, durationFrames: number): TimelineEvent {
     ownerEntityId: TEAM_ID,
     columnId: StatusType.LINK,
     startFrame,
-    segments: [{ properties: { duration: durationFrames } }],
+    segments: [{
+      properties: { duration: durationFrames },
+      frames: [{
+        offsetFrame: 0,
+        clauses: [{
+          conditions: [],
+          effects: [{
+            type: 'dsl',
+            dslEffect: {
+              verb: VerbType.APPLY,
+              object: NounType.STATUS,
+              objectId: StatusType.LINK,
+              to: NounType.TEAM,
+              inheritDuration: true,
+            },
+          }],
+        }],
+      }],
+    }],
     sourceSkillName: TEST_LINK_SOURCE,
   };
 }

@@ -7,10 +7,9 @@
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../overrideController';
-import { NounType, isQualifiedId } from '../../dsl/semantics';
-import { StatusType } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
-import { getAllSkillLabels, getOperatorSkill } from '../gameDataStore';
+import { getAllSkillLabels, getOperatorSkill, getOperatorBase } from '../gameDataStore';
 import { resolveValueNode, buildContextForSkillColumn } from './valueResolver';
 import { ColumnType, CritMode, DamageScalingStatType, DamageType, ElementType, EnemyTierType, EventFrameType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
@@ -345,6 +344,86 @@ function buildAllElementSources(
   return result;
 }
 
+/** Per-element susceptibility sources merging event + accumulator. */
+function buildAllSusceptibilitySources(
+  frame: number,
+  query: EventsQueryService,
+  accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
+  frameKey: string,
+): Partial<Record<ElementType, MultiplierSource[]>> {
+  const result: Partial<Record<ElementType, MultiplierSource[]>> = {};
+  for (const el of ALL_DISPLAY_ELEMENTS) {
+    const merged = [
+      ...query.getSusceptibilitySources(frame, el),
+      ...buildSusceptibilityStatSources(accumulator, frameKey, el),
+    ];
+    if (merged.length > 0) result[el] = merged;
+  }
+  return result;
+}
+
+/** Map element → enemy susceptibility StatType (returns undefined for NONE/ARTS). */
+function elementSusceptibilityStat(el: ElementType): StatType | undefined {
+  const key = `${el}_${NounType.SUSCEPTIBILITY}`;
+  return (Object.values(StatType) as string[]).includes(key) ? key as StatType : undefined;
+}
+
+/** Read enemy's per-element SUSCEPTIBILITY stat accumulator sources. */
+function buildSusceptibilityStatSources(
+  accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
+  frameKey: string,
+  element: ElementType,
+): MultiplierSource[] {
+  if (!accumulator) return [];
+  const statKey = elementSusceptibilityStat(element);
+  if (!statKey) return [];
+  return (accumulator.getFrameStatSources(frameKey, ENEMY_ID, statKey) ?? []).map(s => ({
+    label: s.label,
+    value: s.value,
+    category: NounType.SUSCEPTIBILITY,
+  }));
+}
+
+/** Per-element fragility sources merging event + accumulator. */
+function buildAllFragilitySources(
+  frame: number,
+  query: EventsQueryService,
+  accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
+  frameKey: string,
+): Partial<Record<ElementType, MultiplierSource[]>> {
+  const result: Partial<Record<ElementType, MultiplierSource[]>> = {};
+  for (const el of ALL_DISPLAY_ELEMENTS) {
+    const merged = [
+      ...query.getFragilitySources(frame, el),
+      ...buildFragilityStatSources(accumulator, frameKey, el),
+    ];
+    if (merged.length > 0) result[el] = merged;
+  }
+  return result;
+}
+
+/** Map element → enemy fragility StatType (e.g. HEAT → HEAT_FRAGILITY). */
+function elementFragilityStat(el: ElementType): StatType | undefined {
+  const key = `${el}_${NounType.FRAGILITY}`;
+  return (Object.values(StatType) as string[]).includes(key) ? key as StatType : undefined;
+}
+
+/** Read enemy's per-element FRAGILITY stat accumulator sources. */
+function buildFragilityStatSources(
+  accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
+  frameKey: string,
+  element: ElementType,
+): MultiplierSource[] {
+  if (!accumulator) return [];
+  const statKey = elementFragilityStat(element);
+  if (!statKey) return [];
+  return (accumulator.getFrameStatSources(frameKey, ENEMY_ID, statKey) ?? []).map(s => ({
+    label: s.label,
+    value: s.value,
+    category: NounType.FRAGILITY,
+  }));
+}
+
 /** Combine event-based AMP sources with runtime stat accumulator AMP sources. */
 function buildAmpSources(
   eventSources: MultiplierSource[],
@@ -616,31 +695,31 @@ export function buildDamageTableRows(
               const chanceHit = shouldFireChance(resolvedCritMode, chancePin);
               // Find the DEAL DAMAGE from the active branch (hit or else).
               const dealInfo = findDealDamageInClauses(frame.clauses, chanceHit);
-              if (dealInfo && dealInfo.multipliers.length > 0) {
-                const levelIdx = Math.min(skillLevel - 1, dealInfo.multipliers.length - 1);
-                multiplier = dealInfo.multipliers[levelIdx];
+              if (dealInfo && dealInfo.values.length > 0) {
+                const levelIdx = Math.min(skillLevel - 1, dealInfo.values.length - 1);
+                multiplier = dealInfo.values[levelIdx];
                 segmentMultiplier = null;
                 isPerTick = true;
-              } else if (dealInfo?.multiplierNode) {
-                // Compound expression (MULT, ADD, etc.) — resolve with full context
-                const ctx = buildContextForSkillColumn(props, effectiveColumnId);
+              } else if (dealInfo?.valueNode) {
+                // Compound expression (MULT, ADD, etc.) — resolve with full context.
+                // For talent-owned damage frames, pass the matching talent slot so
+                // TALENT_LEVEL inside the expression resolves against the correct
+                // talentOneLevel / talentTwoLevel (otherwise it silently falls back
+                // to slot 'one').
+                const base = operatorId ? getOperatorBase(operatorId) : undefined;
+                const talentSlot = base?.talents?.two?.id && ev.id === base.talents.two.id ? 'two'
+                  : base?.talents?.one?.id && ev.id === base.talents.one.id ? 'one'
+                  : undefined;
+                const ctx = buildContextForSkillColumn(props, effectiveColumnId, undefined, talentSlot);
                 if (ctx) {
                   ctx.potential = potential;
                 }
-                ctx.getStatusStacks = (statusId: string) => {
-                  if (!statusQuery) return 0;
-                  return statusQuery.getActiveOperatorStatusStacks(absFrame, ev.ownerEntityId, statusId);
-                };
-                ctx.getEnemyStatusStacks = (statusId: string) => {
-                  if (!statusQuery) return 0;
-                  // Parse "<ELEMENT>_SUSCEPTIBILITY" → element
-                  if (isQualifiedId(statusId, StatusType.SUSCEPTIBILITY)) {
-                    const elem = statusId.slice(0, -(StatusType.SUSCEPTIBILITY.length + 1)) as ElementType;
-                    return statusQuery.getActiveSusceptibilityStacks(absFrame, elem);
-                  }
-                  return 0;
-                };
-                multiplier = resolveValueNode(dealInfo.multiplierNode as ValueNode, ctx);
+                if (statusQuery) {
+                  ctx.statusQuery = statusQuery;
+                  ctx.frame = absFrame;
+                  ctx.ownerEntityId = ev.ownerEntityId;
+                }
+                multiplier = resolveValueNode(dealInfo.valueNode as ValueNode, ctx);
                 segmentMultiplier = null;
                 isPerTick = true;
               } else {
@@ -786,7 +865,14 @@ export function buildDamageTableRows(
                 const weaknessStatValue = 1 + (enemyRuntimeDeltas?.[StatType.WEAKNESS] ?? 0);
                 const subDmgReductionEffects = statusQuery?.getDmgReductionEffects(absFrame) ?? [];
                 const subProtectionEffects = statusQuery?.getProtectionEffects(absFrame) ?? [];
-                const subFragilityBonus = statusQuery?.getFragilityBonus(absFrame, element) ?? 0;
+                // Stat-based fragility applied by status clauses (e.g. Razor Clawmark
+                // APPLY STAT HEAT_FRAGILITY / PHYSICAL_FRAGILITY). Reads the enemy's
+                // per-element fragility stat delta; summed into the curated fragility sum.
+                const fragilityStatKey = elementFragilityStat(element);
+                const runtimeFragilityBonus = fragilityStatKey
+                  ? (enemyRuntimeDeltas?.[fragilityStatKey] ?? 0)
+                  : 0;
+                const subFragilityBonus = (statusQuery?.getFragilityBonus(absFrame, element) ?? 0) + runtimeFragilityBonus;
 
                 // Recompute attribute bonus with runtime deltas
                 const mainBonusStat = ATTR_TO_BONUS[opData.mainAttrType];
@@ -820,10 +906,20 @@ export function buildDamageTableRows(
                   corrosionReduction: subCorrosionReduction,
                   ignoredResistance: subIgnoredRes,
                   fragilityBonus: subFragilityBonus,
-                  fragilitySources: statusQuery?.getFragilitySources(absFrame, element) ?? [],
-                  allFragilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'fragility') : {},
-                  susceptibilitySources: statusQuery?.getSusceptibilitySources(absFrame, element) ?? [],
-                  allSusceptibilitySources: statusQuery ? buildAllElementSources(absFrame, statusQuery, 'susceptibility') : {},
+                  fragilitySources: [
+                    ...(statusQuery?.getFragilitySources(absFrame, element) ?? []),
+                    ...buildFragilityStatSources(accumulator, currentFrameKey, element),
+                  ],
+                  allFragilitySources: statusQuery
+                    ? buildAllFragilitySources(absFrame, statusQuery, accumulator, currentFrameKey)
+                    : {},
+                  susceptibilitySources: [
+                    ...(statusQuery?.getSusceptibilitySources(absFrame, element) ?? []),
+                    ...buildSusceptibilityStatSources(accumulator, currentFrameKey, element),
+                  ],
+                  allSusceptibilitySources: statusQuery
+                    ? buildAllSusceptibilitySources(absFrame, statusQuery, accumulator, currentFrameKey)
+                    : {},
                   ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame, element) ?? [], statusDeltas, mergeStatSources(accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.AMP), accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, StatType.AMP))),
                   allAmpSources: buildAllAmpSources(absFrame, element, statusQuery, statusDeltas, accumulator, currentFrameKey, ev.ownerEntityId),
                   weaknessStatValue,
@@ -880,7 +976,13 @@ export function buildDamageTableRows(
                   finisherMultiplier: getFinisherMultiplier(enemyTier, isFinisher),
                   linkMultiplier: getLinkMultiplier(linkBonus, linkBonus > 0),
                   weaknessMultiplier: weaknessStatValue,
-                  susceptibilityMultiplier: getSusceptibilityMultiplier(statusQuery?.getSusceptibilityBonus(absFrame, element) ?? 0),
+                  susceptibilityMultiplier: getSusceptibilityMultiplier(
+                    (statusQuery?.getSusceptibilityBonus(absFrame, element) ?? 0)
+                    + (() => {
+                      const key = elementSusceptibilityStat(element);
+                      return key ? (enemyRuntimeDeltas?.[key] ?? 0) : 0;
+                    })(),
+                  ),
                   fragilityMultiplier: getFragilityMultiplier(subFragilityBonus),
                   dmgReductionMultiplier: getDmgReductionMultiplier(subDmgReductionEffects),
                   protectionMultiplier: getProtectionMultiplier(subProtectionEffects),

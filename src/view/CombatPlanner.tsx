@@ -58,7 +58,7 @@ import {
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 import TimelineColumn from './TimelineColumn';
 import { getCritModeGeneration } from '../controller/combatStateController';
-import { hasChanceClause } from '../controller/timeline/clauseQueries';
+import { hasChanceClause, hasDealDamageClause } from '../controller/timeline/clauseQueries';
 import { throttleByRAF } from '../utils/throttle';
 import type { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { getAxisMap, type Orientation } from '../utils/axisMap';
@@ -2027,10 +2027,13 @@ export default React.memo(function CombatPlanner({
     const isBatch = isInSelection && selectedFrames && selectedFrames.length > 1;
     const targetFrames = isBatch ? selectedFrames : [{ eventUid, segmentIndex, frameIndex }];
 
-    // Filter out DOT frames (cannot crit)
+    // Only damage-dealing frames can crit (exclude DOT + non-damage frames)
     const crittableFrames = targetFrames.filter((sf) => {
       const ev = events.find((ev) => ev.uid === sf.eventUid);
-      return ev?.segments[sf.segmentIndex]?.frames?.[sf.frameIndex]?.damageType !== DamageType.DAMAGE_OVER_TIME;
+      const frame = ev?.segments[sf.segmentIndex]?.frames?.[sf.frameIndex];
+      if (!frame) return false;
+      if (frame.damageType === DamageType.DAMAGE_OVER_TIME) return false;
+      return hasDealDamageClause(frame.clauses);
     });
 
     // Resolve crit state for toggle: mixed/no-crit → crit, all crit → no-crit

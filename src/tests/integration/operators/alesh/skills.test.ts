@@ -759,7 +759,7 @@ describe('Alesh Skills — CHANCE pin + P3 MAY_THE_WILLING_BITE', () => {
     expect(dealMiss).not.toBeNull();
     expect(dealMiss!.insideChanceElse).toBe(true);
     // Base multiplier at L12 = 0.75 (from the elseEffects VARY_BY array)
-    expect(dealMiss!.multipliers).toContain(0.75);
+    expect(dealMiss!.values).toContain(0.75);
 
     // ALWAYS mode (unpinned → hit): combined SP recovery per wiki
     const { result: r2 } = setupAlesh();
@@ -783,8 +783,8 @@ describe('Alesh Skills — CHANCE pin + P3 MAY_THE_WILLING_BITE', () => {
     expect(dealHit).not.toBeNull();
     expect(dealHit!.insideChance).toBe(true);
     // Hit damage is a compound expression (ADD of two VARY_BY arrays), so
-    // multiplierNode is set instead of multipliers[].
-    expect(dealHit!.multiplierNode).toBeDefined();
+    // valueNode is set instead of values[].
+    expect(dealHit!.valueNode).toBeDefined();
   });
 
   it('I1: CHANCE pinned to hit at P3+ applies MAY_THE_WILLING_BITE to team', () => {

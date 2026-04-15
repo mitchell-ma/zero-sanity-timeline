@@ -91,6 +91,7 @@ export class EventsQueryService {
   private protectionEvents: TimelineEvent[];
   private shieldEvents: TimelineEvent[];
   private weaponFragilityEvents: TimelineEvent[];
+  private fragilityEvents: TimelineEvent[];
   private cryoInflictionEvents: TimelineEvent[];
   private solidificationEvents: TimelineEvent[];
   private nodeStaggerEvents: TimelineEvent[];
@@ -128,6 +129,14 @@ export class EventsQueryService {
     this.protectionEvents = events.filter(e => e.columnId === StatusType.PROTECTION);
     this.shieldEvents = events.filter(e => e.columnId === StatusType.SHIELD);
     this.weaponFragilityEvents = events.filter(e => e.columnId.startsWith(FRAGILITY_COLUMN_PREFIX));
+    // Generic element-qualified fragility events on enemy (e.g. Rossi Razor
+    // Clawmark APPLY STATUS FRAGILITY PHYSICAL/HEAT). Excludes weapon-fragility
+    // events (already filtered above under weaponFragilityEvents).
+    this.fragilityEvents = events.filter(e =>
+      e.ownerEntityId === ENEMY_ID
+      && !e.columnId.startsWith(FRAGILITY_COLUMN_PREFIX)
+      && (e.columnId === StatusType.FRAGILITY || isQualifiedId(e.columnId, StatusType.FRAGILITY)),
+    );
     this.cryoInflictionEvents = events.filter(e => e.ownerEntityId === ENEMY_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
     this.solidificationEvents = events.filter(e => e.ownerEntityId === ENEMY_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
     this.nodeStaggerEvents = events.filter(e => e.ownerEntityId === ENEMY_ID && e.columnId === NODE_STAGGER_COLUMN_ID);
@@ -208,10 +217,11 @@ export class EventsQueryService {
   }
 
   /**
-   * Count active operator-owned status events with the given columnId at the frame.
+   * Count active status events on the given column + owner at the frame.
    * Returns the sum of stacks across active matching events.
+   * Respects per-frame exclusion (see setFrameExclusion) for intra-frame ordering.
    */
-  getActiveOperatorStatusStacks(frame: number, ownerEntityId: string, statusId: string): number {
+  getActiveStatusStacks(frame: number, ownerEntityId: string, statusId: string): number {
     let n = 0;
     for (const ev of this.state.getAllEvents()) {
       if (ev.ownerEntityId !== ownerEntityId || ev.columnId !== statusId) continue;
@@ -384,6 +394,19 @@ export class EventsQueryService {
       const events = this.getColumnEvents(tf.requiredColumnId);
       if (events.some(ev => this.isActive(ev, frame))) sum += tf.bonus;
     }
+    // Generic element-qualified FRAGILITY status events on enemy.
+    // Unqualified FRAGILITY events apply to all elements; qualified events
+    // (e.g. PHYSICAL_FRAGILITY, HEAT_FRAGILITY) must match the active element.
+    for (const ev of this.fragilityEvents) {
+      if (!this.isActive(ev, frame)) continue;
+      const qualified = isQualifiedId(ev.columnId, StatusType.FRAGILITY);
+      if (qualified) {
+        const elem = ev.columnId.slice(0, -(StatusType.FRAGILITY.length + 1));
+        if (elem !== element) continue;
+      }
+      const value = ev.statusValue ?? 0;
+      if (value > 0) sum += value;
+    }
     return sum;
   }
 
@@ -452,6 +475,18 @@ export class EventsQueryService {
       if (!tf.elements.includes(element)) continue;
       const events = this.getColumnEvents(tf.requiredColumnId);
       if (events.some(ev => this.isActive(ev, frame))) sources.push({ label: 'Talent fragility', value: tf.bonus, category: 'Talent' });
+    }
+    // Generic element-qualified FRAGILITY status events (e.g. Rossi Razor
+    // Clawmark applies PHYSICAL_FRAGILITY + HEAT_FRAGILITY).
+    for (const ev of this.fragilityEvents) {
+      if (!this.isActive(ev, frame)) continue;
+      const qualified = isQualifiedId(ev.columnId, StatusType.FRAGILITY);
+      if (qualified) {
+        const elem = ev.columnId.slice(0, -(StatusType.FRAGILITY.length + 1));
+        if (elem !== element) continue;
+      }
+      const value = ev.statusValue ?? 0;
+      if (value > 0) sources.push({ label: ev.name ?? ev.columnId, value, category: ev.name ?? 'Fragility' });
     }
     return sources;
   }

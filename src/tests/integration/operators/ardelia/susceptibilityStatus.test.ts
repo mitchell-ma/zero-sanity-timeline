@@ -30,15 +30,15 @@ import type { AppResult } from '../../helpers';
 const SLOT_ARDELIA = 'slot-3';
 
 /**
- * Find a column by owner whose matchColumnIds includes the given columnId.
- * Used for unified columns (enemy status) that collect events via matchColumnIds.
+ * Find a column by owner whose matchColumnIds includes the given columnId,
+ * OR (fallback) the unified enemy-status column by its own columnId.
  */
 function findMatchingColumn(app: AppResult, ownerEntityId: string, matchId: string) {
   return app.columns.find(
     (c): c is MiniTimeline =>
       c.type === ColumnType.MINI_TIMELINE &&
       c.ownerEntityId === ownerEntityId &&
-      (c.matchColumnIds?.includes(matchId) ?? false),
+      ((c.matchColumnIds?.includes(matchId) ?? false) || c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS),
   );
 }
 

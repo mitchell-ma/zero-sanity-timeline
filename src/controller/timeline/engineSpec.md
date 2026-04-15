@@ -74,14 +74,18 @@ processCombatSimulation(rawEvents, loadoutContext...)
 
 All skill / input / talent / enemy action events enter DEC via `createSkillEvent`. It runs three passes per event:
 
-- **Pass 1 — discovery:** `chainComboPredecessor` (truncates prior combo CD on the same owner), `buildReactionSegments` (materializes corrosion/combustion segments from raw duration), `clampPriorControlEvents` (shortens earlier CONTROL events to end at `ev.startFrame`), `_maybeRegisterStop` (time-stop registration; also retroactively re-extends overlapping prior events and reactively shifts queued frames), `_pushToStorage` (deep-clones segments/frames into DEC-owned copies, captures per-segment raw durations in `rawSegmentDurations`, appends to `registeredEvents`).
+- **Pass 1 — discovery:** `chainComboPredecessor` (truncates prior combo CD on the same owner), `buildReactionSegments` (materializes corrosion/combustion segments from raw duration), `clampPriorControlEvents` (shortens earlier CONTROL events to end at `ev.startFrame`), `_maybeRegisterStop` (time-stop registration; also retroactively re-extends overlapping prior events and reactively shifts queued frames), `_pushToStorage` (deep-clones segments/frames into DEC-owned copies, captures per-segment raw durations in `rawSegmentDurations`, appends to `allEvents`).
 - **Pass 2 — positioning:** `extendSingleEvent` (idempotent — reads raw from `rawSegmentDurations`, writes extended to `seg.properties.duration` in place), `computeFramePositions` (sets `absoluteFrame` / `derivedOffsetFrame` on frame markers), `validateTimeStopStart`, `registerSpRecoveryEvent` (structural SP recovery event metadata only — all other resource notifications fire from EVENT_START in the interpreter).
 - **Pass 3 — reactive combo resolution:** `resolveComboTriggersInline` wipes all COMBO_WINDOW events, clears combo events' `comboTriggerColumnId`/`triggerEventUid`, and re-emits windows via `openComboWindow` for the current trigger-match set. Runs every createSkillEvent call; kept correct by reactive merge-on-insert in `openComboWindow`.
-- **Pass 4 — queue frame emission:** `flattenEventsToQueueFrames([ev], this.stops)` emits `EVENT_START`, `SEGMENT_START/END`, `ON_FRAME`, `EVENT_END`, and (for combos without a resolved trigger column) `COMBO_RESOLVE` queue entries. Skipped via `opts.emitQueueFrames: false` for the post-drain re-registration of queue events.
+- **Pass 4 — queue frame emission:** `flattenEventsToQueueFrames([ev], this.stops)` emits queue entries. Skipped via `opts.emitQueueFrames: false` for the post-drain re-registration of queue events.
+  - **Skill events** (`BASIC_ATTACK`, `BATTLE`, `COMBO`, `ULTIMATE`): emit full lifecycle — `EVENT_START`, per-segment `SEGMENT_START` / per-frame `ON_FRAME` / `SEGMENT_END`, `EVENT_END`, and (for combos without a resolved trigger column) `COMBO_RESOLVE`.
+  - **Non-skill wrappers** (freeform inflictions / reactions / physical statuses / statuses): emit **only** the `PROCESS_FRAME` queue entries that carry the wrapper's APPLY clause. The wrapper has no lifecycle of its own — the applied event created by `doApply → applyEvent` owns lifecycle via `runStatusCreationLifecycle`. Emitting skill-style `EVENT_START` / `SEGMENT_*` / `EVENT_END` for the wrapper would duplicate the applied event's hooks.
 
 ### Queue-created events: `addEvent` / `pushEvent`
 
-Created by `EventInterpretorController` during the queue drain (reactions, inflictions, statuses from `APPLY` clauses). Go directly into `stacks` (for active queries) and `output` (for final output). Duration extended inline via `extendDuration` using current stops; tracked in the single-total `rawDurations` map. `reExtendQueueEvents` re-applies extension when a new stop lands mid-drain. These events are **excluded from `rawSegmentDurations`** so the per-segment extension path no-ops on them. After the drain, they are re-registered via `createSkillEvent(..., { emitQueueFrames: false })` so `getProcessedEvents` returns them.
+Created by `EventInterpretorController` during the queue drain (reactions, inflictions, statuses from `APPLY` clauses). Appended to the single `allEvents` list (via `createQueueEvent`) alongside input skill events and indexed into `stacks` for active-frame queries. Duration extended inline via `extendDuration` using current stops; tracked in the single-total `rawDurations` map. `reExtendQueueEvents` re-applies extension when a new stop lands mid-drain. These events are **excluded from `rawSegmentDurations`** so the per-segment extension path no-ops on them.
+
+**Single source of truth.** There is no separate "input" vs. "output" array. `DEC.allEvents` holds every event in the pipeline — skill inputs seeded at the start, talent/control seeds registered before the drain, and queue-derived events pushed during the drain. `EventInterpretorController` does **not** hold a parallel snapshot; its `getAllEvents()` delegates to `controller.getAllEvents()`. Any condition evaluation (`BECOME STACKS`, `HAVE STATUS`, cooldown scans, etc.) must read through that single list — wrapping it in a second merged array risks double-counting every event.
 
 ### Domain Controller API (used by EventInterpretorController)
 
@@ -102,10 +106,10 @@ Created by `EventInterpretorController` during the queue drain (reactions, infli
 
 | Method | Description |
 |--------|-------------|
-| `getRegisteredEvents()` | All events in `registeredEvents` (input + SP + talent + post-queue registered). |
-| `getProcessedEvents()` | `registeredEvents` with reactions merged + reaction frames attached. Final view output. |
+| `getAllEvents()` | Returns `this.allEvents` by reference — the single source of truth for every event in the pipeline (input skills, seeded talents, and queue-derived statuses/inflictions/reactions). `EventInterpretorController.getAllEvents()` is a thin delegate to this. |
+| `getProcessedEvents()` | `allEvents` with reactions merged + reaction frames attached. Final view output. |
 | `getStops()` | Discovered time-stop regions. |
-| `activeCount(col, owner, frame)` | Count active events at frame (queries both `stacks` and `registeredEvents`). |
+| `activeCount(col, owner, frame)` | Count active events at frame (queries both `stacks` and `allEvents`). |
 | `getActiveEvents(col, owner, frame)` | Get active events at frame. |
 
 ---
@@ -197,7 +201,15 @@ Triggers fire on the 0→positive transition (BECOME) and positive→0 transitio
 
 **Condition evaluation:** Both `IS <adj>` and `BECOME <adj>` check the stat accumulator for existence (stat > 0). The difference is semantic — `IS` checks current state, `BECOME` checks state for transition triggers. Both use the shared `ADJECTIVE_TO_STAT` map.
 
-**Freeform status `inheritDuration`:** Freeform-placed statuses use a synthetic `APPLY STATUS` clause with `inheritDuration: true`. This makes `doApply` use the parent event's remaining duration instead of the status config's fixed duration, so user drag-resizing the freeform event propagates to the derived status effect.
+**Freeform status wrapper → applied event (unified path):** Every freeform-placeable non-skill column ships an APPLY clause in its `defaultEvent.segments[0].frames[0].clauses[0]`, produced by `buildStatusMicroColumn`. When the user places such an event, the wrapper enters `state.events` with the APPLY-clause frame attached (via `attachDefaultSegments`). At pipeline runtime, `flattenEventsToQueueFrames` emits one `PROCESS_FRAME` per clause frame (no `EVENT_START` / `SEGMENT_*` / `EVENT_END`). The frame dispatches via `interpret → doApply`, which calls `applyEvent` to create the applied (visible) event with `options.uid = wrapper.uid`. `runStatusCreationLifecycle` then owns the applied event's lifecycle — schedules `EVENT_END`, dispatches `onEntryClause` / `onExitClause`, emits offset>0 segment frames via `pendingExitFrames`.
+
+Skill-triggered applications (e.g. a battle skill's APPLY clause) reach the same `doApply → applyEvent → runStatusCreationLifecycle` path via the skill event's own PROCESS_FRAME dispatch. One codepath from the APPLY-clause frame inward.
+
+**`inheritDuration`:** Freeform wrappers' APPLY clauses set `inheritDuration: true`, so `doApply` uses the wrapper's remaining duration instead of the status config's fixed duration — user drag-resizing the freeform event propagates to the applied event.
+
+**Runtime-user-edited fields (`susceptibility`):** Qualified-susceptibility and FOCUS wrappers carry a per-element `susceptibility` record the user edits via info pane `jsonOverrides`. At dispatch, `handleProcessFrame` sets `ctx.sourceEvent = wrapper`. `doApply`'s generic qualified-status path copies `ctx.sourceEvent.susceptibility` onto the applied event's `eventProps.susceptibility` when the applied columnId matches the wrapper's. That's the single exception threaded through `InterpretContext` — everything else is carried by the static DSL clause.
+
+**Physical-status freeform placement:** Physical statuses (LIFT / KNOCK_DOWN / CRUSH / BREACH) default to `isForced: { verb: IS, value: 1 }` in their APPLY clause, which `applyPhysicalStatus` reads to bypass the Vulnerable-stack gate. The user can edit the clause to unset isForced via override if they want gated behavior.
 
 **Stagger frailty two-pass pipeline:** Stagger frailty events are generated post-pipeline by `StaggerController.sync()`.
 If frailty events exist, the pipeline re-runs with them included so `BECOME STAGGERED` triggers fire.
@@ -230,7 +242,7 @@ Time-stop handling is **retroactive and reactive** — events arrive through `cr
 - The `extendedIds` double-extension guard is **deleted** — no longer needed by construction.
 
 ### Retroactive re-extension on stop discovery
-- When `_maybeRegisterStop` registers a new stop `[S, E]`, it walks `registeredEvents` for entries tracked in `rawSegmentDurations` whose active range overlaps `[S, E]`, and re-runs `extendSingleEvent` + `computeFramePositions` on each. Mutates in place; no object identity change.
+- When `_maybeRegisterStop` registers a new stop `[S, E]`, it walks `allEvents` for entries tracked in `rawSegmentDurations` whose active range overlaps `[S, E]`, and re-runs `extendSingleEvent` + `computeFramePositions` on each. Mutates in place; no object identity change.
 
 ### Reactive queue-entry shift
 - `_maybeRegisterStop` also calls `_shiftQueueForNewStop(S, E, ownStopEventUid)`, which walks the DEC-owned priority queue and shifts every entry whose `frame > S` (excluding the stop event's own entries) by `E - S` frames. Re-heapifies. Keeps already-inserted queue frames aligned with the new extended timeline.

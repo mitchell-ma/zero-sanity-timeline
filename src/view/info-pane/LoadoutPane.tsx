@@ -94,6 +94,12 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   [StatType.NATURE_SUSCEPTIBILITY]: 'stat.NATURE_SUSCEPTIBILITY',
   [StatType.ELECTRIC_SUSCEPTIBILITY]: 'stat.ELECTRIC_SUSCEPTIBILITY',
   [StatType.PHYSICAL_SUSCEPTIBILITY]: 'stat.PHYSICAL_SUSCEPTIBILITY',
+  [StatType.PHYSICAL_FRAGILITY]: 'stat.PHYSICAL_FRAGILITY',
+  [StatType.HEAT_FRAGILITY]: 'stat.HEAT_FRAGILITY',
+  [StatType.CRYO_FRAGILITY]: 'stat.CRYO_FRAGILITY',
+  [StatType.NATURE_FRAGILITY]: 'stat.NATURE_FRAGILITY',
+  [StatType.ELECTRIC_FRAGILITY]: 'stat.ELECTRIC_FRAGILITY',
+  [StatType.ARTS_FRAGILITY]: 'stat.ARTS_FRAGILITY',
   // ── Enemy stats ──────────────────────────────────────────────────────────────
   [StatType.STAGGER_HP]: 'stat.STAGGER_HP',
   [StatType.STAGGER_RECOVERY]: 'stat.STAGGER_RECOVERY',

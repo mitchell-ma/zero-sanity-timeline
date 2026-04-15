@@ -5,6 +5,8 @@ import { formatPct, formatFlat } from '../../controller/info-pane/loadoutPaneCon
 import { parseMathInput } from '../../utils/mathExpr';
 import { getAllSkillLabels, getAllStatusLabels } from '../../controller/gameDataStore';
 import { ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, SegmentType, StatusType } from '../../consts/enums';
+import { DAMAGE_FACTOR_LABELS } from '../../consts/timelineColumnLabels';
+import { t } from '../../locales/locale';
 import { getStatusElementMap, getStatusById, getAnyStatusSerialized } from '../../controller/gameDataStore';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import type { LoadoutProperties } from '../InformationPane';
@@ -463,6 +465,33 @@ function EventPane({
             }
           }
 
+          // Surface event.statusValue for generic stat-style statuses
+          // (FRAGILITY / AMP / WEAKNESS / DMG_REDUCTION / PROTECTION) that carry
+          // their runtime magnitude on the event rather than a per-element
+          // susceptibility record. Labeled by damageFactorType when known so
+          // e.g. HEAT_FRAGILITY renders "Fragility 10.00%" on the card.
+          if (event.statusValue != null && !event.susceptibility) {
+            const factor = event.damageFactorType;
+            const factorLabel = (factor && DAMAGE_FACTOR_LABELS[factor]) ?? t('breakdown.value');
+            statusRows.push(
+              <div key="statusValue" className="ops-field">
+                <span className="ops-field-label">{factorLabel}</span>
+                <span className="ops-field-value">
+                  {editState ? (
+                    <EditableValue
+                      value={event.statusValue}
+                      path="statusValue"
+                      editState={editState}
+                      format={(v) => `${formatFlat(v * 100)}%`}
+                    />
+                  ) : (
+                    formatPct(event.statusValue)
+                  )}
+                </span>
+              </div>
+            );
+          }
+
           const statusExtraFields = statusRows.length > 0 ? <>{statusRows}</> : undefined;
 
           if (!statusCardData && !statusExtraFields) return null;
@@ -617,6 +646,22 @@ function EventPane({
                 </div>
               </div>
             )}
+            {(() => {
+              const rawDuration = eventDuration(event);
+              const adjDuration = processedEvent ? eventDuration(processedEvent) : rawDuration;
+              const hasAdjustment = processedEvent != null && adjDuration !== rawDuration;
+              if (rawDuration === 0 && !hasAdjustment) return null;
+              return (
+                <div className="edit-info-text" style={{ marginTop: 6 }}>
+                  <div>Duration: {framesToSeconds(rawDuration)}s ({rawDuration}f)</div>
+                  {hasAdjustment && (
+                    <div style={{ color: 'var(--gold)' }}>
+                      Time-stop adjusted: {framesToSeconds(adjDuration)}s ({adjDuration}f)
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
 

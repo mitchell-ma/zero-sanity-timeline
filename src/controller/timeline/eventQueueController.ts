@@ -97,7 +97,7 @@ export function runEventQueue(
   // ── Priority queue (owned by DEC; reset() above already cleared it) ────
   // Reset interpreter (reuse singleton)
   const interpretor = getInterpretor();
-  interpretor.resetWith(state, allEvents, {
+  interpretor.resetWith(state, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
     getControlledSlotAtFrame, triggerIndex: triggerIdx, critMode, overrides,
     damageOpCache, enemyDefMult, modelEnemy,

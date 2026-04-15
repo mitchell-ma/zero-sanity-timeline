@@ -296,7 +296,7 @@ describe('Combo skill consumes Steel Oath stacks', () => {
     expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
     const harassDamage = findDealDamageInClauses(seg.frames![0].clauses);
     expect(harassDamage).toBeDefined();
-    expect(harassDamage!.multipliers.length).toBeGreaterThan(0);
+    expect(harassDamage!.values.length).toBeGreaterThan(0);
 
     const assaultEvents = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerEntityId === ENEMY_ID && ev.id === STEEL_OATH_DECISIVE_ASSAULT_ID,
