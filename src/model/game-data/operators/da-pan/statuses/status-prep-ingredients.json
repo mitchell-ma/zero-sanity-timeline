@@ -1,0 +1,87 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "SKILL",
+          "objectId": "COMBO"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "CONSUME",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "with": {
+            "stacks": {
+              "verb": "IS",
+              "value": 1
+            }
+          }
+        },
+        {
+          "verb": "REDUCE",
+          "object": "COOLDOWN",
+          "of": {
+            "object": "SKILL",
+            "objectId": "COMBO",
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
+          },
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0.40,
+                0.40
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            },
+            "unit": "PERCENTAGE"
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "PREP_INGREDIENTS",
+    "name": "Prep Ingredients",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 2
+      },
+      "interactionType": "RESET"
+    },
+    "eventType": "STATUS",
+    "eventIdType": "TALENT",
+    "description": "When Prep Ingredients is active, hitting an enemy with combo skills immediately shortens cooldown by 40% and consumes 1 stack of Prep Ingredients."
+  },
+  "metadata": {
+    "originId": "SALTY_OR_MILD_TALENT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "RECONCILED"
+  },
+  "clauseType": "ALL"
+}

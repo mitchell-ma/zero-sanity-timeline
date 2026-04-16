@@ -26,6 +26,24 @@ export interface TranslatedEffect {
 const titleCase = (s: string) =>
   s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
+/** Resolve a literal numeric value from a ValueNode or raw number, if possible. */
+function resolveLiteralNumber(v: unknown): number | undefined {
+  if (typeof v === 'number') return v;
+  if (v && typeof v === 'object') {
+    const node = v as ValueNode;
+    if (isValueLiteral(node) && typeof node.value === 'number') return node.value;
+  }
+  return undefined;
+}
+
+/** Render a stacks-count threshold with locale-backed singular/plural label. */
+function formatStacksCount(v: unknown): string {
+  const n = resolveLiteralNumber(v);
+  const display = displayValue(v);
+  const key = n === 1 ? 'dsl.stacksCount.one' : 'dsl.stacksCount.other';
+  return t(key, { n: display });
+}
+
 /** Format a ValueNode (or raw value) into a compact display string. */
 function displayValue(v: unknown): string {
   if (v == null) return '?';
@@ -189,6 +207,24 @@ export function translateDslToken(token: string): string {
  * Handles subjectDeterminer, subject, verb, objectQualifier, object, objectId, to, toDeterminer, cardinality.
  */
 export function translateCondition(c: Record<string, unknown>): string {
+  const { prefix, threshold } = splitConditionText(c);
+  return threshold ? `${prefix} ${threshold}` : prefix;
+}
+
+/**
+ * Split a condition into a text prefix and a threshold value node / text.
+ * Callers that want to render structured tables for VARY_BY thresholds
+ * consume `thresholdNode`; text-only callers use {@link translateCondition}.
+ *
+ * - `prefix`: everything up to and including the cardinality word (e.g. "at least").
+ * - `thresholdNode`: the raw threshold ValueNode if it is an object (VARY_BY, expression).
+ * - `threshold`: the compact text form (fallback for non-VARY_BY or narrow spaces).
+ */
+export function splitConditionText(c: Record<string, unknown>): {
+  prefix: string;
+  thresholdNode?: Record<string, unknown>;
+  threshold?: string;
+} {
   const parts: string[] = [];
   if (c.subjectDeterminer) parts.push(translateDslToken(String(c.subjectDeterminer)).toLowerCase());
   if (c.subject) parts.push(translateDslToken(String(c.subject)));
@@ -217,20 +253,27 @@ export function translateCondition(c: Record<string, unknown>): string {
     if (c.toDeterminer) parts.push(translateDslToken(String(c.toDeterminer)).toLowerCase());
     if (c.to) parts.push(translateDslToken(String(c.to)));
   }
+
+  let thresholdNode: Record<string, unknown> | undefined;
+  let thresholdText: string | undefined;
   if (c.cardinalityConstraint) {
     parts.push(translateDslToken(String(c.cardinalityConstraint)).toLowerCase());
-    // The threshold can live in either `c.value` (direct form) or
-    // `c.with.value` (extended ValueNode form). The engine's condition
-    // evaluator supports both (conditionEvaluator.ts:resolveConditionThreshold),
-    // and this translator must mirror it — otherwise the info-pane card for
-    // a condition like `HAVE POTENTIAL GREATER_THAN_EQUAL with.value=5` would
-    // render as "source Operator Have Potential at least" with no number.
-    const directValue = c.value;
     const withBlock = c.with as Record<string, unknown> | undefined;
-    const thresholdValue = directValue ?? withBlock?.value;
-    if (thresholdValue != null) parts.push(displayValue(thresholdValue));
+    const valueThreshold = c.value ?? withBlock?.value;
+    const stacksThreshold = withBlock?.stacks;
+    if (valueThreshold != null) {
+      if (typeof valueThreshold === 'object' && valueThreshold !== null) {
+        thresholdNode = valueThreshold as Record<string, unknown>;
+      }
+      thresholdText = displayValue(valueThreshold);
+    } else if (stacksThreshold != null) {
+      if (typeof stacksThreshold === 'object' && stacksThreshold !== null) {
+        thresholdNode = stacksThreshold as Record<string, unknown>;
+      }
+      thresholdText = formatStacksCount(stacksThreshold);
+    }
   }
-  return parts.join(' ');
+  return { prefix: parts.join(' '), thresholdNode, threshold: thresholdText };
 }
 
 /**
@@ -272,7 +315,7 @@ export function translateEffectParts(ef: Record<string, unknown>): {
   // From
   const fromParts: string[] = [];
   if (ef.fromDeterminer) fromParts.push(translateDslToken(String(ef.fromDeterminer)).toLowerCase());
-  if (ef.fromObject ?? ef.from) fromParts.push(translateDslToken(String(ef.fromObject ?? ef.from)));
+  if (ef.from) fromParts.push(translateDslToken(String(ef.from)));
   const fromTarget = fromParts.length > 0 ? `from ${fromParts.join(' ')}` : '';
 
   // Of (possession: "REDUCE COOLDOWN OF COMBO SKILL")
@@ -394,7 +437,7 @@ export function translateEffect(e: Effect): TranslatedEffect {
   // TO
   if (e.to) parts.push(`to ${formatTarget(String(e.to), e.toDeterminer)}`);
   // FROM
-  if (e.fromObject) parts.push(`from ${formatTarget(String(e.fromObject), e.fromDeterminer)}`);
+  if (e.from) parts.push(`from ${formatTarget(String(e.from), e.fromDeterminer)}`);
   // ON
   if (e.onObject) parts.push(`on ${formatTarget(String(e.onObject), e.onDeterminer)}`);
   // UNTIL
@@ -548,7 +591,7 @@ export function effectToJson(e: Effect): Record<string, unknown> {
   if (e.to) out.to = e.to;
   if (e.toClassFilter) out.toClassFilter = e.toClassFilter;
   if (e.fromDeterminer) out.fromDeterminer = e.fromDeterminer;
-  if (e.fromObject) out.from = e.fromObject;
+  if (e.from) out.from = e.from;
   if (e.onDeterminer) out.onDeterminer = e.onDeterminer;
   if (e.onObject) out.on = e.onObject;
   if (e.with) out.with = withPrepositionToJson(e.with);

@@ -90,7 +90,7 @@ const wulfgardSkillEntries = mockSkillsJson as Record<string, any>;
 
 const _KEY_EXPAND: Record<string, string> = {
   verb: 'verb', object: 'object', subject: 'subject',
-  to: 'to', from: 'fromObject', on: 'onObject',
+  to: 'to', from: 'from', on: 'onObject',
   with: 'with', for: 'for',
 };
 function _expandKeys(val: unknown): unknown {

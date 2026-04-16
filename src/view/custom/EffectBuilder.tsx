@@ -144,7 +144,7 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
           </SentenceSlot>
           <SentenceSlot active={vis.showFrom}>
             <span className="ce-badge ce-badge--keyword">FROM</span>
-            <SentenceSlot active={value.fromObject === SubjectType.OPERATOR}>
+            <SentenceSlot active={value.from === SubjectType.OPERATOR}>
               <CustomSelect
                 className="ib-determiner"
                 value={value.fromDeterminer ?? DeterminerType.THIS}
@@ -153,9 +153,9 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
               />
             </SentenceSlot>
             <CustomSelect
-              value={value.fromObject ?? ''}
+              value={value.from ?? ''}
               options={[{ value: '', label: '—' }, ...Object.entries(TARGET_LABELS).map(([k, label]) => ({ value: k, label }))]}
-              onChange={(v) => update({ fromObject: v || undefined })}
+              onChange={(v) => update({ from: v || undefined })}
             />
           </SentenceSlot>
           <SentenceSlot active={vis.showOn}>

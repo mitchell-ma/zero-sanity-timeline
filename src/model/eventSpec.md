@@ -228,7 +228,7 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
   "toObject"?: string,                  // TO preposition — target/recipient
   "toObjectClassFilter"?: string,       // class filter for TO target (e.g. "GUARD")
   "fromDeterminer"?: DeterminerType,
-  "fromObject"?: string,                // FROM preposition — source
+  "from"?: string,                      // FROM preposition — source
   "onDeterminer"?: DeterminerType,
   "onObject"?: string,                  // ON preposition — stat target entity
   "with"?: {                                // WITH — properties/cardinalities
@@ -523,7 +523,7 @@ the infliction and applies Melting Flame to Laevatain (PERFORM_ALL with output r
           "cardinalityConstraint": "LESS_THAN_EQUAL",
           "cardinality": "MAX",
           "effects": [
-            { "verb": "ABSORB", "cardinality": 1, "object": "INFLICTION", "element": "HEAT", "fromObject": "ENEMY" },
+            { "verb": "ABSORB", "cardinality": 1, "object": "INFLICTION", "element": "HEAT", "from": "ENEMY" },
             { "verb": "APPLY", "cardinality": 1, "object": "STATUS", "objectId": "MELTING_FLAME", "toObject": "THIS_OPERATOR" }
           ]
         }
@@ -1183,7 +1183,7 @@ Reads as: "Perform all at most MAX times: absorb 1 heat infliction from enemy, a
           "cardinality": 1,
           "object": "INFLICTION",
           "element": "HEAT",
-          "fromObject": "ENEMY"
+          "from": "ENEMY"
         },
         {
           "verb": "APPLY",

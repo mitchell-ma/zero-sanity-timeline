@@ -466,7 +466,7 @@ describe('Last Rite — Combo Skill DSL Structure', () => {
     expect(consumeEffect).toBeDefined();
     expect(consumeEffect.object).toBe(NounType.STATUS);
     expect(consumeEffect.objectQualifier).toBe(AdjectiveType.CRYO);
-    expect(consumeEffect.fromObject).toBe(NounType.ENEMY);
+    expect(consumeEffect.from).toBe(NounType.ENEMY);
   });
 
   it('H3: UE recovery on first frame — base 40 + 15 × STACKS of CRYO INFLICTION', () => {

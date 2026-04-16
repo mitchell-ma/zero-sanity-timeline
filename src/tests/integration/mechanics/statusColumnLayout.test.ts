@@ -8,9 +8,10 @@
  * Verifies that status events in Laevatain's operator status column are
  * assigned to distinct visual micro-columns that all fit within the column.
  *
- * Laevatain starts with 2 permanent talent events (Scorching Heart, Re-Ignition).
- * Adding Melting Flame and Scorching Heart Effect produces 4 distinct visual
- * columns, all constrained within the status column (leftFrac + widthFrac ≤ 1).
+ * Both Scorching Heart and Re-Ignition are trigger-only talents (self-applying),
+ * so neither has a presence event at startup. Adding Melting Flame and Scorching
+ * Heart Effect produces 2 distinct visual columns, all constrained within the
+ * status column (leftFrac + widthFrac ≤ 1).
  *
  * Events are added through the context menu flow (right-click → select item).
  */
@@ -55,14 +56,18 @@ function getStatusMenuPayload(app: ReturnType<typeof useApp>, microColumnId: str
 }
 
 describe('Status column layout — micro-column positioning', () => {
-  it('Laevatain starts with 2 permanent talent events in operator status', () => {
+  it('Laevatain starts with no permanent talent events; both SH and Re-Ignition are trigger-only', () => {
     const { result } = renderHook(() => useApp());
 
-    const statusEvents = result.current.allProcessedEvents.filter(
-      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN &&
-        (ev.columnId === SH_TALENT_COLUMN || ev.columnId === RE_IGNITION_COLUMN),
+    const shEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === SH_TALENT_COLUMN,
     );
-    expect(statusEvents.length).toBeGreaterThanOrEqual(2);
+    expect(shEvents.length).toBe(0);
+
+    const reIgnitionEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === RE_IGNITION_COLUMN,
+    );
+    expect(reIgnitionEvents.length).toBe(0);
   });
 
   it('context menu for operator-status column lists micro-column items', () => {
@@ -85,7 +90,7 @@ describe('Status column layout — micro-column positioning', () => {
     expect(columnIds).toContain(SH_EFFECT_COLUMN);
   });
 
-  it('4 distinct visual columns when MF and SH Effect are added via context menu', () => {
+  it('2 distinct visual columns when MF and SH Effect are added via context menu', () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
@@ -118,14 +123,14 @@ describe('Status column layout — micro-column positioning', () => {
 
     // All status events for this column should have micro-positions
     const statusEvents = vm!.events.filter((ev) => ev.ownerEntityId === SLOT_LAEVATAIN);
-    expect(statusEvents.length).toBeGreaterThanOrEqual(4);
+    expect(statusEvents.length).toBeGreaterThanOrEqual(2);
 
     // Collect unique slot positions (leftFrac values)
     const uniqueSlots = new Set(
       statusEvents.map((ev) => vm!.microPositions.get(ev.uid)?.leftFrac),
     );
-    // At least 4 distinct visual columns
-    expect(uniqueSlots.size).toBeGreaterThanOrEqual(4);
+    // At least 2 distinct visual columns
+    expect(uniqueSlots.size).toBeGreaterThanOrEqual(2);
 
     // Every event must be fully within the column (0 ≤ leftFrac + widthFrac ≤ 1)
     for (const ev of statusEvents) {

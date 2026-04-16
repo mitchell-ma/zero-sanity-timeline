@@ -5,11 +5,11 @@
  * All dependencies are static loadout values — no runtime state.
  */
 import {
-  NounType, VerbType, ValueNode, ValueOperation, DeterminerType,
-  isValueLiteral, isValueVariable, isValueStat, isValueStatus, isValueExpression,
+  NounType, VerbType, ValueNode, ValueOperation, DeterminerType, AdjectiveType,
+  isValueLiteral, isValueVariable, isValueStat, isValueStatus, isValueIdentity, isValueExpression,
   isQualifiedId,
 } from '../../dsl/semantics';
-import type { ValueVariable as ValueVariableType, ValueStat as ValueStatType } from '../../dsl/semantics';
+import type { ValueVariable as ValueVariableType, ValueStat as ValueStatType, ValueIdentity as ValueIdentityType } from '../../dsl/semantics';
 import { ElementType, StatusType } from '../../consts/enums';
 import { ENEMY_ID } from '../../model/channels';
 import type { LoadoutProperties } from '../../view/InformationPane';
@@ -129,9 +129,25 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
     return statKey ? (resolveCtx.stats[statKey] ?? 0) : 0;
   }
 
+  if (isValueIdentity(node)) {
+    const idNode = node as ValueIdentityType;
+    // Identity check between entity references. Currently the resolver only tracks
+    // a distinction between THIS (main ctx) and SOURCE (sourceContext). sourceContext
+    // is only populated when the source slot differs from the owner slot — so its
+    // presence is a reliable proxy for "THIS !== SOURCE".
+    const subj = idNode.subjectDeterminer;
+    const obj = idNode.objectDeterminer;
+    if (subj === obj) return 1;
+    const isThisSourcePair =
+      (subj === DeterminerType.THIS && obj === DeterminerType.SOURCE) ||
+      (subj === DeterminerType.SOURCE && obj === DeterminerType.THIS);
+    if (isThisSourcePair) return ctx.sourceContext ? 0 : 1;
+    return 0;
+  }
+
   if (isValueStatus(node)) {
     // CONSUMED STACKS of <STATUS> → stacks consumed by the triggering CONSUME effect
-    if ((node as { objectQualifier?: string }).objectQualifier === 'CONSUMED' && ctx.consumedStacks != null) {
+    if ((node as { objectQualifier?: string }).objectQualifier === AdjectiveType.CONSUMED && ctx.consumedStacks != null) {
       return ctx.consumedStacks;
     }
     const ofClause = node.of;
@@ -201,6 +217,7 @@ export function collapseConstantExpressions(node: ValueNode): ValueNode {
   if (isValueVariable(node)) return node;
   if (isValueStat(node)) return node;
   if (isValueStatus(node)) return node;
+  if (isValueIdentity(node)) return node;
 
   // Expression: recurse into children, then try to collapse
   if (isValueExpression(node)) {

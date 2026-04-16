@@ -306,7 +306,7 @@
         "verb": "IS",
         "value": 99999
       },
-      "interactionType": "RESET"
+      "interactionType": "NONE"
     },
     "duration": {
       "value": {

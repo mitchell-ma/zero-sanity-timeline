@@ -1,38 +1,179 @@
 # TODO
 
-## StackInteractionType NONE vs RESET semantics are backwards
+## Fervent Morale stack cap still displays III in the live UI (Pog P5)
 
-The current engine couples two independent concerns under one enum:
-1. **At-cap behavior** (what happens when `activeCount >= limit`)
-2. **Multi-stack APPLY dispatch** (what happens when a single APPLY carries
-   `stacks = N > 1`)
+E2E tests (`src/tests/integration/operators/pogranichnik/ferventMorale.test.ts`
+D5/D6) pass: engine stamps `ev.maxStacks = 5` at apply time and the presentation
+controller reads it back, producing labels I–V. But the live browser UI still
+caps the visible labels at III for a user with Pog at P5 (same flow as D6: ult
++ combos). The test-vs-UI discrepancy means either (a) the view path the canvas
+actually renders differs from what `computeTimelinePresentation` exercises in
+the test, or (b) a stale/parallel cache is shadowing `ev.maxStacks`. Dev-server
+restart did not resolve it per the user. Next steps:
 
-Current mapping (see `eventInterpretorController.ts:1415-1419` and
-`configDrivenStatusColumn.ts:47-58`):
-- `NONE` → at-cap: reject. Multi-stack APPLY: collapse to 1 event with `stacks = N` (accumulator).
-- `RESET` → at-cap: evict oldest. Multi-stack APPLY: spawn N separate events.
+- Instrument the live canvas to log `presentation.label` for Fervent Morale
+  events and confirm whether the stamp (`ev.maxStacks`) reaches the render, or
+  gets lost in serialization/URL decode/deserialize.
+- Audit every event-copy path (`allocDerivedEvent`, pool reset, URL encode/
+  decode in `embedCodec.ts`, undo/redo history cloning) for whether
+  `maxStacks` survives — the field was added recently and codec paths may not
+  yet carry it across (encode/decode cycle likely drops it, which would
+  explain URL-loaded timelines falling back to `resolveMaxPossibleLimit` at
+  best, or to the stale cache's 3 at worst).
+- Verify `statusStackCache` in `eventPresentationController.ts:69` is reset
+  on hot reload; if not, switch to a non-module-scoped cache keyed off
+  `getAllOperatorStatuses()` identity.
+- Once the live path is reproduced in a failing test, tighten D6 to catch it.
 
-This is backwards from natural reading — "NONE" reads as "no interaction
-between instances", but the engine treats it as an accumulator that
-actively groups stacks into one event. "RESET" reads as "new replaces old",
-but at high limits it's actually the knob that produces separate
-independent events.
+## StackInteractionType: restore original semantics (code drift)
 
-Concrete pain: Tangtang's Waterspout needs N distinct events per BS cast
-(1 + whirlpool count). The natural config is `NONE` + unlimited limit,
-but that gives one grouped event. We have to use `RESET` + 99999 limit
-to get the distinct-events behavior, even though no reset ever happens.
+`StackInteractionType` is an **at-cap-behavior-only** enum. The original
+and still-intended meaning:
+- `NONE` → at cap, **drop the newest apply**.
+- `RESET` → at cap, **clamp the oldest and accept the newest**.
+- `MERGE` → the newest apply subsumes all currently-active instances.
 
-**Cleanup:**
-- Split the two concerns: one field for at-cap behavior, a separate
-  field for multi-stack APPLY dispatch (or infer dispatch from the
-  APPLY expression shape).
-- Visual separation of grouped stacks is already achievable in the
-  view layer — the view can split an `ev.stacks = N` accumulator event
-  into N visually distinct segments without requiring N underlying events.
-  Move visual separation out of the model semantic and into the view.
-- Rename enum values so the names match behavior.
-- Migrate all existing statuses and update docs/tests.
+Multi-stack dispatch (what happens when one APPLY carries `stacks = N > 1`)
+is a **separate concern** and must NOT be inferred from `interactionType`.
+The engine always dispatches N events per N stacks; visual grouping into
+an accumulator display (Steel Oath V → IV → III, SP totals) is a **view**
+concern, gated by whether the event has internal frames at non-zero
+offsets.
+
+The fix is primarily in **engine** (dispatch) and **view** (grouping).
+A small data correction is also needed: statuses currently using
+`RESET + 99999` as a workaround to force N-event dispatch should be
+flipped to `NONE` (their true at-cap intent) once the engine stops
+conflating `RESET` with dispatch.
+
+### Drift
+
+`eventInterpretorController.ts:1417` currently does:
+```ts
+const isAccumulatorApply = cfg?.stackingMode === StackInteractionType.NONE
+  && typeof sv === 'number' && sv > 1;
+const stackCount = isAccumulatorApply ? 1 : (sv > 1 ? sv : 1);
+const applyStacks = isAccumulatorApply ? sv : undefined;
+```
+
+This overloads `NONE` to also mean "collapse N stacks into one event with
+`ev.stacks=N`", and implicitly overloads `RESET` to mean "dispatch N
+separate events." Both overloads are wrong. `interactionType` governs
+at-cap behavior only.
+
+Symptom: Tangtang's Waterspout needs N distinct events per BS (1 +
+whirlpool count). True at-cap intent is `NONE` with no practical cap,
+but the JSON is forced to `RESET + limit: 99999` because that's the
+only combination that makes the engine dispatch N events today. Once
+the engine stops conflating `RESET` with dispatch, Waterspout goes
+back to `NONE`.
+
+### Fix plan
+
+**Model (engine): always dispatch N events per N stacks.**
+
+In `eventInterpretorController.ts` (around line 1415-1419):
+- Delete the `isAccumulatorApply` branch entirely.
+- `stackCount = (typeof sv === 'number' && sv > 1) ? sv : 1`.
+- `applyStacks = undefined` in all normal cases. Events created by the
+  APPLY loop carry `stacks = 1` each.
+- Keep the `stackCount > 1` uid suffix so per-stack events have unique
+  uids (already present: `${si}`).
+
+Aggregator-caller paths that today pass `applyStacks` deliberately (SP
+recovery emitting a single event with `stacks = <SP amount>`, etc.) are
+unchanged — they don't go through this APPLY-stacks branch. Verify by
+grep: any caller of `applyEventFromCtx` that sets `event.stacks` directly
+is fine.
+
+**View: collapse same-frame/same-duration stacks into an accumulator
+block when the event has no internal non-zero-offset frames.**
+
+Grouping rule (to be implemented in the view / event presentation layer):
+- Candidate group key: `(columnId, ownerEntityId, startFrame, duration, id)`.
+- Group members: all events matching the key.
+- If ANY member has an internal frame with `offset > 0` (e.g. Waterspout's
+  1s / 2s / 3s damage ticks), **do not group** — render each event as a
+  separate block so each tick timeline is visible.
+- Otherwise (all internal frames at offset 0, or no frames), render one
+  block with a stack-count label (Steel Oath V, Thunderlance ×3, etc.).
+- Selection, drag, and edit must still target individual underlying
+  events (group is purely visual).
+
+Ownership of the grouping logic: `eventPresentationController` is the
+right layer — it already collates processed events for view consumption
+and knows the frame structure.
+
+**Ancillary engine clean-up (no behavior change intended):**
+
+- `eventPresentationController.ts:174` — `isIndependentReset` uses
+  `statusInfo?.instances <= 1 && RESET` as a proxy for "accumulator."
+  Once dispatch is 1-event-per-stack unconditionally, revisit whether
+  this heuristic is still needed; it's likely dead.
+- `gameDataAdapters.ts:488,725` — `maxStacks > 1 ? NONE : RESET`
+  heuristic for custom statuses. Remove; pick `interactionType` based
+  on actual at-cap intent (custom UI picker).
+- `configDrivenStatusColumn.ts:47-58` — at-cap handling already matches
+  the original semantic (`RESET` → clamp oldest, `NONE` → drop). Leave,
+  add a pinning test.
+- `critExpectationModel.ts:290` (RESET → FIFO model): stays correct.
+
+**Data: correct the workaround entries.**
+
+Statuses currently configured with `RESET + limit: 99999` purely to force
+N-event dispatch (not because any clamp is intended) should flip to
+`NONE` with no practical cap. At-cap behavior never fires in either
+case; the change just makes the JSON express true intent once the
+engine stops tying `RESET` to dispatch.
+
+Known candidates:
+- `WATERSPOUT` (`status-waterspout.json`) → `NONE`.
+- `WATERSPOUT_ULT` (`status-waterspout-ult.json`) → check, likely `NONE`.
+- `WHIRLPOOL` (`status-whirlpool.json`) → check.
+- Other `RESET + 99999` statuses surfaced by
+  `grep 'interactionType": "RESET"' + limit=99999`: audit each and
+  flip to `NONE` where the cap is cosmetic.
+
+Already-correct shapes (no change):
+- Steel Oath: `NONE` + 5 cap → at-cap drops new; APPLY stacks=5 produces
+  5 underlying events; no internal non-zero offsets → view groups into
+  "V → IV → III" accumulator block. ✓
+- Thunderlance / Melting Flame / SP counters: similar grouping path; all
+  land as accumulator blocks via the view rule. ✓
+- `RESET` with a real cap (e.g. `limit: 1` on weapon buffs): unchanged —
+  those genuinely mean "newest replaces oldest at cap."
+
+### Tests
+
+- Unit (`configDrivenStatusColumn`): NONE at cap drops, RESET at cap
+  clamps oldest, MERGE subsumes all. Pin with fixtures.
+- Unit (`eventInterpretorController`): APPLY stacks=N always produces
+  N events with `stacks=1`, regardless of `interactionType`.
+- Unit (view grouping): given N same-key events, group iff no internal
+  frame has offset > 0; otherwise render individually.
+- Integration (Tangtang BS): spawns `1 + whirlpool.stacks` distinct
+  Waterspout blocks; each shows its own CRYO damage tick schedule.
+- Integration (Pogranichnik Steel Oath): ultimate produces 5 underlying
+  events, view shows one block labeled V; after consume-with-restack,
+  V → IV → III display unchanged.
+- Integration: existing SP recovery, Thunderlance, Melting Flame display
+  tests keep passing (view grouping picks them up automatically).
+
+### Ordering
+
+Single commit:
+1. Delete `isAccumulatorApply` branch in `eventInterpretorController`.
+2. Add view grouping logic in `eventPresentationController` (or the
+   view-side presentation pass), keyed on internal-frame offsets.
+3. Flip the `RESET + 99999` workaround statuses to `NONE`.
+4. Update affected tests.
+
+Landing engine-only without the view change will visually blow up Steel
+Oath / SP / Thunderlance (5 separate blocks instead of one). Landing
+engine-only without the JSON fix will leave Waterspout silently broken
+(RESET now means "clamp oldest" — but the cap is 99999, so still a
+no-op in practice — confirming these can ship in any order as long as
+engine + view ship together). Must ship together.
 
 ## Freezing Point talent ends one time-stop short of its source infliction (FIXED 2026-04-14)
 

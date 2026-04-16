@@ -170,7 +170,7 @@ describe('EventInterpretorController: CONSUME', () => {
       verb: VerbType.CONSUME,
       object: ObjectType.INFLICTION,
       objectQualifier: AdjectiveType.HEAT,
-      fromObject: NounType.ENEMY,
+      from: NounType.ENEMY,
       with: {
         stacks: { verb: VerbType.IS, value: 1 },
       },
@@ -191,7 +191,7 @@ describe('EventInterpretorController: CONSUME', () => {
       verb: VerbType.CONSUME,
       object: ObjectType.INFLICTION,
       objectQualifier: AdjectiveType.HEAT,
-      fromObject: NounType.ENEMY,
+      from: NounType.ENEMY,
       with: {
         stacks: { verb: VerbType.IS, value: 1 },
       },
@@ -214,7 +214,7 @@ describe('EventInterpretorController: CONSUME', () => {
       verb: VerbType.CONSUME,
       object: ObjectType.STATUS,
       objectId: 'MELTING_FLAME',
-      fromObject: NounType.OPERATOR,
+      from: NounType.OPERATOR,
       with: {
         stacks: { verb: VerbType.IS, value: 1 },
       },
@@ -239,7 +239,7 @@ describe('EventInterpretorController: CONSUME', () => {
       verb: VerbType.CONSUME,
       object: ObjectType.INFLICTION,
       objectQualifier: AdjectiveType.HEAT,
-      fromObject: NounType.ENEMY,
+      from: NounType.ENEMY,
       // No with.stacks — should warn
     };
 
@@ -279,7 +279,7 @@ describe('EventInterpretorController: ALL', () => {
             verb: VerbType.CONSUME,
             object: ObjectType.INFLICTION,
             objectQualifier: AdjectiveType.HEAT,
-            fromObject: NounType.ENEMY,
+            from: NounType.ENEMY,
             with: { stacks: { verb: VerbType.IS, value: 1 } },
           },
           {
@@ -327,7 +327,7 @@ describe('EventInterpretorController: ALL', () => {
             verb: VerbType.CONSUME,
             object: ObjectType.INFLICTION,
             objectQualifier: AdjectiveType.HEAT,
-            fromObject: NounType.ENEMY,
+            from: NounType.ENEMY,
             with: { stacks: { verb: VerbType.IS, value: 1 } },
           },
         ],
@@ -365,7 +365,7 @@ describe('EventInterpretorController: ALL', () => {
             verb: VerbType.CONSUME,
             object: ObjectType.INFLICTION,
             objectQualifier: AdjectiveType.HEAT,
-            fromObject: NounType.ENEMY,
+            from: NounType.ENEMY,
             with: { stacks: { verb: VerbType.IS, value: 1 } },
           },
           {

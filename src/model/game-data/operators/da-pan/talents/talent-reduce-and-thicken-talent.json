@@ -6,8 +6,7 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "STATUS",
-          "objectId": "INFLICTION",
+          "object": "INFLICTION",
           "objectQualifier": "VULNERABLE",
           "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "with": {
@@ -21,14 +20,52 @@
       "effects": [
         {
           "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "REDUCE_AND_THICKEN",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
           "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "to": "OPERATOR",
+          "with": {
+            "stacks": {
+              "verb": "IS",
+              "object": "STACKS",
+              "objectQualifier": "CONSUMED"
+            }
+          }
         }
       ]
     }
   ],
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "objectQualifier": "PHYSICAL",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "TALENT_LEVEL",
+              "value": [
+                0,
+                0.04,
+                0.06
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "clauseType": "ALL",
   "properties": {
     "id": "REDUCE_AND_THICKEN_TALENT",
     "maxLevel": {
@@ -38,6 +75,20 @@
     "name": "Reduce and Thicken (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 4
+      },
+      "interactionType": "RESET"
+    },
     "eventType": "STATUS",
     "eventIdType": "TALENT",
     "description": "After consuming 1 Vulnerability stack, Da Pan gains Physical DMG Dealt +4% for 10s. This effect can reach 4 stacks."

@@ -20,10 +20,13 @@ import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES } from '../utils/enemies';
 import type { TimelineEvent, Column, EventSegmentData } from '../consts/viewTypes';
 import { eventDuration, durationSegment, computeSegmentsSpan } from '../consts/viewTypes';
-import { ColumnType, SegmentType } from '../consts/enums';
+import { ColumnType, InteractionModeType, SegmentType } from '../consts/enums';
+import { SKILL_COLUMN_ORDER } from '../model/channels';
 import type { StatusLevel } from '../consts/types';
 import type { OverrideStore, EventOverride } from '../consts/overrideTypes';
 import { buildOverrideKey } from '../controller/overrideController';
+
+const SKILL_COLUMN_SET = new Set<string>(SKILL_COLUMN_ORDER);
 
 const EMBED_VERSION = 2;
 
@@ -1409,6 +1412,12 @@ export async function decodeEmbed(
 
     const templateDuration = template?.segments ? computeSegmentsSpan(template.segments) : 0;
     const totalDuration = compact.ad ?? templateDuration;
+    // Non-skill events (heat inflictions, freeform statuses, reactions, etc.)
+    // are user-placed in freeform mode. Mark them so the engine's
+    // sourceCreationInteractionMode propagation (eventInterpretorController.ts:2807)
+    // attaches the freeform marker to the resulting derived events, keeping
+    // them draggable in the view (eventPresentationController.ts:446).
+    const isFreeformPlaceable = !SKILL_COLUMN_SET.has(compact.c);
     const ev: TimelineEvent = {
       uid: `ev-${i + 1}`,
       id: compact.s,
@@ -1417,6 +1426,7 @@ export async function decodeEmbed(
       columnId: compact.c,
       startFrame: compact.f,
       segments: durationSegment(totalDuration),
+      ...(isFreeformPlaceable ? { creationInteractionMode: InteractionModeType.FREEFORM } : {}),
     };
 
     // Convert compact.an (animationDuration) into an ANIMATION segment.

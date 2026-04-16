@@ -11,8 +11,8 @@ import { getStatusElementMap, getStatusById, getAnyStatusSerialized } from '../.
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import type { LoadoutProperties } from '../InformationPane';
 import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, applyCardOverrides } from '../../controller/info-pane/eventPaneController';
-import { getOperatorSkill } from '../../controller/gameDataStore';
-import { DataCardBody, FrameCritState, EditState, EditableValue } from '../custom/DataCardComponents';
+import { getOperatorSkill, getOperatorBase } from '../../controller/gameDataStore';
+import { DataCardBody, FrameCritState, EditState, EditableValue, VaryByLoadout } from '../custom/DataCardComponents';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../../controller/overrideController';
 import { findUltimateEnergyGainInClauses, findSkillPointRecoveryInClauses, findStaggerInClauses } from '../../controller/timeline/clauseQueries';
@@ -115,6 +115,47 @@ function EventPane({
     if (skillCardData) return null; // skill card takes precedence
     return getAnyStatusSerialized(event.name);
   }, [event.name, verbose, skillCardData]);
+
+  // Live loadout dimensions for VARY_BY active-column highlighting. Generic
+  // info-presentation concern: every card gets a loadout, unconditionally.
+  // Fields default to undefined when no source operator resolves — VaryByLeaf
+  // simply skips highlighting dimensions it can't place.
+  const varyByLoadout = useMemo<VaryByLoadout>(() => {
+    const src = event.sourceEntityId;
+    const props = loadoutProperties?.[src ?? '']
+      ?? loadoutProperties?.[slots.find((s) => s.operator?.id === src)?.slotId ?? ''];
+    const skills = props?.skills;
+    const skillByCol: Record<string, number | undefined> = skills ? {
+      [NounType.BASIC_ATTACK]: skills.basicAttackLevel,
+      [NounType.BATTLE]: skills.battleSkillLevel,
+      [NounType.COMBO]: skills.comboSkillLevel,
+      [NounType.ULTIMATE]: skills.ultimateLevel,
+    } : {};
+
+    // Determine the talent slot this card's VARY_BY TALENT_LEVEL values should
+    // resolve against. Mirrors engine's resolveTalentLevel: match event.name or
+    // the status def's originId against the operator's talents.one/two ids.
+    let talentSlot: 'one' | 'two' | undefined;
+    if (src) {
+      const op = getOperatorBase(src);
+      const talentOneId = op?.talents?.one?.id;
+      const talentTwoId = op?.talents?.two?.id;
+      const defId = event.name;
+      const originId = (statusCardData?.metadata as Record<string, unknown> | undefined)?.originId as string | undefined
+        ?? (skillCardData?.metadata as Record<string, unknown> | undefined)?.originId as string | undefined;
+      if (talentTwoId && (defId === talentTwoId || originId === talentTwoId)) talentSlot = 'two';
+      else if (talentOneId && (defId === talentOneId || originId === talentOneId)) talentSlot = 'one';
+    }
+
+    return {
+      skillLevel: skillByCol[event.columnId] ?? skills?.battleSkillLevel,
+      potential: props?.operator?.potential,
+      talentOneLevel: props?.operator?.talentOneLevel,
+      talentTwoLevel: props?.operator?.talentTwoLevel,
+      attributeIncreaseLevel: props?.operator?.attributeIncreaseLevel,
+      talentSlot,
+    };
+  }, [loadoutProperties, slots, event.sourceEntityId, event.columnId, event.name, skillCardData, statusCardData]);
 
   // Inline edit state for status/skill value overrides.
   // Paths are rooted at the TimelineEvent's segments subtree (top-level
@@ -361,7 +402,7 @@ function EventPane({
           return (
             <div className="edit-panel-section">
               <span className="edit-section-label">Skill Definition</span>
-              <DataCardBody data={skillCardData} critState={critState} editState={editState} extraFields={skillExtraFields} />
+              <DataCardBody data={skillCardData} critState={critState} editState={editState} extraFields={skillExtraFields} varyByLoadout={varyByLoadout} />
             </div>
           );
         })()}
@@ -509,7 +550,7 @@ function EventPane({
           return (
             <div className="edit-panel-section">
               <span className="edit-section-label">Status Definition</span>
-              <DataCardBody data={statusCardData!} editState={editState} extraFields={statusExtraFields} />
+              <DataCardBody data={statusCardData!} editState={editState} extraFields={statusExtraFields} varyByLoadout={varyByLoadout} />
             </div>
           );
         })()}

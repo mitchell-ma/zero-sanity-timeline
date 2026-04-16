@@ -259,6 +259,10 @@ export interface TimelineEvent {
   expectedUptime?: number;
   /** Number of stacks consumed by the CONSUME effect that triggered this event's creation (for STACKS CONSUMED resolution). */
   consumedStacks?: number;
+  /** Runtime-resolved stacks.limit at apply time. Stamped by the engine so the
+   *  view can render the correct per-loadout cap (e.g. Pog P5 Fervent Morale = 5)
+   *  rather than the DEFAULT_VALUE_CONTEXT fallback (= 3). */
+  maxStacks?: number;
   /**
    * For status events spawned from an onTriggerClause: the slot ID of the
    * operator whose action matched the trigger conditions. Carried on the

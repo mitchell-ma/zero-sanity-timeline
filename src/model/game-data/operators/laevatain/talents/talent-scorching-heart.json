@@ -11,7 +11,7 @@
     "duration": {
       "value": {
         "verb": "IS",
-        "value": 99999
+        "value": 2
       },
       "unit": "SECOND"
     },
@@ -20,7 +20,7 @@
         "verb": "IS",
         "value": 1
       },
-      "interactionType": "NONE"
+      "interactionType": "RESET"
     },
     "element": "HEAT",
     "eventType": "STATUS",
@@ -52,6 +52,13 @@
       ],
       "effects": [
         {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        },
+        {
           "verb": "ALL",
           "cardinalityConstraint": "UP_TO",
           "value": 4,
@@ -60,7 +67,57 @@
               "verb": "CONSUME",
               "object": "INFLICTION",
               "objectQualifier": "HEAT",
-              "fromObject": "ENEMY",
+              "from": "ENEMY",
+              "with": {
+                "stacks": 1
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "MELTING_FLAME",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "SKILL",
+          "objectId": "FINISHER"
+        },
+        {
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "HEAT"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        },
+        {
+          "verb": "ALL",
+          "cardinalityConstraint": "UP_TO",
+          "value": 4,
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "INFLICTION",
+              "objectQualifier": "HEAT",
+              "from": "ENEMY",
               "with": {
                 "stacks": 1
               }

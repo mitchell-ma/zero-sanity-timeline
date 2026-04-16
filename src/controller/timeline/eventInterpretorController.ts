@@ -1061,7 +1061,7 @@ export class EventInterpretorController {
 
   private canDo(effect: Effect, ctx: InterpretContext) {
     const ownerEntityId = this.resolveEntityId(
-      effect.to as string ?? effect.fromObject as string,
+      effect.to as string ?? effect.from as string,
       ctx, effect.toDeterminer ?? effect.fromDeterminer,
     );
 
@@ -1246,6 +1246,10 @@ export class EventInterpretorController {
       const columnId = effect.objectId ?? '';
       const cfg = getStatusConfig(effect.objectId);
       const def = getStatusDef(effect.objectId);
+      if (!cfg && !def && effect.objectId) {
+        console.warn(`[EventInterpretor] APPLY STATUS ${effect.objectId}: no status definition found — skipping`);
+        return true;
+      }
       const statusObj = effect.objectId ? getStatusById(effect.objectId) : undefined;
       const dv = this.resolveWith(effect.with?.duration, ctx);
       const remainingDuration = ctx.parentEventEndFrame != null
@@ -1412,11 +1416,13 @@ export class EventInterpretorController {
       const stacksNode = effect.with?.stacks as Record<string, unknown> | undefined;
       const isDynamicStacks = stacksNode && ('operation' in stacksNode || stacksNode.object === NounType.STACKS);
       if (isDynamicStacks && typeof sv === 'number' && sv <= 0) return true;
-      // NONE interaction: create 1 event with stacks = N (events represent groupings of stacks)
-      // Other interactions (RESET, etc.): create N separate events (e.g. Steel Oath 5 stacks)
-      const isAccumulatorApply = cfg?.stackingMode === StackInteractionType.NONE && typeof sv === 'number' && sv > 1;
-      const stackCount = isAccumulatorApply ? 1 : (typeof sv === 'number' && sv > 1 ? sv : 1);
-      const applyStacks = isAccumulatorApply ? sv : undefined;
+      // Dispatch is independent of interactionType: one APPLY with stacks=N
+      // always produces N underlying events, each with stacks unset.
+      // interactionType governs at-cap behavior only (NONE=drop, RESET=clamp
+      // oldest, MERGE=subsume), enforced inside the column's add(). Visual
+      // grouping (Steel Oath V, Melting Flame IV) is handled by the view's
+      // clamp rule, not by collapsing events at dispatch time.
+      const stackCount = typeof sv === 'number' && sv > 1 ? sv : 1;
 
       // DSL identity for struct-based matching — if doApply flattened a
       // qualified status (e.g. `STATUS SUSCEPTIBILITY PHYSICAL` →
@@ -1434,12 +1440,12 @@ export class EventInterpretorController {
           : cfg?.maxStacks;
         const eventOverrides = {
           ...eventProps,
-          ...(applyStacks != null ? { stacks: applyStacks } : {}),
           ...(ctx.consumedStacks != null ? { consumedStacks: ctx.consumedStacks } : {}),
           ...(ctx.sourceCreationInteractionMode != null && ctx.sourceEventColumnId === columnId
             ? { creationInteractionMode: ctx.sourceCreationInteractionMode } : {}),
           ...(dslObjectIdFromEffect != null ? { dslObjectId: dslObjectIdFromEffect } : {}),
           ...(dslObjectQualifierFromEffect != null ? { dslObjectQualifier: dslObjectQualifierFromEffect } : {}),
+          ...(runtimeMaxStacks != null ? { maxStacks: runtimeMaxStacks } : {}),
         };
         const added = this.applyEventFromCtx(ctx, columnId, statusEntityId, ctx.frame, duration, source, {
           statusId: effect.objectId,
@@ -1528,7 +1534,7 @@ export class EventInterpretorController {
   }
 
   private doConsume(effect: Effect, ctx: InterpretContext) {
-    const from = effect.fromObject as string ?? (effect as unknown as { from?: string }).from ?? effect.fromDeterminer as string ?? effect.to as string;
+    const from = effect.from as string ?? effect.fromDeterminer as string ?? effect.to as string;
     const ownerEntityId = this.resolveEntityId(
       from, ctx, effect.fromDeterminer ?? effect.toDeterminer,
     );
@@ -2291,6 +2297,18 @@ export class EventInterpretorController {
       )
       : 1;
 
+    // Surface the internal Vulnerable consumption to the reactive trigger index so
+    // operator-defined CONSUME VULNERABLE clauses fire (e.g. Da Pan's Reduce and
+    // Thicken). The direct consumeEvent() call bypasses interpret()'s usual
+    // trigger dispatch, so we emit it explicitly here.
+    if (vulnerableCount > 0) {
+      this.checkReactiveTriggers(
+        VerbType.CONSUME, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, frame,
+        this.resolveSlotId(source.ownerEntityId), source.skillName ?? '',
+        undefined, this._processFrameOut, consumed, ENEMY_ID,
+      );
+    }
+
     const damageMultiplier = getPhysicalStatusBaseMultiplier(PhysicalStatusType.CRUSH, consumed);
 
     this.controller.applyEvent(
@@ -2361,6 +2379,16 @@ export class EventInterpretorController {
         source, { count: vulnerableCount },
       )
       : 1;
+
+    // Surface the internal Vulnerable consumption to the reactive trigger index
+    // (see applyCrush for rationale).
+    if (vulnerableCount > 0) {
+      this.checkReactiveTriggers(
+        VerbType.CONSUME, PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, frame,
+        this.resolveSlotId(source.ownerEntityId), source.skillName ?? '',
+        undefined, this._processFrameOut, consumed, ENEMY_ID,
+      );
+    }
 
     const stackCount = Math.min(consumed, 4);
     const damageMultiplier = getPhysicalStatusBaseMultiplier(PhysicalStatusType.BREACH, consumed);
@@ -3628,7 +3656,7 @@ export class EventInterpretorController {
           object: se.object as Effect['object'],
           objectId: se.objectId,
           objectQualifier: (se.objectQualifier ?? se.element) as Effect['objectQualifier'],
-          fromObject: se.fromObject as Effect['fromObject'],
+          from: se.from as Effect['from'],
           to: se.to as Effect['to'],
           toDeterminer: se.toDeterminer as Effect['toDeterminer'],
           with: se.with as Effect['with'],
@@ -3645,6 +3673,7 @@ export class EventInterpretorController {
       objectQualifier: (te.objectQualifier ?? te.element) as Effect['objectQualifier'],
       to: te.to as Effect['to'],
       toDeterminer: te.toDeterminer as Effect['toDeterminer'],
+      from: te.from as Effect['from'],
       with: te.with as Effect['with'],
       until: te.until as Effect['until'],
       of: te.of as Effect['of'],
@@ -3750,12 +3779,17 @@ export class EventInterpretorController {
       const liveCount = parentEvents.length;
       const interactionType = ctx.def.properties.stacks?.interactionType;
       const canRecycle = interactionType != null && interactionType !== StackInteractionType.NONE;
-      // Non-stacking statuses (limit <= 1) always gate self-APPLY while a live
-      // instance exists — the existing instance owns the lifecycle, dedupe via
-      // gate. Stacking statuses (limit > 1) only gate when at-cap AND there is
-      // no recycle interaction; otherwise the downstream APPLY path recycles
-      // the oldest instance and emits REFRESHED.
-      if (stackLimit <= 1 || (liveCount >= stackLimit && !canRecycle)) {
+      // State-verb-only triggers (BECOME/IS/HAVE) are idempotent — the same
+      // state transition firing twice for the same underlying state shouldn't
+      // produce two instances. Action-verb triggers (PERFORM/APPLY/CONSUME/
+      // DEAL/HIT/DEFEAT/RECEIVE/RECOVER) represent distinct events and should
+      // honor RESET's "new clamps old" semantic so each fire gets its own
+      // instance (e.g. Da Pan Salty or Mild 2s visual marker per ult).
+      const hasActionVerb = ctx.conditions.some(c =>
+        EVENT_PRESENCE_VERBS.has(c.verb as VerbType),
+      );
+      const gateAtCap = !canRecycle || !hasActionVerb;
+      if (liveCount >= stackLimit && gateAtCap) {
         if (triggerEffects.some(isSelfApply)) return [];
       }
     }

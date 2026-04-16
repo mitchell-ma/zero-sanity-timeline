@@ -32,8 +32,7 @@
 
 | ID | Type | Effect |
 |----|------|--------|
-| REDUCE_AND_THICKEN_TALENT | TALENT | Trigger: consume Vulnerability → apply status |
-| REDUCE_AND_THICKEN | TALENT_STATUS | PHYSICAL_DAMAGE_BONUS [0.04, 0.06] by talent level, 10s, max 4 stacks |
+| REDUCE_AND_THICKEN_TALENT | TALENT (self-applying) | Trigger: consume Vulnerability → self-apply (PHYSICAL_DAMAGE_BONUS [0.04, 0.06] by talent level, 10s, max 4 stacks, RESET) |
 | PREP_INGREDIENTS | TALENT_STATUS | Duration VARY_BY POTENTIAL [20, 20, 30×4], max stacks VARY_BY POTENTIAL [1, 1, 2×4] |
 | FINE_COOKING_POTENTIAL | POTENTIAL | Trigger: defeat enemy → apply status |
 | FINE_COOKING | POTENTIAL_STATUS | PHYSICAL_DAMAGE_BONUS +30%, 15s, max 1 stack |

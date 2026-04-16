@@ -14,13 +14,14 @@
  */
 import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR } from '../../consts/enums';
+import { ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR, UnitType } from '../../consts/enums';
+import { FPS } from '../../utils/timeline';
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels, getStatusById } from '../gameDataStore';
 import { getOperatorSkill } from '../../model/game-data/operatorSkillsStore';
 import { StackInteractionType } from '../../consts/enums';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
-import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS } from '../../model/channels';
+import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { formatSegmentShortName, translateDslToken, formatEventLabel } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
 import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
@@ -43,6 +44,23 @@ function stackLabel(stackNumber: number): string {
   return `${stackNumber}`;
 }
 
+/**
+ * Resolve a status def's natural full duration to frames. Used by stack-label
+ * positioning to compute apply-time overlaps independent of post-apply
+ * CONSUME/REFRESH clamps.
+ */
+function statusDefDurationFrames(statusId: string): number {
+  const def = getStatusById(statusId);
+  const dur = def?.duration as { value?: ValueNode; unit?: string } | number | undefined;
+  if (dur == null) return 0;
+  if (typeof dur === 'number') return dur;
+  const raw = dur.value;
+  if (!raw) return 0;
+  const val = typeof raw === 'number' ? raw : resolveValueNode(raw, DEFAULT_VALUE_CONTEXT);
+  if (typeof val !== 'number') return 0;
+  return dur.unit === UnitType.SECOND ? Math.round(val * FPS) : val;
+}
+
 interface StatusStackInfo {
   instances: number;
   verb: string;
@@ -59,13 +77,54 @@ function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
       const limit = rawLimit == null ? 1
         : typeof rawLimit === 'number' ? rawLimit
         : typeof (rawLimit as { value?: number }).value === 'number' ? (rawLimit as { value?: number }).value!
-        : resolveValueNode(rawLimit as unknown as ValueNode, DEFAULT_VALUE_CONTEXT);
+        : resolveMaxPossibleLimit(rawLimit as unknown as ValueNode);
       const verb = se.stacks?.interactionType ?? StackInteractionType.NONE;
       const info = { instances: limit, verb };
       statusStackCache.set(se.id, info);
     }
   }
   return statusStackCache.get(statusId);
+}
+
+/**
+ * Resolve a stacks.limit expression to its maximum possible value across all
+ * loadout states (potential 0-5). Used as the view-layer upper bound for stack
+ * label positioning — so e.g. Pog Fervent Morale labels can reach "V" even if
+ * a specific event hasn't stamped its per-apply runtime cap yet.
+ *
+ * The per-apply runtime cap (stamped on each event's `maxStacks` at apply time
+ * via the engine) is still the authoritative cap for column gating and label
+ * rendering. This is purely the ceiling fallback.
+ */
+function resolveMaxPossibleLimit(node: ValueNode): number {
+  let maxLimit = 0;
+  for (let potential = 0; potential <= 5; potential++) {
+    const ctx = { ...DEFAULT_VALUE_CONTEXT, potential };
+    const v = resolveValueNode(node, ctx);
+    if (typeof v === 'number' && v > maxLimit) maxLimit = v;
+  }
+  return maxLimit > 0 ? maxLimit : 1;
+}
+
+/**
+ * True when clamping an event of status `statusId` to `visualDur` frames
+ * would hide any internal frame marker (e.g. Waterspout's 2s/3s damage
+ * ticks if clamped to 1s). Used to opt out of visual tiling for events
+ * whose per-segment frame offsets would otherwise be cut off.
+ */
+export function clampWouldHideFrame(statusId: string, visualDur: number): boolean {
+  const statusDef = getStatusById(statusId);
+  if (!statusDef) return false;
+  let segStart = 0;
+  for (const seg of statusDef.segments) {
+    if (seg.frames) {
+      for (const f of seg.frames) {
+        if (segStart + f.offsetFrame > visualDur) return true;
+      }
+    }
+    segStart += seg.properties.duration;
+  }
+  return false;
 }
 
 function isSingleInstanceStatus(statusId: string): boolean {
@@ -140,21 +199,49 @@ export function computeStatusViewOverrides(
       const statusInfo = getStatusStackInfo(allSorted[0].name);
       const singleInstance = isSingleInstanceStatus(allSorted[0].name);
       const stackable = isStackableStatus(allSorted[0].name);
-      const stackLimit = statusInfo?.instances;
+      // Prefer the per-event runtime-resolved cap (stamped at apply time) over the
+      // static config default — loadout-dependent limits (e.g. Pog P5 Fervent Morale
+      // cap=5 via the SOURCE-operator potential gate) are only correct per-event.
+      // Use the max across events in case different applies had different caps.
+      const runtimeLimit = allSorted.reduce<number | undefined>((acc, ev) => {
+        if (ev.maxStacks == null) return acc;
+        return acc == null ? ev.maxStacks : Math.max(acc, ev.maxStacks);
+      }, undefined);
+      const stackLimit = runtimeLimit ?? statusInfo?.instances;
 
       const hasRecordedStacks = allSorted.some((ev) => ev.stacks != null);
       if (allSorted.length <= 1 && !stackable && !hasRecordedStacks) continue;
+
+      // Stable apply-time position: count prior events whose UNCONSUMED
+      // (status-def-duration) lifecycle would overlap this event's startFrame.
+      // Using eventEndFrame here was wrong — it returns the CLAMPED end of
+      // consumed events, so a later CS consume could retroactively shift
+      // surviving stacks' labels (e.g. PI "I" → "II" after first stack
+      // consumed). Position should reflect "this was the Nth concurrent
+      // stack at apply time" and stay invariant once the event exists.
+      const defDur = statusDefDurationFrames(allSorted[0].name);
 
       for (const ev of allSorted) {
         let position: number;
         let activeEarlier = 0;
         for (const prev of allSorted) {
           if (prev.uid === ev.uid) break;
-          if (eventEndFrame(prev) >= ev.startFrame) activeEarlier++;
+          // Use the prev event's apply-time end (startFrame + status duration),
+          // not its current clamped end. This decouples labeling from later
+          // CONSUME/REFRESH mutations.
+          const prevApplyEnd = defDur > 0 ? prev.startFrame + defDur : eventEndFrame(prev);
+          if (prevApplyEnd >= ev.startFrame) activeEarlier++;
         }
         position = activeEarlier + 1;
         if (stackLimit != null && position > stackLimit) position = stackLimit;
 
+        // Labeling: prefer ev.stacks when set (apply-time stamp for inflictions,
+        // pre-consume pool stamp for restack-generated historical events, live
+        // pool count for active restack events). Fall back to the apply-time
+        // position otherwise. Without this, restack generations 2+ inherit
+        // phantom overlaps from the defDur of earlier (consumed) generations
+        // and their capped position mis-labels them (e.g. Steel Oath restacked
+        // stacks=4 but position=6 → capped to V instead of IV).
         const labelValue = ev.stacks != null ? ev.stacks : position;
         const displayLabel = singleInstance ? baseName : `${baseName} ${stackLabel(labelValue)}`;
 
@@ -163,14 +250,19 @@ export function computeStatusViewOverrides(
         };
 
         // Visual truncation: truncate at the next event's start frame so
-        // stacking events tile without overlapping wrappers.  Applies to all
+        // stacking events tile without overlapping wrappers. Applies to all
         // events (including consumed) because consumed inflictions can be
         // extended before eviction and their tall wrappers overlap later events.
-        // Single-instance RESET statuses (limit<=1) render independently (no tiling).
-        // Multi-instance RESET statuses (limit>1, incl. INFINITE) DO clamp — new
-        // instances visually supersede earlier ones even when the engine doesn't
-        // reset-evict (unlimited cap never hit).
-        // Single-instance NONE statuses with unlimited stacks (accumulators) DO clamp.
+        //
+        // Two opt-outs:
+        // (a) Single-instance RESET statuses (limit<=1) — render independently.
+        // (b) Events whose internal frames would be hidden by the clamp —
+        //     e.g. Waterspout has damage ticks at 1s/2s/3s; clamping to 1s
+        //     would hide the 2s/3s ticks, so skip the clamp.
+        //
+        // Multi-instance RESET (limit>1 incl. INFINITE) and NONE accumulators
+        // do clamp when no frame would be hidden — that's how simultaneous
+        // applies collapse into one visible block with a stack-count label.
         const isIndependentReset = (statusInfo?.instances ?? 1) <= 1
           && statusInfo?.verb === StackInteractionType.RESET;
         const allIdx = allSorted.indexOf(ev);
@@ -179,7 +271,7 @@ export function computeStatusViewOverrides(
           const evEnd = eventEndFrame(ev);
           if (nextStart < evEnd) {
             const visualDur = nextStart - ev.startFrame;
-            if (visualDur >= 0) {
+            if (visualDur >= 0 && !clampWouldHideFrame(ev.name, visualDur)) {
               override.visualActivationDuration = visualDur;
             }
           }
@@ -527,6 +619,7 @@ function truncateDerivedEvents(col: MiniTimeline, colEvents: TimelineEvent[]): T
     const curEnd = eventEndFrame(cur);
     if (curEnd > next.startFrame) {
       const clampedTotal = next.startFrame - cur.startFrame;
+      if (clampWouldHideFrame(cur.name, clampedTotal)) continue;
       let remaining = clampedTotal;
       const clampedSegments = cur.segments.map(s => {
         if (remaining <= 0) return { ...s, properties: { ...s.properties, duration: 0 } };
@@ -812,11 +905,153 @@ function computeOverlapLanes(colEvents: TimelineEvent[]): Map<string, OverlapLan
  * Viewport culling is NOT applied — the view layer should filter
  * ColumnViewModel.events by visible frame range before rendering.
  */
+/**
+ * For events on arts-infliction columns, split each bar's single segment
+ * into multiple segments at every frame where the column's cumulative active
+ * stack count changes (another heat added, or any heat consumed). Each
+ * segment's `name` becomes `"${baseName} ${stackLabel(count)}"` so the
+ * canvas renderer (which shows per-segment names for multi-segment
+ * non-BATK events) displays the evolving stack count across the bar.
+ *
+ * Why view-layer: the underlying event duration and start frame are
+ * preserved; only the visual representation gets split into time-sliced
+ * labeled sub-bars. This lets users see "Heat I → Heat II → Heat I" as
+ * stacks grow and shrink over time without mutating engine state.
+ */
+function applyInflictionStackSplits(events: TimelineEvent[]): TimelineEvent[] {
+  // Group by (ownerEntityId, columnId); only process infliction columns.
+  const groups = new Map<string, TimelineEvent[]>();
+  for (const ev of events) {
+    if (!INFLICTION_COLUMN_IDS.has(ev.columnId)) continue;
+    const key = `${ev.ownerEntityId}\0${ev.columnId}`;
+    const arr = groups.get(key);
+    if (arr) arr.push(ev);
+    else groups.set(key, [ev]);
+  }
+  if (groups.size === 0) return events;
+
+  const replacements = new Map<string, TimelineEvent>();
+  groups.forEach((group, key) => {
+    const columnId = key.slice(key.indexOf('\0') + 1);
+    const baseName = getAllInflictionLabels()[columnId] ?? resolveEventLabel(group[0]);
+    splitInflictionStackSegments(group, baseName, replacements);
+  });
+
+  if (replacements.size === 0) return events;
+  return events.map((ev) => replacements.get(ev.uid) ?? ev);
+}
+
+/**
+ * Build a transition timeline from the group's events (each event contributes
+ * +1 at its startFrame and -1 at its current endFrame) and split each event
+ * into segments aligned to those transitions.
+ */
+function splitInflictionStackSegments(
+  group: TimelineEvent[],
+  baseName: string,
+  out: Map<string, TimelineEvent>,
+) {
+  // Transitions: sort by frame; when frames tie, process ends before starts
+  // so that "heat ends at F AND heat starts at F" correctly yields the same
+  // count (consumed heat has already left when the new one arrives).
+  interface Transition { frame: number; delta: number }
+  const transitions: Transition[] = [];
+  for (const ev of group) {
+    const end = eventEndFrame(ev);
+    if (end <= ev.startFrame) continue;
+    transitions.push({ frame: ev.startFrame, delta: +1 });
+    transitions.push({ frame: end, delta: -1 });
+  }
+  transitions.sort((a, b) => a.frame - b.frame || a.delta - b.delta);
+
+  // Precompute cumulative count at each transition point (count AFTER the
+  // transition's delta is applied). We walk transitions once and record,
+  // for each unique frame, the count after processing all deltas at that frame.
+  // frameCountAfter[i] = count from transitions[i].frame up until the next transition frame.
+  const countAfter: number[] = new Array(transitions.length);
+  {
+    let c = 0;
+    for (let i = 0; i < transitions.length; i++) {
+      c += transitions[i].delta;
+      countAfter[i] = c;
+    }
+  }
+
+  // For each event, slice transitions overlapping [evStart, evEnd) and build
+  // segments. Only emit splits when there's actually more than one value.
+  for (const ev of group) {
+    const evStart = ev.startFrame;
+    const evEnd = eventEndFrame(ev);
+    if (evEnd <= evStart) continue;
+    // Must be a single-segment event (all infliction events from the engine
+    // are; anything else is already a view-layer derivation we shouldn't touch).
+    if (ev.segments.length !== 1) continue;
+
+    // Walk transitions to find split frames within (evStart, evEnd). The count
+    // at evStart is `countAfter` of the LAST transition whose frame <= evStart.
+    type SegSpec = { from: number; to: number; count: number };
+    const segs: SegSpec[] = [];
+    let cursor = evStart;
+    let curCount = 0;
+    // Find count at evStart by scanning transitions up to evStart (inclusive).
+    // Transitions at evStart with delta=+1 include this event itself.
+    for (let i = 0; i < transitions.length; i++) {
+      if (transitions[i].frame > evStart) break;
+      curCount = countAfter[i];
+    }
+
+    // Collect split frames strictly within (evStart, evEnd).
+    // Group transitions by frame so the count is read AFTER all deltas at that frame are applied.
+    let i = 0;
+    while (i < transitions.length) {
+      const f = transitions[i].frame;
+      // advance past transitions at the same frame
+      let j = i;
+      while (j < transitions.length && transitions[j].frame === f) j++;
+      const countAtThisFrame = countAfter[j - 1];
+      i = j;
+      if (f <= evStart) continue;
+      if (f >= evEnd) break;
+      // Emit segment [cursor, f) with curCount, then update
+      segs.push({ from: cursor, to: f, count: curCount });
+      cursor = f;
+      curCount = countAtThisFrame;
+    }
+    // Final segment: [cursor, evEnd) with curCount
+    segs.push({ from: cursor, to: evEnd, count: curCount });
+
+    // If all segments have the same count, no split needed — keep the event as-is.
+    const uniqueCounts = new Set(segs.map(s => s.count));
+    if (uniqueCounts.size <= 1) continue;
+
+    // Build new segments preserving the original segment's other properties
+    // (metadata, dataSources, etc.) — clone each from the original.
+    const originalSeg = ev.segments[0];
+    const newSegments: EventSegmentData[] = segs
+      .filter(s => s.to > s.from)
+      .map(s => ({
+        ...originalSeg,
+        properties: {
+          ...originalSeg.properties,
+          duration: s.to - s.from,
+          name: `${baseName} ${stackLabel(Math.max(1, s.count))}`,
+        },
+      }));
+
+    out.set(ev.uid, { ...ev, segments: newSegments });
+  }
+}
+
 export function computeTimelinePresentation(
   events: TimelineEvent[],
   columns: Column[],
 ): Map<string, ColumnViewModel> {
   const result = new Map<string, ColumnViewModel>();
+
+  // Replace infliction events with stack-timeline-split clones so each bar
+  // renders multiple labeled sub-segments reflecting the cumulative active
+  // stack count over time. See splitInflictionStackSegments.
+  events = applyInflictionStackSplits(events);
 
   const eventsByOwnerColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {

@@ -21,7 +21,7 @@ import type { LoadoutProperties } from '../../view/InformationPane';
 import type { StatusEventDef } from './eventQueueTypes';
 import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { ValueNode } from '../../dsl/semantics';
-import { VerbType, NounType, ObjectType, DeterminerType, THRESHOLD_MAX } from '../../dsl/semantics';
+import { VerbType, NounType, ObjectType, DeterminerType, AdjectiveType, THRESHOLD_MAX } from '../../dsl/semantics';
 import { ELEMENT_TO_INFLICTION_COLUMN as ELEMENT_TO_INFLICTION } from './columnResolution';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills, getAllOperatorStatuses } from '../gameDataStore';
@@ -263,7 +263,7 @@ function resolveCategories(columnId: string): string[] {
   if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) {
     categories.push(NounType.STATUS);
     // PHYSICAL as category — matches triggers with objectId: 'PHYSICAL' (e.g. APPLY STATUS PHYSICAL)
-    categories.push('PHYSICAL');
+    categories.push(AdjectiveType.PHYSICAL);
   } else if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) {
     categories.push(NounType.STATUS);
   }

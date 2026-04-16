@@ -32,7 +32,7 @@ import {
   getWeaponEffectDefs,
   getGearPiece, getGearPieceIdByName,
 } from '../../controller/gameDataStore';
-import { DataCardBody, normalizedDefToData, EffectDefExtraFields } from '../custom/DataCardComponents';
+import { DataCardBody, normalizedDefToData, EffectDefExtraFields, VaryByContext, VaryByLoadout } from '../custom/DataCardComponents';
 
 // ── Stat display labels ─────────────────────────────────────────────────────
 
@@ -471,7 +471,19 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
   const gearBonus = resolveGearBonusSummary(gearData);
   const { foodName, tactical } = resolveTactical(loadout, stats);
 
+  // Single VARY_BY loadout for every descendant DataCardBody (talent cards,
+  // weapon detail cards, gear detail cards). Each card's VARY_BY tables read
+  // this through the context and highlight the active level column.
+  const varyByLoadout: VaryByLoadout = {
+    skillLevel: stats.skills.battleSkillLevel,
+    potential: stats.operator.potential,
+    talentOneLevel: stats.operator.talentOneLevel,
+    talentTwoLevel: stats.operator.talentTwoLevel,
+    attributeIncreaseLevel: stats.operator.attributeIncreaseLevel,
+  };
+
   return (
+    <VaryByContext.Provider value={varyByLoadout}>
     <>
       <div className="edit-panel-header">
         <div
@@ -772,6 +784,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
         <AggregatedStatsSection operatorId={operatorId} loadout={loadout} stats={stats} color={operator.color} verbose={verbose} />
       </div>
     </>
+    </VaryByContext.Provider>
   );
 }
 

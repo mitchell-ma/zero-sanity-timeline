@@ -41,7 +41,7 @@ interface JsonEffect {
   toDeterminer?: string;
   to?: string;
   fromDeterminer?: string;
-  fromObject?: string;
+  from?: string;
   onObject?: string;
   /** WITH — properties (duration, stacks, value, multiplier, etc.). */
   with?: Record<string, JsonWithValue>;

@@ -56,7 +56,7 @@
         "duration": {
           "value": {
             "verb": "IS",
-            "value": 0.3
+            "value": 0.53
           },
           "unit": "SECOND"
         },
@@ -68,12 +68,12 @@
           "metadata": {
             "eventComponentType": "FRAME",
             "dataSources": [
-              "END_AXIS"
+              "ENDFIELD_SIMULATIONS"
             ]
           },
           "properties": {
             "offset": {
-              "value": 1.26,
+              "value": 0.27,
               "unit": "SECOND"
             }
           },

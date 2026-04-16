@@ -179,10 +179,10 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
       {vis.showFrom && (
         <ul className="ce-ul">
           <li className="ce-li ce-li--last ce-li--leaf">
-            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ fromObject: undefined, fromDeterminer: undefined })} title="Clear">&times;</button>
+            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ from: undefined, fromDeterminer: undefined })} title="Clear">&times;</button>
             <div className="interaction-row">
               <span className="ce-badge ce-badge--keyword">FROM</span>
-              <SentenceSlot active={value.fromObject === SubjectType.OPERATOR}>
+              <SentenceSlot active={value.from === SubjectType.OPERATOR}>
                 <CustomSelect
                   className="ib-determiner"
                   value={value.fromDeterminer ?? ''}
@@ -192,10 +192,10 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
                 />
               </SentenceSlot>
               <CustomSelect
-                value={value.fromObject ?? ''}
+                value={value.from ?? ''}
                 placeholder="Source"
                 options={Object.entries(TARGET_LABELS).map(([k, label]) => ({ value: k, label }))}
-                onChange={(v) => update({ fromObject: v || undefined })}
+                onChange={(v) => update({ from: v || undefined })}
               />
             </div>
           </li>

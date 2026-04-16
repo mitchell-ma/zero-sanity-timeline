@@ -243,16 +243,48 @@ export function renderEvent(
   // show their per-tick markers even when clamped by a subsequent instance.
   if (presentation.visualActivationDuration != null) {
     const clampedDur = presentation.visualActivationDuration;
-    const preservedFrames: EventFrameMarker[] = [];
-    for (const s of segments) {
-      if (!s.frames) continue;
-      for (const f of s.frames) preservedFrames.push(f);
+    // When the event carries per-segment names (e.g. infliction stack-timeline
+    // splits), TRIM the segment array to the clamped duration instead of
+    // collapsing — so the visible sub-bar still renders each stack-count
+    // label it earned during its truncated window.
+    const hasPerSegmentNames = segments.length > 1 && segments.some(s => s.properties.name != null);
+    if (hasPerSegmentNames) {
+      let remaining = clampedDur;
+      const trimmed: EventSegmentData[] = [];
+      for (const s of segments) {
+        if (remaining <= 0) break;
+        const dur = Math.min(s.properties.duration, remaining);
+        trimmed.push({ ...s, properties: { ...s.properties, duration: dur } });
+        remaining -= dur;
+      }
+      if (trimmed.length > 0) {
+        segments = trimmed;
+        layout = undefined;
+      } else {
+        // Fallback: nothing fit — collapse to a single clamped segment.
+        const preservedFrames: EventFrameMarker[] = [];
+        for (const s of segments) {
+          if (!s.frames) continue;
+          for (const f of s.frames) preservedFrames.push(f);
+        }
+        segments = [{
+          properties: { duration: clampedDur },
+          frames: preservedFrames,
+        } as EventSegmentData];
+        layout = undefined;
+      }
+    } else {
+      const preservedFrames: EventFrameMarker[] = [];
+      for (const s of segments) {
+        if (!s.frames) continue;
+        for (const f of s.frames) preservedFrames.push(f);
+      }
+      segments = [{
+        properties: { duration: clampedDur },
+        frames: preservedFrames,
+      } as EventSegmentData];
+      layout = undefined;
     }
-    segments = [{
-      properties: { duration: clampedDur },
-      frames: preservedFrames,
-    } as EventSegmentData];
-    layout = undefined;
   }
 
   // Compute total span
@@ -386,6 +418,17 @@ export function renderEvent(
     if (isSingleSeg && isBatk && event.segmentOrigin != null) {
       // Individual BATK segment placed via context menu — show Roman numeral
       segLabelText = seg.properties.name ?? formatSegmentShortName(undefined, event.segmentOrigin[0]);
+    } else if (isSingleSeg && seg.properties.name) {
+      // Single-segment event whose segment carries its own name (e.g. an
+      // infliction bar trimmed down to one segment by visualActivationDuration).
+      // Use the segment name directly — don't fall back to the event-level
+      // override label, which reflects cumulative count at event-start and may
+      // disagree with the trimmed segment's actual stack-count window.
+      const segName = seg.properties.name;
+      const trailingMatch = segName.match(TRAILING_NUMERAL_RE);
+      segLabelText = (segName.length * 6 + 8 <= segH)
+        ? segName
+        : (trailingMatch?.[1] ?? segName);
     } else if (isSingleSeg) {
       const fullLabel = presentation.label;
       if (fullLabel) {

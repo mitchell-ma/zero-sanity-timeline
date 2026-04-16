@@ -162,7 +162,7 @@
                   "object": "STATUS",
                   "objectId": "INFLICTION",
                   "objectQualifier": "CRYO",
-                  "fromObject": "ENEMY",
+                  "from": "ENEMY",
                   "with": {
                     "stacks": "MAX"
                   }

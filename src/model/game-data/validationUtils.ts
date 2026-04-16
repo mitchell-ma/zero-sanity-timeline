@@ -25,6 +25,8 @@ export function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path
 
 export const VALID_VALUE_NODE_KEYS = new Set([
   'verb', 'value', 'object', 'objectId', 'objectQualifier', 'operation', 'left', 'right', 'of', 'unit',
+  // Identity-comparison value node: "THIS OPERATOR IS SOURCE OPERATOR" → 1 or 0
+  'subject', 'subjectDeterminer', 'objectDeterminer',
 ]);
 
 export const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);

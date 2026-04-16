@@ -166,3 +166,4 @@ export class InflictionColumn implements EventColumn {
     return result;
   }
 }
+

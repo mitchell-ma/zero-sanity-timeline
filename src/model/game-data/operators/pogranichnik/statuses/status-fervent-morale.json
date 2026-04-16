@@ -19,7 +19,7 @@
               ],
               "of": {
                 "object": "OPERATOR",
-                "determiner": "THIS"
+                "determiner": "SOURCE"
               }
             }
           },
@@ -42,7 +42,7 @@
               ],
               "of": {
                 "object": "OPERATOR",
-                "determiner": "THIS"
+                "determiner": "SOURCE"
               }
             }
           }
@@ -84,21 +84,15 @@
             ],
             "of": {
               "object": "OPERATOR",
-              "determiner": "THIS"
+              "determiner": "SOURCE"
             }
           },
           "right": {
-            "verb": "VARY_BY",
-            "object": "STATUS",
-            "objectId": "WHEN_THE_BANNER_FLUTTERS",
-            "value": [
-              0,
-              1
-            ],
-            "of": {
-              "object": "OPERATOR",
-              "determiner": "THIS"
-            }
+            "verb": "IS",
+            "subject": "OPERATOR",
+            "subjectDeterminer": "THIS",
+            "object": "OPERATOR",
+            "objectDeterminer": "SOURCE"
           }
         }
       },

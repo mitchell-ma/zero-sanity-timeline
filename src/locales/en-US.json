@@ -373,6 +373,9 @@
   "dsl.property.skillPoint": "SP",
   "dsl.property.stacks": "Stacks",
 
+  "dsl.stacksCount.one": "{n} stack",
+  "dsl.stacksCount.other": "{n} stacks",
+
   "dsl.with.value": "Value",
   "dsl.with.mainStat": "Main Stat",
   "dsl.with.stacks": "Stacks",

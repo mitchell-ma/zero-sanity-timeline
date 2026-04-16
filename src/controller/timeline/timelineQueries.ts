@@ -45,9 +45,17 @@ export function activeCountAtFrame(
 }
 
 /**
- * Sum the `stacks` of all active events on the given column + owner at a frame.
+ * Count the active stacks of a given status on the given column + owner at a frame.
  * Single authority for "how many stacks of STATUS X does OWNER have at FRAME".
- * Events with no explicit `stacks` field count as 1 each.
+ *
+ * Two shapes of `ev.stacks` are in use:
+ *  - Position marker (each event = 1 stack, e.g. inflictions): the last event's
+ *    `stacks` field equals the running count, so using the last active event's
+ *    value gives the total.
+ *  - Accumulator (1 event = N stacks, e.g. NONE-stacking statuses applied with a
+ *    bulk stacks value): a single event carries the full count.
+ *
+ * Matches `evaluateStacksSubject` in conditionEvaluator.ts.
  */
 export function countActiveStatusStacks(
   events: readonly TimelineEvent[],
@@ -55,13 +63,16 @@ export function countActiveStatusStacks(
   ownerEntityId: string,
   statusId: string,
 ): number {
-  let n = 0;
+  let lastActive: TimelineEvent | undefined;
+  let activeCount = 0;
   for (const ev of events) {
     if (ev.ownerEntityId !== ownerEntityId || ev.columnId !== statusId) continue;
     if (!isActiveAtFrame(ev, frame)) continue;
-    n += ev.stacks ?? 1;
+    activeCount += 1;
+    lastActive = ev;
   }
-  return n;
+  if (lastActive == null) return 0;
+  return lastActive.stacks ?? activeCount;
 }
 
 /**

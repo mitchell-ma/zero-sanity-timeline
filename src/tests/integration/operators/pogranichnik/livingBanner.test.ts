@@ -6,12 +6,13 @@
  * Pogranichnik — The Living Banner (Talent 1) Integration Tests
  *
  * Tests the SP accumulator talent: RECOVER SP → adds stacks to THE_LIVING_BANNER_TALENT.
- * Each APPLY creates a distinct clamped segment carrying the running total.
- * When stacks reach 80 (60 at P3+), consumes stacks and applies FERVENT_MORALE.
+ * Each APPLY stacks=N dispatches N underlying events (one per stack).
+ * When the total active stack count reaches 80 (60 at P3+), consumes 80
+ * stacks and applies FERVENT_MORALE.
  *
  * Verification layers:
- *   1. Controller: no event at start, correct stacks after skills
- *   2. View: correct labels, no block at start
+ *   1. Controller: no event at start, correct stack counts after skills
+ *   2. View: clamped-to-last-event label carries the running total
  */
 
 import { renderHook, act } from '@testing-library/react';
@@ -59,7 +60,7 @@ function getBannerEvents(result: { current: ReturnType<typeof useApp> }) {
     .sort((a, b) => a.startFrame - b.startFrame);
 }
 
-/** Sum stacks across all active (non-consumed) Living Banner events — the status total. */
+/** Count active (non-consumed) Living Banner events — each event = 1 stack. */
 function getBannerStatusTotal(result: { current: ReturnType<typeof useApp> }, frame: number) {
   return result.current.allProcessedEvents
     .filter(ev =>
@@ -68,8 +69,7 @@ function getBannerStatusTotal(result: { current: ReturnType<typeof useApp> }, fr
       && ev.startFrame <= frame
       && frame < ev.startFrame + ev.segments.reduce((s, seg) => s + seg.properties.duration, 0)
       && ev.eventStatus !== EventStatusType.CONSUMED,
-    )
-    .reduce((sum, ev) => sum + (ev.stacks ?? 0), 0);
+    ).length;
 }
 
 function getPresentationVM(result: { current: ReturnType<typeof useApp> }) {
@@ -101,27 +101,33 @@ describe('A. Living Banner Counter', () => {
     expect(bannerInView).toHaveLength(0);
   });
 
-  it('A2: basic attack finisher creates Living Banner with 20 stacks', () => {
+  it('A2: basic attack finisher creates 20 Living Banner events (one per stack)', () => {
     const { result } = setupPog();
 
     placeBasicAttack(result, 2 * FPS);
 
     const bannerEvents = getBannerEvents(result);
-    expect(bannerEvents).toHaveLength(1);
-    expect(bannerEvents[0].stacks).toBe(20);
+    expect(bannerEvents).toHaveLength(20);
+    // One BA → one batch, all events at the same start frame.
+    const startFrames = new Set(bannerEvents.map(ev => ev.startFrame));
+    expect(startFrames.size).toBe(1);
   });
 
-  it('A3: two basic attacks produce two independent 20-stack events (status total 40)', () => {
+  it('A3: two basic attacks produce two 20-stack batches (status total 40)', () => {
     const { result } = setupPog();
 
     placeBasicAttack(result, 2 * FPS);
     placeBasicAttack(result, 5 * FPS);
 
     const bannerEvents = getBannerEvents(result);
-    expect(bannerEvents).toHaveLength(2);
-    expect(bannerEvents[0].stacks).toBe(20);
-    expect(bannerEvents[1].stacks).toBe(20);
-    // Status total = sum across active events — sample after both events have started.
+    expect(bannerEvents).toHaveLength(40);
+    // Two batches at two distinct start frames, 20 events each.
+    const countsByFrame = new Map<number, number>();
+    for (const ev of bannerEvents) {
+      countsByFrame.set(ev.startFrame, (countsByFrame.get(ev.startFrame) ?? 0) + 1);
+    }
+    expect(Array.from(countsByFrame.values()).sort()).toEqual([20, 20]);
+    // Status total = active events — sample after both batches have started.
     const lastStart = Math.max(...bannerEvents.map(e => e.startFrame));
     expect(getBannerStatusTotal(result, lastStart + 1)).toBe(40);
   });
@@ -135,12 +141,11 @@ describe('A. Living Banner Counter', () => {
     placeBasicAttack(result, 8 * FPS);
     placeBasicAttack(result, 11 * FPS);
 
-    // 4 events × 20 stacks = 80 total → all 4 marked CONSUMED, status total drops to 0
+    // 4 batches × 20 = 80 events → all marked CONSUMED, status total drops to 0
     const bannerEvents = getBannerEvents(result);
-    expect(bannerEvents).toHaveLength(4);
+    expect(bannerEvents).toHaveLength(80);
     const consumedCount = bannerEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED).length;
-    expect(consumedCount).toBe(4);
-    // After all consumed, status total should be 0
+    expect(consumedCount).toBe(80);
     const lastFrame = Math.max(...bannerEvents.map(e => e.startFrame)) + 10;
     expect(getBannerStatusTotal(result, lastFrame)).toBe(0);
 
@@ -163,11 +168,11 @@ describe('A. Living Banner Counter', () => {
     placeBasicAttack(result, 5 * FPS);
     placeBasicAttack(result, 8 * FPS);
 
-    // 3 events × 20 stacks = 60 total → all 3 marked CONSUMED, status total drops to 0
+    // 3 batches × 20 = 60 events → all marked CONSUMED, status total drops to 0
     const bannerEvents = getBannerEvents(result);
-    expect(bannerEvents).toHaveLength(3);
+    expect(bannerEvents).toHaveLength(60);
     const consumedCount = bannerEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED).length;
-    expect(consumedCount).toBe(3);
+    expect(consumedCount).toBe(60);
     const lastFrame = Math.max(...bannerEvents.map(e => e.startFrame)) + 10;
     expect(getBannerStatusTotal(result, lastFrame)).toBe(0);
 
@@ -178,7 +183,7 @@ describe('A. Living Banner Counter', () => {
     expect(moraleEvents.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('A6: Living Banner label is "The Living Banner (Talent) 20" after basic attack', () => {
+  it('A6: Living Banner last-event label reflects the position count after basic attack', () => {
     const { result } = setupPog();
 
     placeBasicAttack(result, 2 * FPS);
@@ -186,10 +191,12 @@ describe('A. Living Banner Counter', () => {
     const vm = getPresentationVM(result);
     const bannerInView = vm.events.filter(
       ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG,
-    );
-    expect(bannerInView).toHaveLength(1);
+    ).sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
+    expect(bannerInView).toHaveLength(20);
 
-    const override = vm.statusOverrides.get(bannerInView[0].uid);
+    // The last event (position 20) carries the running-total label.
+    const lastEv = bannerInView[bannerInView.length - 1];
+    const override = vm.statusOverrides.get(lastEv.uid);
     expect(override).toBeDefined();
     expect(override!.label).toBe('The Living Banner (T1) 20');
   });

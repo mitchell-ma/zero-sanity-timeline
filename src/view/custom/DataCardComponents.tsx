@@ -5,14 +5,55 @@
  *
  * Extracted from UnifiedCustomizer.tsx for reuse.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, createContext, useContext } from 'react';
 import { VerbType, NounType } from '../../dsl/semantics';
-import { translateCondition, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
+import { splitConditionText, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
 import { PERMANENT_DURATION } from '../../consts/enums';
 import { formatFlat } from '../../controller/info-pane/loadoutPaneController';
 import type { JsonSkillData } from './OperatorEventEditor';
 import type { NormalizedEffectDef } from '../../controller/gameDataStore';
 import { t } from '../../locales/locale';
+
+// ── Vary-by active index resolution ────────────────────────────────────────
+
+/**
+ * Runtime loadout dimensions used to highlight the active column in a VARY_BY
+ * table. Provided via VaryByContext by callers that know the operator's live
+ * loadout (EventPane, OperatorLoadoutEditor). Readers call
+ * `resolveActiveIndex(dimension)` to convert a VARY_BY dimension (SKILL_LEVEL,
+ * TALENT_LEVEL, POTENTIAL, ATTRIBUTE_INCREASE_LEVEL) into a 0-based array
+ * index, mirroring `getVariableArrayIndex` in `valueResolver.ts`.
+ */
+export interface VaryByLoadout {
+  skillLevel?: number;
+  potential?: number;
+  talentOneLevel?: number;
+  talentTwoLevel?: number;
+  attributeIncreaseLevel?: number;
+  /**
+   * Which talent slot TALENT_LEVEL dimensions should resolve against for this
+   * card. Set by EventPane when the event's id matches the operator's T2 id;
+   * defaults to 'one' (matches the engine's resolveTalentLevel fallback).
+   */
+  talentSlot?: 'one' | 'two';
+}
+
+/** Resolve a VARY_BY dimension → active 0-based array index, or undefined if not mappable. */
+function resolveActiveIndex(loadout: VaryByLoadout | undefined, dimension: string | undefined, talentSlot?: 'one' | 'two'): number | undefined {
+  if (!loadout || !dimension) return undefined;
+  switch (dimension) {
+    case NounType.SKILL_LEVEL: return loadout.skillLevel != null ? loadout.skillLevel - 1 : undefined;
+    case NounType.POTENTIAL:   return loadout.potential;
+    case NounType.TALENT_LEVEL: {
+      const slot = talentSlot ?? loadout.talentSlot ?? 'one';
+      return slot === 'two' ? loadout.talentTwoLevel : loadout.talentOneLevel;
+    }
+    case NounType.ATTRIBUTE_INCREASE_LEVEL: return loadout.attributeIncreaseLevel;
+    default: return undefined;
+  }
+}
+
+export const VaryByContext = createContext<VaryByLoadout | undefined>(undefined);
 
 // ── Edit state (for inline info-pane editing) ──────────────────────────────
 
@@ -236,7 +277,7 @@ export function ReadonlySection({ label, children }: { label: string; children: 
 
 // ── VaryTable ──────────────────────────────────────────────────────────────
 
-export function VaryTable({ columnLabels, rows, style, editState, basePath }: {
+export function VaryTable({ columnLabels, rows, style, editState, basePath, activeIndex }: {
   columnLabels: (string | number)[];
   rows: { label: string; values: (string | number)[] }[];
   style?: React.CSSProperties;
@@ -244,23 +285,26 @@ export function VaryTable({ columnLabels, rows, style, editState, basePath }: {
   editState?: EditState;
   /** Path to the parent VARY_BY value array (e.g. "properties.duration.value"). Cells append `[i]`. */
   basePath?: string;
+  /** Column index that corresponds to the live loadout's active level (highlighted). */
+  activeIndex?: number;
 }) {
+  const activeCls = (i: number) => activeIndex != null && i === activeIndex ? ' ops-cell--active' : '';
   return (
     <table className="ops-frame-vary-table" style={style}>
-      <thead><tr>{columnLabels.map((l, i) => <th key={i}>{l}</th>)}</tr></thead>
+      <thead><tr>{columnLabels.map((l, i) => <th key={i} className={activeCls(i).trim() || undefined}>{l}</th>)}</tr></thead>
       <tbody>{rows.map((r, ri) => (
         <tr key={ri}>{r.values.map((v, vi) => {
           if (editState && basePath && typeof v === 'number') {
             const cellPath = `${basePath}[${vi}]`;
             const overridden = editState.isOverridden(cellPath);
-            const cls = overridden ? 'ops-cell--editable ops-cell--overridden' : 'ops-cell--editable';
+            const cls = `ops-cell--editable${overridden ? ' ops-cell--overridden' : ''}${activeCls(vi)}`;
             return (
               <td key={vi} className={cls}>
                 <EditableValue value={v} path={cellPath} editState={editState} />
               </td>
             );
           }
-          return <td key={vi}>{v}</td>;
+          return <td key={vi} className={activeCls(vi).trim() || undefined}>{v}</td>;
         })}</tr>
       ))}</tbody>
     </table>
@@ -268,6 +312,13 @@ export function VaryTable({ columnLabels, rows, style, editState, basePath }: {
 }
 
 // ── PropertyTree ───────────────────────────────────────────────────────────
+
+/** True when the object is a DSL ValueNode leaf (VARY_BY array or IS literal/stat/status). */
+function isValueNode(v: unknown): v is Record<string, unknown> {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
+  const obj = v as Record<string, unknown>;
+  return obj.verb === VerbType.VARY_BY || obj.verb === VerbType.IS || typeof obj.operation === 'string';
+}
 
 function PropertyTree({ label, value }: { label: string; value: Record<string, unknown> }) {
   const entries = Object.entries(value).filter(([, v]) => v != null);
@@ -278,10 +329,24 @@ function PropertyTree({ label, value }: { label: string; value: Record<string, u
         {entries.map(([k, v], i) => {
           const childLabel = k.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
           const isLast = i === entries.length - 1;
-          const isNested = v && typeof v === 'object' && !Array.isArray(v);
+          const isObj = v && typeof v === 'object' && !Array.isArray(v);
+          const cls = `ops-vt-branch${isLast ? ' ops-vt-branch--last' : ' ops-vt-branch--mid'}`;
+
+          // ValueNode → delegate to ValueNodeTree (handles IS/VARY_BY leaves
+          // AND compound ADD/MULT expressions with full tree rendering). Flat
+          // JSON.stringify fallback for complex operations is what caused the
+          // raw `{"operation":"ADD",...}` blob in STACKS.LIMIT.
+          if (isValueNode(v)) {
+            return (
+              <div key={k} className={cls}>
+                <ValueNodeTree node={v as Record<string, unknown>} label={childLabel} />
+              </div>
+            );
+          }
+
           return (
-            <div key={k} className={`ops-vt-branch${isLast ? ' ops-vt-branch--last' : ' ops-vt-branch--mid'}`}>
-              {isNested
+            <div key={k} className={cls}>
+              {isObj
                 ? <PropertyTree label={childLabel} value={v as Record<string, unknown>} />
                 : <span className="ops-prop-tree-leaf"><span className="ops-prop-tree-leaf-label">{childLabel}</span> {formatPropertyValue(v)}</span>
               }
@@ -309,12 +374,20 @@ const COMBINED_NOUN_PAIRS: { noun: string; determiner: string; label: string }[]
 /** Returns true if an object has nested structure too complex for a single line. */
 function hasNestedComplexity(obj: Record<string, unknown>): boolean {
   for (const v of Object.values(obj)) {
-    if (v && typeof v === 'object') {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
       const inner = v as Record<string, unknown>;
-      if (inner.verb === VerbType.VARY_BY && Array.isArray(inner.value)) return true;
-      if (!Array.isArray(v) && !('verb' in inner)) {
-        if (hasNestedComplexity(inner)) return true;
+      // Any DSL ValueNode (VARY_BY, IS, compound operation) in a child slot
+      // demands tree rendering — keeps STACKS / DURATION / etc. consistent
+      // across operators regardless of whether their limit is a literal or
+      // a compound expression.
+      if (isValueNode(v)) return true;
+      // {value, unit} wrapper (duration/quantity) — recurse into the value;
+      // the wrapper itself is handled by formatPropertyValue.
+      if ('value' in inner && 'unit' in inner) {
+        if (inner.value && typeof inner.value === 'object' && isValueNode(inner.value)) return true;
+        continue;
       }
+      if (hasNestedComplexity(inner)) return true;
     }
   }
   return false;
@@ -348,42 +421,57 @@ function PropertiesView({ props, editState, basePath }: {
         if (val == null) return null;
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
         const keyPath = pathFor(key);
-        // VARY_BY tables
+        // VARY_BY tables — delegate to VaryByLeaf so the active loadout
+        // column is highlighted via VaryByContext.
         if (val && typeof val === 'object' && !Array.isArray(val)) {
           const obj = val as Record<string, unknown>;
+          // Compound operation at the top level (ADD/MULT/SUB of nested
+          // ValueNodes, e.g. `stacks.limit = ADD(3, MULT(POTENTIAL, STATUS))`).
+          // Route through ValueNodeTree inside the standard effect wrapper so
+          // the card styling matches every other effect/property row.
+          if (typeof obj.operation === 'string') {
+            return (
+              <div key={key} className="ops-frame-effect">
+                <div className="ops-frame-effect-sentence"><span className="ops-frame-effect-verb">{label}</span></div>
+                <div className="ops-frame-effect-with">
+                  <ValueNodeTree node={obj} />
+                </div>
+              </div>
+            );
+          }
           if (obj.verb === VerbType.VARY_BY && Array.isArray(obj.value)) {
-            const vals = obj.value as number[];
             return (
               <div key={key} className="ops-frame-effect">
                 <div className="ops-frame-effect-sentence"><span className="ops-frame-effect-verb">{label}</span></div>
                 <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                  <VaryTable
-                    columnLabels={vals.map((_v, vi) => vi + 1)}
-                    rows={[{ label: 'value', values: vals }]}
-                    editState={editState}
-                    basePath={`${keyPath}.value`}
-                  />
+                  <VaryByLeaf node={obj} editState={editState} basePath={`${keyPath}.value`} />
                 </div></div>
               </div>
             );
           }
-          // Duration with nested VARY_BY
-          if ('value' in obj && typeof obj.value === 'object' && obj.value && (obj.value as Record<string, unknown>).verb === VerbType.VARY_BY) {
+          // Duration/quantity wrapper (shape: { value: <ValueNode>, unit }).
+          // Render tree-style for any ValueNode inside — VARY_BY gets a table,
+          // compound operations (ADD/MULT) get a recursive tree, simple IS
+          // stays flat via the existing scalar branches below.
+          if ('value' in obj && 'unit' in obj && obj.value && typeof obj.value === 'object') {
             const inner = obj.value as Record<string, unknown>;
-            const vals = inner.value as number[];
-            if (Array.isArray(vals)) {
+            if (isValueNode(inner) && inner.verb !== VerbType.IS) {
               const unit = typeof obj.unit === 'string' ? obj.unit.replace(/_/g, ' ').toLowerCase() : '';
               return (
                 <div key={key} className="ops-frame-effect">
-                  <div className="ops-frame-effect-sentence"><span className="ops-frame-effect-verb">{label}</span></div>
-                  <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                    <VaryTable
-                      columnLabels={vals.map((_v, vi) => vi + 1)}
-                      rows={[{ label: unit, values: vals }]}
-                      editState={editState}
-                      basePath={`${keyPath}.value.value`}
-                    />
-                  </div></div>
+                  <div className="ops-frame-effect-sentence">
+                    <span className="ops-frame-effect-verb">{label}</span>
+                    {unit && <span className="ops-frame-effect-obj" style={{ color: 'var(--text-muted)' }}>({unit})</span>}
+                  </div>
+                  <div className="ops-frame-effect-with">
+                    {inner.verb === VerbType.VARY_BY && Array.isArray(inner.value) ? (
+                      <div className="ops-frame-vary">
+                        <VaryByLeaf node={inner} editState={editState} basePath={`${keyPath}.value.value`} />
+                      </div>
+                    ) : (
+                      <ValueNodeTree node={inner} />
+                    )}
+                  </div>
                 </div>
               );
             }
@@ -450,20 +538,33 @@ function PropertiesView({ props, editState, basePath }: {
 const VARY_AXIS_LABELS: Record<string, (i: number) => string> = {
   POTENTIAL: (i) => `P${i}`,
   TALENT_LEVEL: (i) => `T${i}`,
+  STATUS: (i) => String(i),
 };
 
-function VaryByLeaf({ node, label, editState, basePath }: {
+function VaryByLeaf({ node, label, editState, basePath, talentSlot }: {
   node: Record<string, unknown>;
   label?: string;
   editState?: EditState;
   basePath?: string;
+  /** Which talent slot this card belongs to; drives TALENT_LEVEL active-index resolution. */
+  talentSlot?: 'one' | 'two';
 }) {
   const vals = node.value as number[];
-  const axis = String(node.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase();
+  const axisParts: string[] = [];
+  if (node.objectQualifier) axisParts.push(String(node.objectQualifier).replace(/_/g, ' ').toLowerCase());
+  axisParts.push(String(node.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase());
+  if (node.objectId) axisParts.push(String(node.objectId).replace(/_/g, ' ').toLowerCase());
+  const axis = axisParts.join(' ');
   const ofClause = node.of as { determiner?: string; object?: string } | undefined;
   const ofParts = ofClause ? [ofClause.determiner, ofClause.object ?? 'OPERATOR'].filter(Boolean).map(s => String(s).toLowerCase()).join(' ') : '';
   const of = ofParts ? ` of ${ofParts}` : '';
   const labelFn = VARY_AXIS_LABELS[String(node.object)] ?? ((i: number) => String(i + 1));
+
+  const loadout = useContext(VaryByContext);
+  const rawIndex = resolveActiveIndex(loadout, node.object as string | undefined, talentSlot);
+  const activeIndex = rawIndex != null
+    ? Math.max(0, Math.min(rawIndex, vals.length - 1))
+    : undefined;
 
   return (
     <div className="ops-vt-vary">
@@ -475,8 +576,33 @@ function VaryByLeaf({ node, label, editState, basePath }: {
         style={{ marginTop: 2 }}
         editState={editState}
         basePath={basePath}
+        activeIndex={activeIndex}
       />
     </div>
+  );
+}
+
+/**
+ * Render a single clause condition line. When the threshold is a VARY_BY ValueNode,
+ * the numeric range is replaced with a full table (matching how effect VARY_BYs render).
+ */
+function ConditionLine({ condition }: { condition: Record<string, unknown> }) {
+  const { prefix, thresholdNode, threshold } = splitConditionText(condition);
+  const isVaryByThreshold = thresholdNode
+    && thresholdNode.verb === VerbType.VARY_BY
+    && Array.isArray(thresholdNode.value);
+  if (isVaryByThreshold) {
+    return (
+      <div className="ops-clause-condition-text">
+        <span>{prefix}</span>
+        <VaryByLeaf node={thresholdNode!} />
+      </div>
+    );
+  }
+  return (
+    <span className="ops-clause-condition-text">
+      {threshold ? `${prefix} ${threshold}` : prefix}
+    </span>
   );
 }
 
@@ -501,6 +627,12 @@ function formatOfChain(of: Record<string, unknown>): string {
 }
 
 function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: string }) {
+  if (node.verb === VerbType.IS && node.subject && node.subjectDeterminer && node.objectDeterminer) {
+    // Identity comparison: "<subjDet> <subject> is <objDet> <object>"
+    const subj = `${String(node.subjectDeterminer).toLowerCase()} ${String(node.subject).toLowerCase()}`;
+    const obj = `${String(node.objectDeterminer).toLowerCase()} ${String(node.object ?? 'OPERATOR').toLowerCase()}`;
+    return <span className="ops-vt-leaf">{label && <span className="ops-prop-tree-leaf-label">{label}</span>} {subj} is {obj}</span>;
+  }
   if (node.verb === VerbType.IS && node.object === NounType.STAT) {
     const stat = String(node.objectId ?? node.stat ?? 'STAT').replace(/_/g, ' ');
     const statOfClause = node.of as { determiner?: string; object?: string } | undefined;
@@ -812,7 +944,7 @@ function ClausePredicateView({ predicate, editState, basePath }: {
             idx++;
             return (
               <div key={`c-${ci}`} className={`ops-vt-branch${idx === allChildren ? '' : ' ops-vt-branch--mid'}`}>
-                <span className="ops-clause-condition-text">{translateCondition(c)}</span>
+                <ConditionLine condition={c} />
               </div>
             );
           })}
@@ -1340,7 +1472,7 @@ export function TabbedSegmentView({ entry, critState, editState }: {
 
 // ── DataCardBody ───────────────────────────────────────────────────────────
 
-export function DataCardBody({ data, extraFields, critState, editState }: {
+export function DataCardBody({ data, extraFields, critState, editState, varyByLoadout }: {
   data: Record<string, unknown>;
   extraFields?: React.ReactNode;
   critState?: FrameCritState;
@@ -1350,6 +1482,13 @@ export function DataCardBody({ data, extraFields, critState, editState }: {
    * "segments[0].frames[1].clause[0].effects[0].with.multiplier.value[2]").
    */
   editState?: EditState;
+  /**
+   * Optional live loadout — when provided, every VARY_BY table inside this card
+   * highlights the column matching the operator's current skill/potential/talent
+   * level. Single entry point for active-column highlighting across every
+   * caller (event info pane, customizer, loadout pane).
+   */
+  varyByLoadout?: VaryByLoadout;
 }) {
   const props = (data.properties ?? {}) as Record<string, unknown>;
   const meta = (data.metadata ?? {}) as Record<string, unknown>;
@@ -1367,7 +1506,7 @@ export function DataCardBody({ data, extraFields, critState, editState }: {
 
   const metaEntries = Object.entries(meta).filter(([k]) => k !== 'icon');
 
-  return (
+  const body = (
     <div className="ops-skill-form">
       {id && <ReadonlyField label="ID" value={id} />}
       {name && <ReadonlyField label="Name" value={name} />}
@@ -1400,6 +1539,11 @@ export function DataCardBody({ data, extraFields, critState, editState }: {
       )}
     </div>
   );
+
+  // Every card unconditionally publishes a VaryByContext. Dimensions missing
+  // from the loadout render without highlight, but the provider is always
+  // there — no gating on the presentation layer.
+  return <VaryByContext.Provider value={varyByLoadout ?? {}}>{body}</VaryByContext.Provider>;
 }
 
 // ── NormalizedEffectDef helpers ─────────────────────────────────────────────

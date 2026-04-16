@@ -99,11 +99,11 @@ describe('A. Fervent Morale RESET stacking', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// B. Living Banner — 1 event per APPLY with stacks metadata
+// B. Living Banner — N events per APPLY with stacks=N (one event per stack)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('B. Living Banner rendering', () => {
-  it('B1: basic attack finisher creates Living Banner with stacks=20', () => {
+  it('B1: basic attack finisher creates 20 Living Banner events in one batch', () => {
     const { result } = setupPog();
 
     const baCol = findColumn(result.current, SLOT_POG, NounType.BASIC_ATTACK);
@@ -114,12 +114,13 @@ describe('B. Living Banner rendering', () => {
       ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG,
     );
 
-    // Single accumulator event with stacks = 20
-    expect(bannerEvents).toHaveLength(1);
-    expect(bannerEvents[0].stacks).toBe(20);
+    // One APPLY with stacks=20 → 20 underlying events, all at the same frame.
+    expect(bannerEvents).toHaveLength(20);
+    const frames = new Set(bannerEvents.map(ev => ev.startFrame));
+    expect(frames.size).toBe(1);
   });
 
-  it('B2: combo creates 3 independent Living Banner events (5, 7, 13) — status total 25', () => {
+  it('B2: combo creates Living Banner batches (5, 7, 13) — total 25 stacks', () => {
     const { result } = setupPog();
 
     const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
@@ -130,13 +131,13 @@ describe('B. Living Banner rendering', () => {
       .filter(ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG)
       .sort((a, b) => a.startFrame - b.startFrame);
 
-    // 3 independent events with own stacks: 5, 7, 13 (status total 25)
-    expect(bannerEvents).toHaveLength(3);
-    expect(bannerEvents[0].stacks).toBe(5);
-    expect(bannerEvents[1].stacks).toBe(7);
-    expect(bannerEvents[2].stacks).toBe(13);
-    const total = bannerEvents.reduce((s, ev) => s + (ev.stacks ?? 0), 0);
-    expect(total).toBe(25);
+    // Combo fires three frames applying 5/7/13 stacks → 3 batches at 3 frames, 25 events total.
+    const countsByFrame = new Map<number, number>();
+    for (const ev of bannerEvents) {
+      countsByFrame.set(ev.startFrame, (countsByFrame.get(ev.startFrame) ?? 0) + 1);
+    }
+    expect(Array.from(countsByFrame.values()).sort((a, b) => a - b)).toEqual([5, 7, 13]);
+    expect(bannerEvents).toHaveLength(25);
   });
 
   it('B3: Living Banner appears in view presentation', () => {
@@ -261,5 +262,81 @@ describe('D. Fervent Morale max stacks via basic attacks', () => {
     // Akekuri P3, POG P0 → FM max still 3 (Akekuri's potential doesn't affect POG)
     for (let i = 0; i < 12; i++) placeBasicAttack(view.result, (2 + i * 3) * FPS);
     expect(getFmEvents(view.result.current)).toHaveLength(3);
+  });
+
+  it('D5: POG at P5 — self-apply Fervent Morale reaches 5 concurrent stacks (3 base + 2 from P3 potential identity gate)', () => {
+    const { result } = setupPog();
+    act(() => { setPotential(result.current, SLOT_POG, 5); });
+
+    // 15 BATKs × 20 SP = 300 SP → 5 applies at P3+ threshold (60 SP each).
+    // Space BATKs at 1s so every FM (20s duration) overlaps — without overlap
+    // the cap is never actually exercised (durations expire between applies).
+    // All applications are self-sourced (Living Banner T1 trigger on Pog),
+    // so THIS OPERATOR === SOURCE OPERATOR → identity gate = 1 → cap = 3 + 2 = 5.
+    for (let i = 0; i < 15; i++) placeBasicAttack(result, (2 + i) * FPS);
+
+    const fms = getFmEvents(result.current);
+    expect(fms).toHaveLength(5);
+    // RESET mode marks the oldest REFRESHED when the cap is hit. If the engine
+    // had resolved cap=3 (e.g. DEFAULT_VALUE_CONTEXT fallback), FM#1 and FM#2
+    // would be REFRESHED by FM#4/#5. With the correct SOURCE-resolved cap=5,
+    // all 5 overlap cleanly and none are clamped.
+    const refreshed = fms.filter(ev => ev.eventStatus === EventStatusType.REFRESHED);
+    expect(refreshed).toHaveLength(0);
+
+    // Every applied FM should carry the runtime-resolved cap (5) stamped on
+    // the event — this is what lets the view render label V instead of being
+    // capped at the static-default III.
+    for (const ev of fms) expect(ev.maxStacks).toBe(5);
+
+    // Verify the view presentation: status column labels must reach "V"
+    // (5th Roman numeral). Prior to the per-event maxStacks stamp, the view
+    // resolved the limit via DEFAULT_VALUE_CONTEXT and capped every label at "III".
+    const statusCol = findColumn(result.current, SLOT_POG, OPERATOR_STATUS_COLUMN_ID);
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusVM = viewModels.get(statusCol!.key);
+    const labels = statusVM!.events
+      .filter(ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG)
+      .map(ev => statusVM!.statusOverrides.get(ev.uid)?.label);
+    expect(labels.some(l => l?.endsWith(' V'))).toBe(true);
+  });
+
+  it('D6: POG at P5 — ult + 3 combos → Fervent Morale labels reach IV (cross-apply via Tactical Instruction T2)', () => {
+    const { result } = setupPog();
+    act(() => { setPotential(result.current, SLOT_POG, 5); });
+    act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
+
+    const ultCol = findColumn(result.current, SLOT_POG, NounType.ULTIMATE);
+    const ultPayload = getMenuPayload(result.current, ultCol!, 0);
+    act(() => { result.current.handleAddEvent(ultPayload.ownerEntityId, ultPayload.columnId, ultPayload.atFrame, ultPayload.defaultSkill); });
+
+    const comboCol = findColumn(result.current, SLOT_POG, NounType.COMBO);
+    // 3 combos close together — each consumes Steel Oath → Tactical Instruction T2
+    // applies Fervent Morale to TRIGGER (Pog himself, solo).
+    for (let i = 0; i < 3; i++) {
+      act(() => { result.current.handleAddEvent(SLOT_POG, NounType.COMBO, (3 + i * 2) * FPS, comboCol!.defaultEvent!); });
+    }
+
+    const fms = getFmEvents(result.current).sort((a, b) => a.startFrame - b.startFrame);
+    for (const f of fms) expect(f.maxStacks).toBe(5);
+
+    const statusCol = findColumn(result.current, SLOT_POG, OPERATOR_STATUS_COLUMN_ID);
+    const viewModels = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    const statusVM = viewModels.get(statusCol!.key);
+    const labels = statusVM!.events
+      .filter(ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG)
+      .map(ev => statusVM!.statusOverrides.get(ev.uid)?.label);
+    // With cap=5 (not 3), the 4th and 5th concurrent FMs must be labeled IV and V,
+    // not capped at III. Earlier bug: eventPresentationController clamped at the
+    // DEFAULT_VALUE_CONTEXT-resolved limit = 3, so every FM past the 3rd read "III".
+    expect(labels.some(l => l?.endsWith(' IV'))).toBe(true);
+    expect(labels.some(l => l?.endsWith(' V'))).toBe(true);
+    expect(labels.filter(l => l?.endsWith(' III')).length).toBeLessThanOrEqual(1);
   });
 });

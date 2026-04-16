@@ -114,7 +114,7 @@ const laevatainStatusesJson = _loadLaevatainStatuses('LAEVATAIN');
 const _KEY_EXPAND: Record<string, string> = {
   verb: 'verb', object: 'object', subject: 'subject',
   to: 'to',
-  from: 'fromObject',
+  from: 'from',
   on: 'onObject',
   with: 'with', for: 'for',
 };
@@ -698,7 +698,7 @@ describe('M. Normal basic attack without external infliction', () => {
 describe('N. Scorching Heart talent presence', () => {
   const LAEV_SLOT = 'slot-0';
 
-  test('N1: SCORCHING_HEART talent event exists at frame 0 with full timeline duration', () => {
+  test('N1: SCORCHING_HEART talent is trigger-only (no permanent presence event)', () => {
     const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'LAEVATAIN' }];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- partial loadout for test
     const loadoutProps: Record<string, any> = {
@@ -706,7 +706,6 @@ describe('N. Scorching Heart talent presence', () => {
     };
     const slotOpMap: Record<string, string> = { [LAEV_SLOT]: 'LAEVATAIN' };
 
-    // Even with no skill events, the talent should be created
     const processed = processCombatSimulation(
       [], loadoutProps, undefined, wirings, slotOpMap,
     );
@@ -714,9 +713,7 @@ describe('N. Scorching Heart talent presence', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const SH_TALENT_ID: string = require('../../model/game-data/operators/laevatain/talents/talent-scorching-heart.json').properties.id;
     const shEvents = processed.filter(ev => ev.id === SH_TALENT_ID);
-    expect(shEvents.length).toBe(1);
-    expect(shEvents[0].startFrame).toBe(0);
-    expect(shEvents[0].ownerEntityId).toBe(LAEV_SLOT);
+    expect(shEvents.length).toBe(0);
   });
 });
 

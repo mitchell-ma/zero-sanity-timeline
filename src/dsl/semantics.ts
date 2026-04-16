@@ -373,6 +373,12 @@ export enum AdjectiveType {
   HIGHEST = "HIGHEST",
   /** At maximum capacity (e.g. CONTROLLED OPERATOR HAVE FULL HP). */
   FULL = "FULL",
+
+  // Stacks-reference qualifier (for ValueStatus in CONSUME-triggered effects):
+  //   `{ verb: IS, object: STACKS, objectQualifier: CONSUMED }` resolves to the
+  //   number of stacks consumed by the triggering CONSUME effect. Used when an
+  //   APPLY following CONSUME wants to scale by the consumed count.
+  CONSUMED = "CONSUMED",
 }
 
 // ── Object ──────────────────────────────────────────────────────────────────
@@ -710,6 +716,23 @@ export interface ValueExpression {
 }
 
 /**
+ * Leaf node: a boolean identity comparison between two entity references.
+ *
+ * Resolves to 1 when the subject and object reference the same entity, else 0.
+ * Typical use: gate a value on "is the THIS operator the same as the SOURCE operator?"
+ *
+ * { verb: IS, subject: "OPERATOR", subjectDeterminer: "THIS",
+ *   object: "OPERATOR", objectDeterminer: "SOURCE" }
+ */
+export interface ValueIdentity {
+  verb: VerbType.IS;
+  subject: NounType;
+  subjectDeterminer: DeterminerType;
+  object: NounType;
+  objectDeterminer: DeterminerType;
+}
+
+/**
  * A value in the DSL — a literal, a variable lookup, a stat reference, or a binary expression.
  *
  * Examples:
@@ -718,7 +741,7 @@ export interface ValueExpression {
  *   { verb: "IS", object: "STAT", objectId: "INTELLECT" }
  *   { operation: "MULT", left: { verb: "IS", value: 7.5 }, right: { verb: "IS", object: "STAT", objectId: "INTELLECT" } }
  */
-export type ValueNode = ValueLiteral | ValueVariable | ValueStat | ValueStatus | ValueExpression;
+export type ValueNode = ValueLiteral | ValueVariable | ValueStat | ValueStatus | ValueIdentity | ValueExpression;
 
 // ── Type guards ─────────────────────────────────────────────────────────────
 
@@ -742,6 +765,12 @@ export function isValueStatus(node: ValueNode): node is ValueStatus {
   if (node == null || typeof node !== 'object') return false;
   if (!('verb' in node) || node.verb !== VerbType.IS) return false;
   return 'object' in node && (node as ValueStatus).object === NounType.STACKS;
+}
+
+export function isValueIdentity(node: ValueNode): node is ValueIdentity {
+  if (node == null || typeof node !== 'object') return false;
+  if (!('verb' in node) || node.verb !== VerbType.IS) return false;
+  return 'subject' in node && 'subjectDeterminer' in node && 'objectDeterminer' in node;
 }
 
 export function isValueExpression(node: ValueNode): node is ValueExpression {
@@ -818,7 +847,7 @@ export interface Effect {
   /** Class filter for TO target (e.g. "GUARD"). */
   toClassFilter?: string;
   /** FROM — source. */
-  fromObject?: SubjectType | string;
+  from?: SubjectType | string;
   /** Determiner for FROM source (THIS, OTHER, ALL, ANY). */
   fromDeterminer?: DeterminerType;
   /** ON — stat target entity (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */

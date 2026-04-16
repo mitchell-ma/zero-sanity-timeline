@@ -60,7 +60,7 @@ export interface TriggerEffect {
   objectDeterminer?: string;
   element?: string;
   objectQualifier?: string;
-  fromObject?: string;
+  from?: string;
   to?: string;
   toDeterminer?: string;
   with?: Record<string, unknown>;
@@ -75,7 +75,7 @@ export interface TriggerSubEffect {
   objectId?: string;
   element?: string;
   objectQualifier?: string;
-  fromObject?: string;
+  from?: string;
   to?: string;
   toDeterminer?: string;
   with?: Record<string, unknown>;

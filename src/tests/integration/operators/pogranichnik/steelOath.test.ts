@@ -697,7 +697,7 @@ describe('H. Living Banner stacks from combo first frame', () => {
     expect(moraleAtComboStart).toHaveLength(0);
   });
 
-  it('H1: Pog combo frames produce 3 independent Living Banner events (5, 7, 13) — status total 25', () => {
+  it('H1: Pog combo frames produce Living Banner batches (5, 7, 13) — total 25 stacks', () => {
     const { result } = setupPogranichnik();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
@@ -707,13 +707,16 @@ describe('H. Living Banner stacks from combo first frame', () => {
       .filter(ev => ev.columnId === LIVING_BANNER_ID && ev.ownerEntityId === SLOT_POG)
       .sort((a, b) => a.startFrame - b.startFrame);
 
-    // 3 independent events with own stacks: 5, 7, 13 (status total = 25)
-    expect(bannerEvents).toHaveLength(3);
-    expect(bannerEvents[0].stacks).toBe(5);
-    expect(bannerEvents[1].stacks).toBe(7);
-    expect(bannerEvents[2].stacks).toBe(13);
-    const total = bannerEvents.reduce((s, ev) => s + (ev.stacks ?? 0), 0);
-    expect(total).toBe(25);
+    // Each APPLY with stacks=N dispatches N underlying events (one per stack).
+    // Combo fires three frames applying 5/7/13 stacks respectively → 3 batches
+    // at 3 distinct start frames, 25 events total.
+    const countsByFrame = new Map<number, number>();
+    for (const ev of bannerEvents) {
+      countsByFrame.set(ev.startFrame, (countsByFrame.get(ev.startFrame) ?? 0) + 1);
+    }
+    const batchSizes = Array.from(countsByFrame.values()).sort((a, b) => a - b);
+    expect(batchSizes).toEqual([5, 7, 13]);
+    expect(bannerEvents).toHaveLength(25);
 
     // Combo event-level clause only has RECOVER ULTIMATE_ENERGY — no Living Banner stacks
     const comboEvents = result.current.allProcessedEvents.filter(
