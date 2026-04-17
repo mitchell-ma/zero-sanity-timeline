@@ -165,10 +165,10 @@ export class ConfigDrivenStatusColumn implements EventColumn {
       setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
       if (source.sourceEventUid) this.host.linkTransition(ev.uid, source.sourceEventUid);
-      // When restacking (remaining > 0), stamp the pre-consume count so the
-      // view shows the descending sequence (V → IV → III). When fully consumed
-      // (remaining === 0), preserve the event's original stacks value.
-      if (remaining > 0) ev.stacks = allActive.length;
+      // Do NOT stamp ev.stacks here — each event represents exactly 1 stack.
+      // The transition-based labeling system in eventPresentationController
+      // computes the running total from event count at each frame.
+      // Stamping pool counts would inflate those totals (5 events × stacks=5 = 25).
     }
 
     if (remaining > 0 && maxRemainingDuration > 0) {
@@ -183,7 +183,6 @@ export class ConfigDrivenStatusColumn implements EventColumn {
         ev.segments = [{ properties: { duration: maxRemainingDuration } }];
         ev.sourceEntityId = templateEvent.sourceEntityId;
         ev.sourceSkillName = templateEvent.sourceSkillName;
-        ev.stacks = remaining;
         this.host.pushEvent(ev);
       }
     }

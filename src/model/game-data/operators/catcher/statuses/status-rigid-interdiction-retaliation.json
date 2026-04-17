@@ -19,7 +19,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "element": "PHYSICAL",
     "description": "While the Rigid Interdiction shield is up, retaliates against attackers with Physical DMG, Vulnerable infliction, and stagger via Rigid Interdiction Retaliation Burst. P5+ also returns Skill Points on each retaliation."
   },

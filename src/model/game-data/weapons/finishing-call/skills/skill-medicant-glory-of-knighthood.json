@@ -65,7 +65,8 @@
   "properties": {
     "name": "Medicant: Glory of Knighthood",
     "description": "Secondary Attribute +{second_attr_up:0.0%}. Combo skill HP treatment effect +{heal_up:0.0%}.",
-    "id": "MEDICANT_GLORY_OF_KNIGHTHOOD"
+    "id": "MEDICANT_GLORY_OF_KNIGHTHOOD",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "FINISHING_CALL",

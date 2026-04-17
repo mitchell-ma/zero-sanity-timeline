@@ -3,7 +3,7 @@
     "name": "Protocol ε: 70.41K",
     "description": "Tele-protocols a massive piece of orbital debris into the battlefield with devastating impact. All enemies in the area of effect suffer massive Electric DMG.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
     "id": "PROTOCOL_EPSILON"
   },

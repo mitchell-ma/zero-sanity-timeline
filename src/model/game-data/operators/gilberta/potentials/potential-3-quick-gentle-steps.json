@@ -4,7 +4,7 @@
     "name": "Quick, Gentle Steps (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Talent Messenger's Song improved: Ultimate Gain Efficiency +5%."
   },
   "metadata": {

@@ -114,7 +114,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "duration": {
       "value": {
         "verb": "IS",

@@ -11,7 +11,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "All 4 Shieldguards initiate a Decisive Assault, dealing massive Physical DMG and recovering plenty of SP."
   },
   "segments": [

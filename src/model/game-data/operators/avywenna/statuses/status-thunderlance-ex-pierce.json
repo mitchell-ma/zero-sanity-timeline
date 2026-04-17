@@ -201,7 +201,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "Returning Thunderlances EX pierce enemies, dealing Electric DMG per lance."
   },
   "metadata": {

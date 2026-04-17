@@ -53,7 +53,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "DREAMS_OF_THE_STARRY_BEACH",

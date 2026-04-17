@@ -181,7 +181,7 @@
       "interactionType": "NONE"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "After a nearby enemy is Solidified or hit with Originium Crystals, Alesh gains 3/4 Ultimate Energy (L1/L2). If Alesh himself triggered the Solidification, he gains an additional 6/8 Ultimate Energy. Per-wiki: this effect can only trigger once every 3s — not yet enforced by the engine."
   },
   "metadata": {

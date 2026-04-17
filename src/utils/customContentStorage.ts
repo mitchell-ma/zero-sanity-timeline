@@ -11,7 +11,7 @@ import type { CustomGearEffect } from '../model/custom/customGearEffectTypes';
 import type { CustomOperatorStatus } from '../model/custom/customOperatorStatusTypes';
 import type { CustomOperatorTalent } from '../model/custom/customOperatorTalentTypes';
 import { getWeaponIdByName } from '../controller/gameDataStore';
-import { GearCategory } from '../consts/enums';
+import { GearCategory, CustomWeaponSkillKind } from '../consts/enums';
 import { needsMigration, migrateV1ToV2 } from './customContentMigration';
 
 const CUSTOM_WEAPONS_KEY = 'zst-custom-weapons';
@@ -212,12 +212,12 @@ export function validateCustomWeapon(
     if (!skill.label.trim()) {
       errors.push({ field: `skills[${i}].label`, message: `Skill ${i + 1} label is required` });
     }
-    if (skill.type === 'STAT_BOOST' && skill.statBoost) {
+    if (skill.type === CustomWeaponSkillKind.STAT_BOOST && skill.statBoost) {
       if (skill.statBoost.values.length === 0) {
         errors.push({ field: `skills[${i}].statBoost.values`, message: `Skill ${i + 1} needs at least one value` });
       }
     }
-    if (skill.type === 'NAMED' && skill.namedEffect) {
+    if (skill.type === CustomWeaponSkillKind.NAMED && skill.namedEffect) {
       const ne = skill.namedEffect;
       if (!ne.name.trim()) {
         errors.push({ field: `skills[${i}].namedEffect.name`, message: `Skill ${i + 1} effect name is required` });

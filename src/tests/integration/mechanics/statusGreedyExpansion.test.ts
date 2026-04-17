@@ -128,18 +128,30 @@ describe('Status greedy expansion — visual duration awareness', () => {
     );
     const vm = viewModels.get(statusCol.key)!;
 
-    // Earlier crit stacks should have visualActivationDuration set (truncated)
+    // Earlier crit stacks that temporally overlap with the next stack should have
+    // visualActivationDuration set (truncated). Stacks that naturally end before
+    // the next stack starts (e.g. the last stack of a batch whose segment was
+    // clamped by an ult-exit consume, followed by a gap before the next batch)
+    // don't need truncation and legitimately have no visual override.
     const sortedCrit = [...critStacks].sort((a, b) => a.startFrame - b.startFrame);
+    let overlapCount = 0;
     for (let i = 0; i < sortedCrit.length - 1; i++) {
-      const override = vm.statusOverrides.get(sortedCrit[i].uid);
-      expect(override).toBeDefined();
-      expect(override!.visualActivationDuration).toBeDefined();
-      // Visual duration should be less than raw segment duration
-      const rawDur = sortedCrit[i].segments.reduce(
+      const cur = sortedCrit[i];
+      const next = sortedCrit[i + 1];
+      const rawDur = cur.segments.reduce(
         (sum: number, s: { properties: { duration: number } }) => sum + s.properties.duration, 0,
       );
+      const curEnd = cur.startFrame + rawDur;
+      if (next.startFrame >= curEnd) continue;
+
+      const override = vm.statusOverrides.get(cur.uid);
+      expect(override).toBeDefined();
+      expect(override!.visualActivationDuration).toBeDefined();
       expect(override!.visualActivationDuration).toBeLessThan(rawDur);
+      overlapCount++;
     }
+    // Ensure the test actually exercised the truncation path at least once.
+    expect(overlapCount).toBeGreaterThan(0);
   });
 
   it('last crit stack event is wider than earlier truncated ones when adjacent slot is free', () => {

@@ -13,6 +13,7 @@ import {
 } from '../../controller/calculation/damageTableBuilder';
 import { Column, MiniTimeline } from '../../consts/viewTypes';
 import { ColumnType, TimelineSourceType } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
 import { OPERATOR_COLUMNS } from '../../model/channels';
 import { Slot } from '../../controller/timeline/columnBuilder';
 
@@ -33,7 +34,7 @@ jest.mock('../../utils/loadoutRegistry', () => ({
   OPERATORS: [], WEAPONS: [], GEARS: [], CONSUMABLES: [], TACTICALS: [],
 }));
 jest.mock('../../consts/gearSetEffects', () => ({
-  getGearSetEffects: () => undefined,
+  getGears: () => undefined,
 }));
 
 function miniTimeline(key: string, ownerEntityId: string, columnId: string, label: string, opts?: { derived?: boolean }): Column {
@@ -90,7 +91,7 @@ describe('buildDamageTableColumns', () => {
     ];
     const result = buildDamageTableColumns(columns);
     expect(result).toHaveLength(2);
-    expect(result.find((c) => c.label === 'DASH')).toBeUndefined();
+    expect(result.find((c) => c.label === NounType.DASH)).toBeUndefined();
   });
 
   it('excludes derived columns', () => {

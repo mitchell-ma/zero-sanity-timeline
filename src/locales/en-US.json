@@ -245,6 +245,18 @@
   "status.BREACH": "Breach",
   "status.SHATTER": "Shatter",
 
+  "statusCategory.SKILL": "Skill",
+  "statusCategory.TALENT": "Talent",
+  "statusCategory.POTENTIAL": "Potential",
+  "statusCategory.WEAPON": "Weapon",
+  "statusCategory.GEAR": "Gear",
+  "statusCategory.CONSUMABLE": "Consumable",
+  "statusCategory.TACTICAL": "Tactical",
+  "statusCategory.STATUS": "Combat Status",
+  "statusCategory.INFLICTION": "Infliction",
+  "statusCategory.REACTION": "Reaction",
+  "statusCategory.PHYSICAL_STATUS": "Physical Status",
+
   "infliction.heat": "Heat",
   "infliction.cryo": "Cryo",
   "infliction.nature": "Nature",

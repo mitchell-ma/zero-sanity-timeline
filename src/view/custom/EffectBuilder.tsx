@@ -58,7 +58,7 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
             placeholder="#"
             onChange={(e) => {
               const raw = e.target.value.toUpperCase();
-              if (raw === 'MAX') {
+              if (raw === THRESHOLD_MAX) {
                 update({ value: THRESHOLD_MAX });
               } else {
                 update({ value: Number(e.target.value) ? { verb: VerbType.IS as const, value: Number(e.target.value) } : undefined });
@@ -242,10 +242,14 @@ function summarizeNode(node: ValueNode): string {
 
 // ── WITH property row ──────────────────────────────────────────────────────
 
+/** UI-only pseudo-verb for the WITH property selector — opens the expression editor modal.
+ *  Distinct from the DSL VerbType enum; only used within this component's selector. */
+const WITH_VERB_EXPR = 'EXPR' as const;
+
 const WITH_VERB_OPTIONS = [
-  { value: 'IS', label: 'is' },
-  { value: 'VARY_BY', label: 'vary by' },
-  { value: 'EXPR', label: 'expression' },
+  { value: VerbType.IS, label: 'is' },
+  { value: VerbType.VARY_BY, label: 'vary by' },
+  { value: WITH_VERB_EXPR, label: 'expression' },
 ];
 
 function WithPropertyRow({ propKey, withValue: node, onChange }: {
@@ -264,10 +268,10 @@ function WithPropertyRow({ propKey, withValue: node, onChange }: {
     : isVariable ? node.value
     : undefined;
 
-  const verbValue = isExpr ? 'EXPR' : isVariable ? VerbType.VARY_BY : VerbType.IS;
+  const verbValue = isExpr ? WITH_VERB_EXPR : isVariable ? VerbType.VARY_BY : VerbType.IS;
 
   const updateVerb = (newVerb: string) => {
-    if (newVerb === 'EXPR') {
+    if (newVerb === WITH_VERB_EXPR) {
       setModalOpen(true);
       // If not already an expression, wrap current value
       if (!isExpr) {

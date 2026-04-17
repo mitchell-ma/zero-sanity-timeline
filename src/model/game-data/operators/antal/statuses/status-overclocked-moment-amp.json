@@ -104,7 +104,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "Applies temporary Electric Amp and Heat Amp to the entire team."
   },
   "metadata": {

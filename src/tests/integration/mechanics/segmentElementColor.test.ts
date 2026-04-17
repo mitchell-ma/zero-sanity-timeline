@@ -20,7 +20,6 @@ import { NounType } from '../../../dsl/semantics';
 import {
   ELEMENT_COLORS, ElementType, InteractionModeType,
 } from '../../../consts/enums';
-import type { MiniTimeline } from '../../../consts/viewTypes';
 import { FPS } from '../../../utils/timeline';
 import {
   computeTimelinePresentation,

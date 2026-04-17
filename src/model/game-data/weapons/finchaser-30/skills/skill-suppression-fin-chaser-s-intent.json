@@ -37,7 +37,8 @@
   "properties": {
     "name": "Suppression: Fin Chaser's Intent",
     "description": "ATK +{atk_up:0.0%}. When the wielder's battle skill applies Solidification, target enemy suffers Cryo DMG Taken +{cryst_dmg_up:0.0%} for {duration:0}s. Effects cannot stack.",
-    "id": "SUPPRESSION_FIN_CHASER_S_INTENT"
+    "id": "SUPPRESSION_FIN_CHASER_S_INTENT",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "FINCHASER_3_0",

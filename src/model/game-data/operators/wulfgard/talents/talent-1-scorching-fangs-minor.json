@@ -24,7 +24,7 @@
     },
     "enhancementType": "MINOR",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "P3: Grants other teammates Scorching Fangs with 50% of the base effects. Heat DMG Dealt +10%/+15%."
   },
   "metadata": {

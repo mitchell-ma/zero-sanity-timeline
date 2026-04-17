@@ -38,7 +38,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate SQUAD! ON ME! improved: While ultimate is active, entire team gains ATK +10%."
   },
   "metadata": {

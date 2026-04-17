@@ -65,7 +65,8 @@
   "properties": {
     "name": "Inspiring: Back to the Broken City",
     "description": "ATK +{atk_up:0.0%}. Arts Intensity +{phy_spell_up:0}.",
-    "id": "INSPIRING_BACK_TO_THE_BROKEN_CITY"
+    "id": "INSPIRING_BACK_TO_THE_BROKEN_CITY",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "FORTMAKER",

@@ -19,7 +19,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "element": "PHYSICAL",
     "description": "Single retaliation hit fired by Rigid Interdiction Retaliation. Deals Physical DMG, applies Vulnerable infliction and stagger. P1+ adds a DEF-scaling bonus strike at +0.1s. P5+ returns Skill Points."
   },

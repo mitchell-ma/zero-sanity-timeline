@@ -13,7 +13,7 @@ export interface CustomGearSet {
   rarity: 4 | 5 | 6;
   icon?: string;
   pieces: CustomGearPiece[];
-  setEffect?: CustomGearSetEffect;
+  setEffect?: CustomGear;
 }
 
 /** A single gear piece within a custom set. */
@@ -25,7 +25,7 @@ export interface CustomGearPiece {
 }
 
 /** Set effect (3-piece bonus). */
-export interface CustomGearSetEffect {
+export interface CustomGear {
   passiveStats?: Partial<Record<StatType | string, number>>;
   effects?: CustomGearEffect[];
 }

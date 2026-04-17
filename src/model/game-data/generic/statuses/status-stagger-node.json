@@ -18,7 +18,7 @@
       "interactionType": "NONE"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "Partial stagger break. Enemy is staggered at a node threshold."
   },
   "metadata": {

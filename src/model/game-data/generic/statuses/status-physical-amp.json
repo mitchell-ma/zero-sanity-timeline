@@ -4,7 +4,7 @@
     "name": "Physical Amp",
     "to": "TEAM",
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Physical Amp applied to the team.",
     "duration": {
       "value": {

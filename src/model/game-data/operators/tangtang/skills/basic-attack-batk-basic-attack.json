@@ -442,7 +442,7 @@
     "name": "I'LL BLOW YOUR MIND!",
     "description": "An attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
     "id": "ILL_BLOW_YOUR_MIND_BATK"

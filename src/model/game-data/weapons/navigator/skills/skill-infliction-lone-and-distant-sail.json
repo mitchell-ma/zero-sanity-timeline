@@ -37,7 +37,8 @@
   "properties": {
     "name": "Infliction: Lone and Distant Sail",
     "description": "Critical Rate +{crit_up:0.0%}. When Solidification or Corrosion is applied to enemies, the wielder gains Cryo DMG Dealt and Nature DMG Dealt +{dmg_up:0.0%}, and Critical Rate +{crit_up2:0.0%} for {duration:0}s. If this effect is triggered by the wielder, double the increase gained. Effects of the same name cannot stack.",
-    "id": "INFLICTION_LONE_AND_DISTANT_SAIL"
+    "id": "INFLICTION_LONE_AND_DISTANT_SAIL",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "NAVIGATOR",

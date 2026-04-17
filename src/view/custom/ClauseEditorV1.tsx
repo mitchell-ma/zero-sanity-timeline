@@ -457,7 +457,7 @@ function CompoundEffectBranch({ effect, onChange }: {
             placeholder="#"
             onChange={(e) => {
               const raw = e.target.value.toUpperCase();
-              const val: ValueNode | typeof THRESHOLD_MAX = raw === 'MAX' ? THRESHOLD_MAX : { verb: VerbType.IS as const, value: Number(e.target.value) || 1 };
+              const val: ValueNode | typeof THRESHOLD_MAX = raw === THRESHOLD_MAX ? THRESHOLD_MAX : { verb: VerbType.IS as const, value: Number(e.target.value) || 1 };
               onChange({ ...effect, for: { ...effect.for!, value: val } });
             }}
           />

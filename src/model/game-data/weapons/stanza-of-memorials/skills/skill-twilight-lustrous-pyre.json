@@ -59,7 +59,8 @@
   "properties": {
     "name": "Twilight: Lustrous Pyre",
     "description": "Max HP +{hp_up:0.0%}. When the wielder casts an ultimate, operators whose elements differ from the wielder gain ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
-    "id": "TWILIGHT_LUSTROUS_PYRE"
+    "id": "TWILIGHT_LUSTROUS_PYRE",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "STANZA_OF_MEMORIALS",

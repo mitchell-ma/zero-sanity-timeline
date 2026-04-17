@@ -36,7 +36,6 @@ import { findColumn, buildContextMenu, getMenuPayload, setUltimateEnergyToMax, t
 // ── Constants ──────────────────────────────────────────────────────────────
 
 const SLOT_AKEKURI = 'slot-1';
-const SLOT_LAEVATAIN = 'slot-0';
 const TEST_LINK_SOURCE = 'Test Link';
 
 // ── Helpers ────────────────────────────────────────────────────────────────

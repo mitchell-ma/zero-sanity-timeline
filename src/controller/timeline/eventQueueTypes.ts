@@ -33,7 +33,7 @@ interface StatusProperties {
   id: string;
   name?: string;
   type?: string;
-  eventIdType?: string;
+  eventCategoryType?: string;
   element?: string;
   target?: string;
   to?: string;

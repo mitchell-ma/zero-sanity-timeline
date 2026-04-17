@@ -33,7 +33,7 @@ const TYPE_OPTIONS = [
   { value: 'TALENT', label: t('eventViewer.type.talent') },
   { value: 'SKILL_STATUS', label: t('eventViewer.type.skillStatus') },
   { value: 'GEAR_STATUS', label: t('eventViewer.type.gearStatus') },
-  { value: 'WEAPON_STATUS', label: t('eventViewer.type.weaponStatus') },
+  { value: 'WEAPON_STAT', label: t('eventViewer.type.weaponStatus') },
   { value: 'POTENTIAL', label: t('eventViewer.type.potential') },
 ];
 
@@ -605,8 +605,8 @@ function StatusLevelRows({ value, onChange }: {
 
 function getDurationSeconds(dur: Record<string, JsonValue> | null): number | null {
   if (!dur) return null;
-  const unit = (dur.unit as string) ?? 'SECOND';
+  const unit = (dur.unit as string) ?? UnitType.SECOND;
   const vn = dur.value as Record<string, JsonValue> | number | undefined;
   const raw = typeof vn === 'object' && vn !== null ? ((vn.value as number) ?? 0) : ((vn as number) ?? 0);
-  return unit === 'FRAME' ? raw / 120 : raw;
+  return unit === UnitType.FRAME ? raw / 120 : raw;
 }

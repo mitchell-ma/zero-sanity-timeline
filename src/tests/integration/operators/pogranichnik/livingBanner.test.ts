@@ -200,4 +200,75 @@ describe('A. Living Banner Counter', () => {
     expect(override).toBeDefined();
     expect(override!.label).toBe('The Living Banner (T1) 20');
   });
+
+  it('A7: post-consume batch labels restart from 1 (consumed events drop out of the running total)', () => {
+    const { result } = setupPog();
+
+    // 5 BAs — the 4th hits 80 stacks → consumes 80, applies Fervent Morale.
+    // The 5th BA adds 20 more events that should label 1..20, NOT 81..100.
+    placeBasicAttack(result, 2 * FPS);
+    placeBasicAttack(result, 5 * FPS);
+    placeBasicAttack(result, 8 * FPS);
+    placeBasicAttack(result, 11 * FPS);
+    placeBasicAttack(result, 14 * FPS);
+
+    const bannerEvents = getBannerEvents(result);
+    const consumed = bannerEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
+    const active = bannerEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
+    expect(consumed).toHaveLength(80);
+    expect(active).toHaveLength(20);
+
+    const vm = getPresentationVM(result);
+    const activeInView = vm.events
+      .filter(ev => ev.columnId === LIVING_BANNER_ID
+        && ev.ownerEntityId === SLOT_POG
+        && ev.eventStatus !== EventStatusType.CONSUMED)
+      .sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
+    expect(activeInView).toHaveLength(20);
+
+    // Last surviving event is the 20th of the post-consume batch.
+    const lastActive = activeInView[activeInView.length - 1];
+    const override = vm.statusOverrides.get(lastActive.uid);
+    expect(override).toBeDefined();
+    expect(override!.label).toBe('The Living Banner (T1) 20');
+  });
+
+  it('A8: mixed-skill rotation that overshoots threshold labels by position, not pool-at-consume count', () => {
+    // Repro for the reported bug: a mixed BA+combo rotation hits 81 stacks at
+    // consume time. `consumeWithRestack` stamps `ev.stacks = 81` on every
+    // consumed event, so the old view labeled all 80 consumed bars "81".
+    // Correct behavior: ignore the pool-count stamp for NONE accumulators and
+    // label by running-total position (20, 40, 60, etc.).
+    const { result } = setupPog();
+    placeBasicAttack(result, 2 * FPS);
+    placeBasicAttack(result, 5 * FPS);
+    function placeCombo(atFrame: number) {
+      const col = findColumn(result.current, SLOT_POG, NounType.COMBO);
+      expect(col).toBeDefined();
+      const payload = getMenuPayload(result.current, col!, atFrame);
+      act(() => {
+        result.current.handleAddEvent(
+          payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
+        );
+      });
+    }
+    placeCombo(8 * FPS);
+    placeCombo(15 * FPS);
+
+    const banner = getBannerEvents(result);
+    const consumed = banner.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
+    // Consume fired — there were more than 80 active stacks at that moment.
+    expect(consumed.length).toBeGreaterThanOrEqual(80);
+
+    const vm = getPresentationVM(result);
+    const labels = banner.map(ev => vm.statusOverrides.get(ev.uid)?.label).filter((l): l is string => !!l);
+    // Labels should be unique running-total positions, not many duplicates
+    // echoing the pool-at-consume count. Pre-fix: 80 consumed events all
+    // labeled the same "81". Post-fix: labels form a monotonic 1..N sequence,
+    // so no single number repeats more than a handful of times.
+    const counts = new Map<string, number>();
+    for (const l of labels) counts.set(l, (counts.get(l) ?? 0) + 1);
+    const mostCommon = Math.max(...Array.from(counts.values()));
+    expect(mostCommon).toBeLessThan(10);
+  });
 });

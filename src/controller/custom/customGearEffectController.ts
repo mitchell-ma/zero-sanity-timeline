@@ -1,7 +1,7 @@
 /**
  * Business logic for custom gear effect CRUD operations.
  *
- * V2: Stores game data JSON (GearStatus[]) with a wrapper for metadata.
+ * V2: Stores game data JSON (GearStat[]) with a wrapper for metadata.
  * The editor still works with CustomGearEffect via adapters.
  */
 import { ElementType } from '../../consts/enums';

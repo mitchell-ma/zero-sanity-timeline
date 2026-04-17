@@ -1,5 +1,30 @@
 # TODO
 
+## Unify physical status onto the generic APPLY STATUS path
+
+Physical status (LIFT / KNOCK_DOWN / CRUSH / BREACH) is handled by bespoke methods (`applyPhysicalStatus` / `applyLiftOrKnockDown` / `applyCrush` / `applyBreach` in `eventInterpretorController.ts`) rather than going through `doApply`'s shared `applyEventFromCtx` helper used by INFLICTION / REACTION / STATUS. Consequences: every freeform-editability improvement (uid reuse via `freeformUidFor`, wrapper-duration inheritance for segment resize, creationInteractionMode propagation) has had to be re-implemented on the physical path, and future work will re-introduce the same class of bug.
+
+Most of the bespoke mechanics already have DSL shapes:
+- Stack consumption + damage scaling with consumed stacks — `{verb: IS, object: STACKS, objectQualifier: CONSUMED}` (see `feedback_consumed_stacks_pattern`); multipliers become `VARY_BY STACKS_CONSUMED`.
+- Stats-scaled damage — already in REACTION/STATUS via the shared damage calc.
+- Variable duration by consumed stacks (Breach) — `properties.duration: VARY_BY STACKS_CONSUMED`.
+- `isForced` — already in APPLY `with`, plumbed through the generic path.
+
+Sharp edges to handle:
+- [ ] **Conditional non-creation.** "No Vulnerable active AND not forced → skip creating Crush/Breach, add 1 Vulnerable instead." Cleanest shape: onTriggerClause on the wrapper that fires different APPLY effects based on `HAVE VULNERABLE`.
+- [ ] **Solidification → Shatter side-effect.** Move `tryConsumeSolidification` to an onTriggerClause listening for `APPLY PHYSICAL_STATUS` → `CONSUME SOLIDIFICATION` → `APPLY REACTION SHATTER`. Same shape arts reactions already use.
+- [ ] **"Always +1 Vulnerable on Lift/Knock Down"** — trivial separate APPLY clause on the wrapper.
+
+Plan:
+- [ ] Confirm/add `STACKS_CONSUMED` VARY_BY axis support for CONSUME-triggered effects.
+- [ ] Author `status-lift.json` / `status-knock-down.json` / `status-crush.json` / `status-breach.json` as real configs. Wrapper columns load via the existing `buildStatusMicroColumn` path.
+- [ ] Prototype BREACH first (simpler than CRUSH; exercises duration-scaling) to confirm the generic path carries it.
+- [ ] Delete `applyPhysicalStatus` / `applyLiftOrKnockDown` / `applyCrush` / `applyBreach` and the `AdjectiveType.PHYSICAL` shortcut at `eventInterpretorController.ts:1202`.
+- [ ] Move Solidification → Shatter side-effect to an onTriggerClause.
+- [ ] Keep the existing E2E tests in `src/tests/integration/freeform/freeformPhysicalStatusEditable.test.ts` as the regression harness — they should continue to pass without modification.
+
+**Risk:** bespoke methods may predate the DSL being expressive enough. Check git history before committing; the conditional-non-creation case is the one to prototype first — if it expresses cleanly, the rest follows.
+
 ## Fervent Morale stack cap still displays III in the live UI (Pog P5)
 
 E2E tests (`src/tests/integration/operators/pogranichnik/ferventMorale.test.ts`

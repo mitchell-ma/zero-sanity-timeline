@@ -136,19 +136,27 @@ function EventPane({
     // resolve against. Mirrors engine's resolveTalentLevel: match event.name or
     // the status def's originId against the operator's talents.one/two ids.
     let talentSlot: 'one' | 'two' | undefined;
+    const originId = (statusCardData?.metadata as Record<string, unknown> | undefined)?.originId as string | undefined
+      ?? (skillCardData?.metadata as Record<string, unknown> | undefined)?.originId as string | undefined;
     if (src) {
       const op = getOperatorBase(src);
       const talentOneId = op?.talents?.one?.id;
       const talentTwoId = op?.talents?.two?.id;
       const defId = event.name;
-      const originId = (statusCardData?.metadata as Record<string, unknown> | undefined)?.originId as string | undefined
-        ?? (skillCardData?.metadata as Record<string, unknown> | undefined)?.originId as string | undefined;
       if (talentTwoId && (defId === talentTwoId || originId === talentTwoId)) talentSlot = 'two';
       else if (talentOneId && (defId === talentOneId || originId === talentOneId)) talentSlot = 'one';
     }
 
+    // For status events, trace originId to the originating skill's column
+    // (e.g. Harass → SHIELDGUARD_BANNER → ULTIMATE → ultimateLevel).
+    let resolvedSkillLevel = skillByCol[event.columnId];
+    if (resolvedSkillLevel == null && originId && src) {
+      const originSkill = getOperatorSkill(src, originId);
+      if (originSkill?.eventCategoryType) resolvedSkillLevel = skillByCol[originSkill.eventCategoryType];
+    }
+
     return {
-      skillLevel: skillByCol[event.columnId] ?? skills?.battleSkillLevel,
+      skillLevel: resolvedSkillLevel ?? skills?.battleSkillLevel,
       potential: props?.operator?.potential,
       talentOneLevel: props?.operator?.talentOneLevel,
       talentTwoLevel: props?.operator?.talentTwoLevel,

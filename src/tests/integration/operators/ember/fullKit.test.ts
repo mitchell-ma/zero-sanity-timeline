@@ -20,7 +20,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, InteractionModeType, SegmentType } from '../../../../consts/enums';
+import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EventStatusType, InteractionModeType, SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { OPERATOR_STATUS_COLUMN_ID, ENEMY_ID, ENEMY_ACTION_COLUMN_ID } from '../../../../model/channels';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -379,7 +379,7 @@ describe('D. Pay the Ferric Price', () => {
     );
     expect(pftp).toHaveLength(4);
     expect(pftp.filter(ev => !ev.eventStatus)).toHaveLength(3);
-    expect(pftp.filter(ev => ev.eventStatus === 'REFRESHED')).toHaveLength(1);
+    expect(pftp.filter(ev => ev.eventStatus === EventStatusType.REFRESHED)).toHaveLength(1);
   });
 });
 

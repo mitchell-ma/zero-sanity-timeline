@@ -4,7 +4,7 @@
     "name": "Arts Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Arts Fragility applied to enemy.",
     "duration": {
       "value": {

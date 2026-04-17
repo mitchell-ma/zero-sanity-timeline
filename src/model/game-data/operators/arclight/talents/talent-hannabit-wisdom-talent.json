@@ -9,7 +9,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "50% chance to ignore an Arts Infliction applied on her."
   },
   "metadata": {

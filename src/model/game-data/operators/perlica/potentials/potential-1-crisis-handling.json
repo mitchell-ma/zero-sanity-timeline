@@ -4,7 +4,7 @@
     "name": "Crisis Handling (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Combo skill Instant Protocol: Chain improved: Electrification duration +{duration-1:0%}."
   },
   "metadata": {

@@ -3,7 +3,7 @@
     "name": "Tremolo",
     "description": "Estella expends all her strength to unleash a powerful slam of the spear shaft, dealing Physical DMG to all enemies in a circular area around self. To enemies with Physical Susceptibility, the skill forcibly applies Lift to them.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
     "id": "TREMOLO"
   },

@@ -18,7 +18,7 @@
     "name": "Newly Forged Blade (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Combo skill Full Moon Slash improved: Length of cooldown {coolDown:0}s; SP recovery is increased to 1.2 times the original."
   },
   "metadata": {

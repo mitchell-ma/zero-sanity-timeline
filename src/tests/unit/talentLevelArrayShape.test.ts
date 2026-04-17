@@ -18,6 +18,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { VerbType, NounType } from '../../dsl/semantics';
 
 const GAME_DATA_ROOT = path.resolve(__dirname, '../../model/game-data');
 const OPERATORS_DIR = path.join(GAME_DATA_ROOT, 'operators');
@@ -63,7 +64,7 @@ function findTalentLevelArrays(node: unknown, jsonPath: string, out: VaryByMatch
   }
   if (node === null || typeof node !== 'object') return;
   const obj = node as Record<string, unknown>;
-  if (obj.verb === 'VARY_BY' && obj.object === 'TALENT_LEVEL' && Array.isArray(obj.value)) {
+  if (obj.verb === VerbType.VARY_BY && obj.object === NounType.TALENT_LEVEL && Array.isArray(obj.value)) {
     out.push({ filePath, array: obj.value as number[], jsonPath });
   }
   for (const [k, v] of Object.entries(obj)) {

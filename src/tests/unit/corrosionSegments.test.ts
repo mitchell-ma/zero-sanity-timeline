@@ -16,7 +16,7 @@
 import { attachReactionFrames } from '../../controller/timeline/processInfliction';
 import { deriveReactions } from '../../controller/timeline/deriveReactions';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID, USER_ID } from '../../model/channels';
+import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID } from '../../model/channels';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
 import { findStaggerInClauses } from '../../controller/timeline/clauseQueries';
 import { StatusLevel } from '../../consts/types';

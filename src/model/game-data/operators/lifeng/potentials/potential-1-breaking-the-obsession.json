@@ -4,7 +4,7 @@
     "name": "Breaking the Obsession (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Battle skill Turbid Avatar improved: Physical Susceptibility +5%; also triggers this additional effect to enemies with no more than 2 Vulnerability stacks."
   },
   "metadata": {

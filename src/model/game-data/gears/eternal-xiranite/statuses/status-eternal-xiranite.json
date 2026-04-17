@@ -20,7 +20,7 @@
     }
   ],
   "properties": {
-    "id": "ETERNAL_XIRANITE",
+    "id": "ETERNAL_XIRANITE_STAT",
     "name": "Eternal Xiranite",
     "duration": {
       "value": {
@@ -38,7 +38,7 @@
     },
     "description": "DMG Dealt +16% for 15s to other teammates.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "ETERNAL_XIRANITE",

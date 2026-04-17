@@ -4,7 +4,7 @@
     "name": "NONE",
     "rarity": 5,
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_EFFECT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
     "originId": "game",

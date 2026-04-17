@@ -6,7 +6,7 @@
     "name": "Destructive Sequence (Finisher)",
     "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "PHYSICAL",
     "id": "DESTRUCTIVE_SEQUENCE_FINISHER"

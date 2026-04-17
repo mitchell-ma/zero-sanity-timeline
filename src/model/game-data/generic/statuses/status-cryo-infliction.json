@@ -19,7 +19,7 @@
       "interactionType": "REFRESH"
     },
     "eventType": "STATUS",
-    "eventIdType": "INFLICTION",
+    "eventCategoryType": "INFLICTION",
     "description": "Cryo element infliction. Stacks up to 4 times. At 4 stacks, triggers Solidification arts reaction."
   },
   "metadata": {

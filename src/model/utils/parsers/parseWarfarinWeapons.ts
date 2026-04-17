@@ -586,14 +586,20 @@ function buildNamedLevelEntry(
 
 // ── Parsing ──────────────────────────────────────────────────────────────────
 
-function classifySkill(skillId: string, tagId: string): string {
+/** Local parser discriminator for weapon skill shape (stat-boost vs named). */
+const enum WeaponSkillCategory {
+  STAT_BOOST = 'STAT_BOOST',
+  NAMED = 'NAMED',
+}
+
+function classifySkill(skillId: string, tagId: string): WeaponSkillCategory {
   if (skillId.startsWith('wpn_attr_') || skillId.startsWith('wpn_sp_attr_')) {
-    return 'STAT_BOOST';
+    return WeaponSkillCategory.STAT_BOOST;
   }
   if (tagId.startsWith('attr_')) {
-    return 'STAT_BOOST';
+    return WeaponSkillCategory.STAT_BOOST;
   }
-  return 'NAMED';
+  return WeaponSkillCategory.NAMED;
 }
 
 function flattenBlackboard(bb: BlackboardEntry[], resolution: KeyResolution): Record<string, number> {
@@ -624,7 +630,7 @@ function parseWeaponSkill(
   const keyResolution = buildKeyResolution(levels);
 
   // ── Stat boost skills: simple flatten ───────────────────────────────────
-  if (skillCategory === 'STAT_BOOST') {
+  if (skillCategory === WeaponSkillCategory.STAT_BOOST) {
     return {
       weaponSkillType: weaponSkillType ?? skillId,
       name: first.skillName,

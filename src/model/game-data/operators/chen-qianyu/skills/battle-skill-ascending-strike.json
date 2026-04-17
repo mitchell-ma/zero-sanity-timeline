@@ -3,7 +3,7 @@
     "name": "Ascending Strike",
     "description": "Performs an uppercut slash at the target enemy, dealing Physical DMG and Lift.",
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
     "id": "ASCENDING_STRIKE"
   },

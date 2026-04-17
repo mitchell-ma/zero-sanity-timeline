@@ -6,7 +6,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { NounType } from '../../dsl/semantics';
+import { NounType, VerbType } from '../../dsl/semantics';
 import { ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
 import { ENEMY_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
@@ -550,7 +550,7 @@ export function validateUpdate(
                   ...p,
                   effects: p.effects.filter(e => {
                     const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
-                    return !(dsl && (dsl.verb === 'RECOVER' || dsl.verb === 'RETURN') && dsl.object === 'SKILL_POINT');
+                    return !(dsl && (dsl.verb === VerbType.RECOVER || dsl.verb === VerbType.RETURN) && dsl.object === NounType.SKILL_POINT);
                   }),
                 })).filter(p => p.effects.length > 0);
               }

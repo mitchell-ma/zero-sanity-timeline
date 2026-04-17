@@ -4,7 +4,7 @@
     "name": "Cryo Amp",
     "to": "TEAM",
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Cryo Amp applied to the team.",
     "duration": {
       "value": {

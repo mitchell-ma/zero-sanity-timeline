@@ -3,7 +3,7 @@
     "name": "MORE SPICE!",
     "description": "When an enemy reaches 4 stacks of Vulnerability. Swings the wok at the enemy to deal massive Physical DMG and Crush. This Crush also deals more DMG.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
     "id": "MORE_SPICE"
   },

@@ -48,7 +48,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "For every 10 Will, DEF +1.2."
   },
   "metadata": {

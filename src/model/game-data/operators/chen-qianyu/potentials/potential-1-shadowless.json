@@ -80,7 +80,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "DMG Dealt +20% to enemies below 50% HP."
   },
   "metadata": {

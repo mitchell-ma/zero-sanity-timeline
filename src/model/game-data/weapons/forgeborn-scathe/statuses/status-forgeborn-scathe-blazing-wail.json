@@ -55,7 +55,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS",
+    "eventCategoryType": "WEAPON_STAT",
     "description": "Heat DMG Dealt +{fire_dmg_up:0.0%}. When the wielder casts an ultimate, the wielder gains Basic Attack DMG Dealt +{normal_atk_up:0.0%} for {duration:0.0}s. Effects of the same name cannot stack."
   },
   "metadata": {

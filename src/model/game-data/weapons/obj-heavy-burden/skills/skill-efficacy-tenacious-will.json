@@ -59,7 +59,8 @@
   "properties": {
     "name": "Efficacy: Tenacious Will",
     "description": "Secondary Attribute +{second_attr_up:0.0%}. When the wielder applies Knocked Down or Weakened, the wielder gains DEF +{def_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
-    "id": "EFFICACY_TENACIOUS_WILL"
+    "id": "EFFICACY_TENACIOUS_WILL",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "OBJ_HEAVY_BURDEN",

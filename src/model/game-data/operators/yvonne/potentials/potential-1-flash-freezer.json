@@ -4,8 +4,8 @@
     "name": "Flash Freezer (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
-    "description": "Combo skill Flashfreezer \u03c537 improved: Effect radius +20%; releases energy 2 more times; and gains an additional 15 Ultimate Energy after dealing DMG."
+    "eventCategoryType": "POTENTIAL",
+    "description": "Combo skill Flashfreezer υ37 improved: Effect radius +20%; releases energy 2 more times; and gains an additional 15 Ultimate Energy after dealing DMG."
   },
   "metadata": {
     "originId": "YVONNE",

@@ -11,7 +11,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "A Shieldguard harasses the enemy, dealing Physical DMG and recovering SP."
   },
   "segments": [

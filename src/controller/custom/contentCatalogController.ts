@@ -3,12 +3,12 @@
  */
 import { ContentCategory, ContentBrowserItem } from '../../consts/contentBrowserTypes';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
-import { getAllWeapons, getAllGearPieces, getGearSetEffect, getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectIds, getAllGearEffectTypes, getGearEffectLabel } from '../gameDataStore';
+import { getAllWeapons, getAllGearPieces, getGear, getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectIds, getAllGearEffectTypes, getGearEffectLabel } from '../gameDataStore';
 import { getAllConsumables, getAllTacticals } from '../../model/game-data/consumablesStore';
 import { getGearSetData } from '../gameDataStore';
-import { getGearSetEffects } from '../../consts/gearSetEffects';
+import { getGears } from '../../consts/gearSetEffects';
 import { getAllSkillLabels } from '../gameDataStore';
-import {  } from '../../consts/enums';
+import { GearSetType } from '../../consts/enums';
 import { getCustomWeapons } from './customWeaponController';
 import { getCustomGearSets } from './customGearController';
 import { getCustomOperators } from './customOperatorController';
@@ -132,11 +132,11 @@ export function getAllContentItems(): ContentBrowserItem[] {
   const seenSets = new Set<string>();
   for (const g of getAllGearPieces()) {
     const key = g.gearSet;
-    if (key === 'NONE' || seenSets.has(key)) continue;
+    if (key === GearSetType.NONE || seenSets.has(key)) continue;
     seenSets.add(key);
     const pieceCount = getAllGearPieces().filter((x) => x.gearSet === key).length;
     const setData = getGearSetData(key);
-    const setEffect = getGearSetEffect(key);
+    const setEffect = getGear(key);
     const rarity = setEffect?.rarity ?? 5;
     items.push({
       id: key,
@@ -173,7 +173,7 @@ export function getAllContentItems(): ContentBrowserItem[] {
   // ── Gear Set Effects ────────────────────────────────────────────────────
   for (const gearSetType of getAllGearEffectTypes()) {
     const defs = getGearEffectDefs(gearSetType);
-    const passiveEntry = getGearSetEffects(gearSetType as import('../../consts/enums').GearSetType);
+    const passiveEntry = getGears(gearSetType as GearSetType);
     const passiveCount = passiveEntry ? Object.keys(passiveEntry.passiveStats).length : 0;
     items.push({
       id: `gse:${gearSetType}`,

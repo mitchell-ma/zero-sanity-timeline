@@ -19,7 +19,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "element": "CRYO",
     "description": "Single retaliation hit fired by Saturated Defense Retaliation. Deals Cryo DMG, applies Cryo Infliction and stagger, recovers Ultimate Energy via SAR Professional, and at P5+ returns Skill Points."
   },

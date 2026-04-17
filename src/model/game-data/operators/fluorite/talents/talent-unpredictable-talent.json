@@ -99,7 +99,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack."
   },
   "metadata": {

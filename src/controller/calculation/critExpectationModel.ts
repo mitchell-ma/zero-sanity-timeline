@@ -15,7 +15,7 @@
  * Dependent statuses consume E_total but don't influence it.
  */
 
-import { StackInteractionType, CritMode, PERMANENT_DURATION } from '../../consts/enums';
+import { StackInteractionType, CritMode, PERMANENT_DURATION, UnitType } from '../../consts/enums';
 import { StatType, resolveEffectStat } from '../../model/enums/stats';
 import { VerbType, NounType } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './valueResolver';
@@ -118,7 +118,7 @@ function getDurationFrames(duration?: { value: ValueNode; unit: string }): numbe
   if (!duration) return PERMANENT_DURATION * FPS;
   const val = resolveValue(duration.value);
   if (val >= PERMANENT_DURATION) return PERMANENT_DURATION * FPS;
-  return duration.unit === 'SECOND' ? Math.round(val * FPS) : val;
+  return duration.unit === UnitType.SECOND ? Math.round(val * FPS) : val;
 }
 
 // ── Config extraction ────────────────────────────────────────────────────────
@@ -649,8 +649,17 @@ export class CritExpectationModel {
         const contribution = prob * ts.value;
         eTotal += contribution;
         if (prob > 1e-6) {
+          // Disambiguate from the same status's per-stack / always-on sources
+          // when the status also provides a non-threshold crit-rate bonus
+          // (e.g. MI Security: 3-piece passive +5% AND at-max-stacks +5%).
+          const baseLabel = ts.label ?? model.config.label;
+          const displayLabel = ts.label
+            ? baseLabel
+            : ts.atStacks === model.config.stackCap
+              ? `${baseLabel} (Max Stacks)`
+              : `${baseLabel} (${ts.atStacks} Stacks)`;
           critSources.push({
-            label: ts.label ?? model.config.label,
+            label: displayLabel,
             statusId: model.config.statusId,
             value: ts.value,
             probability: prob,

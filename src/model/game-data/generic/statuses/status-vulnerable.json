@@ -19,7 +19,7 @@
       "interactionType": "REFRESH"
     },
     "eventType": "STATUS",
-    "eventIdType": "INFLICTION",
+    "eventCategoryType": "INFLICTION",
     "description": "Physical infliction. Stacks up to 4 times. Consumed by physical status applications (Lift, Knock Down, Crush, Breach) to determine their status level."
   },
   "metadata": {

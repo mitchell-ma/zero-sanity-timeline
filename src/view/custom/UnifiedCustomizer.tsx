@@ -38,13 +38,13 @@ import { deleteCustomGearEffect } from '../../controller/custom/customGearEffect
 import { deleteCustomOperatorStatus } from '../../controller/custom/customOperatorStatusController';
 import { deleteCustomOperatorTalent } from '../../controller/custom/customOperatorTalentController';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
-import { getGearPiecesBySet, getWeapon, getWeaponIdByName, getWeaponEffectDefs, getGearEffectDefs, getGenericWeaponSkill, getNamedWeaponSkill, getWeaponStatuses } from '../../controller/gameDataStore';
-import { getGearSetData, getGearSetEffect } from '../../controller/gameDataStore';
-import { getGearSetEffects } from '../../consts/gearSetEffects';
-import { GearSetType, GearCategory, SegmentType, ELEMENT_COLORS, ElementType } from '../../consts/enums';
+import { getGearPiecesBySet, getWeapon, getWeaponIdByName, getWeaponEffectDefs, getGearEffectDefs, getGenericWeaponSkill, getNamedWeaponSkill, getWeaponStats } from '../../controller/gameDataStore';
+import { getGearSetData, getGear } from '../../controller/gameDataStore';
+import { getGears } from '../../consts/gearSetEffects';
+import { GearSetType, GearCategory, SegmentType, ELEMENT_COLORS, ElementType, UnitType, EventCategoryType, CustomWeaponSkillKind } from '../../consts/enums';
 import type { SkillType, SkillDef, EventSegmentData, EventFrameMarker, TimelineEvent } from '../../consts/viewTypes';
 import { computeSegmentsSpan } from '../../consts/viewTypes';
-import { THRESHOLD_MAX, NounType } from '../../dsl/semantics';
+import { THRESHOLD_MAX, NounType, VerbType } from '../../dsl/semantics';
 import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
 import { getLeafValue } from '../../controller/calculation/valueResolver';
 import { operatorToCustomOperator, weaponToCustomWeapon, gearSetToCustomGearSet } from '../../controller/custom/builtinToCustomConverter';
@@ -793,13 +793,13 @@ function CustomWeaponView({ data }: { data: CustomWeapon }) {
           <div key={i} className="ev-item-card">
             <div className="ev-item-name">{skill.label}</div>
             <div className="ev-type-badge">{skill.type}</div>
-            {skill.type === 'STAT_BOOST' && skill.statBoost && (
+            {skill.type === CustomWeaponSkillKind.STAT_BOOST && skill.statBoost && (
               <div className="ev-field-grid">
                 <Field label="Stat" value={skill.statBoost.stat.replace(/_/g, ' ')} />
                 <Field label="Values" value={`[${skill.statBoost.values.join(', ')}]`} />
               </div>
             )}
-            {skill.type === 'NAMED' && skill.namedEffect && (
+            {skill.type === CustomWeaponSkillKind.NAMED && skill.namedEffect && (
               <>
                 <div className="ev-field-grid">
                   <Field label="Effect" value={skill.namedEffect.name} />
@@ -1206,12 +1206,12 @@ function buildMockEvent(entry: { id: string; label: string; data: JsonSkillData 
   const eventSegs: EventSegmentData[] = jsonSegs.map((seg, si) => {
     const dur = seg.properties?.duration as { value: unknown; unit: string } | undefined;
     const durVal = dur ? resolveLeaf(dur.value) : null;
-    const durFrames = durVal != null ? (dur!.unit === 'FRAME' ? durVal : Math.round(durVal * FPS)) : 24;
+    const durFrames = durVal != null ? (dur!.unit === UnitType.FRAME ? durVal : Math.round(durVal * FPS)) : 24;
 
     const frames: EventFrameMarker[] = (seg.frames ?? []).map((f) => {
       const off = (f.properties as Record<string, unknown> | undefined)?.offset as { value: unknown; unit: string } | undefined;
       const offVal = off ? resolveLeaf(off.value) : null;
-      const offFrames = offVal != null ? (off!.unit === 'FRAME' ? offVal : Math.round(offVal * FPS)) : 0;
+      const offFrames = offVal != null ? (off!.unit === UnitType.FRAME ? offVal : Math.round(offVal * FPS)) : 0;
       return { offsetFrame: offFrames };
     });
 
@@ -1360,7 +1360,7 @@ function BuiltinOperatorStatusesView({ operatorId }: { operatorId: string }) {
           for (const frame of (seg.frames ?? [])) {
             for (const clause of (frame.clause ?? [])) {
               for (const eff of (clause.effects ?? [])) {
-                if (eff.verb !== 'APPLY' || eff.object !== 'STATUS') continue;
+                if (eff.verb !== VerbType.APPLY || eff.object !== NounType.STATUS) continue;
                 const statusId = eff.objectId as string;
                 if (statusId && !operatorStatusIds.has(statusId)) referencedGenericIds.add(statusId);
               }
@@ -1378,7 +1378,7 @@ function BuiltinOperatorStatusesView({ operatorId }: { operatorId: string }) {
       : [];
 
     return [...operatorStatuses, ...genericStatuses]
-      .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventIdType !== 'TALENT');
+      .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType !== EventCategoryType.TALENT);
   }, [operatorId]);
   const [openIdxSet, setOpenIdxSet] = useState<Set<number>>(new Set());
 
@@ -1580,7 +1580,7 @@ function BuiltinOperatorView({ id }: { id: string }) {
         {activeCategory === 'talents' && (() => {
           const talentStatuses = getOperatorStatuses(id)
             .map(s => s.serialize() as Record<string, unknown>)
-            .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventIdType === 'TALENT');
+            .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType === EventCategoryType.TALENT);
           return talentStatuses.length > 0 ? talentStatuses.map((s, i) => {
             const props = s.properties as Record<string, unknown>;
             const name = (props.name as string) ?? (props.id as string) ?? `Talent ${i + 1}`;
@@ -1625,7 +1625,7 @@ function BuiltinWeaponView({ id }: { id: string }) {
   const weaponId = getWeaponIdByName(id);
   const weapon = weaponId ? getWeapon(weaponId) : undefined;
   const dslDefs = getWeaponEffectDefs(id);
-  const weaponStatuses = useMemo(() => weaponId ? getWeaponStatuses(weaponId) : [], [weaponId]);
+  const weaponStatuses = useMemo(() => weaponId ? getWeaponStats(weaponId) : [], [weaponId]);
   const [activeTab, setActiveTab] = useState<'skills' | 'statuses'>('skills');
   const [openSkills, setOpenSkills] = useState<Set<number>>(new Set());
   const [openEffects, setOpenEffects] = useState<Set<number>>(new Set());
@@ -1801,10 +1801,10 @@ const GEAR_CATEGORY_LABELS: Record<string, string> = {
 function BuiltinGearSetView({ id }: { id: string }) {
   const gearSetData = getGearSetData(id);
   const registryPieces = getGearPiecesBySet(id);
-  const passiveEntry = getGearSetEffects(id as GearSetType);
+  const passiveEntry = getGears(id as GearSetType);
   const dslDefs = getGearEffectDefs(id);
   const rawEffect = useMemo(() => {
-    const ef = getGearSetEffect(id);
+    const ef = getGear(id);
     return ef ? ef.serialize() as Record<string, unknown> : null;
   }, [id]);
   const [activeTab, setActiveTab] = useState<string>(GearCategory.ARMOR);
@@ -1991,7 +1991,7 @@ function BuiltinSkillView({ id }: { id: string }) {
           {(skillJson!.segments as Record<string, unknown>[]).map((seg, si) => {
             const dur = seg.duration as { value: number; unit: string } | undefined;
             const durVal = dur?.value ?? 0;
-            const durStr = dur ? `${durVal}${dur.unit === 'FRAME' ? 'f' : 's'}` : '';
+            const durStr = dur ? `${durVal}${dur.unit === UnitType.FRAME ? 'f' : 's'}` : '';
             const frames = (seg.frames ?? []) as Record<string, unknown>[];
             const effects: Effect[] = ((seg.clause ?? []) as Predicate[]).flatMap((p: Predicate) => p.effects ?? []);
             const stats = (seg.stats ?? []) as { statType: string; value: number | number[] }[];
@@ -2019,7 +2019,7 @@ function BuiltinSkillView({ id }: { id: string }) {
                   <div className="cv-chain-frames">
                     {frames.map((f, fi) => {
                       const offset = f.offset as { value: number; unit: string } | undefined;
-                      const offsetStr = offset ? `${offset.value}${offset.unit === 'FRAME' ? 'f' : 's'}` : '0';
+                      const offsetStr = offset ? `${offset.value}${offset.unit === UnitType.FRAME ? 'f' : 's'}` : '0';
                       return (
                         <div key={fi} className="cv-frame-card">
                           <div className="cv-frame-header">
@@ -2042,7 +2042,7 @@ function BuiltinSkillView({ id }: { id: string }) {
           <div className="cv-frame-timeline">
             {(skillJson!.frames as Record<string, unknown>[]).map((frame, fi) => {
               const offset = frame.offset as { value: number; unit: string } | undefined;
-              const offsetStr = offset ? `${offset.value}${offset.unit === 'FRAME' ? 'f' : 's'}` : '0';
+              const offsetStr = offset ? `${offset.value}${offset.unit === UnitType.FRAME ? 'f' : 's'}` : '0';
               const fEffects: Effect[] = ((frame.clause ?? []) as Predicate[]).flatMap((p: Predicate) => p.effects ?? []);
               return (
                 <div key={fi} className="cv-frame-card">
@@ -2086,7 +2086,7 @@ function BuiltinSkillView({ id }: { id: string }) {
           {statusEvents.map((se, i) => {
             const props = se.properties as Record<string, unknown> | undefined;
             const dur = (se.duration ?? props?.duration) as { value: number | number[]; unit: string } | undefined;
-            const durStr = dur ? (Array.isArray(dur.value) ? dur.value.join(', ') : dur.value) + (dur.unit === 'FRAME' ? 'f' : 's') : '';
+            const durStr = dur ? (Array.isArray(dur.value) ? dur.value.join(', ') : dur.value) + (dur.unit === UnitType.FRAME ? 'f' : 's') : '';
             return (
               <div key={i} className="ev-item-card">
                 <div className="ev-item-name">{String(se.id)}</div>

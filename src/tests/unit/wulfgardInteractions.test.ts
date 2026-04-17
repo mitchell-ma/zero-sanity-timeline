@@ -81,6 +81,8 @@ jest.mock('../../view/InformationPane', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../../model/game-data/operators/wulfgard/wulfgard.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
+const SCORCHING_FANGS_TALENT_ID: string = require('../../model/game-data/operators/wulfgard/talents/talent-1-scorching-fangs.json').properties.id;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadSkillsJson: _loadWulfgardSkills, loadStatusesJson: _loadWulfgardStatuses } = require('../helpers/loadGameData');
 const mockSkillsJson = _loadWulfgardSkills('WULFGARD');
 const mockStatusesJson = _loadWulfgardStatuses('WULFGARD');
@@ -579,7 +581,7 @@ describe('E. Empowered Battle Skill', () => {
 
 describe('F. Scorching Fangs (Talent)', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sf = mockJson.statusEvents.find((s: any) => s.id === 'WULFGARD_TALENT1_SCORCHING_FANGS');
+  const sf = mockJson.statusEvents.find((s: any) => s.id === SCORCHING_FANGS_TALENT_ID);
 
   test('F1: Scorching Fangs talent exists', () => {
     expect(sf).toBeDefined();

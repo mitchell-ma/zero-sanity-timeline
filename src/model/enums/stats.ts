@@ -59,15 +59,16 @@ export enum StatType {
   DAMAGE_BONUS = "DAMAGE_BONUS",
   /** Damage taken bonus (percentage increase to damage received). Qualified by element in DSL. */
   DAMAGE_TAKEN_BONUS = "DAMAGE_TAKEN_BONUS",
-  /** Elemental damage amplification (percentage). Qualified by element in DSL. */
-  AMP = "AMP",
-  /** Arts/elemental susceptibility (percentage increase to arts damage taken). Qualified by element in DSL. */
-  SUSCEPTIBILITY = "SUSCEPTIBILITY",
+  // AMP, SUSCEPTIBILITY, FRAGILITY must always be qualified in authored DSL
+  // (`{object: STAT, objectId: AMP, objectQualifier: <EL>}` → flattened to
+  // `<EL>_AMP`). No unqualified AMP/SUSCEPTIBILITY stat exists.
+  ARTS_AMP = "ARTS_AMP",
   HEAT_SUSCEPTIBILITY = "HEAT_SUSCEPTIBILITY",
   CRYO_SUSCEPTIBILITY = "CRYO_SUSCEPTIBILITY",
   NATURE_SUSCEPTIBILITY = "NATURE_SUSCEPTIBILITY",
   ELECTRIC_SUSCEPTIBILITY = "ELECTRIC_SUSCEPTIBILITY",
   PHYSICAL_SUSCEPTIBILITY = "PHYSICAL_SUSCEPTIBILITY",
+  ARTS_SUSCEPTIBILITY = "ARTS_SUSCEPTIBILITY",
   /** Element-qualified fragility debuff on enemy (percentage increase to damage taken of that element). */
   PHYSICAL_FRAGILITY = "PHYSICAL_FRAGILITY",
   HEAT_FRAGILITY = "HEAT_FRAGILITY",
@@ -155,13 +156,13 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   // ── Damage factor stats ───────────────────────────────────────────────────
   [StatType.DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
   [StatType.DAMAGE_TAKEN_BONUS]: [StatOwnerType.ENEMY],
-  [StatType.AMP]: [StatOwnerType.OPERATOR],
-  [StatType.SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
+  [StatType.ARTS_AMP]: [StatOwnerType.OPERATOR],
   [StatType.HEAT_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   [StatType.CRYO_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   [StatType.NATURE_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   [StatType.ELECTRIC_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   [StatType.PHYSICAL_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
+  [StatType.ARTS_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   [StatType.PHYSICAL_FRAGILITY]: [StatOwnerType.ENEMY],
   [StatType.HEAT_FRAGILITY]: [StatOwnerType.ENEMY],
   [StatType.CRYO_FRAGILITY]: [StatOwnerType.ENEMY],

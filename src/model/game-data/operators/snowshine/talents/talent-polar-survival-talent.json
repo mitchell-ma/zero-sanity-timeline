@@ -9,7 +9,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Snowfield SAR Assistance treatment values are increased by 15% / 25% at talent level 1 / 2."
   },
   "metadata": {

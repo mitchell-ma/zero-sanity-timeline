@@ -1227,7 +1227,7 @@
     "name": "Seething Wolfblood",
     "description": "An attack with up to 5 sequences that deals Physical DMG.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
     "id": "SEETHING_WOLFBLOOD_BATK"

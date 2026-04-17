@@ -33,6 +33,7 @@ const BS_ID: string = BS_JSON.properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT = 'slot-0';
+const ENEMY_HIT_PARAM_ID = 'ENEMY_HIT';
 
 beforeEach(() => { localStorage.clear(); });
 
@@ -341,7 +342,7 @@ describe('H. P4 SINGLE_TARGET supplied parameter', () => {
   it('H1: BS JSON has ENEMY_HIT supplied parameter with range 1-2, default 1', () => {
     const params = BS_JSON.properties.suppliedParameters?.VARY_BY;
     expect(params).toBeDefined();
-    const enemyHit = params.find((p: { id: string }) => p.id === 'ENEMY_HIT');
+    const enemyHit = params.find((p: { id: string }) => p.id === ENEMY_HIT_PARAM_ID);
     expect(enemyHit).toBeDefined();
     expect(enemyHit.default).toBe(1);
     expect(enemyHit.lowerRange).toBe(1);

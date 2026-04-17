@@ -37,7 +37,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "element": "NATURE",
     "description": "An Improvised Explosive stuck to the target. Slows the target and explodes after a short duration, dealing Nature DMG and applying Nature Infliction."
   },

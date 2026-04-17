@@ -180,7 +180,13 @@ export class EventsQueryService {
     return true;
   }
 
-  private resolveSegmentSusceptibility(ev: TimelineEvent, frame: number, element: ElementType): number {
+  /**
+   * Strict per-element susceptibility lookup — `element` must match the key
+   * in the event's susceptibility map exactly (no ARTS expansion). Used by
+   * `getSusceptibilitySources` for breakdown attribution so an ARTS event
+   * surfaces only under the ARTS category, not under each arts element.
+   */
+  private resolveSegmentSusceptibilityStrict(ev: TimelineEvent, frame: number, element: ElementType): number {
     if (ev.segments.length > 0) {
       const elapsed = this.gameTimeElapsed(ev.startFrame, frame);
       let segStart = 0;
@@ -193,6 +199,22 @@ export class EventsQueryService {
       }
     }
     return ev.susceptibility?.[element] ?? 0;
+  }
+
+  /**
+   * Arts-expanded susceptibility lookup — returns the value for `element`,
+   * falling back to the `ARTS` key when querying one of the four arts
+   * elements. Used by `getSusceptibilityBonus` so arts damage math picks up
+   * ARTS_SUSCEPTIBILITY events without denormalizing the event into four
+   * per-element keys.
+   */
+  private resolveSegmentSusceptibility(ev: TimelineEvent, frame: number, element: ElementType): number {
+    const direct = this.resolveSegmentSusceptibilityStrict(ev, frame, element);
+    if (direct) return direct;
+    if (ARTS_ELEMENTS.has(element)) {
+      return this.resolveSegmentSusceptibilityStrict(ev, frame, ElementType.ARTS);
+    }
+    return 0;
   }
 
   private resolveSegmentLabel(ev: TimelineEvent, frame: number): string {
@@ -244,11 +266,17 @@ export class EventsQueryService {
       // Only count events targeting the requested element. Column ID is
       // either `<ELEMENT>_SUSCEPTIBILITY` or a generic SUSCEPTIBILITY/FOCUS
       // that carries per-element values on the event itself.
+      // ARTS_SUSCEPTIBILITY counts toward any arts element (HEAT/CRYO/NATURE/ELECTRIC).
       const qualified = isQualifiedId(ev.columnId, StatusType.SUSCEPTIBILITY);
       if (qualified) {
         const elem = ev.columnId.slice(0, -(StatusType.SUSCEPTIBILITY.length + 1));
-        if (elem !== element) continue;
-      } else if (ev.susceptibility?.[element] === undefined) {
+        const matches = elem === element
+          || (elem === ElementType.ARTS && ARTS_ELEMENTS.has(element));
+        if (!matches) continue;
+      } else if (
+        ev.susceptibility?.[element] === undefined
+        && !(ARTS_ELEMENTS.has(element) && ev.susceptibility?.[ElementType.ARTS] !== undefined)
+      ) {
         continue;
       }
       n += ev.stacks ?? 1;
@@ -395,14 +423,17 @@ export class EventsQueryService {
       if (events.some(ev => this.isActive(ev, frame))) sum += tf.bonus;
     }
     // Generic element-qualified FRAGILITY status events on enemy.
-    // Unqualified FRAGILITY events apply to all elements; qualified events
-    // (e.g. PHYSICAL_FRAGILITY, HEAT_FRAGILITY) must match the active element.
+    // Unqualified FRAGILITY events apply to all elements; per-element qualified
+    // events (e.g. PHYSICAL_FRAGILITY, HEAT_FRAGILITY) must match the active
+    // element; ARTS_FRAGILITY matches any arts element (HEAT/CRYO/NATURE/ELECTRIC).
     for (const ev of this.fragilityEvents) {
       if (!this.isActive(ev, frame)) continue;
       const qualified = isQualifiedId(ev.columnId, StatusType.FRAGILITY);
       if (qualified) {
         const elem = ev.columnId.slice(0, -(StatusType.FRAGILITY.length + 1));
-        if (elem !== element) continue;
+        const matches = elem === element
+          || (elem === ElementType.ARTS && ARTS_ELEMENTS.has(element));
+        if (!matches) continue;
       }
       const value = ev.statusValue ?? 0;
       if (value > 0) sum += value;
@@ -434,11 +465,19 @@ export class EventsQueryService {
     return this.solidificationEvents.some(ev => this.isActive(ev, frame));
   }
 
+  /**
+   * Strict per-element source listing — ARTS_SUSCEPTIBILITY events are
+   * surfaced only when queried for `ARTS`, not when queried for HEAT / CRYO /
+   * NATURE / ELECTRIC. The per-element sum for arts damage picks up the arts
+   * event via `getSusceptibilityBonus` (which does the ARTS-expansion);
+   * the breakdown display instead groups arts events under an ARTS row so
+   * they aren't duplicated across each arts element.
+   */
   getSusceptibilitySources(frame: number, element: ElementType): MultiplierSource[] {
     const sources: MultiplierSource[] = [];
     for (const ev of this.susceptibilityEvents) {
       if (!this.isActive(ev, frame)) continue;
-      const bonus = this.resolveSegmentSusceptibility(ev, frame, element);
+      const bonus = this.resolveSegmentSusceptibilityStrict(ev, frame, element);
       if (bonus) sources.push({ label: this.resolveSegmentLabel(ev, frame), value: bonus, category: ev.name });
     }
     return sources;
@@ -478,6 +517,10 @@ export class EventsQueryService {
     }
     // Generic element-qualified FRAGILITY status events (e.g. Rossi Razor
     // Clawmark applies PHYSICAL_FRAGILITY + HEAT_FRAGILITY).
+    // ARTS_FRAGILITY is surfaced only under the ARTS query (strict match) so
+    // arts fragility appears once in the breakdown under the ARTS row, not
+    // duplicated under each arts element. The arts damage math still picks
+    // it up via `getFragilityBonus`, which does the ARTS-expansion.
     for (const ev of this.fragilityEvents) {
       if (!this.isActive(ev, frame)) continue;
       const qualified = isQualifiedId(ev.columnId, StatusType.FRAGILITY);

@@ -25,7 +25,7 @@ import { evaluateInteraction } from './conditionEvaluator';
 import { hasSkillPointClause, findDealDamageInClauses } from './clauseQueries';
 import type { ConditionContext } from './conditionEvaluator';
 import type { TimeStopRegion } from './processTimeStop';
-import { VerbType, NounType, DeterminerType, CardinalityConstraintType } from '../../dsl/semantics';
+import { VerbType, NounType, DeterminerType, CardinalityConstraintType, AdjectiveType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -184,7 +184,7 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
       return new Set(INFLICTION_COLUMN_IDS);
 
     case 'STATUS':
-      if (cond.objectId === 'PHYSICAL') {
+      if (cond.objectId === AdjectiveType.PHYSICAL) {
         // APPLY PHYSICAL STATUS — resolve qualifier to specific column, or all physical columns
         if (cond.objectQualifier) return new Set([cond.objectQualifier]);
         return new Set(PHYSICAL_STATUS_COLUMN_IDS);
@@ -377,7 +377,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
 
 function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
-  if ((primaryCond.object !== 'STATUS' && primaryCond.object !== 'INFLICTION') || !primaryCond.objectId) return matches;
+  if ((primaryCond.object !== NounType.STATUS && primaryCond.object !== NounType.INFLICTION) || !primaryCond.objectId) return matches;
 
   // Collect ALL conditions (primary + secondary) that use HAVE — each contributes candidate frames
   const allHaveConds = [primaryCond, ...ctx.secondaryConditions.filter(sc => sc.verb === VerbType.HAVE)];
@@ -424,7 +424,7 @@ function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
   const matches: TriggerMatch[] = [];
   const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, VerbType.RECOVER);
 
-  if (primaryCond.object === 'SKILL_POINT') {
+  if (primaryCond.object === NounType.SKILL_POINT) {
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerEntityId)) continue;
       let cumulativeOffset = 0;

@@ -6,7 +6,7 @@
     "name": "I'LL BLOW YOUR MIND! (Finisher)",
     "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "CRYO",
     "id": "ILL_BLOW_YOUR_MIND_FINISHER"

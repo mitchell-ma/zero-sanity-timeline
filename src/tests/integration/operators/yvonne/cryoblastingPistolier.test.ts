@@ -26,6 +26,7 @@ import { getUltimateEnergyCost } from '../../../../controller/operators/operator
 import { findColumn, getMenuPayload, buildContextMenu, setUltimateEnergyToMax } from '../../helpers';
 import { checkVariantAvailability } from '../../../../controller/timeline/eventValidator';
 import type { AppResult } from '../../helpers';
+import { REACTION_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const YVONNE_ID: string = require('../../../../model/game-data/operators/yvonne/yvonne.json').id;
@@ -36,8 +37,6 @@ const BATK_ID: string = require('../../../../model/game-data/operators/yvonne/sk
 const CRIT_RATE_ID: string = require('../../../../model/game-data/operators/yvonne/statuses/status-crit-stacks.json').properties.id;
 const CRIT_DAMAGE_ID: string = require('../../../../model/game-data/operators/yvonne/statuses/status-crit-damage.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
-
-import { REACTION_COLUMNS, ENEMY_ID } from '../../../../model/channels';
 
 const SLOT = 'slot-0';
 

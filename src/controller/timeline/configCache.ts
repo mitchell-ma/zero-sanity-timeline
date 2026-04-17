@@ -18,8 +18,8 @@ import type { ValueNode } from '../../dsl/semantics';
 import type { EventSegmentData } from '../../consts/viewTypes';
 import type { StatusEventDef } from './eventQueueTypes';
 import { getAllOperatorStatuses } from '../gameDataStore';
-import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
-import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
+import { getAllWeaponStats } from '../../model/game-data/weaponStatusesStore';
+import { getAllGearStats } from '../../model/game-data/gearStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { PERMANENT_DURATION, SegmentType } from '../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -46,8 +46,8 @@ function buildCaches(): void {
   _defCache = new Map();
   const allStatuses = [
     ...getAllOperatorStatuses(),
-    ...getAllWeaponStatuses(),
-    ...getAllGearStatuses(),
+    ...getAllWeaponStats(),
+    ...getAllGearStats(),
   ];
   for (const s of allStatuses) {
     // ── config projection (duration / stacks / cooldown / susceptibility) ──
@@ -69,7 +69,7 @@ function buildCaches(): void {
     //       a parallel `cooldownSeconds` field.
     let cooldownFrames: number | undefined = cdSecs && cdSecs > 0 ? Math.round(cdSecs * FPS) : undefined;
     if (cooldownFrames == null) {
-      // Only OperatorStatus exposes a segments array (WeaponStatus / GearStatus
+      // Only OperatorStatus exposes a segments array (WeaponStat / GearStat
       // are clause-only). Duck-type the read so we don't narrow the union.
       const statusSegments = (s as unknown as { segments?: EventSegmentData[] }).segments;
       const cdSeg = statusSegments?.find((seg: EventSegmentData) =>

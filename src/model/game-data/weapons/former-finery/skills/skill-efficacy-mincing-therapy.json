@@ -57,7 +57,8 @@
   "properties": {
     "name": "Efficacy: Mincing Therapy",
     "description": "Treatment Efficiency +{heal_up:0.0%}. After a Protected operator takes DMG, the wielder restores the said operator's HP by [{heal_will_add:0} + Will×{heal_will_mult:0.00}]. Effect only triggers once every {cd:0}s.",
-    "id": "EFFICACY_MINCING_THERAPY"
+    "id": "EFFICACY_MINCING_THERAPY",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "FORMER_FINERY",

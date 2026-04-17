@@ -14,8 +14,7 @@
  */
 import { TimelineEvent, Column, MiniTimeline, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR, UnitType } from '../../consts/enums';
-import { FPS } from '../../utils/timeline';
+import { ELEMENT_COLORS, ElementType, InteractionModeType, EventStatusType, DEFAULT_EVENT_COLOR } from '../../consts/enums';
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels, getStatusById } from '../gameDataStore';
 import { getOperatorSkill } from '../../model/game-data/operatorSkillsStore';
 import { StackInteractionType } from '../../consts/enums';
@@ -24,8 +23,8 @@ import type { ValueNode } from '../../dsl/semantics';
 import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { formatSegmentShortName, translateDslToken, formatEventLabel } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
-import { getAllWeaponStatuses } from '../../model/game-data/weaponStatusesStore';
-import { getAllGearStatuses } from '../../model/game-data/gearStatusesStore';
+import { getAllWeaponStats } from '../../model/game-data/weaponStatusesStore';
+import { getAllGearStats } from '../../model/game-data/gearStatusesStore';
 
 import type { Slot } from './columnBuilder';
 import type { ValidationMaps } from './eventValidationController';
@@ -44,23 +43,6 @@ function stackLabel(stackNumber: number): string {
   return `${stackNumber}`;
 }
 
-/**
- * Resolve a status def's natural full duration to frames. Used by stack-label
- * positioning to compute apply-time overlaps independent of post-apply
- * CONSUME/REFRESH clamps.
- */
-function statusDefDurationFrames(statusId: string): number {
-  const def = getStatusById(statusId);
-  const dur = def?.duration as { value?: ValueNode; unit?: string } | number | undefined;
-  if (dur == null) return 0;
-  if (typeof dur === 'number') return dur;
-  const raw = dur.value;
-  if (!raw) return 0;
-  const val = typeof raw === 'number' ? raw : resolveValueNode(raw, DEFAULT_VALUE_CONTEXT);
-  if (typeof val !== 'number') return 0;
-  return dur.unit === UnitType.SECOND ? Math.round(val * FPS) : val;
-}
-
 interface StatusStackInfo {
   instances: number;
   verb: string;
@@ -71,7 +53,7 @@ let statusStackCache: Map<string, StatusStackInfo> | null = null;
 function getStatusStackInfo(statusId: string): StatusStackInfo | undefined {
   if (!statusStackCache) {
     statusStackCache = new Map();
-    for (const se of [...getAllOperatorStatuses(), ...getAllWeaponStatuses(), ...getAllGearStatuses()]) {
+    for (const se of [...getAllOperatorStatuses(), ...getAllWeaponStats(), ...getAllGearStats()]) {
       if (!se.id || statusStackCache.has(se.id)) continue;
       const rawLimit = se.stacks?.limit;
       const limit = rawLimit == null ? 1
@@ -112,6 +94,25 @@ function resolveMaxPossibleLimit(node: ValueNode): number {
  * ticks if clamped to 1s). Used to opt out of visual tiling for events
  * whose per-segment frame offsets would otherwise be cut off.
  */
+/**
+ * True when the status has at least one segment frame at offset > 0 (i.e., an
+ * interior damage/effect tick that can't be visually clamped). Used by
+ * DYNAMIC_SPLIT slot assignment to prevent such statuses from sharing a slot:
+ * tiling them would hide the interior frames. Frames at offset 0 don't count —
+ * they render at event start regardless of clamping.
+ */
+function hasInteriorSegmentFrames(statusId: string): boolean {
+  const def = getStatusById(statusId);
+  if (!def) return false;
+  for (const seg of def.segments) {
+    if (!seg.frames) continue;
+    for (const f of seg.frames) {
+      if (f.offsetFrame > 0) return true;
+    }
+  }
+  return false;
+}
+
 export function clampWouldHideFrame(statusId: string, visualDur: number): boolean {
   const statusDef = getStatusById(statusId);
   if (!statusDef) return false;
@@ -190,8 +191,6 @@ export function computeStatusViewOverrides(
     for (const [columnId, typeEvents] of Array.from(byType.entries())) {
       if (REACTION_COLUMN_IDS.has(columnId)) continue;
 
-      // Include all events (including consumed) for labeling — consumed events
-      // with recorded stacks still need their stack label for display.
       const allSorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       if (allSorted.length === 0) continue;
       const baseName = getAllInflictionLabels()[columnId] ?? resolveEventLabel(allSorted[0]);
@@ -199,55 +198,90 @@ export function computeStatusViewOverrides(
       const statusInfo = getStatusStackInfo(allSorted[0].name);
       const singleInstance = isSingleInstanceStatus(allSorted[0].name);
       const stackable = isStackableStatus(allSorted[0].name);
-      // Prefer the per-event runtime-resolved cap (stamped at apply time) over the
-      // static config default — loadout-dependent limits (e.g. Pog P5 Fervent Morale
-      // cap=5 via the SOURCE-operator potential gate) are only correct per-event.
-      // Use the max across events in case different applies had different caps.
+
+      const hasRecordedStacks = allSorted.some((ev) => ev.stacks != null);
+      if (allSorted.length <= 1 && !stackable && !hasRecordedStacks) continue;
+
+      // NONE accumulators (Living Banner, Wildland Trekker): one event = one
+      // stack of a running counter. Each event gets a unique position label
+      // (1, 2, …, 20) based on how many preceding events overlap at its start.
+      // Uses clamped ends so consumed events don't inflate post-consume labels.
+      const isNoneAccumulator = statusInfo?.verb === StackInteractionType.NONE;
+
+      // Stack limit for label capping: prefer per-event runtime-resolved cap
+      // (stamped at apply time for loadout-dependent limits like P5 Fervent
+      // Morale cap=5), fall back to static config limit.
       const runtimeLimit = allSorted.reduce<number | undefined>((acc, ev) => {
         if (ev.maxStacks == null) return acc;
         return acc == null ? ev.maxStacks : Math.max(acc, ev.maxStacks);
       }, undefined);
       const stackLimit = runtimeLimit ?? statusInfo?.instances;
 
-      const hasRecordedStacks = allSorted.some((ev) => ev.stacks != null);
-      if (allSorted.length <= 1 && !stackable && !hasRecordedStacks) continue;
-
-      // Stable apply-time position: count prior events whose UNCONSUMED
-      // (status-def-duration) lifecycle would overlap this event's startFrame.
-      // Using eventEndFrame here was wrong — it returns the CLAMPED end of
-      // consumed events, so a later CS consume could retroactively shift
-      // surviving stacks' labels (e.g. PI "I" → "II" after first stack
-      // consumed). Position should reflect "this was the Nth concurrent
-      // stack at apply time" and stay invariant once the event exists.
-      const defDur = statusDefDurationFrames(allSorted[0].name);
+      // Transition-based stack count (for pool-count statuses like RESET/MERGE).
+      // For each event emit +stacks at its startFrame and -stacks at its
+      // (possibly consume-clamped) endFrame. Walk transitions in order; at each
+      // unique frame the running total = cumulative active stack count.
+      // All events at the same start frame share the same label (pool count).
+      //
+      // Consume ordering: at the same frame, process -deltas before +deltas
+      // so a leftover created by an absorb-and-reapply consume reflects the
+      // post-consume total, not the pre-consume total.
+      interface Transition { frame: number; delta: number }
+      const countAtFrame = new Map<number, number>();
+      if (!isNoneAccumulator) {
+        const transitions: Transition[] = [];
+        for (const ev of allSorted) {
+          const s = ev.stacks ?? 1;
+          if (s === 0) continue;
+          transitions.push({ frame: ev.startFrame, delta: s });
+          transitions.push({ frame: eventEndFrame(ev), delta: -s });
+        }
+        transitions.sort((a, b) => a.frame - b.frame || a.delta - b.delta);
+        let running = 0;
+        let ti = 0;
+        while (ti < transitions.length) {
+          const f = transitions[ti].frame;
+          while (ti < transitions.length && transitions[ti].frame === f) {
+            running += transitions[ti].delta;
+            ti++;
+          }
+          countAtFrame.set(f, running);
+        }
+      }
 
       for (const ev of allSorted) {
-        let position: number;
-        let activeEarlier = 0;
-        for (const prev of allSorted) {
-          if (prev.uid === ev.uid) break;
-          // Use the prev event's apply-time end (startFrame + status duration),
-          // not its current clamped end. This decouples labeling from later
-          // CONSUME/REFRESH mutations.
-          const prevApplyEnd = defDur > 0 ? prev.startFrame + defDur : eventEndFrame(prev);
-          if (prevApplyEnd >= ev.startFrame) activeEarlier++;
+        let labelValue: number;
+        if (ev.stacks != null) {
+          // Event has a pre-computed stack label (inflictions, physical statuses).
+          // Use it directly — infliction stacks represent the total at creation
+          // time, not how many stacks this event adds.
+          labelValue = ev.stacks;
+        } else if (isNoneAccumulator) {
+          // Per-event position: count preceding events whose clamped end
+          // overlaps this event's startFrame. Uses `>=` (inclusive) so events
+          // that triggered a same-frame CONSUME (e.g. Arclight cast2 whose
+          // apply trips the threshold and clamps cast1's end to F=cast2.start,
+          // or Living Banner's 81st event that fires the threshold at its own
+          // start frame) still see the prior batch as "active at apply time".
+          // Post-consume NEW batches at later frames naturally get correct
+          // labels: consumed priors have end=Fconsume < new.start, excluded.
+          let activeEarlier = 0;
+          for (const prev of allSorted) {
+            if (prev.uid === ev.uid) break;
+            if ((prev.stacks ?? 1) === 0) continue;
+            if (eventEndFrame(prev) >= ev.startFrame) activeEarlier++;
+          }
+          labelValue = activeEarlier + 1;
+        } else {
+          // Transition-based pool count (RESET/MERGE/REFRESH): running total
+          // at this event's start frame. Each event = 1 stack (stacks field
+          // is not set for these).
+          labelValue = countAtFrame.get(ev.startFrame) ?? 1;
         }
-        position = activeEarlier + 1;
-        if (stackLimit != null && position > stackLimit) position = stackLimit;
+        if (stackLimit != null && labelValue > stackLimit) labelValue = stackLimit;
+        const displayLabel = singleInstance ? baseName : `${baseName} ${stackLabel(Math.max(1, labelValue))}`;
 
-        // Labeling: prefer ev.stacks when set (apply-time stamp for inflictions,
-        // pre-consume pool stamp for restack-generated historical events, live
-        // pool count for active restack events). Fall back to the apply-time
-        // position otherwise. Without this, restack generations 2+ inherit
-        // phantom overlaps from the defDur of earlier (consumed) generations
-        // and their capped position mis-labels them (e.g. Steel Oath restacked
-        // stacks=4 but position=6 → capped to V instead of IV).
-        const labelValue = ev.stacks != null ? ev.stacks : position;
-        const displayLabel = singleInstance ? baseName : `${baseName} ${stackLabel(labelValue)}`;
-
-        const override: StatusViewOverride = {
-          label: displayLabel,
-        };
+        const override: StatusViewOverride = { label: displayLabel };
 
         // Visual truncation: truncate at the next event's start frame so
         // stacking events tile without overlapping wrappers. Applies to all
@@ -259,10 +293,6 @@ export function computeStatusViewOverrides(
         // (b) Events whose internal frames would be hidden by the clamp —
         //     e.g. Waterspout has damage ticks at 1s/2s/3s; clamping to 1s
         //     would hide the 2s/3s ticks, so skip the clamp.
-        //
-        // Multi-instance RESET (limit>1 incl. INFINITE) and NONE accumulators
-        // do clamp when no frame would be hidden — that's how simultaneous
-        // applies collapse into one visible block with a stack-count label.
         const isIndependentReset = (statusInfo?.instances ?? 1) <= 1
           && statusInfo?.verb === StackInteractionType.RESET;
         const allIdx = allSorted.indexOf(ev);
@@ -378,7 +408,7 @@ export function resolveEventLabel(ev: TimelineEvent): string {
     const level = ev.statusLevel ?? 1;
     return `${base} ${ROMAN[level - 1] ?? level}`;
   }
-  return formatEventLabel(base, ev.name, getStatusById(ev.name)?.eventIdType);
+  return formatEventLabel(base, ev.name, getStatusById(ev.name)?.eventCategoryType);
 }
 
 /**
@@ -677,10 +707,14 @@ function computeMicroPositions(
     };
 
     // typeKey resolution: events whose columnId matches a declared micro-column
-    // use the columnId as their typeKey (so all instances of the same declared
-    // type share one slot). Events whose columnId isn't declared fall back to uid.
+    // normally share a slot via the columnId typeKey (lets stacking statuses like
+    // Focus or Link tile in one visual column). But statuses with interior segment
+    // frames (Waterspout's 1s/2s/3s damage ticks) can't be visually clamped without
+    // hiding frames — so each instance needs its own slot. Fall back to uid in
+    // that case; the label/visualActivationDuration logic already treats these
+    // events as independent.
     const typeKeyOf = (ev: TimelineEvent) =>
-      mcIdSet.has(ev.columnId) ? ev.columnId : ev.uid;
+      (mcIdSet.has(ev.columnId) && !hasInteriorSegmentFrames(ev.name)) ? ev.columnId : ev.uid;
 
     // Pre-assign slots to every declared micro-column that has at least one event,
     // in definition order. This guarantees each declared type gets its own dedicated

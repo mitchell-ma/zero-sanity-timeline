@@ -3,7 +3,7 @@
     "name": "Thunderlance: Strike",
     "description": "When controlled operator performs a Final Strike on a target with active Electric Infliction or Electrification. Leaps into mid-air and throws 3 Thunderlances at the target, then deals 1 hit of Electric DMG to enemies in the area of effect.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
     "id": "THUNDERLANCE_STRIKE"
   },

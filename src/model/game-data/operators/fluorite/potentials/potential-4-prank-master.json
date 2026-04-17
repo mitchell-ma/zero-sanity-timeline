@@ -4,7 +4,7 @@
     "name": "Prank Master (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate Apex Prankster improved: Ultimate Energy cost -10%."
   },
   "metadata": {

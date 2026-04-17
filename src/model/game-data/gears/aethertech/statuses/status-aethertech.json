@@ -24,7 +24,7 @@
     }
   ],
   "properties": {
-    "id": "AETHERTECH",
+    "id": "AETHERTECH_STAT",
     "name": "Æthertech",
     "duration": {
       "value": {
@@ -42,7 +42,7 @@
     },
     "description": "Physical DMG +8% for 15s after applying Vulnerability. Max 4 stacks.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "AETHERTECH",

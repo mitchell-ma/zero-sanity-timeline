@@ -20,7 +20,7 @@
     }
   ],
   "properties": {
-    "id": "MORDVOLT_RESISTANT",
+    "id": "MORDVOLT_RESISTANT_STAT",
     "name": "Mordvolt Resistant",
     "duration": {
       "value": {
@@ -38,7 +38,7 @@
     },
     "description": "Treatment Effect +30% when HP below 50%.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "MORDVOLT_RESISTANT",

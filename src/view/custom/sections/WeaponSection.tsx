@@ -3,7 +3,7 @@
  * Identity stays collapsible; Skills and Statuses are in a tab container.
  */
 import { useState } from 'react';
-import { WeaponType, ElementType } from '../../../consts/enums';
+import { WeaponType, ElementType, CustomWeaponSkillKind } from '../../../consts/enums';
 import type { CustomWeapon, CustomWeaponSkillDef } from '../../../model/custom/customWeaponTypes';
 import { maxSkillsForRarity } from '../../../model/custom/customWeaponTypes';
 import type { CustomStatusEventDef } from '../../../model/custom/customStatusEventTypes';
@@ -16,7 +16,11 @@ import StatusEventFields from './StatusEventFields';
 const WEAPON_TYPES = Object.values(WeaponType);
 const RARITIES = [3, 4, 5, 6] as const;
 
-type WeaponTab = 'SKILLS' | 'STATUSES';
+/** Tab identifiers for the weapon section's two-tab container. */
+enum WeaponTab {
+  SKILLS = 'SKILLS',
+  STATUSES = 'STATUSES',
+}
 
 interface Props {
   data: CustomWeapon;
@@ -87,17 +91,17 @@ function SkillEditor({ skill, index, onChange, onRemove }: {
         <input type="text" value={skill.label} onChange={(e) => onChange({ ...skill, label: e.target.value })} />
       </label>
       <div className="wz-radio-group">
-        <label className={`wz-radio${skill.type === 'STAT_BOOST' ? ' active' : ''}`}>
-          <input type="radio" checked={skill.type === 'STAT_BOOST'} onChange={() => onChange({ ...skill, type: 'STAT_BOOST' })} />
+        <label className={`wz-radio${skill.type === CustomWeaponSkillKind.STAT_BOOST ? ' active' : ''}`}>
+          <input type="radio" checked={skill.type === CustomWeaponSkillKind.STAT_BOOST} onChange={() => onChange({ ...skill, type: CustomWeaponSkillKind.STAT_BOOST })} />
           Stat Boost
         </label>
-        <label className={`wz-radio${skill.type === 'NAMED' ? ' active' : ''}`}>
-          <input type="radio" checked={skill.type === 'NAMED'} onChange={() => onChange({ ...skill, type: 'NAMED' })} />
+        <label className={`wz-radio${skill.type === CustomWeaponSkillKind.NAMED ? ' active' : ''}`}>
+          <input type="radio" checked={skill.type === CustomWeaponSkillKind.NAMED} onChange={() => onChange({ ...skill, type: CustomWeaponSkillKind.NAMED })} />
           Named Effect
         </label>
       </div>
-      {skill.type === 'STAT_BOOST' && <StatBoostEditor skill={skill} onChange={onChange} />}
-      {skill.type === 'NAMED' && skill.namedEffect && (
+      {skill.type === CustomWeaponSkillKind.STAT_BOOST && <StatBoostEditor skill={skill} onChange={onChange} />}
+      {skill.type === CustomWeaponSkillKind.NAMED && skill.namedEffect && (
         <div className="wizard-section" style={{ gap: '0.5rem' }}>
           <label className="wz-field">
             <span>Effect Name</span>
@@ -192,7 +196,7 @@ function SkillEditor({ skill, index, onChange, onRemove }: {
 }
 
 export default function WeaponSection({ data, onChange, originalId }: Props) {
-  const [activeTab, setActiveTab] = useState<WeaponTab>('SKILLS');
+  const [activeTab, setActiveTab] = useState<WeaponTab>(WeaponTab.SKILLS);
   const update = (patch: Partial<CustomWeapon>) => onChange({ ...data, ...patch });
   const maxSkills = maxSkillsForRarity(data.weaponRarity);
   const statusEvents = data.statusEvents ?? [];
@@ -242,8 +246,8 @@ export default function WeaponSection({ data, onChange, originalId }: Props) {
       <div className="ops-skill-tabs" style={{ marginTop: '0.5rem' }}>
         <button
           type="button"
-          className={`ops-skill-tab${activeTab === 'SKILLS' ? ' ops-skill-tab--active' : ''}`}
-          onClick={() => setActiveTab('SKILLS')}
+          className={`ops-skill-tab${activeTab === WeaponTab.SKILLS ? ' ops-skill-tab--active' : ''}`}
+          onClick={() => setActiveTab(WeaponTab.SKILLS)}
         >
           <span className="ops-skill-tab-label">
             Skills
@@ -252,8 +256,8 @@ export default function WeaponSection({ data, onChange, originalId }: Props) {
         </button>
         <button
           type="button"
-          className={`ops-skill-tab${activeTab === 'STATUSES' ? ' ops-skill-tab--active' : ''}`}
-          onClick={() => setActiveTab('STATUSES')}
+          className={`ops-skill-tab${activeTab === WeaponTab.STATUSES ? ' ops-skill-tab--active' : ''}`}
+          onClick={() => setActiveTab(WeaponTab.STATUSES)}
         >
           <span className="ops-skill-tab-label">
             Statuses
@@ -263,7 +267,7 @@ export default function WeaponSection({ data, onChange, originalId }: Props) {
       </div>
 
       {/* ─── Skills tab ──────────────────────────────────────────── */}
-      {activeTab === 'SKILLS' && (
+      {activeTab === WeaponTab.SKILLS && (
         <div className="wizard-section">
           {data.skills.map((skill, i) => (
             <SkillEditor
@@ -279,7 +283,7 @@ export default function WeaponSection({ data, onChange, originalId }: Props) {
             />
           ))}
           {data.skills.length < maxSkills && (
-            <button className="btn-add-sm" onClick={() => update({ skills: [...data.skills, { type: 'STAT_BOOST', label: `Skill ${data.skills.length + 1}`, statBoost: { stat: 'ATTACK_BONUS', values: Array(9).fill(0) } }] })}>
+            <button className="btn-add-sm" onClick={() => update({ skills: [...data.skills, { type: CustomWeaponSkillKind.STAT_BOOST, label: `Skill ${data.skills.length + 1}`, statBoost: { stat: 'ATTACK_BONUS', values: Array(9).fill(0) } }] })}>
               + Add Skill
             </button>
           )}
@@ -287,7 +291,7 @@ export default function WeaponSection({ data, onChange, originalId }: Props) {
       )}
 
       {/* ─── Statuses tab ────────────────────────────────────────── */}
-      {activeTab === 'STATUSES' && (
+      {activeTab === WeaponTab.STATUSES && (
         <div className="wizard-section">
           {statusEvents.length === 0 && (
             <div className="ops-empty" style={{ padding: '0.75rem 0' }}>No status events. Add statuses this weapon produces.</div>

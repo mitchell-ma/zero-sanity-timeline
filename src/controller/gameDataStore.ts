@@ -4,7 +4,7 @@
  * All consumers import from here. configStore and sub-stores are internal.
  */
 
-import { ElementType, ArtsReactionType, PhysicalStatusType, StatusType } from '../consts/enums';
+import { ElementType, ArtsReactionType, PhysicalStatusType, StatusType, EventCategoryType } from '../consts/enums';
 import { NounType } from '../dsl/semantics';
 import { t } from '../locales/locale';
 import {
@@ -62,13 +62,13 @@ import {
   type GearPiece,
 
   // Gear statuses & set effects
-  getGearSetEffect,
-  getAllGearSetEffectIds,
-  getAllGearSetEffects,
-  getGearStatuses,
-  getAllGearStatusOriginIds,
-  type GearSetEffect,
-  type GearStatus,
+  getGear,
+  getAllGearIds,
+  getAllGears,
+  getGearStats,
+  getAllGearStatOriginIds,
+  type Gear,
+  type GearStat,
 
   // Weapon skills
   getGenericWeaponSkill,
@@ -79,16 +79,16 @@ import {
   type WeaponSkill,
 
   // Weapon statuses
-  getWeaponStatuses,
-  getAllWeaponStatusOriginIds,
+  getWeaponStats,
+  getAllWeaponStatOriginIds,
 
   // Weapon & gear effects
   getWeaponEffectDefs,
   getGearEffectDefs,
   getWeaponTriggerDefs,
-  getWeaponStatusTriggerDefs,
+  getWeaponStatTriggerDefs,
   getGearTriggerDefs,
-  getGearStatusTriggerDefs,
+  getGearStatTriggerDefs,
   getConsumablePassiveDef,
   getTacticalTriggerDef,
   getAllWeaponEffectIds,
@@ -165,8 +165,8 @@ import {
 export type {
   Weapon,
   GearPiece,
-  GearSetEffect,
-  GearStatus,
+  Gear,
+  GearStat,
   WeaponSkill,
   WeaponSkillStatResult,
   OperatorBase,
@@ -197,8 +197,8 @@ export { registerCustomGearPiece, deregisterCustomGearPiece };
 
 // ── Gear statuses & set effects ─────────────────────────────────────────────
 
-export { getGearSetEffect, getAllGearSetEffectIds, getAllGearSetEffects };
-export { getGearStatuses, getAllGearStatusOriginIds };
+export { getGear, getAllGearIds, getAllGears };
+export { getGearStats, getAllGearStatOriginIds };
 
 // ── Weapon skills ───────────────────────────────────────────────────────────
 
@@ -207,12 +207,12 @@ export { getGenericSkillStats, getNamedSkillPassiveStats };
 
 // ── Weapon statuses ─────────────────────────────────────────────────────────
 
-export { getWeaponStatuses, getAllWeaponStatusOriginIds };
+export { getWeaponStats, getAllWeaponStatOriginIds };
 
 // ── Weapon & gear effects ──────────────────────────────────────────────────
 
 export { getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectIds, getAllGearEffectTypes };
-export { getWeaponTriggerDefs, getWeaponStatusTriggerDefs, getGearTriggerDefs, getGearStatusTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef };
+export { getWeaponTriggerDefs, getWeaponStatTriggerDefs, getGearTriggerDefs, getGearStatTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef };
 export { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs };
 export { registerCustomGearEffectDefs, deregisterCustomGearEffectDefs };
 export { getGearEffectLabel, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions };
@@ -366,19 +366,19 @@ export function getAllStatusLabels(): Record<string, string> {
     if (status.name) labels[status.id] = status.name;
   }
   // Weapon statuses
-  for (const originId of getAllWeaponStatusOriginIds()) {
-    for (const ws of getWeaponStatuses(originId)) {
+  for (const originId of getAllWeaponStatOriginIds()) {
+    for (const ws of getWeaponStats(originId)) {
       if (ws.name && ws.id) labels[ws.id] = ws.name;
     }
   }
   // Gear statuses
-  for (const originId of getAllGearStatusOriginIds()) {
-    for (const gs of getGearStatuses(originId)) {
+  for (const originId of getAllGearStatOriginIds()) {
+    for (const gs of getGearStats(originId)) {
       if (gs.name && gs.id) labels[gs.id] = gs.name;
     }
   }
   // Gear set effects
-  for (const gse of getAllGearSetEffects()) {
+  for (const gse of getAllGears()) {
     if (gse.name && gse.id) labels[gse.id] = gse.name;
   }
   _statusLabels = labels;
@@ -440,27 +440,94 @@ export function getStatusById(statusId: string): OperatorStatus | undefined {
   return buildStatusByIdCache().get(statusId);
 }
 
+/** Look up the EventCategoryType for any status by ID (operator, weapon, or gear). */
+export function getStatusCategoryById(statusId: string): EventCategoryType | undefined {
+  const opStatus = buildStatusByIdCache().get(statusId);
+  if (opStatus) return opStatus.categoryType;
+  for (const originId of getAllWeaponStatOriginIds()) {
+    for (const ws of getWeaponStats(originId)) {
+      if (ws.id === statusId) return ws.categoryType;
+    }
+  }
+  for (const originId of getAllGearStatOriginIds()) {
+    for (const gs of getGearStats(originId)) {
+      if (gs.id === statusId) return gs.categoryType;
+    }
+  }
+  for (const gse of getAllGears()) {
+    if (gse.id === statusId) return gse.categoryType;
+  }
+  // Consumables
+  if (getConsumable(statusId)) return EventCategoryType.CONSUMABLE;
+  // Tacticals
+  if (getTactical(statusId)) return EventCategoryType.TACTICAL;
+  return undefined;
+}
+
 /** Look up any status definition (operator, weapon, or gear) and return serialized JSON. */
 export function getAnyStatusSerialized(statusId: string): Record<string, unknown> | null {
   const opStatus = buildStatusByIdCache().get(statusId);
   if (opStatus) return opStatus.serialize() as Record<string, unknown>;
-  for (const originId of getAllWeaponStatusOriginIds()) {
-    for (const ws of getWeaponStatuses(originId)) {
+  for (const originId of getAllWeaponStatOriginIds()) {
+    for (const ws of getWeaponStats(originId)) {
       if (ws.id === statusId) return ws.serialize() as Record<string, unknown>;
     }
   }
-  for (const originId of getAllGearStatusOriginIds()) {
-    for (const gs of getGearStatuses(originId)) {
+  for (const originId of getAllGearStatOriginIds()) {
+    for (const gs of getGearStats(originId)) {
       if (gs.id === statusId) return gs.serialize() as Record<string, unknown>;
     }
   }
-  for (const gse of getAllGearSetEffects()) {
+  for (const gse of getAllGears()) {
     if (gse.id === statusId) return gse.serialize() as Record<string, unknown>;
   }
   return null;
 }
 
 let _statusElementMap: Record<string, string> | null = null;
+
+// ── Status categories (EventCategoryType) ───────────────────────────────────
+
+let _statusCategories: Record<string, string> | null = null;
+
+/**
+ * Scan all status sources and return a map of EventCategoryType → display label
+ * for every category that actually exists in the game data.
+ */
+export function getAllStatusCategories(): Record<string, string> {
+  if (_statusCategories) return _statusCategories;
+  const cats = new Set<EventCategoryType>();
+  // Operator statuses (includes generic)
+  for (const status of getAllOperatorStatuses()) {
+    if (status.categoryType) cats.add(status.categoryType);
+  }
+  // Weapon statuses
+  for (const originId of getAllWeaponStatOriginIds()) {
+    for (const ws of getWeaponStats(originId)) {
+      cats.add(ws.categoryType);
+    }
+  }
+  // Gear set effects
+  for (const gse of getAllGears()) {
+    cats.add(gse.categoryType);
+  }
+  // Gear statuses
+  for (const originId of getAllGearStatOriginIds()) {
+    for (const gs of getGearStats(originId)) {
+      cats.add(gs.categoryType);
+    }
+  }
+  // Consumable + tactical categories always exist
+  cats.add(EventCategoryType.CONSUMABLE);
+  cats.add(EventCategoryType.TACTICAL);
+
+  const labels: Record<string, string> = {};
+  for (const cat of Array.from(cats)) {
+    labels[cat] = t(`statusCategory.${cat}`) || cat;
+  }
+  _statusCategories = labels;
+  return _statusCategories;
+}
 
 export function getStatusElementMap(): Record<string, string> {
   if (_statusElementMap) return _statusElementMap;

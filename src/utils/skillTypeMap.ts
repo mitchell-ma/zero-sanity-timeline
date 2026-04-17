@@ -1,19 +1,19 @@
 /**
  * Shared skill type map builder.
  *
- * Reads eventIdType/eventQualifierType from skill properties to build a
+ * Reads eventCategoryType/eventQualifierType from skill properties to build a
  * hierarchical map preserving the column→sub-type relationship:
  *
  *   { BASIC_ATTACK: { BATK: [id, ...], FINISHER: [id], DIVE: [id] },
  *     BATTLE: [id, ...], COMBO: [id, ...], ULTIMATE: [id, ...] }
  *
  * Skills with eventQualifierType (BASIC_ATTACK sub-types) are nested under
- * their eventIdType. Skills without a qualifier are stored as flat arrays.
+ * their eventCategoryType. Skills without a qualifier are stored as flat arrays.
  */
 
 /** Minimal skill shape needed for type map building. */
 interface SkillLike {
-  eventIdType?: string;
+  eventCategoryType?: string;
   eventQualifierType?: string;
 }
 
@@ -32,7 +32,7 @@ export function buildSkillTypeMap(skills: ReadonlyMap<string, SkillLike> | Recor
     : Object.entries(skills).map(([id, s]) => [id, s.properties ?? s] as [string, SkillLike]);
 
   for (const [id, skill] of entries) {
-    const idType = skill.eventIdType;
+    const idType = skill.eventCategoryType;
     if (!idType) continue;
 
     if (skill.eventQualifierType) {

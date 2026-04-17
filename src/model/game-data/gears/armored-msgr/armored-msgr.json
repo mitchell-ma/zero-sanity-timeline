@@ -23,7 +23,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ARMORED_MSGR",
+          "objectId": "ARMORED_MSGR_STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
@@ -37,7 +37,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Strength +50. When the wearer's HP drops below 50%, the wearer gains 30% DMG Reduction against all types of DMG.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_EFFECT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
     "originId": "game",

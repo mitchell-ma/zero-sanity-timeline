@@ -4,7 +4,7 @@
     "name": "Link Aggregation (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate Stack Overflow improved: Ultimate Energy cost -10%."
   },
   "metadata": {

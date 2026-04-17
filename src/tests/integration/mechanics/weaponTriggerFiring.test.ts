@@ -27,7 +27,7 @@ import type { AppResult } from '../helpers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const WEAPON_SKILL_ID: string = require('../../../model/game-data/weapons/forgeborn-scathe/skills/skill-twilight-blazing-wail.json').properties.id;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const WEAPON_STATUS_ID: string = require('../../../model/game-data/weapons/forgeborn-scathe/statuses/status-forgeborn-scathe-blazing-wail.json').properties.id;
+const WEAPON_STAT_ID: string = require('../../../model/game-data/weapons/forgeborn-scathe/statuses/status-forgeborn-scathe-blazing-wail.json').properties.id;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const WEAPON_ID: string = require('../../../model/game-data/weapons/forgeborn-scathe/forgeborn-scathe.json').properties.id;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -95,7 +95,7 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
 
     // No weapon status events before casting ultimate
     const beforeStatus = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
+      ev => ev.columnId === WEAPON_STAT_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(beforeStatus).toHaveLength(0);
 
@@ -105,7 +105,7 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
 
     // Weapon status event should now exist
     const afterStatus = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
+      ev => ev.columnId === WEAPON_STAT_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(afterStatus).toHaveLength(1);
 
@@ -127,7 +127,7 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
 
     // The weapon status event should be routed to the operator status column
     const weaponStatusEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
+      ev => ev.columnId === WEAPON_STAT_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(weaponStatusEvents).toHaveLength(1);
     expect(weaponStatusEvents[0].startFrame).toBeGreaterThan(0);
@@ -149,7 +149,7 @@ describe('Weapon Trigger Firing — Status Applied on Ultimate', () => {
     });
 
     const statusEvents = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === WEAPON_STATUS_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
+      ev => ev.columnId === WEAPON_STAT_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(statusEvents).toHaveLength(0);
   });

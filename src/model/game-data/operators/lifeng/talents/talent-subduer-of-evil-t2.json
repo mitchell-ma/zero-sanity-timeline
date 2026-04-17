@@ -24,16 +24,32 @@
   ],
   "segments": [
     {
-      "metadata": { "eventComponentType": "SEGMENT" },
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
       "properties": {
-        "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" },
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        },
         "name": "Subduer of Evil",
         "element": "PHYSICAL"
       },
       "frames": [
         {
-          "metadata": { "eventComponentType": "FRAME" },
-          "properties": { "offset": { "value": 0, "unit": "SECOND" }, "element": "PHYSICAL" },
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            },
+            "element": "PHYSICAL"
+          },
           "clause": [
             {
               "conditions": [],
@@ -47,7 +63,11 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "TALENT_LEVEL",
-                      "value": [0, 0.5, 1],
+                      "value": [
+                        0,
+                        0.5,
+                        1
+                      ],
                       "of": {
                         "object": "OPERATOR",
                         "determiner": "THIS"
@@ -82,9 +102,12 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "stacks": {
-      "limit": { "verb": "IS", "value": 1 },
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
       "interactionType": "RESET"
     },
     "description": "Applying Knock Down also deals 100% ATK of Physical DMG."

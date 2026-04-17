@@ -945,7 +945,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     );
 
     // Focus should be derived from Antal's battle skill frame
-    const focusEvents = processed.filter((e) => e.columnId === 'FOCUS');
+    const focusEvents = processed.filter((e) => e.columnId === StatusType.FOCUS);
     expect(focusEvents.length).toBeGreaterThan(0);
 
     // Combo activation window should appear
@@ -1026,7 +1026,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     );
 
     // Focus should be derived from Antal's battle skill
-    const focusEvents = processed.filter((e) => e.columnId === 'FOCUS');
+    const focusEvents = processed.filter((e) => e.columnId === StatusType.FOCUS);
     expect(focusEvents.length).toBeGreaterThan(0);
 
     // Heat infliction from Akekuri should exist
@@ -1091,7 +1091,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     );
 
     // 1. Focus derived from Antal's battle skill
-    const focusEvents = processed.filter((e) => e.columnId === 'FOCUS');
+    const focusEvents = processed.filter((e) => e.columnId === StatusType.FOCUS);
     expect(focusEvents.length).toBe(1);
     expect(focusEvents[0].sourceEntityId).toBe(SLOT_ANTAL);
 

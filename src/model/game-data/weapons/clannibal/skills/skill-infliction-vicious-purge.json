@@ -85,7 +85,8 @@
   "properties": {
     "name": "Infliction: Vicious Purge",
     "description": "Arts DMG +{spell_dmg_up:0.0%}. After the wielder consumes an Arts Reaction, target enemy suffers Arts DMG Taken +{dmg_taken_up:0.0%} (for the specified element) for {duration:0}s. Each effect applies separately and does not stack with itself. Effect only triggers once every {cd:0}s.",
-    "id": "INFLICTION_VICIOUS_PURGE"
+    "id": "INFLICTION_VICIOUS_PURGE",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "CLANNIBAL",

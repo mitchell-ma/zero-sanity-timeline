@@ -37,7 +37,7 @@
     "name": "Bonus Spec Training (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "DEF +{Def:0}, Will +{Will:0}."
   },
   "metadata": {

@@ -3,9 +3,20 @@
     "name": "CHOP 'N DUNK!",
     "description": "Da Pan slams the chopping board to forcibly Lift all enemies in the area of effect in front of him. This is followed by a 6-sequence flurry of slashes that deals Physical DMG. The final step is to bash every enemy to the ground to forcibly Knock Down and deal massive Physical DMG to them.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
-    "id": "CHOP_N_DUNK"
+    "id": "CHOP_N_DUNK",
+    "suppliedParameters": {
+      "VARY_BY": [
+        {
+          "id": "ENEMY_DEFEATED",
+          "name": "Enemies Defeated",
+          "lowerRange": 0,
+          "upperRange": 1,
+          "default": 0
+        }
+      ]
+    }
   },
   "clause": [
     {
@@ -101,7 +112,10 @@
                   "objectQualifier": "LIFT",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": { "verb": "IS", "value": 1 }
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    }
                   }
                 }
               ]
@@ -481,7 +495,10 @@
                   "objectQualifier": "KNOCK_DOWN",
                   "to": "ENEMY",
                   "with": {
-                    "isForced": { "verb": "IS", "value": 1 }
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    }
                   }
                 },
                 {
@@ -522,6 +539,31 @@
                       }
                     }
                   }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "PARAMETER",
+                  "subjectId": "ENEMY_DEFEATED",
+                  "verb": "IS",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FINE_COOKING_POTENTIAL",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR"
                 }
               ]
             }

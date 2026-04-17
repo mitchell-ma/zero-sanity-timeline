@@ -4,7 +4,7 @@
     "name": "High Specs Tech Tester (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Applying Focus on the same target for 20s increases Electric Susceptibility and Heat Susceptibility effects by 4%."
   },
   "metadata": {

@@ -3,7 +3,7 @@
     "name": "Vigil Services",
     "description": "Last Rite encases herself in frost armor, creates an ice scythe to perform 3 slashes, and gains immunity to all damages while this state is active. \nEach slash deals massive Cryo DMG. \nLast Rite can only gain Ultimate Energy from her own battle skills and combo skills.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "CRYO",
     "id": "VIGIL_SERVICES"
   },

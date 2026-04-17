@@ -29,7 +29,7 @@ import {
 } from '../utils/timeline';
 import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { TimelineSourceType, InteractionModeType, ColumnType, DamageType } from '../consts/enums';
+import { TimelineSourceType, InteractionModeType, ColumnType, DamageType, EventCategoryType } from '../consts/enums';
 import {
   Operator,
   Enemy,
@@ -52,6 +52,7 @@ import {
 } from '../controller/timeline/eventValidator';
 import { computeAllValidations } from '../controller/timeline/eventValidationController';
 import { computeSlotElementColors, computeEventPresentation, computeTimelinePresentation } from '../controller/timeline/eventPresentationController';
+import { getAllStatusCategories } from '../controller/gameDataStore';
 import {
   buildColumnContextMenu,
 } from '../controller/timeline/contextMenuController';
@@ -67,6 +68,9 @@ import { getAxisMap, type Orientation } from '../utils/axisMap';
 const MIN_SLOT_COLS = 4;
 const EMPTY_WEAPON_TYPES: string[] = [];
 const EMPTY_COMBO_WINDOW_EVENTS: TimelineEvent[] = [];
+
+/** DOM tag names for editable elements where global shortcuts should be suppressed. */
+const EDITABLE_TAG_NAMES = new Set<string>(['INPUT', 'TEXTAREA', 'SELECT']);
 
 
 interface MarqueeState {
@@ -173,31 +177,8 @@ const noop2 = (_a: unknown, _b: unknown) => {};
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 
-const STATUS_TYPE_LABELS: Record<string, string> = {
-  'STATUS': 'Combat Status',
-  [NounType.SKILL_STATUS]: 'Skill Status',
-  [NounType.TALENT]: 'Talent',
-  [NounType.WEAPON_STATUS]: 'Weapon Status',
-  [NounType.GEAR_STATUS]: 'Gear Status',
-  [NounType.GEAR_SET_EFFECT]: 'Gear Set Effect',
-  [NounType.GEAR_SET_STATUS]: 'Gear Set Status',
-  [NounType.POTENTIAL]: 'Potential',
-  [NounType.CONSUMABLE]: 'Consumable',
-  [NounType.TACTICAL]: 'Tactical',
-};
-
-/** Special key for the cross-cutting "Permanent" filter (not an ). */
+/** Special key for the cross-cutting "Permanent" filter (not a status category). */
 const PERMANENT_FILTER_KEY = 'PERMANENT';
-
-/** Groups of status types for the filter menu, with display order. */
-const STATUS_FILTER_GROUPS: { label: string; types: string[]; permanent?: boolean }[] = [
-  { label: 'Passive', types: [], permanent: true },
-  { label: 'Skills', types: [NounType.SKILL_STATUS, NounType.TALENT, NounType.POTENTIAL] },
-  { label: 'Weapons', types: [NounType.WEAPON_STATUS] },
-  { label: 'Gears', types: [NounType.GEAR_STATUS, NounType.GEAR_SET_EFFECT, NounType.GEAR_SET_STATUS] },
-  { label: 'Consumables', types: [NounType.CONSUMABLE] },
-  { label: 'Tacticals', types: [NounType.TACTICAL] },
-];
 
 // Column width weight — used for grid proportions within operator groups
 const COL_WEIGHT_SKILL_IDS = new Set<string>([NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE]);
@@ -439,7 +420,7 @@ export default React.memo(function CombatPlanner({
       const hasFilterable = col.microColumns.some((mc) => mc.statusType || mc.permanent);
       if (!hasFilterable) return col;
       const isMcHidden = (mc: import('../consts/viewTypes').MicroColumn) => {
-        const effectiveType = mc.statusType ?? NounType.SKILL_STATUS;
+        const effectiveType = mc.statusType ?? EventCategoryType.SKILL;
         if (hiddenStatusTypes.has(effectiveType)) return true;
         if (hidePermanent && mc.permanent) return true;
         return false;
@@ -920,7 +901,7 @@ export default React.memo(function CombatPlanner({
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (EDITABLE_TAG_NAMES.has(tag)) return;
       if (readOnly) return;
       if (e.key === 'Delete' && selectedIds.size > 0) {
         e.preventDefault();
@@ -1792,7 +1773,7 @@ export default React.memo(function CombatPlanner({
       const hasTyped = col.microColumns.some((mc) => mc.statusType);
       if (!hasTyped) continue;
       for (const mc of col.microColumns) {
-        const effectiveType = mc.statusType ?? NounType.SKILL_STATUS;
+        const effectiveType = mc.statusType ?? EventCategoryType.SKILL;
         types.set(effectiveType, (types.get(effectiveType) ?? 0) + 1);
         if (mc.permanent) permCount++;
       }
@@ -1820,68 +1801,29 @@ export default React.memo(function CombatPlanner({
     if (statusTypeCounts.size === 0) return;
     const unfilteredCol = columnsProp.find((c) => c.key === col.key);
     if (!unfilteredCol || unfilteredCol.type !== 'mini-timeline' || !unfilteredCol.microColumns?.some((mc) => mc.statusType)) return;
+    const categoryLabels = getAllStatusCategories();
     const items: import('../consts/viewTypes').ContextMenuItem[] = [
       { label: 'Status Filters', header: true },
     ];
-    for (const group of STATUS_FILTER_GROUPS) {
-      // Permanent group: cross-cutting, uses PERMANENT_FILTER_KEY
-      if (group.permanent) {
-        if (permanentCount === 0) continue;
-        items.push({
-          label: `${group.label} (${permanentCount})`,
-          checked: () => !hiddenStatusTypesRef.current.has(PERMANENT_FILTER_KEY),
-          keepOpen: true,
-          action: () => {
-            toggleHiddenStatusTypes((prev) => {
-              const next = new Set(prev);
-              if (next.has(PERMANENT_FILTER_KEY)) next.delete(PERMANENT_FILTER_KEY); else next.add(PERMANENT_FILTER_KEY);
-              return next;
-            });
-          },
-        });
-        continue;
-      }
-      // Source-based groups — flat list of individually toggleable types
-      const groupTypes = group.types.filter((t) => statusTypeCounts.has(t));
-      if (groupTypes.length === 0) continue;
-      if (groupTypes.length === 1) {
-        const type = groupTypes[0];
-        const count = statusTypeCounts.get(type) ?? 0;
-        items.push({
-          label: `${group.label} (${count})`,
-          checked: () => !hiddenStatusTypesRef.current.has(type),
-          keepOpen: true,
-          action: () => {
-            toggleHiddenStatusTypes((prev) => {
-              const next = new Set(prev);
-              if (next.has(type)) next.delete(type); else next.add(type);
-              return next;
-            });
-          },
-        });
-      } else {
-        items.push({ label: group.label, header: true });
-        for (const type of groupTypes) {
-          const count = statusTypeCounts.get(type) ?? 0;
-          items.push({
-            label: `${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
-            checked: () => !hiddenStatusTypesRef.current.has(type),
-            keepOpen: true,
-            action: () => {
-              toggleHiddenStatusTypes((prev) => {
-                const next = new Set(prev);
-                if (next.has(type)) next.delete(type); else next.add(type);
-                return next;
-              });
-            },
-          });
-        }
-      }
-    }
-    for (const [type, count] of Array.from(statusTypeCounts.entries())) {
-      if (STATUS_FILTER_GROUPS.some((g) => g.types.includes(type as string))) continue;
+    // Permanent filter (cross-cutting, not a category)
+    if (permanentCount > 0) {
       items.push({
-        label: `${STATUS_TYPE_LABELS[type] ?? type} (${count})`,
+        label: `Passive (${permanentCount})`,
+        checked: () => !hiddenStatusTypesRef.current.has(PERMANENT_FILTER_KEY),
+        keepOpen: true,
+        action: () => {
+          toggleHiddenStatusTypes((prev) => {
+            const next = new Set(prev);
+            if (next.has(PERMANENT_FILTER_KEY)) next.delete(PERMANENT_FILTER_KEY); else next.add(PERMANENT_FILTER_KEY);
+            return next;
+          });
+        },
+      });
+    }
+    // One entry per category that actually has micro columns
+    for (const [type, count] of Array.from(statusTypeCounts.entries())) {
+      items.push({
+        label: `${categoryLabels[type] ?? type} (${count})`,
         checked: () => !hiddenStatusTypesRef.current.has(type),
         keepOpen: true,
         action: () => {

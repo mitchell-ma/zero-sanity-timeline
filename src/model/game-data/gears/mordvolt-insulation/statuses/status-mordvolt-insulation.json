@@ -21,7 +21,7 @@
     }
   ],
   "properties": {
-    "id": "MORDVOLT_INSULATION",
+    "id": "MORDVOLT_INSULATION_STAT",
     "name": "Mordvolt Insulation",
     "duration": {
       "value": {
@@ -39,7 +39,7 @@
     },
     "description": "Arts DMG +20% when HP above 80%.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "MORDVOLT_INSULATION",

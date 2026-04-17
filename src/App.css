@@ -10878,9 +10878,7 @@
 /* Active loadout column — highlights the cell matching the live skill/talent/potential level. */
 .ops-frame-vary-table th.ops-cell--active,
 .ops-frame-vary-table td.ops-cell--active {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  color: var(--accent);
-  font-weight: 600;
+  font-weight: 700;
 }
 .ops-frame-vary-table th.ops-cell--active {
   border-bottom: 1px solid var(--accent);

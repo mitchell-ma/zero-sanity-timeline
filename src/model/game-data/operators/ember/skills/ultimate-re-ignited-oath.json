@@ -3,7 +3,7 @@
     "name": "Re-Ignited Oath",
     "description": "Slams the ground to deal Heat DMG to nearby enemies, while granting every teammate a Shield based on Ember's Max HP.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "HEAT",
     "id": "RE_IGNITED_OATH"
   },

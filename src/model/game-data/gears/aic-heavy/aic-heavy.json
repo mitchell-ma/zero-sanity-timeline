@@ -13,7 +13,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "AIC_HEAVY",
+          "objectId": "AIC_HEAVY_STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
@@ -27,7 +27,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's HP +500. After the wearer defeats an enemy, the wearer restores 100 HP. Effect trigger cooldown: 5s.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_EFFECT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
     "originId": "game",

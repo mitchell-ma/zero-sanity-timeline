@@ -313,24 +313,40 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
       (ev) => ev.ownerEntityId === TEAM_ID && ev.id === STEEL_OATH_ID,
     );
 
-    // Collect distinct stack counts in chronological order
-    const distinctCounts = Array.from(new Set(
-      steelOathEvents
-        .sort((a, b) => a.startFrame - b.startFrame)
-        .map(ev => ev.stacks ?? 0),
-    ));
+    // Verify descending labels through the presentation layer (transition-based labeling).
+    // Each generation of restacked events gets a lower running total: V → IV → III.
+    const vmMap = computeTimelinePresentation(
+      result.current.allProcessedEvents,
+      result.current.columns,
+    );
+    // Collect all statusOverrides across column view models
+    const allOverrides = new Map<string, { label?: string }>();
+    for (const colVM of Array.from(vmMap.values())) {
+      for (const [uid, override] of Array.from(colVM.statusOverrides)) allOverrides.set(uid, override);
+    }
+    const labelsByGen = steelOathEvents
+      .sort((a, b) => a.startFrame - b.startFrame)
+      .map(ev => allOverrides.get(ev.uid)?.label ?? '');
 
-    // Should have 3 distinct stack counts (initial, after 1st consume, after 2nd consume)
-    expect(distinctCounts).toHaveLength(3);
-    // Each successive count is one less than the previous
-    expect(distinctCounts[1]).toBe(distinctCounts[0]! - 1);
-    expect(distinctCounts[2]).toBe(distinctCounts[1]! - 1);
+    // Extract distinct labels in chronological order (preserving first occurrence)
+    const seen = new Set<string>();
+    const distinctLabels: string[] = [];
+    for (const l of labelsByGen) {
+      if (l && !seen.has(l)) { seen.add(l); distinctLabels.push(l); }
+    }
 
-    // Active (non-consumed) events should all have the lowest stack count
+    // Should have 3 distinct labels: "Steel Oath V", "Steel Oath IV", "Steel Oath III"
+    expect(distinctLabels).toHaveLength(3);
+    expect(distinctLabels[0]).toContain('V');
+    expect(distinctLabels[1]).toContain('IV');
+    expect(distinctLabels[2]).toContain('III');
+
+    // Active (non-consumed) events should all have the lowest stack label
     const active = steelOathEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(active.length).toBeGreaterThan(0);
     for (const ev of active) {
-      expect(ev.stacks).toBe(distinctCounts[2]);
+      const label = allOverrides.get(ev.uid)?.label ?? '';
+      expect(label).toContain('III');
     }
   });
 });

@@ -48,6 +48,10 @@ const BARRAGE_ID: string = BARRAGE_JSON.properties.id;
 
 const FREEZING_POINT_JSON = require('../../../../model/game-data/operators/yvonne/talents/talent-freezing-point-talent.json');
 const FREEZING_POINT_ID: string = FREEZING_POINT_JSON.properties.id;
+
+const EXPERT_MECHCRAFTER_ID: string = require(
+  '../../../../model/game-data/operators/yvonne/statuses/status-expert-mechcrafter.json',
+).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_YVONNE = 'slot-0';
@@ -399,7 +403,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     });
 
     const expert = result.current.allProcessedEvents.find(
-      ev => ev.id === 'EXPERT_MECHCRAFTER' && ev.ownerEntityId === SLOT_YVONNE,
+      ev => ev.id === EXPERT_MECHCRAFTER_ID && ev.ownerEntityId === SLOT_YVONNE,
     );
     expect(expert).toBeDefined();
     const dur = expert!.segments.reduce(
@@ -420,7 +424,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     const statusCol = findColumn(result.current, SLOT_YVONNE, 'operator-status');
     const vm = viewModels.get(statusCol!.key);
     expect(vm).toBeDefined();
-    expect(vm!.events.some(ev => ev.id === 'EXPERT_MECHCRAFTER')).toBe(true);
+    expect(vm!.events.some(ev => ev.id === EXPERT_MECHCRAFTER_ID)).toBe(true);
   });
 
   it('Expert Mechcrafter NOT visible at P0', () => {
@@ -434,7 +438,7 @@ describe('Yvonne Skills -- integration through useApp', () => {
     });
 
     const expert = result.current.allProcessedEvents.filter(
-      ev => ev.id === 'EXPERT_MECHCRAFTER' && ev.ownerEntityId === SLOT_YVONNE,
+      ev => ev.id === EXPERT_MECHCRAFTER_ID && ev.ownerEntityId === SLOT_YVONNE,
     );
     expect(expert).toHaveLength(0);
   });

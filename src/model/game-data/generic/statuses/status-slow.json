@@ -38,7 +38,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Reduces movement speed."
   },
   "metadata": {

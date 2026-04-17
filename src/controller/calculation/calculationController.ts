@@ -196,13 +196,24 @@ export function computeReactionFrameDamage(
 
   // Pick up APPLY STAT <ELEMENT>_SUSCEPTIBILITY / <ELEMENT>_FRAGILITY
   // contributions (e.g. Antal FOCUS) from the enemy stat accumulator so the
-  // simplified reaction-damage HP estimate reflects them. Weakness and
+  // simplified reaction-damage HP estimate reflects them. Arts reactions
+  // (COMBUSTION/SOLIDIFICATION/CORROSION/ELECTRIFICATION) also pick up the
+  // ARTS_* umbrella stat alongside the per-element stat. Weakness and
   // dmgReduction remain neutral (no element-qualified stat equivalents today).
+  const accumulator = getLastStatAccumulator();
   const readEnemyStat = (suffix: StatusType): number => {
-    const key = `${element}_${suffix}`;
-    return (Object.values(StatType) as string[]).includes(key)
-      ? (getLastStatAccumulator()?.getStat(ENEMY_ID, key as StatType) ?? 0)
-      : 0;
+    const perElKey = `${element}_${suffix}`;
+    const artsKey = `${ElementType.ARTS}_${suffix}`;
+    let sum = 0;
+    if ((Object.values(StatType) as string[]).includes(perElKey)) {
+      sum += accumulator?.getStat(ENEMY_ID, perElKey as StatType) ?? 0;
+    }
+    const isArtsElement = element === ElementType.HEAT || element === ElementType.CRYO
+      || element === ElementType.NATURE || element === ElementType.ELECTRIC;
+    if (isArtsElement && (Object.values(StatType) as string[]).includes(artsKey)) {
+      sum += accumulator?.getStat(ENEMY_ID, artsKey as StatType) ?? 0;
+    }
+    return sum;
   };
   const enemySusceptibility = readEnemyStat(StatusType.SUSCEPTIBILITY);
   const enemyFragility = readEnemyStat(StatusType.FRAGILITY);

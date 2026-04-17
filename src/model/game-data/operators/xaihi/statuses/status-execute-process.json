@@ -18,7 +18,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Cryo DMG Taken debuff (Cryo Fragility) applied by Stress Testing."
   },
   "metadata": {

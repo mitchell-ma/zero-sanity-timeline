@@ -69,7 +69,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "Grants every teammate a Shield based on 18%-25% of Ember's Max HP for 10s."
   },
   "metadata": {

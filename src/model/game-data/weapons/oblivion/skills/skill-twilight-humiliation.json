@@ -59,7 +59,8 @@
   "properties": {
     "name": "Twilight: Humiliation",
     "description": "Critical Rate +{crit_up:0.0%}. When the wielder casts an ultimate, the wielder gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. When the wielder casts a combo skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
-    "id": "TWILIGHT_HUMILIATION"
+    "id": "TWILIGHT_HUMILIATION",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "OBLIVION",

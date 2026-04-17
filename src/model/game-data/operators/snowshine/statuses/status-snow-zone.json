@@ -18,7 +18,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "element": "CRYO",
     "description": "A freezing zone created by Frigid Snowfield. Deals Cryo DMG over time (10 ticks at 0.5s intervals over 5s) and forcibly applies Solidification to enemies caught within. At P3+ the Solidification lasts 2s longer than the zone itself."
   },
@@ -167,7 +167,7 @@
           },
           "properties": {
             "offset": {
-              "value": 1.0,
+              "value": 1,
               "unit": "SECOND"
             },
             "element": "CRYO"
@@ -285,7 +285,7 @@
           },
           "properties": {
             "offset": {
-              "value": 2.0,
+              "value": 2,
               "unit": "SECOND"
             },
             "element": "CRYO"
@@ -403,7 +403,7 @@
           },
           "properties": {
             "offset": {
-              "value": 3.0,
+              "value": 3,
               "unit": "SECOND"
             },
             "element": "CRYO"
@@ -521,7 +521,7 @@
           },
           "properties": {
             "offset": {
-              "value": 4.0,
+              "value": 4,
               "unit": "SECOND"
             },
             "element": "CRYO"
@@ -639,7 +639,7 @@
           },
           "properties": {
             "offset": {
-              "value": 5.0,
+              "value": 5,
               "unit": "SECOND"
             },
             "element": "CRYO"

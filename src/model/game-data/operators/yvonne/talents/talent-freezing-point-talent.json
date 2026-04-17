@@ -235,7 +235,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Against enemies with active Cryo Infliction, gains Critical DMG Dealt +{inflict_up:0%}. Effect is doubled against enemies with Solidification."
   },
   "metadata": {

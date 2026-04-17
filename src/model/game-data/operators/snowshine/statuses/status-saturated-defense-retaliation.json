@@ -19,7 +19,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "While the Saturated Defense shield is up, retaliates against attackers with Cryo DMG, Cryo Infliction, and stagger. Each retaliation also recovers Ultimate Energy via SAR Professional (T2)."
   },
   "metadata": {

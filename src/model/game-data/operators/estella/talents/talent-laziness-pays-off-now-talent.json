@@ -9,7 +9,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Ignores Cryo Infliction and takes -10% (T1) / -20% (T2) Cryo DMG."
   },
   "metadata": {

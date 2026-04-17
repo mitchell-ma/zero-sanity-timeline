@@ -19,7 +19,7 @@
     }
   ],
   "properties": {
-    "id": "FRONTIERS",
+    "id": "FRONTIERS_STAT",
     "name": "Frontiers",
     "duration": {
       "value": {
@@ -37,7 +37,7 @@
     },
     "description": "Team DMG +16%",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "FRONTIERS",

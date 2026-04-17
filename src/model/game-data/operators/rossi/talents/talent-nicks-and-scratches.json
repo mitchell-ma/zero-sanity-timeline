@@ -10,7 +10,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "After Wolven Ambrage activates, applies Razor Clawmark to target. While active: target takes Physical DMG per second and increased Physical + Heat DMG taken. Effect baked into battle skill Crimson Shadow."
   },
   "metadata": {

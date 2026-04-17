@@ -63,7 +63,8 @@
   "properties": {
     "name": "Brutality: Lands of Yore",
     "description": "Arts Intensity +{phy_spell_up:0}. After the wielder consumes Vulnerability stack(s), the wielder gains Physical DMG Dealt +[{phy_dmg_up_mult:0.0%}×Stacks Consumed] for {duration:0}s. Effects of the same name cannot stack.",
-    "id": "BRUTALITY_LANDS_OF_YORE"
+    "id": "BRUTALITY_LANDS_OF_YORE",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "ANCIENT_CANAL",

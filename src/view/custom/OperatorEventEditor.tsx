@@ -11,6 +11,7 @@ import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { getAllSkillLabels } from '../../controller/gameDataStore';
 import type { Clause } from '../../dsl/semantics';
 import { NounType } from '../../dsl/semantics';
+import { UnitType } from '../../consts/enums';
 import ClauseEditor from './ClauseEditor';
 
 /** Shape for JSON skill/segment/frame/status data flowing through the editor. */
@@ -222,7 +223,7 @@ function ActivationWindowSection({ activationWindow, readOnly }: {
   const triggerClause = activationWindow.onTriggerClause ?? [];
   const dur = activationWindow.segments?.[0]?.properties?.duration;
   const durVal = dur ? (typeof dur.value === 'number' ? dur.value : null) : null;
-  const durUnit = dur?.unit === 'FRAME' ? 'f' : 's';
+  const durUnit = dur?.unit === UnitType.FRAME ? 'f' : 's';
   const maxSkills = activationWindow.properties?.maxSkills;
 
   return (
@@ -252,7 +253,7 @@ function SegmentSection({ segment, index, readOnly }: { segment: JsonSkillData; 
   const name = segment.properties?.name || (index < HIT_NAMES.length ? HIT_NAMES[index] : `Hit ${index + 1}`);
   const dur = segment.properties?.duration ?? segment.duration;
   const durVal = dur ? resolveLeafNumber(dur.value) : null;
-  const durStr = durVal != null ? `${durVal}${dur!.unit === 'FRAME' ? 'f' : 's'}` : '';
+  const durStr = durVal != null ? `${durVal}${dur!.unit === UnitType.FRAME ? 'f' : 's'}` : '';
   const segFrames = segment.frames ?? [];
   const clause: Clause = segment.clause ?? [];
 
@@ -281,7 +282,7 @@ function SegmentSection({ segment, index, readOnly }: { segment: JsonSkillData; 
 function FrameSection({ frame, index, readOnly }: { frame: JsonSkillData; index: number; readOnly?: boolean }) {
   const [open, setOpen] = useState(false);
   const offset = frame.properties?.offset ?? frame.offset;
-  const offsetStr = offset ? `${offset.value}${offset.unit === 'FRAME' ? 'f' : 's'}` : '0';
+  const offsetStr = offset ? `${offset.value}${offset.unit === UnitType.FRAME ? 'f' : 's'}` : '0';
   const clause: Clause = frame.clause ?? [];
   const hasClause = clause.length > 0;
 

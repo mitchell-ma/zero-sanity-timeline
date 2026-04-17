@@ -3,7 +3,7 @@
     "name": "Frag Grenade·β",
     "description": "When an Arts Infliction is applied to an enemy. Throws a frag grenade at the target's location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "HEAT",
     "id": "FRAG_GRENADE_BETA"
   },

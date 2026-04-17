@@ -13,14 +13,17 @@ import { LoadoutProperties } from '../../view/InformationPane';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 
 // Mock operatorRegistry to avoid require.context for splash art assets
-jest.mock('../../controller/operators/operatorRegistry', () => ({
-  getOperatorConfig: (id: string) => {
-    if (id !== 'LAEVATAIN') return undefined;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('../../model/game-data/operators/laevatain/laevatain.json');
-  },
-  ALL_OPERATORS: [],
-}));
+jest.mock('../../controller/operators/operatorRegistry', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const laevatainJson = require('../../model/game-data/operators/laevatain/laevatain.json');
+  return {
+    getOperatorConfig: (id: string) => {
+      if (id !== laevatainJson.id) return undefined;
+      return laevatainJson;
+    },
+    ALL_OPERATORS: [],
+  };
+});
 
 // Mock loadoutRegistry to avoid require.context for asset discovery
 jest.mock('../../utils/loadoutRegistry', () => {
@@ -93,21 +96,25 @@ jest.mock('../../utils/loadoutRegistry', () => {
 });
 
 // Mock weaponGameData to avoid require.context
-jest.mock('../../model/game-data/weaponGameData', () => ({
-  getSkillValues: (skillType: string, statKey: string) => {
-    // Forgeborn Scathe weapon skills
-    if (skillType === 'INTELLECT_BOOST_L' && statKey === 'INTELLECT')
-      return [20, 30, 44, 57, 70, 87, 109, 131, 156];
-    if (skillType === 'ATTACK_BOOST_L' && statKey === 'ATTACK_BONUS')
-      return [0.05, 0.07, 0.10, 0.14, 0.17, 0.22, 0.28, 0.34, 0.39];
-    if (skillType === 'FORGEBORN_SCATHE_TWILIGHT_BLAZING_WAIL' && statKey === 'HEAT_DAMAGE_BONUS')
-      return [0.16, 0.192, 0.224, 0.256, 0.288, 0.32, 0.364, 0.406, 0.448];
-    return [];
-  },
-  getConditionalValues: () => [],
-  getConditionalScalar: () => null,
-  getBaseAttackForLevel: () => 510,
-}));
+jest.mock('../../model/game-data/weaponGameData', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { WeaponSkillType, StatType } = require('../../consts/enums');
+  return {
+    getSkillValues: (skillType: string, statKey: string) => {
+      // Forgeborn Scathe weapon skills
+      if (skillType === WeaponSkillType.INTELLECT_BOOST_L && statKey === StatType.INTELLECT)
+        return [20, 30, 44, 57, 70, 87, 109, 131, 156];
+      if (skillType === WeaponSkillType.ATTACK_BOOST_L && statKey === StatType.ATTACK_BONUS)
+        return [0.05, 0.07, 0.10, 0.14, 0.17, 0.22, 0.28, 0.34, 0.39];
+      if (skillType === WeaponSkillType.FORGEBORN_SCATHE_TWILIGHT_BLAZING_WAIL && statKey === StatType.HEAT_DAMAGE_BONUS)
+        return [0.16, 0.192, 0.224, 0.256, 0.288, 0.32, 0.364, 0.406, 0.448];
+      return [];
+    },
+    getConditionalValues: () => [],
+    getConditionalScalar: () => null,
+    getBaseAttackForLevel: () => 510,
+  };
+});
 
 describe('loadoutAggregator — Laevatain maxed loadout', () => {
   const OPERATOR_ID = 'LAEVATAIN';

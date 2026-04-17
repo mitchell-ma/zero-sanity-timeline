@@ -4,7 +4,7 @@
     "name": "Physical Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Physical Fragility applied to enemy.",
     "duration": {
       "value": {

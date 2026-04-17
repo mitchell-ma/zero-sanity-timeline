@@ -6,7 +6,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate CHOP 'N DUNK! improved: If the ultimate defeats at least one enemy, Da Pan deals +30% Physical DMG for 15s. This effect cannot stack."
   },
   "metadata": {

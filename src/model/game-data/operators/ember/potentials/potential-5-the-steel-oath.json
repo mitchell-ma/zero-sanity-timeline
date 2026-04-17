@@ -4,7 +4,7 @@
     "name": "The Steel Oath (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by 1.2; while this shield is active, the wielder gains ATK +10%."
   },
   "metadata": {

@@ -18,9 +18,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../../dsl/semantics';
+import { NounType, VerbType, DeterminerType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { ColumnType, InteractionModeType, SegmentType } from '../../../../consts/enums';
+import { ColumnType, InteractionModeType, SegmentType, UnitType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -1539,20 +1539,22 @@ describe('P. Talent & Potential Config Verification', () => {
     const effects = t1.clause[0].effects;
     // HASTE to ALL OPERATOR
     const hasteEffect = effects.find(
-      (e: { verb: string; objectId?: string }) => e.objectId === 'HASTE',
+      (e: { verb: string; object?: string }) => e.verb === VerbType.APPLY && e.object === NounType.STAT,
     );
     expect(hasteEffect).toBeDefined();
-    expect(hasteEffect.toDeterminer).toBe('ALL');
-    expect(hasteEffect.to).toBe('OPERATOR');
+    expect(hasteEffect.objectId).toBe('HASTE');
+    expect(hasteEffect.toDeterminer).toBe(DeterminerType.ALL);
+    expect(hasteEffect.to).toBe(NounType.OPERATOR);
 
     // SLOW to ENEMY with value+unit PERCENTAGE wrapper
     const slowEffect = effects.find(
-      (e: { verb: string; objectId?: string }) => e.objectId === 'SLOW',
+      (e: { verb: string; object?: string }) => e.verb === VerbType.APPLY && e.object === NounType.STATUS,
     );
     expect(slowEffect).toBeDefined();
-    expect(slowEffect.to).toBe('ENEMY');
+    expect(slowEffect.objectId).toBe(NounType.SLOW);
+    expect(slowEffect.to).toBe(NounType.ENEMY);
     // Verify SLOW uses {value, unit: "PERCENTAGE"} wrapper
-    expect(slowEffect.with.value.unit).toBe('PERCENTAGE');
+    expect(slowEffect.with.value.unit).toBe(UnitType.PERCENTAGE);
   });
 
   it('P4: Waterspout ULT status has T2 and P5 damage bonus baked', () => {
@@ -1634,11 +1636,11 @@ describe('P. Talent & Potential Config Verification', () => {
   });
 
   it('P8: BS frame at 1s — no direct cryo infliction (comes from waterspout status frame)', () => {
-    const waterspoutFrame = BATTLE_SKILL_JSON.segments[0].frames[2];
+    const waterspoutFrame = BATTLE_SKILL_JSON.segments[0].frames[1];
     const effects = waterspoutFrame.clause[0].effects;
 
     // BS does NOT directly apply cryo infliction — waterspout status handles it via frame at 0s
-    expect(effects.every((e: { object: string }) => e.object !== 'INFLICTION')).toBe(true);
+    expect(effects.every((e: { object: string }) => e.object !== NounType.INFLICTION)).toBe(true);
 
     expect(effects[0].verb).toBe('DEAL');    // STAGGER
     expect(effects[0].object).toBe('STAGGER');
@@ -1654,7 +1656,7 @@ describe('P. Talent & Potential Config Verification', () => {
   });
 
   it('P9: BS main shot (0.9s frame) has P3 ×1.1 baked', () => {
-    const mainShotFrame = BATTLE_SKILL_JSON.segments[0].frames[1]; // index 1 = 0.9s
+    const mainShotFrame = BATTLE_SKILL_JSON.segments[0].frames[0]; // index 0 = 0.9s
     const dmgEffect = mainShotFrame.clause[0].effects[0];
     // Value should be MULT(VARY_BY SKILL_LEVEL, VARY_BY POTENTIAL [1,1,1,1.1,1.1,1.1])
     expect(dmgEffect.with.value.operation).toBe('MULT');

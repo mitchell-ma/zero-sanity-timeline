@@ -22,7 +22,7 @@
       "ENHANCED"
     ],
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "HEAT",
     "id": "SMOULDERING_FIRE_ENHANCED",
     "name": "Smouldering Fire (Enhanced)"

@@ -3,7 +3,7 @@
     "name": "Tiny Surprise",
     "description": "Kicks an Improvised Explosive that sticks to the target, applying Slow and exploding after a short duration. The explosion deals Nature DMG and Nature Infliction to enemies in the area of effect. Defeating the target also sets off the Improvised Explosive immediately.\nOnly 1 Improvised Explosive can be present in the battlefield.",
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "NATURE",
     "id": "TINY_SURPRISE"
   },
@@ -49,7 +49,9 @@
         {
           "metadata": {
             "eventComponentType": "FRAME",
-            "dataSources": ["END_AXIS"]
+            "dataSources": [
+              "END_AXIS"
+            ]
           },
           "properties": {
             "offset": {

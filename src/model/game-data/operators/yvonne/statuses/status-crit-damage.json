@@ -20,7 +20,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "After Cryoblasting Pistolier (Crit Rate) reaches max stacks, Yvonne gains a Critical DMG buff for the remainder of the skill."
   },
   "clause": [

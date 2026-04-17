@@ -57,7 +57,8 @@
   "properties": {
     "name": "Infliction: Covetous Buildup",
     "description": "ATK +{atk_up:0.0%}. Whenever Combustion or Corrosion is applied to an enemy, the wielder gains Heat and Nature DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
-    "id": "INFLICTION_COVETOUS_BUILDUP"
+    "id": "INFLICTION_COVETOUS_BUILDUP",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "UMBRAL_TORCH",

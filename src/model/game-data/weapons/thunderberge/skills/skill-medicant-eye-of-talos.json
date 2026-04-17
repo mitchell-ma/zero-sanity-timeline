@@ -58,7 +58,8 @@
   "properties": {
     "name": "Medicant: Eye of Talos",
     "description": "Shield applied +{shield_up:0.0%}. After the wielder's combo skill provides HP treatment, the controlled operator gains an additional [{hp_ratio:0.0%}×Wielder's Max HP] Shield for {duration:0}s. Effect only triggers once every {cd:0}s.",
-    "id": "MEDICANT_EYE_OF_TALOS"
+    "id": "MEDICANT_EYE_OF_TALOS",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "THUNDERBERGE",

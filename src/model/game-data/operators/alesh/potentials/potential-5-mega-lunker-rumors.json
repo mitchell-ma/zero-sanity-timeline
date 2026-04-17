@@ -4,7 +4,7 @@
     "name": "Mega Lunker Rumors (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate One Monster Catch! improved: Hitting a target below 50% HP increases the DMG Multiplier to 1.5 times the original."
   },
   "metadata": {

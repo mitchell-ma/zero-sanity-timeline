@@ -4,7 +4,7 @@
     "name": "Cold Shelter (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Battle skill Saturated Defense improved: During the blocking effect, Arts Inflictions cannot be applied to allied operators with Protection."
   },
   "metadata": {

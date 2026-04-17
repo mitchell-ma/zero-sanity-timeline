@@ -23,19 +23,19 @@
 
 ### Ultimate: CHOP 'N DUNK!
 - CONSUME ULTIMATE_ENERGY VARY_BY POTENTIAL [90, 90, 90, 76.5, 76.5, 76.5]
+- Supplied parameter: ENEMY_DEFEATED (0-1, default 0) — at 1, applies FINE_COOKING_POTENTIAL to self (P1 bake-in)
 - Animation: 1.4s TIME_STOP
 - Frame 1 (@0s): APPLY LIFT to ENEMY (isForced)
 - Frames 2-7 (@0.3, 0.4, 0.5, 0.6, 0.7, 0.8s): DEAL PHYSICAL DAMAGE [0.22 → 0.50] each (6 aerial hits)
-- Frame 8 (@1.27s): APPLY KNOCK_DOWN to ENEMY (isForced), DEAL PHYSICAL DAMAGE [1.78 → 4.00]
+- Frame 8 (@1.27s): APPLY KNOCK_DOWN to ENEMY (isForced), DEAL PHYSICAL DAMAGE [1.78 → 4.00]; if ENEMY_DEFEATED ≥ 1, APPLY FINE_COOKING_POTENTIAL to self
 
 ## Statuses (da-pan-statuses.json)
 
 | ID | Type | Effect |
 |----|------|--------|
 | REDUCE_AND_THICKEN_TALENT | TALENT (self-applying) | Trigger: consume Vulnerability → self-apply (PHYSICAL_DAMAGE_BONUS [0.04, 0.06] by talent level, 10s, max 4 stacks, RESET) |
-| PREP_INGREDIENTS | TALENT_STATUS | Duration VARY_BY POTENTIAL [20, 20, 30×4], max stacks VARY_BY POTENTIAL [1, 1, 2×4] |
-| FINE_COOKING_POTENTIAL | POTENTIAL | Trigger: defeat enemy → apply status |
-| FINE_COOKING | POTENTIAL_STATUS | PHYSICAL_DAMAGE_BONUS +30%, 15s, max 1 stack |
+| PREP_INGREDIENTS | TALENT_STATUS | Duration = 20 + VARY_BY POTENTIAL [0, 0, 10×4]s; max stacks = 2 + VARY_BY POTENTIAL [0, 0, 1×4] (P2 bake-in) |
+| FINE_COOKING_POTENTIAL | POTENTIAL_STATUS | PHYSICAL_DAMAGE_BONUS +30%, 15s, max 1 stack (applied by ultimate when ENEMY_DEFEATED ≥ 1) |
 
 ## Potentials
 

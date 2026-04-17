@@ -90,7 +90,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "After consuming 1 Vulnerability stack, Da Pan gains Physical DMG Dealt +4% for 10s. This effect can reach 4 stacks."
   },
   "metadata": {

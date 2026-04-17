@@ -6,7 +6,7 @@
     "name": "Seething Wolfblood (Finisher)",
     "description": "Basic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP. Final Strike also deals 18 Stagger.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "PHYSICAL",
     "id": "SEETHING_WOLFBLOOD_FINISHER"

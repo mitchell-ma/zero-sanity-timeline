@@ -2,8 +2,8 @@
  * Skill form section for the Unified Customizer.
  * Extracted from CustomSkillWizard — same fields, collapsible layout.
  */
-import { ElementType, TimeInteractionType } from '../../../consts/enums';
-import { NounType } from '../../../dsl/semantics';
+import { ElementType, TimeInteractionType, CombatResourceType } from '../../../consts/enums';
+import { NounType, VerbType } from '../../../dsl/semantics';
 import type { CustomSkill } from '../../../model/custom/customSkillTypes';
 import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
@@ -21,7 +21,7 @@ interface Props {
 export default function SkillSection({ data, onChange, originalId }: Props) {
   const update = (patch: Partial<CustomSkill>) => onChange({ ...data, ...patch });
 
-  const spCost = data.resourceInteractions?.find((r) => r.resourceType === 'SKILL_POINT')?.value ?? 0;
+  const spCost = data.resourceInteractions?.find((r) => r.resourceType === CombatResourceType.SKILL_POINT)?.value ?? 0;
 
   return (
     <>
@@ -78,7 +78,7 @@ export default function SkillSection({ data, onChange, originalId }: Props) {
               <input type="number" value={spCost} onChange={(e) => {
                 const val = Number(e.target.value);
                 if (val > 0) {
-                  update({ resourceInteractions: [{ resourceType: 'SKILL_POINT', verb: 'CONSUME', value: val }] });
+                  update({ resourceInteractions: [{ resourceType: CombatResourceType.SKILL_POINT, verb: VerbType.CONSUME, value: val }] });
                 } else {
                   update({ resourceInteractions: undefined });
                 }

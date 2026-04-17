@@ -79,7 +79,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "Team buff from Wildland Trekker: Electric DMG Dealt +0.05% per point of Arclight's Intellect (+0.08% at T2, ×1.3 at P3). Duration 15s, does not stack."
   },
   "metadata": {

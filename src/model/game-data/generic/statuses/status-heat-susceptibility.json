@@ -4,7 +4,7 @@
     "name": "Heat Susceptibility",
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Heat Susceptibility applied to enemy.",
     "duration": {
       "value": {

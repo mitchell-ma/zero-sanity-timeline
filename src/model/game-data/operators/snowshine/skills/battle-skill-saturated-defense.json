@@ -3,7 +3,7 @@
     "name": "Saturated Defense",
     "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Cryo DMG and applies Cryo Infliction on the attacker.",
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "CRYO",
     "id": "SATURATED_DEFENSE"
   },

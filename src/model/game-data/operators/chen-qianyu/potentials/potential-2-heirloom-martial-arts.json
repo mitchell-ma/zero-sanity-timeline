@@ -38,7 +38,7 @@
     "name": "Heirloom Martial Arts (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Agility +15, Physical DMG Dealt +8%."
   },
   "metadata": {

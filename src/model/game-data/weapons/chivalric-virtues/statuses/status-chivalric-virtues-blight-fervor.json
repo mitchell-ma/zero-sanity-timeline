@@ -54,7 +54,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS",
+    "eventCategoryType": "WEAPON_STAT",
     "description": "Treatment Efficiency +{heal_up:0.0%}. After the wielder's skill provides HP treatment, the entire team gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack."
   },
   "metadata": {

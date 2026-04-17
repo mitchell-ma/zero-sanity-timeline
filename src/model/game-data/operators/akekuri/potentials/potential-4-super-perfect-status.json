@@ -4,7 +4,7 @@
     "name": "Super Perfect Status (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate SQUAD! ON ME! improved: Ultimate Energy cost -{1-costValue:0%}."
   },
   "metadata": {

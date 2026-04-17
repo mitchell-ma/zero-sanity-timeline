@@ -4,7 +4,7 @@
     "name": "Pole of Menace (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Thunderlance and Thunderlance EX duration +20s."
   },
   "metadata": {

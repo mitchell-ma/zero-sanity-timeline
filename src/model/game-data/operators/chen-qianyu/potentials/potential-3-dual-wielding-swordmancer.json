@@ -4,7 +4,7 @@
     "name": "Dual-Wielding Swordmancer (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Battle skill Ascending Strike, combo skill Soar to the Stars, and ultimate Blade Gale improved: DMG Multiplier is increased to 1.1 times the original."
   },
   "metadata": {

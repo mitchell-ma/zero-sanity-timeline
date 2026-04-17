@@ -3,7 +3,7 @@
     "name": "Moment of Blazing Shadow",
     "description": "When an enemy has both Vulnerability and Arts Infliction stacks. Fire erupts beneath the enemy's feet, dealing Physical DMG.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
     "id": "MOMENT_OF_BLAZING_SHADOW"
   },

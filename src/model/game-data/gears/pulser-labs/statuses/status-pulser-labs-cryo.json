@@ -39,7 +39,7 @@
     },
     "description": "Cryo DMG +50% for 10s after applying Solidification. Cannot stack.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "PULSER_LABS",

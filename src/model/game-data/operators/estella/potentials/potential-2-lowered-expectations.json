@@ -4,7 +4,7 @@
     "name": "Lowered Expectations (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate Tremolo improved: Ultimate Energy cost -{1-costValue:0%}."
   },
   "metadata": {

@@ -21,7 +21,7 @@
     }
   ],
   "properties": {
-    "id": "ROVING_MSGR",
+    "id": "ROVING_MSGR_STAT",
     "name": "Roving MSGR",
     "duration": {
       "value": {
@@ -39,7 +39,7 @@
     },
     "description": "Physical DMG +20% when HP above 80%.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "ROVING_MSGR",

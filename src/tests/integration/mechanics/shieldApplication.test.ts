@@ -19,6 +19,8 @@ import type { AppResult } from '../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const EMBER_ID: string = require('../../../model/game-data/operators/ember/ember.json').id;
+const STEEL_OATH_ID: string = require('../../../model/game-data/operators/ember/statuses/status-the-steel-oath.json').properties.id;
+const STEEL_OATH_EMPOWERED_ID: string = require('../../../model/game-data/operators/ember/statuses/status-the-steel-oath-empowered.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT = 'slot-0';
@@ -49,7 +51,7 @@ describe('Shield Application — Ember Ultimate', () => {
     act(() => { addUlt(result.current, 5 * FPS); });
 
     const steelOath = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === 'THE_STEEL_OATH',
+      ev => ev.columnId === STEEL_OATH_ID,
     );
     expect(steelOath.length).toBeGreaterThanOrEqual(1);
   });
@@ -61,12 +63,12 @@ describe('Shield Application — Ember Ultimate', () => {
     act(() => { addUlt(result.current, 5 * FPS); });
 
     const empowered = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === 'THE_STEEL_OATH_EMPOWERED',
+      ev => ev.columnId === STEEL_OATH_EMPOWERED_ID,
     );
     expect(empowered.length).toBeGreaterThanOrEqual(1);
 
     const regular = result.current.allProcessedEvents.filter(
-      ev => ev.columnId === 'THE_STEEL_OATH',
+      ev => ev.columnId === STEEL_OATH_ID,
     );
     expect(regular).toHaveLength(0);
   });

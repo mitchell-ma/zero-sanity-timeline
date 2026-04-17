@@ -6229,7 +6229,7 @@
   ],
   "properties": {
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
     "id": "EXUBERANT_TRIGGER_BATK_EMPOWERED",

@@ -357,7 +357,7 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
     const check = (n: unknown): boolean => {
       if (!n || typeof n !== 'object') return false;
       const obj = n as Record<string, unknown>;
-      if (obj.object === 'STACKS' && (obj.of as Record<string, unknown>)?.object === 'EVENT') return true;
+      if (obj.object === NounType.STACKS && (obj.of as Record<string, unknown>)?.object === NounType.EVENT) return true;
       return check(obj.left) || check(obj.right);
     };
     return check(this._durationNode);

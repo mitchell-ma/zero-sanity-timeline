@@ -3,7 +3,7 @@
     "name": "Bombardment Sequence",
     "description": "Bombards the ground with Originium Arts, dealing massive Physical DMG to all enemies within a fan-shaped area. If the enemy has Originium Crystals on them, this skill consumes the Originium Crystals and deals one more hit of Physical DMG.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
     "id": "BOMBARDMENT_SEQUENCE"
   },

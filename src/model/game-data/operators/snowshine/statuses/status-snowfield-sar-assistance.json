@@ -19,7 +19,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "Snowfield SAR Assistant: instant HP recovery followed by continuous HP recovery ticks over 3 seconds. Heal formula scales with source operator's Will; Polar Survival (T1) multiplies the total by 1 + 15% / 25%."
   },
   "metadata": {

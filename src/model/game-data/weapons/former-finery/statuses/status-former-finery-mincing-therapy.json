@@ -53,7 +53,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "FORMER_FINERY",

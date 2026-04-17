@@ -4,7 +4,7 @@
     "name": "Insane Angling Set (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate One Monster Catch! improved: Ultimate Energy cost -15%."
   },
   "metadata": {

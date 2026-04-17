@@ -4,7 +4,7 @@
     "name": "Habitual Delay (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Combo skill Distortion improved: Physical Susceptibility duration +3s."
   },
   "metadata": {

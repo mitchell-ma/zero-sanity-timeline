@@ -4,7 +4,7 @@
     "name": "Hypothermic Perfusion (Mirage)",
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "element": "CRYO",
     "description": "Last Rite's Mirage unleashes an additional attack at the target. Deals Cryo DMG and applies Cryo Infliction.",
     "duration": {

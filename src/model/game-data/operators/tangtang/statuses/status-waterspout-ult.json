@@ -442,7 +442,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "A Waterspout created by DA CHIEF SEES YOU! via Riot Bringer talent. Has the same effects as those created by the battle skill and gains additional DMG Dealt bonus from Talent 2 (+40%/+60%) and Potential 5 (+80%)."
   },
   "metadata": {

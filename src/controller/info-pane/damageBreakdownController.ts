@@ -124,7 +124,7 @@ function buildSourceSubEntries(
   // Consolidate sources with the same label (e.g. 10 crit stack events each
   // contributing 0.03 → one entry "Cryoblasting Pistolier (Crit) ×10: 0.30").
   const filtered = sources.filter((s) => Math.abs(s.value) > 0.00001);
-  const grouped = new Map<string, { total: number; count: number; contributionIndex?: number }>();
+  const grouped = new Map<string, { total: number; count: number; contributionIndex?: number; subSources?: { source: string; value: number }[] }>();
   const order: string[] = [];
   for (const s of filtered) {
     const existing = grouped.get(s.source);
@@ -132,7 +132,7 @@ function buildSourceSubEntries(
       existing.total += s.value;
       existing.count++;
     } else {
-      grouped.set(s.source, { total: s.value, count: 1, contributionIndex: s.contributionIndex });
+      grouped.set(s.source, { total: s.value, count: 1, contributionIndex: s.contributionIndex, subSources: s.subSources });
       order.push(s.source);
     }
   }
@@ -143,6 +143,8 @@ function buildSourceSubEntries(
     const entry = makeSubEntry(displayLabel, g.total, '', format);
     if (g.contributionIndex != null && contributions?.[g.contributionIndex]) {
       entry.subEntries = buildContributionSubEntries(contributions[g.contributionIndex], sub.critMode ?? CritMode.EXPECTED);
+    } else if (g.subSources?.length) {
+      entry.subEntries = g.subSources.map(ss => makeSubEntry(ss.source, ss.value, '', format));
     }
     return entry;
   });
@@ -154,9 +156,14 @@ function buildDamageBonusSubEntries(sub: DamageSubComponents): MultiplierEntry[]
   // Physical
   const physEntry = makeElementEntry(sub, ElementType.PHYSICAL);
   entries.push(physEntry);
-  // Arts DMG% — between Physical and Heat
-  const artsEntry = makeSubEntry('Arts DMG%', sub.artsDmgBonus, 'Arts damage bonus');
-  artsEntry.subEntries = buildSourceSubEntries(sub, StatType.ARTS_DAMAGE_BONUS);
+  // Arts DMG% — applies only to arts-element hits (Heat, Cryo, Nature, Electric)
+  const isArtsActive = sub.element !== ElementType.PHYSICAL && sub.element !== ElementType.NONE;
+  const artsEntry = makeSubEntry('Arts DMG%', sub.artsDmgBonus, isArtsActive ? 'Arts damage bonus' : 'Does not apply to this hit');
+  if (isArtsActive) {
+    artsEntry.subEntries = buildSourceSubEntries(sub, StatType.ARTS_DAMAGE_BONUS);
+  } else {
+    artsEntry.cssClass = 'dmg-breakdown-neutral';
+  }
   entries.push(artsEntry);
   // Heat, Cryo, Nature, Electric
   for (const el of [ElementType.HEAT, ElementType.CRYO, ElementType.NATURE, ElementType.ELECTRIC]) {
@@ -249,15 +256,10 @@ function buildCritSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
       critSnapshot.expectedCritRate,
       critMode === CritMode.EXPECTED ? 'Effective E(T) at this frame' : '',
     );
-    critRateEntry.subEntries = buildSourceSubEntries(sub, StatType.CRITICAL_RATE);
-    entries.push(critRateEntry);
-
-    // Crit DMG
-    const critDmgEntry = makeSubEntry('Crit DMG', critDamage, 'Bonus damage on crit');
-    critDmgEntry.subEntries = buildSourceSubEntries(sub, StatType.CRITICAL_DAMAGE);
-    entries.push(critDmgEntry);
+    const critRateSubs: MultiplierEntry[] = buildSourceSubEntries(sub, StatType.CRITICAL_RATE) ?? [];
 
     // Conditional crit sources (threshold-gated, e.g. MI Security at 5 stacks)
+    // nest under Crit Rate since their contribution adds to the Crit Rate total.
     const isExpectedCrit = critMode === CritMode.EXPECTED;
     for (const source of critSnapshot.critSources) {
       if (source.probability == null) continue;
@@ -269,8 +271,16 @@ function buildCritSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
       const subEntries = [makeSubEntry(stacksLabel, source.value, '')];
       if (isExpectedCrit) subEntries.push(makeSubEntry('Uptime', source.probability, ''));
       entry.subEntries = subEntries;
-      entries.push(entry);
+      critRateSubs.push(entry);
     }
+
+    critRateEntry.subEntries = critRateSubs;
+    entries.push(critRateEntry);
+
+    // Crit DMG
+    const critDmgEntry = makeSubEntry('Crit DMG', critDamage, 'Bonus damage on crit');
+    critDmgEntry.subEntries = buildSourceSubEntries(sub, StatType.CRITICAL_DAMAGE);
+    entries.push(critDmgEntry);
 
     return entries;
   }

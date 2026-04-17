@@ -271,7 +271,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     const battleFrames = rawSkills.BATTLE.segments[0].frames;
     const firstFrameEffects = battleFrames[0].clause[0].effects;
     const mfEffect = firstFrameEffects.find(
-      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectId === 'MELTING_FLAME'
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectId === MELTING_FLAME_ID
     );
     expect(mfEffect).toBeDefined();
     expect(mfEffect.object).toBe(NounType.STATUS);
@@ -410,7 +410,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
     const clauses = allFrames[1].getClauses();
     const hasUeRecover = clauses.some(p => p.effects.some(e => {
       const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
-      return dsl?.verb === 'RECOVER' && dsl?.object === 'ULTIMATE_ENERGY';
+      return dsl?.verb === VerbType.RECOVER && dsl?.object === NounType.ULTIMATE_ENERGY;
     }));
     expect(hasUeRecover).toBe(false);
   });

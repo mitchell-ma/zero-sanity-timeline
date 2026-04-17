@@ -2,7 +2,7 @@
  * ColumnRegistry — lazy-creates EventColumn instances from status configs.
  *
  * All column behavior is derived from JSON configs (generic, operator, weapon,
- * gear, custom). The eventIdType determines the column class:
+ * gear, custom). The eventCategoryType determines the column class:
  *   INFLICTION / PHYSICAL_INFLICTION → InflictionColumn
  *   REACTION                         → ReactionColumn
  *   PHYSICAL_STATUS                  → PhysicalStatusColumn
@@ -45,7 +45,7 @@ export class ColumnRegistry {
 
   private createColumn(columnId: string): EventColumn {
     const config = getStatusById(columnId);
-    const category = config?.eventIdType as string | undefined;
+    const category = config?.eventCategoryType as string | undefined;
 
     switch (category) {
       case NounType.INFLICTION:

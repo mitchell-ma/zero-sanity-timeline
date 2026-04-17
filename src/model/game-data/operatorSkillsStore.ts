@@ -36,7 +36,7 @@ const VALID_SKILL_ENTRY_KEYS = new Set([
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
   'id', 'name', 'description', 'duration', 'windowFrames',
   'enhancementTypes', 'dependencyTypes', 'element',
-  'eventType', 'eventIdType', 'eventQualifierType', 'suppliedParameters',
+  'eventType', 'eventCategoryType', 'eventQualifierType', 'suppliedParameters',
 ]);
 
 const VALID_SKILL_METADATA_KEYS = new Set(['originId', 'eventComponentType', 'dataSources', 'icon', 'dataStatus']);
@@ -141,7 +141,7 @@ export class OperatorSkill {
   readonly dependencyTypes?: string[];
   readonly element?: string;
   readonly eventType: EventType;
-  readonly eventIdType?: string;
+  readonly eventCategoryType?: string;
   readonly eventQualifierType?: string;
   readonly activationWindow?: ActivationWindowDef;
   readonly originId?: string;
@@ -167,7 +167,7 @@ export class OperatorSkill {
     if (props.dependencyTypes) this.dependencyTypes = props.dependencyTypes as string[];
     if (props.element) this.element = props.element as string;
     this.eventType = (props.eventType as EventType) ?? EventType.SKILL;
-    if (props.eventIdType) this.eventIdType = props.eventIdType as string;
+    if (props.eventCategoryType) this.eventCategoryType = props.eventCategoryType as string;
     if (props.eventQualifierType) this.eventQualifierType = props.eventQualifierType as string;
     if (json.activationWindow) this.activationWindow = json.activationWindow as ActivationWindowDef;
     if (meta.originId) this.originId = meta.originId as string;
@@ -195,7 +195,7 @@ export class OperatorSkill {
         ...(this.dependencyTypes ? { dependencyTypes: this.dependencyTypes } : {}),
         ...(this.element ? { element: this.element } : {}),
         eventType: this.eventType,
-        ...(this.eventIdType ? { eventIdType: this.eventIdType } : {}),
+        ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
         ...(this.eventQualifierType ? { eventQualifierType: this.eventQualifierType } : {}),
         ...(this.suppliedParameters ? { suppliedParameters: this.suppliedParameters } : {}),
       },

@@ -94,7 +94,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "Shattering Originium Crystals deals additional Physical DMG."
   },
   "metadata": {

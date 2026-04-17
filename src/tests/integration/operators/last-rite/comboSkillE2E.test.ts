@@ -14,7 +14,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType, VerbType } from '../../../../dsl/semantics';
+import { NounType, VerbType, AdjectiveType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { EventStatusType, InteractionModeType, SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -149,7 +149,7 @@ describe('C. Combo consumes cryo infliction stacks', () => {
     const consumeEffect = firstFrame.clause[0].effects.find(
       (e: { verb: string; object: string; objectQualifier?: string }) =>
         e.verb === VerbType.CONSUME && e.object === NounType.STATUS
-        && e.objectQualifier === 'CRYO',
+        && e.objectQualifier === AdjectiveType.CRYO,
     );
     expect(consumeEffect).toBeDefined();
   });

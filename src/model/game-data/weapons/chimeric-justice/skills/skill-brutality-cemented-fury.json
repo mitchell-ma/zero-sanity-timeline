@@ -60,7 +60,8 @@
   "properties": {
     "name": "Brutality: Cemented Fury",
     "description": "Critical Rate +{crit_up:0.0%}. When the wielder applies Vulnerability to an enemy with no Vulnerability stacks, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
-    "id": "BRUTALITY_CEMENTED_FURY"
+    "id": "BRUTALITY_CEMENTED_FURY",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "CHIMERIC_JUSTICE",

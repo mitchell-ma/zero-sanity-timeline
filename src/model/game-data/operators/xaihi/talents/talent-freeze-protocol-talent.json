@@ -9,7 +9,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Ultimate Stack Overflow improved: The ultimate also dispels Cryo Infliction and Solidification from the entire team."
   },
   "metadata": {

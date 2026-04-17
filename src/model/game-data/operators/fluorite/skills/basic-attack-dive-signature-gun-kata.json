@@ -6,7 +6,7 @@
     "name": "Signature Gun Kata (Dive)",
     "description": "Basic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",
     "element": "NATURE",
     "id": "SIGNATURE_GUN_KATA_DIVE"

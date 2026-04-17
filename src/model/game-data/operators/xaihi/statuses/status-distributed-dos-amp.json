@@ -7,6 +7,7 @@
           "verb": "APPLY",
           "object": "STAT",
           "objectId": "AMP",
+          "objectQualifier": "ARTS",
           "toDeterminer": "THIS",
           "to": "OPERATOR",
           "with": {
@@ -76,7 +77,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "When the controlled operator is already at Max HP when triggering the Auxiliary Crystal HP restoration, grants a temporary Arts Amp."
   },
   "metadata": {

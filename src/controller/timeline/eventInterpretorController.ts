@@ -464,7 +464,7 @@ function resolveClauseDimensionKey(
   def: StatusEventDef,
   keys: string[],
 ): string | undefined {
-  if (dim === 'POTENTIAL') {
+  if (dim === NounType.POTENTIAL) {
     let best: string | undefined;
     let bestN = -1;
     for (const k of keys) {
@@ -475,7 +475,7 @@ function resolveClauseDimensionKey(
     }
     return best;
   }
-  if (dim === 'TALENT_LEVEL' || dim === 'INTELLECT') {
+  if (dim === NounType.TALENT_LEVEL || dim === StatType.INTELLECT) {
     const talentLevel = resolveTalentLevel(def, ctx);
     let best: string | undefined;
     let bestN = 0;
@@ -600,7 +600,7 @@ export class EventInterpretorController {
   private getControlledSlotAtFrame?: (frame: number) => string;
   private triggerIndex?: TriggerIndex;
   /** Pending stat reversals: negative deltas scheduled at status expiry frames. */
-  _statReversals?: { frame: number; entityId: string; stat: import('../../consts/enums').StatType; value: number; lifecycleKey?: string }[];
+  _statReversals?: { frame: number; entityId: string; stat: import('../../consts/enums').StatType; value: number; lifecycleKey?: string; sourceColumnId?: string }[];
   /** Replace-semantics stat totals for lifecycle clause effects, keyed by `statusId:entityId`. */
   private _lifecycleStatTotals?: Map<string, Record<string, number>>;
   /** Temporary frame-scoped stat reversals (reversed immediately after snapshot). */
@@ -1490,7 +1490,7 @@ export class EventInterpretorController {
               const reverseAtFrame = ctx.parentSegmentEndFrame ?? ctx.parentEventEndFrame;
               if (reverseAtFrame != null) {
                 if (!this._statReversals) this._statReversals = [];
-                this._statReversals.push({ frame: reverseAtFrame, entityId: ownerEntityId, stat: statKey, value: -v });
+                this._statReversals.push({ frame: reverseAtFrame, entityId: ownerEntityId, stat: statKey, value: -v, sourceColumnId: ctx.parentStatusId });
               }
             }
             // Fire BECOME state trigger on 0→positive transition (not when already active)
@@ -1601,10 +1601,10 @@ export class EventInterpretorController {
       const consumed = this.controller.consumeEvent(consumeCol, statusOwner, ctx.frame, source,
         isInflictionConsume ? { count } : hasExplicitCount ? { count, restack: true } : undefined);
       if (consumed > 0) this.lastConsumedStacks = consumed;
-      // Reschedule stat reversals for consumed statuses to fire at consumption frame
+      // Reschedule stat reversals for the consumed status to fire at consumption frame
       if (consumed > 0 && this._statReversals?.length) {
         for (const r of this._statReversals) {
-          if (r.frame > ctx.frame) r.frame = ctx.frame;
+          if (r.sourceColumnId === consumeCol && r.frame > ctx.frame) r.frame = ctx.frame;
         }
       }
       return consumed > 0;
@@ -2170,13 +2170,26 @@ export class EventInterpretorController {
     let result = false;
     const physCol = columnId as string;
     const parentUid = ctx.sourceEventUid;
+    // Reuse the freeform wrapper's uid for the applied event on the same column
+    // so the raw wrapper and processed event share an identity — otherwise the
+    // view renders a derived uid that handleRemoveEvent/handleMoveEvent can't
+    // resolve back to the raw event, leaving the event non-editable. Matches
+    // the `freeformUidFor` pattern used for APPLY INFLICTION / APPLY REACTION.
+    const freeformWrapperUid = ctx.sourceEventColumnId === physCol ? ctx.sourceEventUid : undefined;
+    // Inherit the wrapper's total segment duration so the user's segment-resize
+    // override on the wrapper flows through to the applied event's duration.
+    // Without this the applied event hardcodes LIFT_KNOCK_DOWN_DURATION /
+    // BREACH_DURATION[...] and ignores user resizes.
+    const freeformWrapperDuration = (freeformWrapperUid && ctx.sourceEvent)
+      ? ctx.sourceEvent.segments.reduce((sum, seg) => sum + seg.properties.duration, 0)
+      : undefined;
     if (physCol === PHYSICAL_STATUS_COLUMNS.LIFT
       || physCol === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN) {
-      result = this.applyLiftOrKnockDown(physCol, ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode);
+      result = this.applyLiftOrKnockDown(physCol, ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode, freeformWrapperUid, freeformWrapperDuration);
     } else if (physCol === PHYSICAL_STATUS_COLUMNS.CRUSH) {
-      result = this.applyCrush(ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode);
+      result = this.applyCrush(ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode, freeformWrapperUid, freeformWrapperDuration);
     } else if (physCol === PHYSICAL_STATUS_COLUMNS.BREACH) {
-      result = this.applyBreach(ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode);
+      result = this.applyBreach(ctx.frame, source, isForced, parentUid, ctx.sourceCreationInteractionMode, freeformWrapperUid, freeformWrapperDuration);
     }
 
     // Check if a physical status event was created (not just Vulnerable)
@@ -2203,19 +2216,23 @@ export class EventInterpretorController {
     isForced: boolean,
     parentEventUid?: string,
     creationInteractionMode?: InteractionModeType,
+    freeformWrapperUid?: string,
+    freeformWrapperDuration?: number,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
     const hasVulnerable = this.controller.activeCount(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
     ) > 0;
 
-    // Always add 1 Vulnerable stack
+    // Always add 1 Vulnerable stack. This is an auto side-effect on a
+    // DIFFERENT column from the wrapper, so it cannot reuse the wrapper's
+    // uid — keep it engine-derived (no creationInteractionMode) so the view
+    // renders it non-draggable rather than as a ghost-draggable whose uid
+    // can't round-trip to a raw event.
     this.controller.applyEvent(
       PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
       PHYSICAL_INFLICTION_DURATION, source,
-      { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame), parents,
-        ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
-      },
+      { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame), parents },
     );
 
     // Status only triggers if enemy had Vulnerable OR isForced
@@ -2224,18 +2241,19 @@ export class EventInterpretorController {
     const statusId = columnId as PhysicalStatusType;
     const label = STATUS_LABELS[statusId];
 
+    const effectiveDuration = freeformWrapperDuration ?? LIFT_KNOCK_DOWN_DURATION;
     this.controller.applyEvent(
-      columnId, ENEMY_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
+      columnId, ENEMY_ID, frame, effectiveDuration, source, {
         statusId,
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
-        uid: derivedEventUid(columnId, source.ownerEntityId, frame),
+        uid: freeformWrapperUid ?? derivedEventUid(columnId, source.ownerEntityId, frame),
         parents,
         event: {
           ...(creationInteractionMode != null ? { creationInteractionMode } : {}),
           name: label,
           segments: [{
-            properties: { duration: LIFT_KNOCK_DOWN_DURATION, name: label },
+            properties: { duration: effectiveDuration, name: label },
             frames: [{
               offsetFrame: 0,
               damageElement: ElementType.PHYSICAL,
@@ -2267,6 +2285,8 @@ export class EventInterpretorController {
     isForced: boolean,
     parentEventUid?: string,
     creationInteractionMode?: InteractionModeType,
+    freeformWrapperUid?: string,
+    freeformWrapperDuration?: number,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
     const vulnerableCount = this.controller.activeCount(
@@ -2277,12 +2297,11 @@ export class EventInterpretorController {
       // No Vulnerable stacks active. Unless forced (e.g. freeform placement),
       // just add 1 stack and skip creating a Crush.
       if (!isForced) {
+        // Side-effect VULNERABLE: see applyLiftOrKnockDown — engine-derived.
         this.controller.applyEvent(
           PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
           PHYSICAL_INFLICTION_DURATION, source,
-          { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'crush'), parents,
-            ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
-          },
+          { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'crush'), parents },
         );
         return true;
       }
@@ -2311,18 +2330,19 @@ export class EventInterpretorController {
 
     const damageMultiplier = getPhysicalStatusBaseMultiplier(PhysicalStatusType.CRUSH, consumed);
 
+    const effectiveDuration = freeformWrapperDuration ?? LIFT_KNOCK_DOWN_DURATION;
     this.controller.applyEvent(
-      PHYSICAL_STATUS_COLUMNS.CRUSH, ENEMY_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
+      PHYSICAL_STATUS_COLUMNS.CRUSH, ENEMY_ID, frame, effectiveDuration, source, {
         statusId: PhysicalStatusType.CRUSH,
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
-        uid: derivedEventUid(PhysicalStatusType.CRUSH, source.ownerEntityId, frame),
+        uid: freeformWrapperUid ?? derivedEventUid(PhysicalStatusType.CRUSH, source.ownerEntityId, frame),
         parents,
         event: {
           ...(creationInteractionMode != null ? { creationInteractionMode } : {}),
           stacks: consumed,
           segments: [{
-            properties: { duration: LIFT_KNOCK_DOWN_DURATION, name: STATUS_LABELS[PhysicalStatusType.CRUSH] },
+            properties: { duration: effectiveDuration, name: STATUS_LABELS[PhysicalStatusType.CRUSH] },
             frames: [{
               offsetFrame: 0,
               damageElement: ElementType.PHYSICAL,
@@ -2353,6 +2373,8 @@ export class EventInterpretorController {
     isForced: boolean,
     parentEventUid?: string,
     creationInteractionMode?: InteractionModeType,
+    freeformWrapperUid?: string,
+    freeformWrapperDuration?: number,
   ): boolean {
     const parents = parentEventUid ? [parentEventUid] : undefined;
     const vulnerableCount = this.controller.activeCount(
@@ -2361,12 +2383,11 @@ export class EventInterpretorController {
 
     if (vulnerableCount === 0) {
       if (!isForced) {
+        // Side-effect VULNERABLE: see applyLiftOrKnockDown — engine-derived.
         this.controller.applyEvent(
           PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_ID, frame,
           PHYSICAL_INFLICTION_DURATION, source,
-          { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'breach'), parents,
-            ...(creationInteractionMode != null ? { event: { creationInteractionMode } } : {}),
-          },
+          { uid: derivedEventUid(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, source.ownerEntityId, frame, 'breach'), parents },
         );
         return true;
       }
@@ -2392,14 +2413,14 @@ export class EventInterpretorController {
 
     const stackCount = Math.min(consumed, 4);
     const damageMultiplier = getPhysicalStatusBaseMultiplier(PhysicalStatusType.BREACH, consumed);
-    const durationFrames = BREACH_DURATION[stackCount] ?? BREACH_DURATION[1];
+    const durationFrames = freeformWrapperDuration ?? (BREACH_DURATION[stackCount] ?? BREACH_DURATION[1]);
 
     this.controller.applyEvent(
       PHYSICAL_STATUS_COLUMNS.BREACH, ENEMY_ID, frame, durationFrames, source, {
         statusId: PhysicalStatusType.BREACH,
         stackingMode: StackInteractionType.RESET,
         maxStacks: 1,
-        uid: derivedEventUid(PhysicalStatusType.BREACH, source.ownerEntityId, frame),
+        uid: freeformWrapperUid ?? derivedEventUid(PhysicalStatusType.BREACH, source.ownerEntityId, frame),
         parents,
         event: {
           ...(creationInteractionMode != null ? { creationInteractionMode } : {}),
@@ -2867,6 +2888,15 @@ export class EventInterpretorController {
     if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clauses) && !frame.frameSkipped) {
       const frameKey = `${event.uid}:${si}:${fi}`;
       this.controller.snapshotStatDeltas(frameKey, event.ownerEntityId);
+      // Also snapshot source operator's slot deltas when the owner differs (e.g. team-owned
+      // status damage like Steel Oath Harass needs the source operator's Fervent Morale ATK%).
+      // sourceEntityId is an operator ID — resolve to slot ID since the accumulator is keyed by slot.
+      if (event.sourceEntityId && event.sourceEntityId !== event.ownerEntityId) {
+        const sourceSlotId = this.resolveSlotId(event.sourceEntityId);
+        if (sourceSlotId !== event.ownerEntityId) {
+          this.controller.snapshotStatDeltas(frameKey, sourceSlotId);
+        }
+      }
       // Also snapshot enemy deltas so the damage formula can read enemy-side
       // factor stats (e.g. WEAKNESS) at frame resolution.
       this.controller.snapshotStatDeltas(frameKey, ENEMY_ID);
@@ -3262,6 +3292,14 @@ export class EventInterpretorController {
             if (this.controller.hasStatAccumulator() && hasDealDamageClause(fm.clauses)) {
               const frameKey = `${statusEv.uid}:${si}:${fi}`;
               this.controller.snapshotStatDeltas(frameKey, statusEv.ownerEntityId);
+              // Also snapshot source operator's slot deltas when the owner differs (e.g. team-owned
+              // status damage needs the source operator's runtime stat buffs).
+              if (statusEv.sourceEntityId && statusEv.sourceEntityId !== statusEv.ownerEntityId) {
+                const sourceSlotId = this.resolveSlotId(statusEv.sourceEntityId);
+                if (sourceSlotId !== statusEv.ownerEntityId) {
+                  this.controller.snapshotStatDeltas(frameKey, sourceSlotId);
+                }
+              }
               this.controller.snapshotStatDeltas(frameKey, ENEMY_ID);
               this.controller.snapshotStatDeltas(frameKey, TEAM_ID);
             }
@@ -3650,7 +3688,7 @@ export class EventInterpretorController {
       return {
         verb: te.verb as VerbType,
         cardinalityConstraint: te.cardinalityConstraint as Effect['cardinalityConstraint'],
-        value: te.value === 'MAX' ? THRESHOLD_MAX : te.value as Effect['value'],
+        value: te.value === THRESHOLD_MAX ? THRESHOLD_MAX : te.value as Effect['value'],
         effects: te.effects?.map(se => ({
           verb: se.verb as VerbType,
           object: se.object as Effect['object'],
@@ -3678,7 +3716,7 @@ export class EventInterpretorController {
       until: te.until as Effect['until'],
       of: te.of as Effect['of'],
       cardinalityConstraint: te.cardinalityConstraint as Effect['cardinalityConstraint'],
-      value: te.value === 'MAX' ? THRESHOLD_MAX : te.value as Effect['value'],
+      value: te.value === THRESHOLD_MAX ? THRESHOLD_MAX : te.value as Effect['value'],
     };
   }
 
@@ -3738,7 +3776,7 @@ export class EventInterpretorController {
     // (e.g. OLDEN_STARE's dive trigger when no OLDEN_STARE is active on the enemy,
     // or AUXILIARY_CRYSTAL's FINAL_STRIKE trigger when no crystal is active on the operator).
     if (!parentEv) {
-      const parentEventIdType = ctx.def.properties.eventIdType ?? ctx.def.properties.type;
+      const parentEventIdType = ctx.def.properties.eventCategoryType ?? ctx.def.properties.type;
       const isTalentOrPotential = parentEventIdType === NounType.TALENT
         || parentEventIdType === NounType.POTENTIAL;
       if (!isTalentOrPotential) {
@@ -4046,12 +4084,34 @@ export class EventInterpretorController {
       if (isFirstMatch) break;
     }
 
+    // Scale per-stack stat contributions by the number of active stacks.
+    // The lifecycle fires once per entity (latest event), not per instance.
+    // Each stack contributes independently (per CLAUDE.md: "per-stack, not per-status").
+    // interpret() already applied 1× of each stat delta to the accumulator,
+    // so apply the remaining (activeStacks - 1)× delta and record the full
+    // scaled total for reversal scheduling.
+    const activeStacks = this.controller.activeCount(statusId, instanceEntityId, entry.frame);
+    if (activeStacks > 1 && this.controller.hasStatAccumulator()) {
+      for (const stat of Object.keys(newTotals)) {
+        const extra = newTotals[stat] * (activeStacks - 1);
+        this.controller.applyStatDelta(instanceEntityId, { [stat as import('../../consts/enums').StatType]: extra });
+        newTotals[stat] *= activeStacks;
+      }
+    }
+
     // Push source for breakdown display and schedule reversal at parent event end
     if (this.controller.hasStatAccumulator()) {
       const statusName = ctx.def.properties.name ?? statusId;
       for (const [stat, value] of Object.entries(newTotals) as [import('../../consts/enums').StatType, number][]) {
         if (value !== 0) {
-          const source = buildStatSource(statusName, value, { verb: VerbType.APPLY, object: NounType.STAT, objectId: stat }, interpretCtx);
+          const perStack = value / activeStacks;
+          const label = activeStacks > 1
+            ? `${statusName} ×${activeStacks}`
+            : statusName;
+          const source: StatSource = { label, value };
+          if (activeStacks > 1) {
+            source.subSources = [{ label: 'Per stack', value: perStack }];
+          }
           this.controller.pushStatSource(instanceEntityId, stat, source);
         }
       }
@@ -4063,7 +4123,7 @@ export class EventInterpretorController {
       this._statReversals = this._statReversals.filter(r => r.lifecycleKey !== totalsKey);
       for (const [stat, value] of Object.entries(newTotals) as [import('../../consts/enums').StatType, number][]) {
         if (value !== 0) {
-          this._statReversals.push({ frame: parentEventEndFrame, entityId: instanceEntityId, stat, value: -value, lifecycleKey: totalsKey });
+          this._statReversals.push({ frame: parentEventEndFrame, entityId: instanceEntityId, stat, value: -value, lifecycleKey: totalsKey, sourceColumnId: statusId });
         }
       }
     }

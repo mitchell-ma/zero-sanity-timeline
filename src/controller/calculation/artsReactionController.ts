@@ -86,24 +86,37 @@ export interface ReactionDamageTick {
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
 
-/** Read enemy's current per-element SUSCEPTIBILITY stat from the accumulator.
- *  Mirrors the damageTableBuilder pattern so APPLY STAT <ELEMENT>_SUSCEPTIBILITY
- *  contributions (e.g. Antal FOCUS) flow into reaction damage multipliers. */
-function getEnemySusceptibilityStat(element: ElementType): number {
-  const key = `${element}_${StatusType.SUSCEPTIBILITY}`;
+const ARTS_ELEMENTS_FOR_STAT: ReadonlySet<ElementType> = new Set([
+  ElementType.HEAT, ElementType.CRYO, ElementType.NATURE, ElementType.ELECTRIC,
+]);
+
+/** Read one stat from the enemy accumulator, guarded by registered-StatType. */
+function readEnemyStatIfExists(key: string): number {
   if (!(Object.values(StatType) as string[]).includes(key)) return 0;
   return getLastStatAccumulator()?.getStat(ENEMY_ID, key as StatType) ?? 0;
 }
 
-/** Read enemy's current per-element FRAGILITY stat from the accumulator.
- *  Full element coverage (PHYSICAL/HEAT/CRYO/NATURE/ELECTRIC/ARTS); returns 0
- *  for elements whose stat key isn't registered. Mirrors the susceptibility
- *  shape so APPLY STAT <ELEMENT>_FRAGILITY (e.g. Razor Clawmark) flows into
- *  reaction damage multipliers. */
+/** Read enemy's effective SUSCEPTIBILITY stat for `element`: per-element
+ *  (HEAT_SUSCEPTIBILITY etc.) plus ARTS_SUSCEPTIBILITY when `element` is an
+ *  arts element. Mirrors damageTableBuilder so APPLY STAT flows into reaction
+ *  damage multipliers. */
+function getEnemySusceptibilityStat(element: ElementType): number {
+  let sum = readEnemyStatIfExists(`${element}_${StatusType.SUSCEPTIBILITY}`);
+  if (ARTS_ELEMENTS_FOR_STAT.has(element)) {
+    sum += readEnemyStatIfExists(`${ElementType.ARTS}_${StatusType.SUSCEPTIBILITY}`);
+  }
+  return sum;
+}
+
+/** Read enemy's effective FRAGILITY stat for `element`. Same umbrella logic
+ *  as susceptibility — arts damage reads the per-element stat plus
+ *  ARTS_FRAGILITY. */
 function getEnemyFragilityStat(element: ElementType): number {
-  const key = `${element}_${StatusType.FRAGILITY}`;
-  if (!(Object.values(StatType) as string[]).includes(key)) return 0;
-  return getLastStatAccumulator()?.getStat(ENEMY_ID, key as StatType) ?? 0;
+  let sum = readEnemyStatIfExists(`${element}_${StatusType.FRAGILITY}`);
+  if (ARTS_ELEMENTS_FOR_STAT.has(element)) {
+    sum += readEnemyStatIfExists(`${ElementType.ARTS}_${StatusType.FRAGILITY}`);
+  }
+  return sum;
 }
 
 /**

@@ -3,7 +3,7 @@
     "name": "Soar to the Stars",
     "description": "When an enemy becomes Vulnerable. A slashing dash that passes through the target enemy and deals Physical DMG and Lift to all enemies along the way.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
     "id": "SOAR_TO_THE_STARS"
   },

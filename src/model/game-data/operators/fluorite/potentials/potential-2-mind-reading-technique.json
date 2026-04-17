@@ -4,7 +4,7 @@
     "name": "Mind Reading Technique (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Talent Unpredictable improved: Chance to ignore Arts DMG +10%."
   },
   "metadata": {

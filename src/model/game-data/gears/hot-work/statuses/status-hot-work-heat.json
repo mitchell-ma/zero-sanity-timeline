@@ -39,7 +39,7 @@
     },
     "description": "Heat DMG +50% for 10s after applying Combustion. Cannot stack.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "HOT_WORK",

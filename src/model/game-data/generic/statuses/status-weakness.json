@@ -24,7 +24,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Reduces the affected target's DMG dealt.",
     "duration": {
       "value": {

@@ -23,7 +23,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "REACTION",
+    "eventCategoryType": "REACTION",
     "description": "Triggered by consuming Solidification. Deals Cryo DMG based on the consumed Solidification's status level."
   },
   "metadata": {

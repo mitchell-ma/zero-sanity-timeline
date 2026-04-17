@@ -18,7 +18,7 @@ import {
   NounType, VerbType,
   ValueOperation,
 } from '../../../../dsl/semantics';
-import { InteractionModeType } from '../../../../consts/enums';
+import { InteractionModeType, StatType } from '../../../../consts/enums';
 import { useApp } from '../../../../app/useApp';
 import { FPS } from '../../../../utils/timeline';
 import { INFLICTION_COLUMNS, ENEMY_ID, REACTION_COLUMNS } from '../../../../model/channels';
@@ -397,7 +397,7 @@ describe('B. Freezing Point — unified talent event with FIRST_MATCH clause', (
 describe('C. P2 Flawless Creation stat clauses', () => {
   it('C1: has APPLY STAT INTELLECT +20', () => {
     const intEffect = P2_JSON.clause[0].effects.find(
-      (e: { objectId: string }) => e.objectId === 'INTELLECT',
+      (e: { objectId: string }) => e.objectId === StatType.INTELLECT,
     );
     expect(intEffect).toBeDefined();
     expect(intEffect.verb).toBe(VerbType.APPLY);
@@ -407,7 +407,7 @@ describe('C. P2 Flawless Creation stat clauses', () => {
 
   it('C2: has APPLY STAT CRITICAL_RATE +0.07', () => {
     const critEffect = P2_JSON.clause[0].effects.find(
-      (e: { objectId: string }) => e.objectId === 'CRITICAL_RATE',
+      (e: { objectId: string }) => e.objectId === StatType.CRITICAL_RATE,
     );
     expect(critEffect).toBeDefined();
     expect(critEffect.verb).toBe(VerbType.APPLY);
@@ -423,10 +423,10 @@ describe('C. P2 Flawless Creation stat clauses', () => {
 describe('D. P5 Expert Mechcrafter', () => {
   it('D1: status has ATK +10% and Crit DMG +30%', () => {
     const effects = EXPERT_STATUS_JSON.clause[0].effects;
-    const atk = effects.find((e: { objectId: string }) => e.objectId === 'ATTACK_BONUS');
+    const atk = effects.find((e: { objectId: string }) => e.objectId === StatType.ATTACK_BONUS);
     expect(atk).toBeDefined();
     expect(atk.with.value.value).toBe(0.1);
-    const critDmg = effects.find((e: { objectId: string }) => e.objectId === 'CRITICAL_DAMAGE');
+    const critDmg = effects.find((e: { objectId: string }) => e.objectId === StatType.CRITICAL_DAMAGE);
     expect(critDmg).toBeDefined();
     expect(critDmg.with.value.value).toBe(0.3);
   });

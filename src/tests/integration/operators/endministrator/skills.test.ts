@@ -22,7 +22,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType, AdjectiveType } from '../../../../dsl/semantics';
+import { NounType, VerbType, AdjectiveType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { ColumnType, EventStatusType, InteractionModeType, SegmentType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -611,12 +611,12 @@ describe('D2. Realspace Stasis', () => {
     // (ESSENCE_DISINTEGRATION is applied by the talent trigger via CONSUME cascade)
     for (const trigger of statusJson.onTriggerClause) {
       const consumeEffect = trigger.effects.find(
-        (e: Record<string, unknown>) => e.verb === 'CONSUME' && e.object === 'EVENT',
+        (e: Record<string, unknown>) => e.verb === VerbType.CONSUME && e.object === NounType.EVENT,
       );
       expect(consumeEffect).toBeDefined();
 
       const shatterEffect = trigger.effects.find(
-        (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectId === 'ORIGINIUM_CRYSTALS_SHATTER',
+        (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectId === ORIGINIUM_CRYSTALS_SHATTER_ID,
       );
       expect(shatterEffect).toBeDefined();
     }

@@ -5,6 +5,7 @@
  * Auto-discovers operators/*-operator.json via require.context.
  */
 import { checkKeys, VALID_METADATA_KEYS, validateTalentLevelArrays, validateNonNegativeValues } from './validationUtils';
+import { NounType, VerbType } from '../../dsl/semantics';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -242,7 +243,7 @@ function loadPotentialsFromFiles(context: any, operatorDir: string): { resolved:
 function resolveMaxLevel(node: unknown): number | null {
   if (!node || typeof node !== 'object') return null;
   const rec = node as Record<string, unknown>;
-  if (rec.verb === 'IS' && typeof rec.value === 'number') return rec.value;
+  if (rec.verb === VerbType.IS && typeof rec.value === 'number') return rec.value;
   return null;
 }
 
@@ -251,7 +252,7 @@ function deriveTalentMaxLevel(obj: unknown): number {
   if (Array.isArray(obj)) return Math.max(0, ...obj.map(deriveTalentMaxLevel));
   if (obj && typeof obj === 'object') {
     const rec = obj as Record<string, unknown>;
-    if (rec.object === 'TALENT_LEVEL' && rec.verb === 'VARY_BY' && Array.isArray(rec.value)) {
+    if (rec.object === NounType.TALENT_LEVEL && rec.verb === VerbType.VARY_BY && Array.isArray(rec.value)) {
       return rec.value.length;
     }
     return Math.max(0, ...Object.values(rec).map(deriveTalentMaxLevel));

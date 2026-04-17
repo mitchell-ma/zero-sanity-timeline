@@ -4,7 +4,7 @@
     "name": "Super Salty Comeback (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Battle skill Unconventional Lure improved: SP Recovery grants an additional 10 SP."
   },
   "metadata": {

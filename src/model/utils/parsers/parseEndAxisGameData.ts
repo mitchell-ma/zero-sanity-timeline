@@ -315,11 +315,11 @@ function buildResourceEffect(
   };
 
   if (resourceType === CombatResourceType.ULTIMATE_ENERGY && interactionType === VerbType.RECOVER) {
-    if (target === 'SELF') {
-      effect.toDeterminer = DeterminerType.THIS;
-      effect.to = NounType.OPERATOR;
-    } else if (target === NounType.TEAM) {
+    if (target === NounType.TEAM) {
       effect.toDeterminer = DeterminerType.ALL;
+      effect.to = NounType.OPERATOR;
+    } else if (target) {
+      effect.toDeterminer = DeterminerType.THIS;
       effect.to = NounType.OPERATOR;
     }
   }
@@ -364,7 +364,7 @@ function parseBattleSkill(char: GameDataCharacter): SkillCategory {
 
   // Ultimate energy gain (self)
   if (char.skill_gaugeGain) {
-    effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.skill_gaugeGain, 'SELF'));
+    effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.skill_gaugeGain, DeterminerType.THIS));
   }
 
   // Ultimate energy gain (team)
@@ -397,7 +397,7 @@ function parseComboSkill(char: GameDataCharacter): SkillCategory {
 
   // Ultimate energy gain
   if (char.link_gaugeGain) {
-    effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.link_gaugeGain, 'SELF'));
+    effects.push(buildResourceEffect(CombatResourceType.ULTIMATE_ENERGY, VerbType.RECOVER, char.link_gaugeGain, DeterminerType.THIS));
   }
 
   const result: SkillCategory = {

@@ -3,7 +3,7 @@
     "name": "Arcane Staff: Matrix Displacement",
     "description": "When an Arts Reaction is applied to an enemy. A quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "NATURE",
     "id": "MATRIX_DISPLACEMENT",
     "suppliedParameters": {

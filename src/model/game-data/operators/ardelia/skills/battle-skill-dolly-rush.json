@@ -3,7 +3,7 @@
     "name": "Dolly Rush",
     "description": "Hops on Mr. Dolly and rams the target to deal Nature DMG. If the target has Corrosion, then consume the Corrosion and apply Physical Susceptibility and Arts Susceptibility to the target.",
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "NATURE",
     "id": "DOLLY_RUSH"
   },

@@ -4,7 +4,7 @@
     "name": "Electric Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Electric Fragility applied to enemy.",
     "duration": {
       "value": {

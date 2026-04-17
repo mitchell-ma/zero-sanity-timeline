@@ -546,7 +546,7 @@
     "name": "Rocky Whispers",
     "description": "An attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "NATURE",
     "id": "ROCKY_WHISPERS_BATK"

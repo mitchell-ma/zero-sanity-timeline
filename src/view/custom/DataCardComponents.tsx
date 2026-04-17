@@ -8,7 +8,7 @@
 import React, { useState, useCallback, createContext, useContext } from 'react';
 import { VerbType, NounType } from '../../dsl/semantics';
 import { splitConditionText, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
-import { PERMANENT_DURATION } from '../../consts/enums';
+import { PERMANENT_DURATION, UnitType } from '../../consts/enums';
 import { formatFlat } from '../../controller/info-pane/loadoutPaneController';
 import type { JsonSkillData } from './OperatorEventEditor';
 import type { NormalizedEffectDef } from '../../controller/gameDataStore';
@@ -204,7 +204,7 @@ function formatDuration(dur: { value: unknown; unit: string } | undefined): stri
   const val = resolveLeaf(dur.value);
   if (val == null) return '';
   if (val >= PERMANENT_DURATION) return 'Infinite';
-  const unit = dur.unit === 'FRAME' ? 'f' : 's';
+  const unit = dur.unit === UnitType.FRAME ? 'f' : 's';
   return `${formatFlat(val)}${unit}`;
 }
 
@@ -393,6 +393,67 @@ function hasNestedComplexity(obj: Record<string, unknown>): boolean {
   return false;
 }
 
+type SuppliedParamDef = { id: string; name: string; lowerRange: number; upperRange: number; default: number };
+
+/**
+ * Render suppliedParameters as a branching tree — matching the PropertyTree
+ * styling used for other nested property shapes (duration, stacks, compound
+ * ValueNodes). Top level is the "Supplied Parameters" label, each axis (e.g.
+ * VARY_BY) is a mid-level branch, and each param def hangs below with its
+ * range + default as leaf rows.
+ */
+function SuppliedParametersTree({ axes }: { axes: Record<string, unknown> }) {
+  const axisEntries = Object.entries(axes).filter(([, defs]) => Array.isArray(defs) && (defs as unknown[]).length > 0);
+  if (axisEntries.length === 0) return null;
+
+  return (
+    <div className="ops-prop-tree">
+      <span className="ops-prop-tree-label">Supplied Parameters</span>
+      <div className="ops-prop-tree-children">
+        {axisEntries.map(([axis, rawDefs], ai) => {
+          const defs = rawDefs as SuppliedParamDef[];
+          const axisLabel = axis.replace(/_/g, ' ').toLowerCase();
+          const isLastAxis = ai === axisEntries.length - 1;
+          const axisCls = `ops-vt-branch${isLastAxis ? ' ops-vt-branch--last' : ' ops-vt-branch--mid'}`;
+          return (
+            <div key={axis} className={axisCls}>
+              <div className="ops-prop-tree">
+                <span className="ops-prop-tree-label">{axisLabel}</span>
+                <div className="ops-prop-tree-children">
+                  {defs.map((def, di) => {
+                    const isLastParam = di === defs.length - 1;
+                    const paramCls = `ops-vt-branch${isLastParam ? ' ops-vt-branch--last' : ' ops-vt-branch--mid'}`;
+                    const name = def.name || def.id;
+                    return (
+                      <div key={def.id ?? name} className={paramCls}>
+                        <div className="ops-prop-tree">
+                          <span className="ops-prop-tree-label">{name}</span>
+                          <div className="ops-prop-tree-children">
+                            <div className="ops-vt-branch ops-vt-branch--mid">
+                              <span className="ops-prop-tree-leaf">
+                                <span className="ops-prop-tree-leaf-label">Range</span> {`${def.lowerRange}\u2013${def.upperRange}`}
+                              </span>
+                            </div>
+                            <div className="ops-vt-branch ops-vt-branch--last">
+                              <span className="ops-prop-tree-leaf">
+                                <span className="ops-prop-tree-leaf-label">Default</span> {def.default}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function PropertiesView({ props, editState, basePath }: {
   props: Record<string, unknown>;
   editState?: EditState;
@@ -421,6 +482,13 @@ function PropertiesView({ props, editState, basePath }: {
         if (val == null) return null;
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
         const keyPath = pathFor(key);
+        // suppliedParameters — unique shape (`{ VARY_BY: [ParamDef, …] }`) that
+        // the generic `formatPropertyValue` fallback collapses into an unreadable
+        // comma-joined blob. Render each declared parameter as a branching tree
+        // matching the styling used for other nested property shapes.
+        if (key === 'suppliedParameters' && val && typeof val === 'object') {
+          return <SuppliedParametersTree key={key} axes={val as Record<string, unknown>} />;
+        }
         // VARY_BY tables — delegate to VaryByLeaf so the active loadout
         // column is highlighted via VaryByContext.
         if (val && typeof val === 'object' && !Array.isArray(val)) {
@@ -1229,6 +1297,7 @@ export function TabbedSegmentView({ entry, critState, editState }: {
   const topFrames = entry.data.frames ?? [];
   const [activeSegTab, setActiveSegTab] = useState(0);
   const [activeFrameTab, setActiveFrameTab] = useState<number | null>(null);
+  const varyByLoadout = useContext(VaryByContext);
 
   const handleSegChange = useCallback((si: number) => {
     setActiveSegTab(si);
@@ -1348,7 +1417,7 @@ export function TabbedSegmentView({ entry, critState, editState }: {
               const segDur = seg.properties?.duration ?? seg.duration as { value: unknown; unit: string } | undefined;
               if (!segDur) return null;
               const range = resolveLeafRange((segDur as { value: unknown }).value);
-              const unit = (segDur as { unit: string }).unit === 'FRAME' ? 'f' : 's';
+              const unit = (segDur as { unit: string }).unit === UnitType.FRAME ? 'f' : 's';
               if (range && range.length > 1 && new Set(range).size > 1) {
                 // VARY_BY duration — editable cells. Resolve the path to the inner values[] array.
                 const durObj = segDur as Record<string, unknown>;
@@ -1411,16 +1480,20 @@ export function TabbedSegmentView({ entry, critState, editState }: {
             })()}
             {segFrames.length > 0 && (() => {
               const totals = sumFrameMultipliers(segFrames);
-              if (totals) return (
-                <div className="ops-frame-effect">
-                  <div className="ops-frame-effect-sentence">
-                    <span className="ops-frame-effect-verb">Total Multiplier</span>
+              if (totals) {
+                const rawIdx = resolveActiveIndex(varyByLoadout, NounType.SKILL_LEVEL);
+                const totalActiveIdx = rawIdx != null ? Math.max(0, Math.min(rawIdx, totals.length - 1)) : undefined;
+                return (
+                  <div className="ops-frame-effect">
+                    <div className="ops-frame-effect-sentence">
+                      <span className="ops-frame-effect-verb">Total Multiplier</span>
+                    </div>
+                    <div className="ops-frame-effect-with"><div className="ops-frame-vary">
+                      <VaryTable columnLabels={totals.map((_v, vi) => vi + 1)} rows={[{ label: 'value', values: totals.map(v => Math.round(v * 1000) / 1000) }]} activeIndex={totalActiveIdx} />
+                    </div></div>
                   </div>
-                  <div className="ops-frame-effect-with"><div className="ops-frame-vary">
-                    <VaryTable columnLabels={totals.map((_v, vi) => vi + 1)} rows={[{ label: 'value', values: totals.map(v => Math.round(v * 1000) / 1000) }]} />
-                  </div></div>
-                </div>
-              );
+                );
+              }
               return null;
             })()}
             {segClause && segClause.length > 0 && (
@@ -1560,7 +1633,7 @@ export function normalizedDefToData(def: NormalizedEffectDef): Record<string, un
     stacks: def.stacks,
     ...(def.properties ?? {}),
     ...(def.cooldownSeconds ? { cooldownSeconds: def.cooldownSeconds } : {}),
-    ...(def.eventIdType ? { eventIdType: def.eventIdType } : {}),
+    ...(def.eventCategoryType ? { eventCategoryType: def.eventCategoryType } : {}),
     ...(def.usageLimit ? { usageLimit: def.usageLimit } : {}),
   };
   return {

@@ -188,7 +188,7 @@ export function loadGearPieces(gearSetSlug: string): any[] {
  * injected into status entries whose `id` matches the `objectId` in the
  * trigger effects.
  */
-export function loadGearStatuses(gearSetSlug: string): { gearSetType: string; statusEvents: any[] } {
+export function loadGearStates(gearSetSlug: string): { gearSetType: string; statusEvents: any[] } {
   // Load individual status definitions
   const statusDir = path.join(GAME_DATA_ROOT, 'gears', gearSetSlug, 'statuses');
   const statusById: Record<string, any> = {};

@@ -39,8 +39,8 @@
               "object": "TALENT_LEVEL",
               "value": [
                 0,
-                0.40,
-                0.40
+                0.4,
+                0.4
               ],
               "of": {
                 "object": "OPERATOR",
@@ -60,20 +60,58 @@
     "toDeterminer": "THIS",
     "duration": {
       "value": {
-        "verb": "IS",
-        "value": 20
+        "operation": "ADD",
+        "left": {
+          "verb": "IS",
+          "value": 20
+        },
+        "right": {
+          "verb": "VARY_BY",
+          "object": "POTENTIAL",
+          "value": [
+            0,
+            0,
+            10,
+            10,
+            10,
+            10
+          ],
+          "of": {
+            "object": "OPERATOR",
+            "determiner": "THIS"
+          }
+        }
       },
       "unit": "SECOND"
     },
     "stacks": {
       "limit": {
-        "verb": "IS",
-        "value": 2
+        "operation": "ADD",
+        "left": {
+          "verb": "IS",
+          "value": 2
+        },
+        "right": {
+          "verb": "VARY_BY",
+          "object": "POTENTIAL",
+          "value": [
+            0,
+            0,
+            1,
+            1,
+            1,
+            1
+          ],
+          "of": {
+            "object": "OPERATOR",
+            "determiner": "THIS"
+          }
+        }
       },
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "When Prep Ingredients is active, hitting an enemy with combo skills immediately shortens cooldown by 40% and consumes 1 stack of Prep Ingredients."
   },
   "metadata": {

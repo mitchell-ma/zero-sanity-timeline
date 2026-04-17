@@ -23,7 +23,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "DMG Dealt +20%/+30% to Staggered enemies."
   },
   "metadata": {

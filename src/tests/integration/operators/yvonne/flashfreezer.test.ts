@@ -536,7 +536,7 @@ describe('I. Combo updates on loadout potential change', () => {
     const effects = frame7.clauses![0].effects;
     expect(effects.some(e => {
       const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
-      return dsl?.verb === 'DEAL' && dsl?.object === 'STAGGER';
+      return dsl?.verb === VerbType.DEAL && dsl?.object === NounType.STAGGER;
     })).toBe(true);
   });
 

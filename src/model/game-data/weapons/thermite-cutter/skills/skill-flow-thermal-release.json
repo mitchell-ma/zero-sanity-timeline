@@ -77,7 +77,8 @@
   "properties": {
     "name": "Flow: Thermal Release",
     "description": "ATK +{atk_up:0.0%}. After the wielder's skill recovers SP or grants a Link state, the entire team gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
-    "id": "FLOW_THERMAL_RELEASE"
+    "id": "FLOW_THERMAL_RELEASE",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "THERMITE_CUTTER",

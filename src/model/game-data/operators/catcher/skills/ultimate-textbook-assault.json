@@ -3,7 +3,7 @@
     "name": "Textbook Assault",
     "description": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weakness, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
     "id": "TEXTBOOK_ASSAULT"
   },
@@ -156,7 +156,10 @@
                   "with": {
                     "multiplier": {
                       "operation": "SUB",
-                      "left": { "verb": "IS", "value": 1 },
+                      "left": {
+                        "verb": "IS",
+                        "value": 1
+                      },
                       "right": {
                         "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",

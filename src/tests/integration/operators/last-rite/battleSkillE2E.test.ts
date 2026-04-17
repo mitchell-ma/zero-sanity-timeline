@@ -370,7 +370,7 @@ describe('H. Hypothermic Perfusion (Mirage) — config verification', () => {
     expect(MIRAGE_JSON.properties.to).toBe(NounType.ENEMY);
     expect(MIRAGE_JSON.properties.element).toBe('CRYO');
     expect(MIRAGE_JSON.properties.duration.value.value).toBe(2);
-    expect(MIRAGE_JSON.properties.eventIdType).toBe('SKILL_STATUS');
+    expect(MIRAGE_JSON.properties.eventCategoryType).toBe('SKILL_STATUS');
   });
 
   it('H2: mirage segment frame at offset 0s with DEAL CRYO DAMAGE, APPLY CRYO INFLICTION, DEAL STAGGER', () => {

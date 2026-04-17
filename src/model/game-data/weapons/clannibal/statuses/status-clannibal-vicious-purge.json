@@ -53,7 +53,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS",
+    "eventCategoryType": "WEAPON_STAT",
     "description": "Arts DMG +{spell_dmg_up:0.0%}. After the wielder consumes an Arts Reaction, target enemy suffers Arts DMG Taken +{dmg_taken_up:0.0%} (for the specified element) for {duration:0}s. Each effect applies separately and does not stack with itself. Effect only triggers once every {cd:0}s."
   },
   "metadata": {

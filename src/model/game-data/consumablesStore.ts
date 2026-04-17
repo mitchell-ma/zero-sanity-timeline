@@ -5,7 +5,7 @@
  *   consumables/consumables/*.json  → ConsumableData
  *   consumables/tacticals/*.json    → TacticalData
  */
-import { StatType, UnitType, EventType, StackInteractionType } from '../../consts/enums';
+import { StatType, UnitType, EventType } from '../../consts/enums';
 import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { checkKeys, VALID_CLAUSE_KEYS, validateNonNegativeValues } from './validationUtils';
@@ -165,7 +165,7 @@ export class ConsumableData {
     return resolveDurationSeconds(this.duration);
   }
 
-  /** Serialize as a talent-shaped passive def for the event pipeline. */
+  /** Serialize as a trigger-source def for the event pipeline. */
   serializeAsTriggerDef(): Record<string, unknown> {
     return {
       clause: this.clause,
@@ -174,10 +174,9 @@ export class ConsumableData {
         name: this.name,
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
-        stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         duration: this.duration,
         eventType: EventType.STATUS,
-        eventIdType: NounType.CONSUMABLE,
+        eventCategoryType: NounType.CONSUMABLE,
       },
       metadata: {},
     };
@@ -232,7 +231,7 @@ export class TacticalData {
     return resolveDurationSeconds(this.duration);
   }
 
-  /** Serialize as a talent-shaped trigger source def for the event pipeline. */
+  /** Serialize as a trigger-source def for the event pipeline. */
   serializeAsTriggerDef(): Record<string, unknown> {
     return {
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
@@ -242,9 +241,8 @@ export class TacticalData {
         name: this.name,
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
-        stacks: { limit: { verb: VerbType.IS, value: 1 }, interactionType: StackInteractionType.NONE },
         eventType: EventType.STATUS,
-        eventIdType: NounType.TACTICAL,
+        eventCategoryType: NounType.TACTICAL,
       },
       metadata: {},
       usageLimit: this.resolvedUsageLimit,

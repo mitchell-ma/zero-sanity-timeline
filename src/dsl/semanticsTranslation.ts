@@ -8,8 +8,8 @@
  */
 
 import type { Effect, Interaction, Predicate, ValueNode, WithPreposition } from '../dsl/semantics';
-import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, NounType, VerbType } from '../dsl/semantics';
-import { UnitType } from '../consts/enums';
+import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, NounType, VerbType, THRESHOLD_MAX } from '../dsl/semantics';
+import { UnitType, EnhancementType } from '../consts/enums';
 import { t } from '../locales/locale';
 
 // ── Output ───────────────────────────────────────────────────────────────────
@@ -424,9 +424,9 @@ export function translateEffect(e: Effect): TranslatedEffect {
   }
 
   // Cardinality (e.g. "Apply 3 Heat infliction")
-  const card = !inlinedValue && e.value != null && e.value !== 'MAX'
+  const card = !inlinedValue && e.value != null && e.value !== THRESHOLD_MAX
     ? `${displayValue(e.value)} `
-    : !inlinedValue && e.value === 'MAX' ? 'max ' : '';
+    : !inlinedValue && e.value === THRESHOLD_MAX ? 'max ' : '';
 
   // Object
   const obj = formatObject(e);
@@ -442,14 +442,14 @@ export function translateEffect(e: Effect): TranslatedEffect {
   if (e.onObject) parts.push(`on ${formatTarget(String(e.onObject), e.onDeterminer)}`);
   // UNTIL
   if (e.until) {
-    const scope = String(e.until.of?.object ?? 'EVENT').toLowerCase();
+    const scope = String(e.until.of?.object ?? NounType.EVENT).toLowerCase();
     const det = e.until.of?.determiner?.toLowerCase() ?? 'this';
     parts.push(`until ${e.until.object.toLowerCase()} of ${det} ${scope}`);
   }
   // FOR
   if (e.for) {
     const fc = e.for.cardinalityConstraint.replace(/_/g, ' ').toLowerCase();
-    const forVal = e.for.value === 'MAX' ? 'max' : displayValue(e.for.value);
+    const forVal = e.for.value === THRESHOLD_MAX ? 'max' : displayValue(e.for.value);
     parts.push(`for ${fc} ${forVal}`);
   } else if (e.cardinalityConstraint && e.value == null) {
     parts.push(e.cardinalityConstraint.replace(/_/g, ' ').toLowerCase());
@@ -525,8 +525,8 @@ export function formatSegmentShortName(segmentName: string | undefined, index: n
  * `SUBDUER_OF_EVIL_T2` → "Subduer of Evil (T2)"). Other event categories
  * and labels that already include the marker are returned unchanged.
  */
-export function formatEventLabel(baseName: string, id: string, eventIdType: string | undefined): string {
-  if (eventIdType !== NounType.POTENTIAL && eventIdType !== NounType.TALENT) return baseName;
+export function formatEventLabel(baseName: string, id: string, eventCategoryType: string | undefined): string {
+  if (eventCategoryType !== NounType.POTENTIAL && eventCategoryType !== NounType.TALENT) return baseName;
   for (const token of id.split('_')) {
     if (token.length > 1 && (token[0] === 'P' || token[0] === 'T')) {
       const rest = token.slice(1);
@@ -547,7 +547,7 @@ export function formatSkillDisplayName(baseName: string, enhancementTypes?: stri
   const name = eventName ?? baseName;
   if (!enhancementTypes?.length) return name;
   const labels = enhancementTypes
-    .filter((t) => t !== 'NORMAL')
+    .filter((t) => t !== EnhancementType.NORMAL)
     .map((t) => ENHANCEMENT_LABELS[t] ?? titleCase(t));
   if (labels.length === 0) return name;
   return `${name} (${labels.join(' + ')})`;

@@ -3,7 +3,7 @@
     "name": "The Pulverizing Front",
     "description": "Pogranichnik performs a 2-sequence slash attack at enemies in front of him, dealing Physical DMG, applying Breach, and recovering SP based on the number of Vulnerability stacks consumed. The SP recovery effect can only trigger 1 time, even if the skill hits multiple targets.",
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
     "id": "THE_PULVERIZING_FRONT",
     "suppliedParameters": {

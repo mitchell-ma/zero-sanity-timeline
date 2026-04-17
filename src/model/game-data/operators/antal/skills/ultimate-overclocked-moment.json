@@ -3,7 +3,7 @@
     "name": "Overclocked Moment",
     "description": "Applies temporary Electric Amp and Heat Amp to the entire team.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "id": "OVERCLOCKED_MOMENT"
   },
   "clause": [

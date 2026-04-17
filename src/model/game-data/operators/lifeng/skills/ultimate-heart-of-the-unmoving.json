@@ -3,7 +3,7 @@
     "name": "Heart of the Unmoving",
     "description": "Unleashes an aspect that performs an Immovable Vajra Slam. The Slam deals Physical DMG and applies Knock Down to all enemies in a large area of effect (AOE), and pulls enemies towards the center of the AOE. After a while, the Slam unleashes one more hit that deals massive Physical DMG and applies another Knock Down to enemies still within its AOE.\nIf the skill consumes a Link, then it deals an additional hit of massive Physical DMG.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
     "id": "HEART_OF_THE_UNMOVING"
   },
@@ -240,9 +240,15 @@
             "left": {
               "verb": "IS",
               "object": "STACKS",
-              "of": { "object": "EVENT", "objectId": "LINK" }
+              "of": {
+                "object": "EVENT",
+                "objectId": "LINK"
+              }
             },
-            "right": { "verb": "IS", "value": 2.03 }
+            "right": {
+              "verb": "IS",
+              "value": 2.03
+            }
           },
           "unit": "SECOND"
         },
@@ -251,9 +257,14 @@
       },
       "frames": [
         {
-          "metadata": { "eventComponentType": "FRAME" },
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
           "properties": {
-            "offset": { "value": 1.93, "unit": "SECOND" }
+            "offset": {
+              "value": 1.93,
+              "unit": "SECOND"
+            }
           },
           "clause": [
             {
@@ -263,7 +274,12 @@
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": { "value": { "verb": "IS", "value": 5 } }
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
                 },
                 {
                   "verb": "DEAL",
@@ -274,14 +290,33 @@
                     "value": {
                       "verb": "VARY_BY",
                       "object": "SKILL_LEVEL",
-                      "value": [2.67, 2.94, 3.2, 3.47, 3.74, 4, 4.27, 4.54, 4.8, 5.14, 5.54, 6],
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      "value": [
+                        2.67,
+                        2.94,
+                        3.2,
+                        3.47,
+                        3.74,
+                        4,
+                        4.27,
+                        4.54,
+                        4.8,
+                        5.14,
+                        5.54,
+                        6
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 }

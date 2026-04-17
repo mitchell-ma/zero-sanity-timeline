@@ -4,7 +4,7 @@
     "name": "Wind Walker (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Ultimate Arcane Staff: Gravity Field improved: When an enemy is affected by the Anomalous Gravity Field of the ultimate, double the Arts Susceptibility increase per Vulnerability stack. When finalizing this effect, the target is treated as having 1 additional stack of Vulnerability (total stacks max out at 4)."
   },
   "metadata": {

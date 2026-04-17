@@ -6,7 +6,7 @@
  * functions to produce editor-compatible types.
  */
 import { GearSetType, ElementType, WeaponType } from '../../consts/enums';
-import { getWeapon, resolveWeaponId, getGearSetEffect, getWeaponStatuses, getGearStatuses, getGearPiecesBySet } from '../gameDataStore';
+import { getWeapon, resolveWeaponId, getGear, getWeaponStats, getGearStats, getGearPiecesBySet } from '../gameDataStore';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { getOperatorBase, getComboTriggerInfo } from '../gameDataStore';
 import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../dsl/semantics';
@@ -24,7 +24,7 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
   if (!config) return null;
 
   const weaponJson = config.serialize();
-  const statusObjs = getWeaponStatuses(weaponId!) ?? [];
+  const statusObjs = getWeaponStats(weaponId!) ?? [];
   const statusJsons = statusObjs.map(s => s.serialize());
 
   const friendly = weaponToFriendly(weaponJson, [], statusJsons);
@@ -38,10 +38,10 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
   const gearPieces = getGearPiecesBySet(gearSetType as string);
   if (gearPieces.length === 0) return null;
 
-  const setEffect = getGearSetEffect(gearSetType);
+  const setEffect = getGear(gearSetType);
   const setEffectJson = setEffect?.serialize() ?? undefined;
   const pieceJsons = gearPieces.map(p => p.serialize());
-  const gearStatuses = getGearStatuses(gearSetType as string) ?? [];
+  const gearStatuses = getGearStats(gearSetType as string) ?? [];
   const statusJsons = gearStatuses.map(s => s.serialize());
 
   const friendly = gearSetToFriendly(setEffectJson, pieceJsons, statusJsons, gearSetType as string);

@@ -4,7 +4,7 @@
     "name": "Carrot and Sharp Stick (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "When returning Thunderlances or Thunderlances EX hit an Electric Susceptible enemy, the DMG multipliers are increased to 1.15 times the original."
   },
   "metadata": {

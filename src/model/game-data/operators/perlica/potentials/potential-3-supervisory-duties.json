@@ -4,7 +4,7 @@
     "name": "Supervisory Duties (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "After Perlica applies Electrification to the enemy, she gains ATK +20% for 5s. This effect can reach 2 stacks."
   },
   "metadata": {

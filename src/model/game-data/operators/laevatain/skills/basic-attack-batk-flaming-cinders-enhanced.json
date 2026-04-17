@@ -611,7 +611,7 @@
       "ENHANCED"
     ],
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "HEAT",
     "id": "FLAMING_CINDERS_BATK_ENHANCED",

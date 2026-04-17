@@ -9,7 +9,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Ultimate Textbook Assault improved: Final hit creates 2/3 shockwave(s) at talent level 1/2, each dealing 30%/45% ATK of Physical DMG."
   },
   "metadata": {

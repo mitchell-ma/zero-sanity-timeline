@@ -3,7 +3,7 @@
     "name": "Aspect of Wrath",
     "description": "When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. Unleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
     "id": "ASPECT_OF_WRATH"
   },
@@ -199,7 +199,10 @@
                   "to": "TEAM",
                   "with": {
                     "duration": {
-                      "value": { "verb": "IS", "value": 20 },
+                      "value": {
+                        "verb": "IS",
+                        "value": 20
+                      },
                       "unit": "SECOND"
                     }
                   }

@@ -1,11 +1,11 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
 import { AdjectiveType, DeterminerType, NounType, VerbType, isQualifiedId, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
+import { ColumnType, CombatResourceType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
 import { ENEMY_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, ENEMY_ACTION_LABELS } from '../../consts/timelineColumnLabels';
-import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
+import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, getStatusById, getStatusCategoryById, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import { TEAM_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
@@ -116,6 +116,7 @@ function buildStatusMicroColumn(
   overrides?: { label?: string; permanent?: boolean; durationSeconds?: number },
 ): MicroColumn {
   const cfg = getStatusById(statusId);
+  const categoryType = getStatusCategoryById(statusId);
   const label = overrides?.label ?? getAllStatusLabels()[statusId] ?? cfg?.name ?? statusId;
   const durSec = overrides?.durationSeconds ?? cfg?.durationSeconds ?? 10;
   const durFrames = durSec === PERMANENT_DURATION || durSec === 0 ? TOTAL_FRAMES : Math.round(durSec * FPS);
@@ -154,10 +155,10 @@ function buildStatusMicroColumn(
     id: statusId,
     label,
     color,
-    ...(cfg?.eventIdType ? { statusType: cfg.eventIdType } : {}),
+    ...(categoryType ? { statusType: categoryType } : {}),
     ...(overrides?.permanent
-      || ((cfg?.eventIdType === NounType.TALENT
-        || cfg?.eventIdType === NounType.POTENTIAL)
+      || ((cfg?.eventCategoryType === NounType.TALENT
+        || cfg?.eventCategoryType === NounType.POTENTIAL)
         && !(cfg?.stacks?.interactionType === StackInteractionType.NONE && cfg?.maxStacks >= UNLIMITED_STACKS)
         && !cfg?.onTriggerClause?.length
         // Self-trigger talents with finite durations (Fluorite Unpredictable T2)
@@ -251,7 +252,7 @@ export function buildColumns(
           for (const frame of (seg.frames ?? [])) {
             for (const clause of (frame.clause ?? [])) {
               for (const eff of (clause.effects ?? [])) {
-                if (eff.verb !== 'APPLY' || eff.object !== 'STATUS') continue;
+                if (eff.verb !== VerbType.APPLY || eff.object !== NounType.STATUS) continue;
                 if (eff.to !== NounType.OPERATOR) continue;
                 const statusId = eff.objectId as string;
                 if (!statusId) continue;
@@ -774,7 +775,7 @@ export function buildColumns(
           if (op && skillType === NounType.COMBO) {
             const allSkills = getOperatorSkills(op.id);
             const comboSkills = allSkills
-              ? Array.from(allSkills.values()).filter((sk) => sk.eventIdType === NounType.COMBO || sk.eventIdType === NounType.COMBO)
+              ? Array.from(allSkills.values()).filter((sk) => sk.eventCategoryType === NounType.COMBO || sk.eventCategoryType === NounType.COMBO)
               : [];
             if (comboSkills.length > 0) {
               const variants: NonNullable<MiniTimeline['eventVariants']> = [];
@@ -851,7 +852,7 @@ export function buildColumns(
                   name: cs.id,
                   displayName: cs.name,
                   segments: csSegs,
-                  skillPointCost: cs.resourceInteractions?.find((r) => r.resourceType === 'SKILL_POINT')?.value,
+                  skillPointCost: cs.resourceInteractions?.find((r) => r.resourceType === CombatResourceType.SKILL_POINT)?.value,
                 });
               }
             }
@@ -880,7 +881,7 @@ export function buildColumns(
       // APPLY EVENT / CONSUME EVENT) are transient and should not hug left.
       const isPassiveStatus = (def: OperatorStatusDef): boolean => {
         const cfg = getStatusById(def.statusId);
-        if (cfg?.eventIdType !== NounType.TALENT && cfg?.eventIdType !== NounType.POTENTIAL) return false;
+        if (cfg?.eventCategoryType !== NounType.TALENT && cfg?.eventCategoryType !== NounType.POTENTIAL) return false;
         const isCounter = cfg?.stacks?.interactionType === StackInteractionType.NONE && (cfg?.maxStacks ?? 0) >= UNLIMITED_STACKS;
         if (isCounter) return false;
         const durSec = cfg?.durationSeconds ?? 0;
@@ -908,8 +909,8 @@ export function buildColumns(
         const hasFiniteDuration = durSec > 0 && durSec < PERMANENT_DURATION;
         const isPermanent = !isCounter
           && !hasFiniteDuration
-          && (cfg?.eventIdType === NounType.TALENT
-            || cfg?.eventIdType === NounType.POTENTIAL);
+          && (cfg?.eventCategoryType === NounType.TALENT
+            || cfg?.eventCategoryType === NounType.POTENTIAL);
         const mc = buildStatusMicroColumn(def.statusId, def.color, { label: def.label, permanent: isPermanent });
         // Use columnId (may differ from statusId for OPERATOR_COLUMNS entries)
         mc.id = def.columnId;

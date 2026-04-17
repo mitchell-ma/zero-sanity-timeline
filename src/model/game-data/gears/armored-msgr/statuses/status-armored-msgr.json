@@ -20,7 +20,7 @@
     }
   ],
   "properties": {
-    "id": "ARMORED_MSGR",
+    "id": "ARMORED_MSGR_STAT",
     "name": "Armored MSGR",
     "duration": {
       "value": {
@@ -38,7 +38,7 @@
     },
     "description": "30% DMG Reduction when HP below 50%.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "ARMORED_MSGR",

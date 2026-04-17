@@ -5,11 +5,14 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "stacks": {
-      "limit": { "verb": "IS", "value": 1 },
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Absorbs incoming damage before HP is reduced."
   },
   "metadata": {

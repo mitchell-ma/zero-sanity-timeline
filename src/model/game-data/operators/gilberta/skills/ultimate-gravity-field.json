@@ -3,7 +3,7 @@
     "name": "Arcane Staff: Gravity Field",
     "description": "Creates an Anomalous Gravity Field that instantly deals 1 hit of Nature DMG and applies Nature Infliction to enemies caught in the field. Targets in the Anomalous Gravity Field also suffer from Slow and Arts Susceptibility. The effect of Arts Susceptibility is further increased based on the number of active Vulnerability stacks on the target. \nIf a target in the field is Lifted, the Lifted status will persist until the field wears off.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "NATURE",
     "id": "GRAVITY_FIELD"
   },

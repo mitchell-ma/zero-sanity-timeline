@@ -19,7 +19,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Combo timing window. Applied by Normal combo on last frame. Consumed by Empowered combo activation. Duration until end of activation window."
   },
   "metadata": {

@@ -24,7 +24,7 @@
     }
   ],
   "properties": {
-    "id": "BONEKRUSHA",
+    "id": "BONEKRUSHA_STAT",
     "name": "Bonekrusha",
     "duration": {
       "value": {
@@ -42,7 +42,7 @@
     },
     "description": "Consumed on next battle skill cast",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "BONEKRUSHA",

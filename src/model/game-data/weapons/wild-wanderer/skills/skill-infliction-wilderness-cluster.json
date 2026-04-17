@@ -57,7 +57,8 @@
   "properties": {
     "name": "Infliction: Wilderness Cluster",
     "description": "Arts Intensity +{phy_spell_up:0}. When the wielder applies Electrification, the team gains Physical DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
-    "id": "INFLICTION_WILDERNESS_CLUSTER"
+    "id": "INFLICTION_WILDERNESS_CLUSTER",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "WILD_WANDERER",

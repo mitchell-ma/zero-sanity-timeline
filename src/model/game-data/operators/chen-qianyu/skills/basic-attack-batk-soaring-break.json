@@ -620,7 +620,7 @@
     "name": "Soaring Break",
     "description": "An attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
     "id": "SOARING_BREAK_BATK"

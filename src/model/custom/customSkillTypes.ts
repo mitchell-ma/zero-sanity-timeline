@@ -2,7 +2,7 @@
  * Type definitions for user-created custom skills.
  * Skills are standalone entities that can be assigned to operators.
  */
-import { ElementType, TimeInteractionType } from '../../consts/enums';
+import { ElementType, TimeInteractionType, CombatResourceType } from '../../consts/enums';
 import type { Interaction } from '../../dsl/semantics';
 import type { StatType } from '../enums';
 
@@ -28,7 +28,7 @@ export interface CustomSkill {
 }
 
 export interface CustomSkillResourceInteraction {
-  resourceType: string;
+  resourceType: CombatResourceType;
   verb: string;
   value: number;
   target?: string;

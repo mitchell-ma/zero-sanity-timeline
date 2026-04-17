@@ -20,6 +20,11 @@ import type { InterpretContext } from '../../controller/timeline/eventInterpreto
 import { VerbType, AdjectiveType, CardinalityConstraintType, NounType, ObjectType } from '../../dsl/semantics';
 import type { Effect } from '../../dsl/semantics';
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+const SCORCHING_HEART_ID: string = require('../../model/game-data/operators/laevatain/statuses/status-scorching-heart.json').properties.id;
+const MELTING_FLAME_ID: string = require('../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
+/* eslint-enable @typescript-eslint/no-require-imports */
+
 // ── Mock require.context before importing modules that use it ────────────
 
 jest.mock('../../model/game-data/weaponGameData', () => ({
@@ -303,7 +308,7 @@ describe('EventInterpretorController: ALL', () => {
 
     // The 2 MF statuses created
     const mfStatuses = interp.controller.getAllEvents().filter(ev =>
-      ev.columnId === 'MELTING_FLAME'
+      ev.columnId === MELTING_FLAME_ID
     );
     expect(mfStatuses.length).toBe(2);
     consoleSpy.mockRestore();
@@ -380,7 +385,7 @@ describe('EventInterpretorController: ALL', () => {
 
     interp.interpret(effect, ctx);
 
-    const mfStatuses = interp.controller.getAllEvents().filter(ev => ev.columnId === 'MELTING_FLAME');
+    const mfStatuses = interp.controller.getAllEvents().filter(ev => ev.columnId === MELTING_FLAME_ID);
     expect(mfStatuses.length).toBe(1); // Only 1, not 4
     consoleSpy.mockRestore();
   });
@@ -412,7 +417,7 @@ describe('EventInterpretorController: ANY', () => {
           effects: [{
             verb: VerbType.APPLY,
             object: ObjectType.STATUS,
-            objectId: 'HEAT_STATUS',
+            objectId: SCORCHING_HEART_ID,
             to: NounType.OPERATOR,
           }],
         },
@@ -427,7 +432,7 @@ describe('EventInterpretorController: ANY', () => {
           effects: [{
             verb: VerbType.APPLY,
             object: ObjectType.STATUS,
-            objectId: 'CRYO_STATUS',
+            objectId: MELTING_FLAME_ID,
             to: NounType.OPERATOR,
           }],
         },
@@ -436,10 +441,11 @@ describe('EventInterpretorController: ANY', () => {
 
     interp.interpret(effect, ctx);
 
-    const statuses = interp.controller.getAllEvents().filter(ev => ev.columnId === 'CRYO_STATUS');
+    // Second predicate matched (CRYO infliction active) — MELTING_FLAME applied,
+    // SCORCHING_HEART (first predicate) must NOT be applied.
+    const statuses = interp.controller.getAllEvents().filter(ev => ev.columnId === MELTING_FLAME_ID);
     expect(statuses.length).toBe(1);
-    // No heat status should be created
-    const heatStatuses = interp.controller.getAllEvents().filter(ev => ev.columnId === 'HEAT_STATUS');
+    const heatStatuses = interp.controller.getAllEvents().filter(ev => ev.columnId === SCORCHING_HEART_ID);
     expect(heatStatuses.length).toBe(0);
     consoleSpy.mockRestore();
   });

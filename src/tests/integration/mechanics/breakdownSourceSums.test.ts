@@ -323,3 +323,106 @@ describe('D. Yvonne Cryoblasting Pistolier — runtime CRITICAL_RATE in breakdow
     expect(critRateEntry!.value).toBe(damageRow.params!.sub!.critRate);
   });
 });
+
+// =============================================================================
+// E. Arts DMG% applicability — "Does not apply" for physical hits
+// =============================================================================
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+const AKEKURI_ID: string = require('../../../model/game-data/operators/akekuri/akekuri.json').id;
+/* eslint-enable @typescript-eslint/no-require-imports */
+
+describe('E. Arts DMG% applicability in Damage Bonus breakdown', () => {
+  it('E1: physical-element hit shows Arts DMG% as "Does not apply to this hit"', () => {
+    const { result } = renderHook(() => useApp());
+    // Akekuri is a physical-element operator
+    act(() => { result.current.handleSwapOperator(SLOT, AKEKURI_ID); });
+
+    const baCol = findColumn(result.current, SLOT, NounType.BASIC_ATTACK);
+    expect(baCol).toBeDefined();
+    const payload = getMenuPayload(result.current, baCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    });
+
+    const calc = getCalcResult(result.current);
+    const damageRow = calc.rows.find(r =>
+      r.damage != null && r.damage > 0 &&
+      r.params?.sub && r.ownerEntityId === SLOT,
+    );
+    expect(damageRow).toBeDefined();
+
+    const entries = buildMultiplierEntries(damageRow!.params!);
+    const dmgBonusEntry = findEntry(entries, 'Damage Bonus');
+    expect(dmgBonusEntry).toBeDefined();
+
+    const artsSub = dmgBonusEntry!.subEntries?.find(s => s.label === 'Arts DMG%');
+    expect(artsSub).toBeDefined();
+    expect(artsSub!.source).toBe('Does not apply to this hit');
+    expect(artsSub!.cssClass).toBe('dmg-breakdown-neutral');
+    // No source sub-entries for inactive element
+    expect(artsSub!.subEntries).toBeUndefined();
+  });
+
+  it('E2: arts-element hit (Heat) shows Arts DMG% as "Arts damage bonus"', () => {
+    const { result } = renderHook(() => useApp());
+    // Default Laevatain — Heat element battle skill
+
+    const bsCol = findColumn(result.current, SLOT, NounType.BATTLE);
+    expect(bsCol).toBeDefined();
+    const payload = getMenuPayload(result.current, bsCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    });
+
+    const calc = getCalcResult(result.current);
+    const damageRow = calc.rows.find(r =>
+      r.damage != null && r.damage > 0 &&
+      r.params?.sub && r.ownerEntityId === SLOT,
+    );
+    expect(damageRow).toBeDefined();
+
+    const entries = buildMultiplierEntries(damageRow!.params!);
+    const dmgBonusEntry = findEntry(entries, 'Damage Bonus');
+    expect(dmgBonusEntry).toBeDefined();
+
+    const artsSub = dmgBonusEntry!.subEntries?.find(s => s.label === 'Arts DMG%');
+    expect(artsSub).toBeDefined();
+    expect(artsSub!.source).toBe('Arts damage bonus');
+  });
+
+  it('E3: physical hit — Physical DMG% is active, Heat/Cryo/Nature/Electric are "Does not apply"', () => {
+    const { result } = renderHook(() => useApp());
+    act(() => { result.current.handleSwapOperator(SLOT, AKEKURI_ID); });
+
+    const baCol = findColumn(result.current, SLOT, NounType.BASIC_ATTACK);
+    const payload = getMenuPayload(result.current, baCol!, 2 * FPS);
+    act(() => {
+      result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
+    });
+
+    const calc = getCalcResult(result.current);
+    const damageRow = calc.rows.find(r =>
+      r.damage != null && r.damage > 0 &&
+      r.params?.sub && r.ownerEntityId === SLOT,
+    );
+    expect(damageRow).toBeDefined();
+
+    const entries = buildMultiplierEntries(damageRow!.params!);
+    const dmgBonusEntry = findEntry(entries, 'Damage Bonus');
+    expect(dmgBonusEntry).toBeDefined();
+
+    // Physical should be active
+    const physSub = dmgBonusEntry!.subEntries?.find(s => s.label === 'Physical DMG%');
+    expect(physSub).toBeDefined();
+    expect(physSub!.source).toBe('Active element bonus');
+
+    // All arts elements + Arts DMG% should be inactive
+    for (const inactiveLabel of ['Arts DMG%', 'Heat DMG%', 'Cryo DMG%', 'Nature DMG%', 'Electric DMG%']) {
+      const sub = dmgBonusEntry!.subEntries?.find(s => s.label === inactiveLabel);
+      expect(sub).toBeDefined();
+      expect(sub!.source).toBe('Does not apply to this hit');
+      expect(sub!.cssClass).toBe('dmg-breakdown-neutral');
+    }
+  });
+});

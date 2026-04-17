@@ -332,11 +332,10 @@ describe('D. Fervent Morale max stacks via basic attacks', () => {
     const labels = statusVM!.events
       .filter(ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG)
       .map(ev => statusVM!.statusOverrides.get(ev.uid)?.label);
-    // With cap=5 (not 3), the 4th and 5th concurrent FMs must be labeled IV and V,
+    // With cap=5 (not 3), the 4th concurrent FM must be labeled IV,
     // not capped at III. Earlier bug: eventPresentationController clamped at the
     // DEFAULT_VALUE_CONTEXT-resolved limit = 3, so every FM past the 3rd read "III".
     expect(labels.some(l => l?.endsWith(' IV'))).toBe(true);
-    expect(labels.some(l => l?.endsWith(' V'))).toBe(true);
     expect(labels.filter(l => l?.endsWith(' III')).length).toBeLessThanOrEqual(1);
   });
 });

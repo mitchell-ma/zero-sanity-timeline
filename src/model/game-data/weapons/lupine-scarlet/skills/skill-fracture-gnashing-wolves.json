@@ -58,7 +58,8 @@
   "properties": {
     "name": "Fracture: Gnashing Wolves",
     "description": "ATK +{atk_up:0.0%}. After the wielder's skill deals Critical DMG, the wielder gains 1 stack of Wolven Blood that grants Physical and Heat DMG Dealt +{dmg_up:0.0%}. Wolven Blood can reach {max_stack:0} stacks. After reaching {max_stack:0} stacks, the wielder gains another Physical and Heat DMG Dealt +{dmg_up2:0.0%} for {duration:0}s. After the duration ends, all Wolven Blood stacks are removed.",
-    "id": "FRACTURE_GNASHING_WOLVES"
+    "id": "FRACTURE_GNASHING_WOLVES",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "LUPINE_SCARLET",

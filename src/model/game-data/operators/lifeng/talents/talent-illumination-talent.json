@@ -81,7 +81,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Every point of Intellect and Will further grants ATK +{atk_up:0.00%}."
   },
   "metadata": {

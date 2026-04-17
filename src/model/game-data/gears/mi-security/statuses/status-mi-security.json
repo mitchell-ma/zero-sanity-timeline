@@ -52,7 +52,7 @@
     }
   ],
   "properties": {
-    "id": "MI_SECURITY",
+    "id": "MI_SECURITY_STAT",
     "name": "MI Security",
     "duration": {
       "value": {
@@ -70,7 +70,7 @@
     },
     "description": "ATK +5% per stack for 5s after crit. At 5 stacks, also Critical Rate +5%.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "MI_SECURITY",

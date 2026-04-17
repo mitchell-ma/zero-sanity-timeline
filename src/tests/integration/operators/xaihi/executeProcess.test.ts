@@ -30,6 +30,11 @@ const CRYO_FRAGILITY_ID: string = require(
   '../../../../model/game-data/generic/statuses/status-cryo-fragility.json',
 ).properties.id;
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const AUXILIARY_CRYSTAL_ID: string = require(
+  '../../../../model/game-data/operators/xaihi/statuses/status-auxiliary-crystal.json',
+).properties.id;
+
 const SLOT_XAIHI = 'slot-2';
 const SLOT_CONTROLLED = 'slot-0';
 
@@ -54,7 +59,7 @@ function setupXaihiWithCombo() {
   const comboCol = findColumn(view.result.current, SLOT_XAIHI, NounType.COMBO);
   const lastConsumed = Math.max(
     ...view.result.current.allProcessedEvents
-      .filter(ev => ev.name === 'AUXILIARY_CRYSTAL' && ev.eventStatus === EventStatusType.CONSUMED)
+      .filter(ev => ev.name === AUXILIARY_CRYSTAL_ID && ev.eventStatus === EventStatusType.CONSUMED)
       .map(ev => ev.startFrame + ev.segments.reduce((s: number, seg: { properties: { duration: number } }) => s + seg.properties.duration, 0)),
   );
   const comboPayload = getMenuPayload(view.result.current, comboCol!, lastConsumed + 1 * FPS);

@@ -4,7 +4,7 @@
     "name": "Self Refinement (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "All attributes +{Str:0}."
   },
   "metadata": {

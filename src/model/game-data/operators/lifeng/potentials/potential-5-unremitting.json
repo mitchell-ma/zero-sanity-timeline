@@ -16,7 +16,10 @@
           "verb": "HAVE",
           "object": "POTENTIAL",
           "cardinalityConstraint": "GREATER_THAN_EQUAL",
-          "value": { "verb": "IS", "value": 5 }
+          "value": {
+            "verb": "IS",
+            "value": 5
+          }
         }
       ],
       "effects": [
@@ -32,16 +35,32 @@
   ],
   "segments": [
     {
-      "metadata": { "eventComponentType": "SEGMENT" },
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
       "properties": {
-        "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" },
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        },
         "name": "Unremitting",
         "element": "PHYSICAL"
       },
       "frames": [
         {
-          "metadata": { "eventComponentType": "FRAME" },
-          "properties": { "offset": { "value": 0, "unit": "SECOND" }, "element": "PHYSICAL" },
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            },
+            "element": "PHYSICAL"
+          },
           "clause": [
             {
               "conditions": [],
@@ -52,12 +71,18 @@
                   "object": "DAMAGE",
                   "to": "ENEMY",
                   "with": {
-                    "value": { "verb": "IS", "value": 2.5 },
+                    "value": {
+                      "verb": "IS",
+                      "value": 2.5
+                    },
                     "mainStat": {
                       "verb": "IS",
                       "object": "STAT",
                       "objectId": "ATTACK",
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     }
                   }
                 },
@@ -65,7 +90,12 @@
                   "verb": "DEAL",
                   "object": "STAGGER",
                   "to": "ENEMY",
-                  "with": { "value": { "verb": "IS", "value": 5 } }
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 5
+                    }
+                  }
                 }
               ]
             }
@@ -75,11 +105,22 @@
       ]
     },
     {
-      "metadata": { "eventComponentType": "SEGMENT" },
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
       "properties": {
-        "segmentTypes": ["COOLDOWN", "IMMEDIATE_COOLDOWN"],
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
         "name": "Cooldown",
-        "duration": { "value": { "verb": "IS", "value": 13 }, "unit": "SECOND" },
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 13
+          },
+          "unit": "SECOND"
+        },
         "timeDependency": "REAL_TIME"
       },
       "frames": []
@@ -92,9 +133,12 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "stacks": {
-      "limit": { "verb": "IS", "value": 1 },
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
       "interactionType": "RESET"
     },
     "description": "Talent Subduer of Evil improved: Every 15s, the next effect triggered deals another 250% ATK of Physical DMG and 5 Stagger."

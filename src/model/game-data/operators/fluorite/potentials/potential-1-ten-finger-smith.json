@@ -4,7 +4,7 @@
     "name": "Ten-Finger Smith (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Agility +{Agi:0}, Intellect +10."
   },
   "metadata": {

@@ -77,7 +77,8 @@
   "properties": {
     "name": "Twilight: Azure Clouds",
     "description": "Battle skills and ultimates gain Physical DMG Dealt +{phy_dmg_up:0.0%}. Against Staggered enemies, battle skills and ultimates also gain DMG Dealt +{dmg_up:0.0%}.",
-    "id": "TWILIGHT_AZURE_CLOUDS"
+    "id": "TWILIGHT_AZURE_CLOUDS",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "RAPID_ASCENT",

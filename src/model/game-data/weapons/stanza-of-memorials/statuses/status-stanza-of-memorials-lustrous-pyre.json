@@ -55,7 +55,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "STANZA_OF_MEMORIALS",

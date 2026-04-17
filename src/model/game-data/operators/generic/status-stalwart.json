@@ -4,7 +4,7 @@
     "name": "Stalwart",
     "target": "OPERATOR",
     "targetDeterminer": "THIS",
-    "eventIdType": "STATUS"
+    "eventCategoryType": "STATUS"
   },
   "metadata": {
     "originId": "game",

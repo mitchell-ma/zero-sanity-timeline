@@ -54,7 +54,7 @@
     },
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "DETONATION_UNIT",

@@ -58,7 +58,8 @@
   "properties": {
     "name": "Combative: Anthem of Cinder",
     "description": "ATK +{atk_up1:0.0%}. When the wielder deals a Physical Status, the wielder gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
-    "id": "COMBATIVE_ANTHEM_OF_CINDER"
+    "id": "COMBATIVE_ANTHEM_OF_CINDER",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "SUNDERING_STEEL",

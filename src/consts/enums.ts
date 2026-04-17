@@ -370,28 +370,6 @@ export enum GearSetType {
   ETERNAL_XIRANITE = "ETERNAL_XIRANITE",
 }
 
-export enum GearSetEffectType {
-  HOT_WORK = "HOT_WORK",
-  PULSER_LABS = "PULSER_LABS",
-  AETHERTECH = "AETHERTECH",
-  SWORDMANCER = "SWORDMANCER",
-  MI_SECURITY = "MI_SECURITY",
-  FRONTIERS = "FRONTIERS",
-  TYPE_50_YINGLUNG = "TYPE_50_YINGLUNG",
-  LYNX = "LYNX",
-  ETERNAL_XIRANITE = "ETERNAL_XIRANITE",
-  BONEKRUSHA = "BONEKRUSHA",
-  CATASTROPHE = "CATASTROPHE",
-  ABURREY_LEGACY = "ABURREY_LEGACY",
-  ARMORED_MSGR = "ARMORED_MSGR",
-  ROVING_MSGR = "ROVING_MSGR",
-  MORDVOLT_INSULATION = "MORDVOLT_INSULATION",
-  MORDVOLT_RESISTANT = "MORDVOLT_RESISTANT",
-  AIC_HEAVY = "AIC_HEAVY",
-  AIC_LIGHT = "AIC_LIGHT",
-  TIDE_SURGE = "TIDE_SURGE",
-}
-
 export enum DataStatus {
   RECONCILED = 'RECONCILED',
   PARTIALLY_VERIFIED = 'PARTIALLY_VERIFIED',
@@ -437,6 +415,20 @@ export enum EnhancementType {
   MAJOR = "MAJOR",
 }
 
+/**
+ * Skill category keys used as top-level keys in operator `skills` JSON,
+ * and as discriminators in parsers/merge logic. These represent enhancement
+ * variants of BASIC_ATTACK and BATTLE_SKILL. Base categories
+ * (BASIC_ATTACK, BATTLE_SKILL, etc.) come from NounType.
+ */
+export enum SkillCategoryKey {
+  ENHANCED_BASIC_ATTACK = "ENHANCED_BASIC_ATTACK",
+  EMPOWERED_BASIC_ATTACK = "EMPOWERED_BASIC_ATTACK",
+  ENHANCED_BATTLE_SKILL = "ENHANCED_BATTLE_SKILL",
+  EMPOWERED_BATTLE_SKILL = "EMPOWERED_BATTLE_SKILL",
+  ENHANCED_EMPOWERED_BATTLE_SKILL = "ENHANCED_EMPOWERED_BATTLE_SKILL",
+}
+
 /** The phase type of an event segment. */
 export enum SegmentType {
   ANIMATION = "ANIMATION",
@@ -456,6 +448,21 @@ export enum TimelineSourceType {
   COMMON = "COMMON",
   TACTICAL = "TACTICAL",
   FREEFORM = "FREEFORM",
+}
+
+/** High-level source category for status events — used for timeline filters. */
+export enum EventCategoryType {
+  SKILL = "SKILL",
+  TALENT = "TALENT",
+  POTENTIAL = "POTENTIAL",
+  WEAPON = "WEAPON",
+  GEAR = "GEAR",
+  CONSUMABLE = "CONSUMABLE",
+  TACTICAL = "TACTICAL",
+  STATUS = "STATUS",
+  INFLICTION = "INFLICTION",
+  REACTION = "REACTION",
+  PHYSICAL_STATUS = "PHYSICAL_STATUS",
 }
 
 export enum InteractionModeType {
@@ -602,6 +609,12 @@ export enum DamageType {
 
 
 
+
+/** Discriminator for custom weapon skill definitions — stat-boost passive or a named triggered effect. */
+export enum CustomWeaponSkillKind {
+  STAT_BOOST = "STAT_BOOST",
+  NAMED = "NAMED",
+}
 
 export enum WeaponSkillType {
   // ── Stat boosts (each has _S / _M / _L size variants) ──────────────────────

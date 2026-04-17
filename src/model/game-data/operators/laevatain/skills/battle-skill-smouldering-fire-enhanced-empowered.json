@@ -23,7 +23,7 @@
       "EMPOWERED"
     ],
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "HEAT",
     "id": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
     "name": "Smouldering Fire (Enhanced + Empowered)"

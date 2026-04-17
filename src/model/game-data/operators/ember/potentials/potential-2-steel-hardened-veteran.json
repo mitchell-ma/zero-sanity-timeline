@@ -4,7 +4,7 @@
     "name": "Steel-Hardened Veteran (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Strength +{Str:0}, Will +{Will:0}."
   },
   "metadata": {

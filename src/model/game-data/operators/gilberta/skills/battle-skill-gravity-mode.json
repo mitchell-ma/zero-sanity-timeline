@@ -3,7 +3,7 @@
     "name": "Arcane Staff: Gravity Mode",
     "description": "Initiates Arts channeling that creates a gravity well. The gravity well pulls in nearby enemies and deals Nature DMG to them. When channeling ends, the gravity well implodes to deal Nature DMG and Nature Infliction to enemies in the area of effect.",
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "NATURE",
     "id": "GRAVITY_MODE"
   },

@@ -234,7 +234,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "Targets in the Anomalous Gravity Field suffer from Slow and Arts Susceptibility. The effect of Arts Susceptibility is further increased based on the number of active Vulnerability stacks on the target. If a target in the field is Lifted, the Lifted status will persist until the field wears off."
   },
   "metadata": {

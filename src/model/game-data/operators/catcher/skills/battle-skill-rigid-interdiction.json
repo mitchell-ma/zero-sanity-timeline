@@ -3,7 +3,7 @@
     "name": "Rigid Interdiction",
     "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Physical DMG and applies 1 stack of Vulnerability to the attacking enemy.",
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
     "id": "RIGID_INTERDICTION"
   },

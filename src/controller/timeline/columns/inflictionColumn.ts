@@ -25,7 +25,7 @@ export class InflictionColumn implements EventColumn {
     this.columnId = columnId;
     this.host = host;
     const config = getStatusById(columnId);
-    this.isArts = config?.eventIdType === NounType.INFLICTION;
+    this.isArts = config?.eventCategoryType === NounType.INFLICTION;
     this.maxStacks = (config?.stacks?.limit as { value?: number } | undefined)?.value ?? 4;
   }
 

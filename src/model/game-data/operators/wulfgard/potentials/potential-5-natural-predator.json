@@ -36,8 +36,8 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
-    "description": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade\u00b7\u03b2."
+    "eventCategoryType": "POTENTIAL",
+    "description": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade·β."
   },
   "metadata": {
     "originId": "WULFGARD",

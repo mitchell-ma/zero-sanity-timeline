@@ -13,7 +13,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "FRONTIERS",
+          "objectId": "FRONTIERS_STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
@@ -27,7 +27,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Combo Skill Cooldown Reduction +{1-comboskill_cooldown:0%}. After the wearer's skill recovers SP, the team gains DMG +{dmg_up:0%} for {duration}s. This effect cannot stack.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_EFFECT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
     "originId": "game",

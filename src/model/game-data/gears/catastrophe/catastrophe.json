@@ -14,7 +14,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "CATASTROPHE",
+          "objectId": "CATASTROPHE_STAT",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
@@ -28,7 +28,7 @@
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Ultimate Gain Efficiency +{ultimate_gain_up:0%}. The wearer casts a battle skill, the action returns {atb_recover:0} SP. This effect only triggers 1 time per battle.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_EFFECT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
     "originId": "game",

@@ -99,8 +99,7 @@
                       },
                       "unit": "SECOND"
                     }
-                  },
-                  "objectQualifier": "CRYO"
+                  }
                 }
               ]
             }
@@ -120,7 +119,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "duration": {
       "value": {
         "verb": "IS",

@@ -84,7 +84,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS",
+    "eventCategoryType": "WEAPON_STAT",
     "description": "Arts Intensity +{phy_spell_up:0}. When the wielder applies Electrification, the team gains Physical DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Effects of the same name cannot stack."
   },
   "metadata": {

@@ -21,7 +21,7 @@
     }
   ],
   "properties": {
-    "id": "TIDE_SURGE",
+    "id": "TIDE_SURGE_STAT",
     "name": "Tide Surge",
     "duration": {
       "value": {
@@ -39,7 +39,7 @@
     },
     "description": "Arts DMG +35% for 15s after applying 2+ stacks of Arts Infliction. Cannot stack.",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "TIDE_SURGE",

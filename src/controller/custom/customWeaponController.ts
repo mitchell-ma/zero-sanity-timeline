@@ -4,7 +4,7 @@
  * V2: Stores weapon bundles as { weapon: GameDataJson, statuses: GameDataJson[] }.
  * The editor still works with CustomWeapon via adapters.
  */
-import { WeaponType } from '../../consts/enums';
+import { WeaponType, CustomWeaponSkillKind } from '../../consts/enums';
 import type { CustomWeapon } from '../../model/custom/customWeaponTypes';
 import { loadGameDataArray, saveGameDataArray, STORAGE_KEYS, validateCustomWeapon } from '../../utils/customContentStorage';
 import type { ValidationError } from '../../utils/customContentStorage';
@@ -120,9 +120,9 @@ export function getDefaultCustomWeapon(): CustomWeapon {
     weaponRarity: 5,
     baseAtk: { lv1: 42, lv90: 411 },
     skills: [
-      { type: 'STAT_BOOST', label: 'Skill 1', statBoost: { stat: 'ATTACK_BONUS', values: [0, 0, 0, 0, 0, 0, 0, 0, 0] } },
-      { type: 'STAT_BOOST', label: 'Skill 2', statBoost: { stat: 'ATTACK_BONUS', values: [0, 0, 0, 0, 0, 0, 0, 0, 0] } },
-      { type: 'STAT_BOOST', label: 'Skill 3', statBoost: { stat: 'ATTACK_BONUS', values: [0, 0, 0, 0, 0, 0, 0, 0, 0] } },
+      { type: CustomWeaponSkillKind.STAT_BOOST, label: 'Skill 1', statBoost: { stat: 'ATTACK_BONUS', values: [0, 0, 0, 0, 0, 0, 0, 0, 0] } },
+      { type: CustomWeaponSkillKind.STAT_BOOST, label: 'Skill 2', statBoost: { stat: 'ATTACK_BONUS', values: [0, 0, 0, 0, 0, 0, 0, 0, 0] } },
+      { type: CustomWeaponSkillKind.STAT_BOOST, label: 'Skill 3', statBoost: { stat: 'ATTACK_BONUS', values: [0, 0, 0, 0, 0, 0, 0, 0, 0] } },
     ],
   };
 }

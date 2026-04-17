@@ -395,7 +395,9 @@
               "value": 0.8,
               "unit": "SECOND"
             },
-            "frameTypes": ["FINAL_STRIKE"]
+            "frameTypes": [
+              "FINAL_STRIKE"
+            ]
           },
           "clause": [
             {
@@ -479,7 +481,7 @@
     "name": "Ruination",
     "description": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
     "id": "RUINATION_BATK"

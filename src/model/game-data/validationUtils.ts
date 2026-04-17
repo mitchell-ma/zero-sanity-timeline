@@ -602,6 +602,64 @@ export function collectThisOperatorInValueNode(node: unknown, path: string, owne
   return errors;
 }
 
+/**
+ * Walk an arbitrary clause tree (conditions + effects, including nested
+ * predicates in ALL/ANY compound effects) and flag every occurrence of a
+ * `<role>Determiner: THIS` paired with its companion noun equal to `OPERATOR`.
+ * When the enclosing status has `to: ENEMY` (or TEAM), `THIS` resolves to the
+ * non-operator owner, so any `THIS + OPERATOR` reference silently picks up
+ * the wrong entity's (empty) stats/levels. The canonical form is `SOURCE` to
+ * point at the casting operator.
+ *
+ * Covers all DSL determiner/noun pairings that may reference the caster:
+ *   - subjectDeterminer + subject      (condition subject)
+ *   - objectDeterminer  + object       (effect/condition object)
+ *   - toDeterminer      + to           (effect recipient)
+ *   - fromDeterminer    + from         (effect source)
+ *   - ofDeterminer      + of           (effect flat ref)
+ *   - determiner        + object       (nested `of` struct inside value nodes,
+ *                                       also caught by collectThisOperatorInValueNode)
+ */
+export function collectThisOperatorInClauses(node: unknown, path: string, ownerLabel: string): string[] {
+  if (node === null || typeof node !== 'object') return [];
+  const errors: string[] = [];
+
+  if (Array.isArray(node)) {
+    for (let i = 0; i < node.length; i++) {
+      errors.push(...collectThisOperatorInClauses(node[i], `${path}[${i}]`, ownerLabel));
+    }
+    return errors;
+  }
+
+  const obj = node as Record<string, unknown>;
+
+  const pairs: [string, string][] = [
+    ['subjectDeterminer', 'subject'],
+    ['objectDeterminer', 'object'],
+    ['toDeterminer', 'to'],
+    ['fromDeterminer', 'from'],
+    ['ofDeterminer', 'of'],
+    ['determiner', 'object'],
+  ];
+  for (const [detKey, nounKey] of pairs) {
+    if (obj[detKey] === DeterminerType.THIS && obj[nounKey] === NounType.OPERATOR) {
+      errors.push(
+        `${path}: "${detKey}: THIS" with "${nounKey}: OPERATOR" resolves against the ${ownerLabel} entity `
+        + `(no operator stats/levels). Use "${detKey}: SOURCE" to resolve against the casting operator.`,
+      );
+    }
+  }
+
+  for (const key of Object.keys(obj)) {
+    const value = obj[key];
+    if (value && typeof value === 'object') {
+      errors.push(...collectThisOperatorInClauses(value, `${path}.${key}`, ownerLabel));
+    }
+  }
+
+  return errors;
+}
+
 // ── Flattenable-base qualifier consistency ─────────────────────────────────
 
 /**
@@ -609,23 +667,25 @@ export function collectThisOperatorInValueNode(node: unknown, path: string, owne
  * objectQualifier: Y}` and which represent per-element status columns
  * (e.g. `SUSCEPTIBILITY + PHYSICAL` → Physical Susceptibility).
  *
- * Using the base without a qualifier is legal ONLY for pure stat
- * modifications (SUSCEPTIBILITY / FRAGILITY base applies are handled by
- * the stat accumulator with no timeline event). For AMP and any case
- * where the apply creates an event, the qualifier is required — an
- * unqualified apply would write to an orphan column.
+ * In EFFECTS, the qualifier is strictly required — an unqualified apply
+ * would write to an orphan column / be silently dropped by the interpretor.
+ * In CONDITIONS, the qualifier may be omitted when paired with
+ * `objectDeterminer: "ANY"`, which signals a wildcard trigger match
+ * (e.g. Eternal Xiranite's "fires when wearer applies any susceptibility").
  */
 const FLATTENABLE_STATUS_BASES_FOR_VALIDATION = new Set<string>([
   NounType.AMP,
+  NounType.SUSCEPTIBILITY,
+  NounType.FRAGILITY,
 ]);
 
 /**
- * Flag an effect or condition whose `{object: STATUS, objectId: X}` uses
- * a flattenable base without a qualifier where a qualifier is required.
+ * Flag an effect whose `{object: STATUS, objectId: <BASE>}` omits the
+ * `objectQualifier` — an unqualified apply has no canonical storage column.
  * The canonical authoring form is
  * `{object: STATUS, objectId: <BASE>, objectQualifier: <X>}`.
  */
-function warnFlattenableBaseMissingQualifier(shape: Record<string, unknown>, path: string): string[] {
+function warnFlattenableBaseMissingQualifierInEffect(shape: Record<string, unknown>, path: string): string[] {
   const object = shape.object as string | undefined;
   const objectId = shape.objectId as string | undefined;
   const objectQualifier = shape.objectQualifier as string | undefined;
@@ -634,8 +694,32 @@ function warnFlattenableBaseMissingQualifier(shape: Record<string, unknown>, pat
   if (!FLATTENABLE_STATUS_BASES_FOR_VALIDATION.has(objectId)) return [];
   if (objectQualifier) return [];
   return [
-    `${path}: STATUS ${objectId} without objectQualifier — requires an `
-    + `element qualifier (PHYSICAL/CRYO/HEAT/ELECTRIC/NATURE/ARTS).`,
+    `${path}: effect APPLY/CONSUME STATUS ${objectId} without objectQualifier — `
+    + `requires an element qualifier (PHYSICAL/CRYO/HEAT/ELECTRIC/NATURE/ARTS). `
+    + `Wildcards are only allowed in trigger conditions via "objectDeterminer": "ANY".`,
+  ];
+}
+
+/**
+ * Flag a condition whose `{object: STATUS, objectId: <BASE>}` omits the
+ * `objectQualifier` AND lacks the `objectDeterminer: "ANY"` wildcard marker.
+ * An unqualified trigger check without the ANY marker is ambiguous — use
+ * `objectDeterminer: "ANY"` to explicitly declare the wildcard match.
+ */
+function warnFlattenableBaseMissingQualifierInCondition(shape: Record<string, unknown>, path: string): string[] {
+  const object = shape.object as string | undefined;
+  const objectId = shape.objectId as string | undefined;
+  const objectQualifier = shape.objectQualifier as string | undefined;
+  const objectDeterminer = shape.objectDeterminer as string | undefined;
+  if (object !== NounType.STATUS) return [];
+  if (!objectId) return [];
+  if (!FLATTENABLE_STATUS_BASES_FOR_VALIDATION.has(objectId)) return [];
+  if (objectQualifier) return [];
+  if (objectDeterminer === DeterminerType.ANY) return [];
+  return [
+    `${path}: condition STATUS ${objectId} without objectQualifier — either add `
+    + `an element qualifier (PHYSICAL/CRYO/HEAT/ELECTRIC/NATURE/ARTS) or set `
+    + `"objectDeterminer": "ANY" to explicitly match any qualifier.`,
   ];
 }
 
@@ -695,7 +779,7 @@ export function validateEffect(ef: Record<string, unknown>, path: string): strin
     ...warnRawBooleanIsForced(ef, path),
     ...warnInvalidWithKeys(ef, path),
     ...warnReactionPhysicalIdMisuse(ef, path),
-    ...warnFlattenableBaseMissingQualifier(ef, path),
+    ...warnFlattenableBaseMissingQualifierInEffect(ef, path),
   ];
 }
 
@@ -711,6 +795,6 @@ export function validateInteraction(shape: Record<string, unknown>, path: string
     ...warnInvalidConditionVerb(shape, path),
     ...warnInvalidQualifier(shape, path),
     ...warnInvalidDeterminers(shape, path),
-    ...warnFlattenableBaseMissingQualifier(shape, path),
+    ...warnFlattenableBaseMissingQualifierInCondition(shape, path),
   ];
 }

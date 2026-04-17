@@ -33,7 +33,7 @@
     }
   ],
   "properties": {
-    "id": "SWORDMANCER",
+    "id": "SWORDMANCER_STAT",
     "name": "Swordmancer",
     "description": "Deals 250% ATK Physical DMG + 10 Stagger. 15s cooldown.",
     "duration": {
@@ -52,7 +52,7 @@
     },
     "cooldownSeconds": 15,
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "SWORDMANCER",

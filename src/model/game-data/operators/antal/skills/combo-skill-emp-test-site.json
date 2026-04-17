@@ -3,7 +3,7 @@
     "name": "EMP Test Site",
     "description": "When an enemy with active Focus suffers a Physical Status or Arts Infliction. Triggers 1 energy explosion on the enemy that deals Electric DMG and applies another stack of the same Physical Status or Arts Infliction.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
     "id": "EMP_TEST_SITE"
   },

@@ -4,8 +4,8 @@
     "name": "Reentry Control (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
-    "description": "Ultimate Protocol \u03b5: 70.41K improved: Critical Rate +30%."
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Protocol ε: 70.41K improved: Critical Rate +30%."
   },
   "metadata": {
     "originId": "PERLICA",

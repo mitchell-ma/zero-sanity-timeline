@@ -5,8 +5,8 @@
  * Auto-discovers operator-statuses/*.json via require.context.
  * Each file contains an array of operator status entries sharing an originId.
  */
-import { EventType, UNLIMITED_STACKS } from '../../consts/enums';
-import { NounType } from '../../dsl/semantics';
+import { EventType, EventCategoryType, UNLIMITED_STACKS } from '../../consts/enums';
+import { NounType, EVENT_CATEGORY_TO_GROUP } from '../../dsl/semantics';
 import type { EventSegmentData, EventFrameMarker } from '../../consts/viewTypes';
 import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from '../../controller/calculation/valueResolver';
@@ -14,7 +14,7 @@ import { PERMANENT_DURATION } from '../../consts/enums';
 import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
 
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectThisOperatorInValueNode } from './validationUtils';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectThisOperatorInClauses } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ interface StatusSegment {
 
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType', 'level']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventIdType', 'maxLevel', 'crowdControls']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventCategoryType', 'maxLevel', 'crowdControls']);
 const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -125,17 +125,17 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
   if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
 
-  // eventIdType must be a known category. TALENT_STATUS / POTENTIAL_STATUS are
+  // eventCategoryType must be a known category. TALENT_STATUS / POTENTIAL_STATUS are
   // no longer valid — use TALENT / POTENTIAL instead. A TALENT or POTENTIAL is
   // not inherently passive; the engine decides based on whether other events
   // trigger it (onTriggerClause with APPLY/CONSUME EVENT THIS).
-  if (typeof props.eventIdType === 'string') {
+  if (typeof props.eventCategoryType === 'string') {
     // eslint-disable-next-line no-restricted-syntax
-    if (props.eventIdType === 'TALENT_STATUS') {
-      errors.push(`properties.eventIdType: "TALENT_STATUS" is invalid — use "TALENT" instead`);
+    if (props.eventCategoryType === 'TALENT_STATUS') {
+      errors.push(`properties.eventCategoryType: "TALENT_STATUS" is invalid — use "TALENT" instead`);
     // eslint-disable-next-line no-restricted-syntax
-    } else if (props.eventIdType === 'POTENTIAL_STATUS') {
-      errors.push(`properties.eventIdType: "POTENTIAL_STATUS" is invalid — use "POTENTIAL" instead`);
+    } else if (props.eventCategoryType === 'POTENTIAL_STATUS') {
+      errors.push(`properties.eventCategoryType: "POTENTIAL_STATUS" is invalid — use "POTENTIAL" instead`);
     }
   }
 
@@ -143,50 +143,37 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
   if (!props.to && !props.target) errors.push('properties.to: required (TEAM, OPERATOR, or ENEMY)');
 
   // When the status targets TEAM or ENEMY (properties.to), value resolution
-  // runs against that non-operator entity — no stats, skill level, talent
-  // level, or potential. Flag any value nodes using THIS OPERATOR; they
-  // should use SOURCE OPERATOR to resolve against the casting operator.
-  // Walks every clause location: top-level, onTrigger/onEntry/onExit, and
-  // per-segment (seg.clause, seg.onEntry/onExit/onTrigger, seg.frames[*].clause).
+  // and determiner resolution run against that non-operator entity — no stats,
+  // skill level, talent level, or potential. Flag any determiner+noun pair of
+  // the form `THIS + OPERATOR` anywhere in the clause trees (effect-level
+  // to/from/of/object/subject determiners, condition-level subject/object
+  // determiners, nested `of` structs in ValueNodes, and predicates inside
+  // compound ALL/ANY effects). The canonical form is `SOURCE` so the resolver
+  // picks up the casting operator's context.
+  //
+  // Walks every clause location: top-level clauses, onTrigger/onEntry/onExit,
+  // and per-segment (seg.clause, seg.onEntry/onExit/onTrigger, seg.frames[*].clause).
   if (props.to === NounType.TEAM || props.to === NounType.ENEMY) {
     const ownerLabel = props.to === NounType.TEAM ? 'TEAM' : 'ENEMY';
-    const walkEffects = (clauses: unknown[], clausePath: string) => {
-      if (!Array.isArray(clauses)) return;
-      for (let ci = 0; ci < clauses.length; ci++) {
-        const clause = clauses[ci] as Record<string, unknown>;
-        const effects = clause.effects as Record<string, unknown>[] | undefined;
-        if (!Array.isArray(effects)) continue;
-        for (let ei = 0; ei < effects.length; ei++) {
-          const ef = effects[ei];
-          const w = ef.with as Record<string, unknown> | undefined;
-          if (!w) continue;
-          for (const key of Object.keys(w)) {
-            if (w[key] && typeof w[key] === 'object') {
-              errors.push(...collectThisOperatorInValueNode(
-                w[key], `${clausePath}[${ci}].effects[${ei}].with.${key}`, ownerLabel,
-              ));
-            }
-          }
-        }
-      }
+    const walk = (clauses: unknown, clausePath: string) => {
+      errors.push(...collectThisOperatorInClauses(clauses, clausePath, ownerLabel));
     };
-    if (json.clause) walkEffects(json.clause as unknown[], 'clause');
-    if (json.onTriggerClause) walkEffects(json.onTriggerClause as unknown[], 'onTriggerClause');
-    if (json.onEntryClause) walkEffects(json.onEntryClause as unknown[], 'onEntryClause');
-    if (json.onExitClause) walkEffects(json.onExitClause as unknown[], 'onExitClause');
-    // Per-segment clauses + frame clauses inside segments.
+    if (json.clause) walk(json.clause, 'clause');
+    if (json.onTriggerClause) walk(json.onTriggerClause, 'onTriggerClause');
+    if (json.onEntryClause) walk(json.onEntryClause, 'onEntryClause');
+    if (json.onExitClause) walk(json.onExitClause, 'onExitClause');
     if (Array.isArray(json.segments)) {
       for (let si = 0; si < (json.segments as unknown[]).length; si++) {
         const seg = (json.segments as Record<string, unknown>[])[si];
         const segBase = `segments[${si}]`;
-        if (seg.clause) walkEffects(seg.clause as unknown[], `${segBase}.clause`);
-        if (seg.onTriggerClause) walkEffects(seg.onTriggerClause as unknown[], `${segBase}.onTriggerClause`);
-        if (seg.onEntryClause) walkEffects(seg.onEntryClause as unknown[], `${segBase}.onEntryClause`);
-        if (seg.onExitClause) walkEffects(seg.onExitClause as unknown[], `${segBase}.onExitClause`);
+        if (seg.clause) walk(seg.clause, `${segBase}.clause`);
+        if (seg.onTriggerClause) walk(seg.onTriggerClause, `${segBase}.onTriggerClause`);
+        if (seg.onEntryClause) walk(seg.onEntryClause, `${segBase}.onEntryClause`);
+        if (seg.onExitClause) walk(seg.onExitClause, `${segBase}.onExitClause`);
         if (Array.isArray(seg.frames)) {
           for (let fi = 0; fi < (seg.frames as unknown[]).length; fi++) {
             const frame = (seg.frames as Record<string, unknown>[])[fi];
-            if (frame.clause) walkEffects(frame.clause as unknown[], `${segBase}.frames[${fi}].clause`);
+            if (frame.clause) walk(frame.clause, `${segBase}.frames[${fi}].clause`);
           }
         }
       }
@@ -236,7 +223,8 @@ export class OperatorStatus {
   readonly stacks?: StacksConfig;
   readonly enhancementTypes?: string[];
   readonly eventType: EventType;
-  readonly eventIdType?: string;
+  readonly eventCategoryType?: string;
+  readonly categoryType?: EventCategoryType;
   readonly isEnabled?: boolean;
   readonly originId: string;
   readonly dataSources: string[];
@@ -303,7 +291,10 @@ export class OperatorStatus {
     }
     if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
     this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
-    if (props.eventIdType) this.eventIdType = props.eventIdType as string;
+    if (props.eventCategoryType) {
+      this.eventCategoryType = props.eventCategoryType as string;
+      this.categoryType = EVENT_CATEGORY_TO_GROUP[this.eventCategoryType];
+    }
     if (meta.isEnabled === false) this.isEnabled = false;
     this.originId = (meta.originId ?? '') as string;
     this.dataSources = (meta.dataSources ?? []) as string[];
@@ -387,7 +378,7 @@ export class OperatorStatus {
         ...(this.stacks ? { stacks: this.stacks } : {}),
         ...(this.enhancementTypes ? { enhancementTypes: this.enhancementTypes } : {}),
         eventType: this.eventType,
-        ...(this.eventIdType ? { eventIdType: this.eventIdType } : {}),
+        ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
       },
       metadata: {
         ...(this.isEnabled === false ? { isEnabled: false } : {}),

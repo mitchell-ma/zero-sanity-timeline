@@ -4,7 +4,7 @@
     "name": "Indomitable Front (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Combo skill Frontline Support improved: Restores the HP of another teammate with the lowest percentage HP at 50% of the base effect."
   },
   "metadata": {

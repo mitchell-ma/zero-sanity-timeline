@@ -27,7 +27,7 @@ const TYPE_OPTIONS = [
   { value: 'TALENT', label: t('eventViewer.type.talent') },
   { value: 'SKILL_STATUS', label: t('eventViewer.type.skillStatus') },
   { value: 'GEAR_STATUS', label: t('eventViewer.type.gearStatus') },
-  { value: 'WEAPON_STATUS', label: t('eventViewer.type.weaponStatus') },
+  { value: 'WEAPON_STAT', label: t('eventViewer.type.weaponStatus') },
   { value: 'POTENTIAL', label: t('eventViewer.type.potential') },
 ];
 

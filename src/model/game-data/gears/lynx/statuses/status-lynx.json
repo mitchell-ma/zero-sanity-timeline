@@ -20,7 +20,7 @@
     }
   ],
   "properties": {
-    "id": "LYNX",
+    "id": "LYNX_STAT",
     "name": "LYNX",
     "duration": {
       "value": {
@@ -38,7 +38,7 @@
     },
     "description": "30% if treatment exceeds max HP",
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "LYNX",

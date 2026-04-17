@@ -7,7 +7,7 @@ import { getStarredOperators, toggleStarredOperator } from '../../utils/starredO
 import {
   getWeaponsByType,
   getGearPiecesByType,
-  getGearSetEffect,
+  getGear,
   getAllConsumables,
   getAllTacticals,
 } from '../../controller/gameDataStore';
@@ -28,7 +28,7 @@ import { TopEntry } from './BreakdownTree';
 import { t } from '../../locales/locale';
 import {
   getNamedWeaponSkill,
-  getWeaponStatuses, getWeaponIdByName,
+  getWeaponStats, getWeaponIdByName,
   getWeaponEffectDefs,
   getGearPiece, getGearPieceIdByName,
 } from '../../controller/gameDataStore';
@@ -87,13 +87,13 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   // ── Damage factor stats ──────────────────────────────────────────────────────
   [StatType.DAMAGE_BONUS]: 'stat.DAMAGE_BONUS',
   [StatType.DAMAGE_TAKEN_BONUS]: 'stat.DAMAGE_TAKEN_BONUS',
-  [StatType.AMP]: 'stat.AMP',
-  [StatType.SUSCEPTIBILITY]: 'stat.SUSCEPTIBILITY',
+  [StatType.ARTS_AMP]: 'stat.ARTS_AMP',
   [StatType.HEAT_SUSCEPTIBILITY]: 'stat.HEAT_SUSCEPTIBILITY',
   [StatType.CRYO_SUSCEPTIBILITY]: 'stat.CRYO_SUSCEPTIBILITY',
   [StatType.NATURE_SUSCEPTIBILITY]: 'stat.NATURE_SUSCEPTIBILITY',
   [StatType.ELECTRIC_SUSCEPTIBILITY]: 'stat.ELECTRIC_SUSCEPTIBILITY',
   [StatType.PHYSICAL_SUSCEPTIBILITY]: 'stat.PHYSICAL_SUSCEPTIBILITY',
+  [StatType.ARTS_SUSCEPTIBILITY]: 'stat.ARTS_SUSCEPTIBILITY',
   [StatType.PHYSICAL_FRAGILITY]: 'stat.PHYSICAL_FRAGILITY',
   [StatType.HEAT_FRAGILITY]: 'stat.HEAT_FRAGILITY',
   [StatType.CRYO_FRAGILITY]: 'stat.CRYO_FRAGILITY',
@@ -682,7 +682,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
               id: gp.id,
               name: gp.name,
               icon: gp.icon,
-              rarity: getGearSetEffect(gp.gearSet)?.rarity ?? 5,
+              rarity: getGear(gp.gearSet)?.rarity ?? 5,
             }));
             return (
               <React.Fragment key={ranksKey}>
@@ -901,7 +901,7 @@ function WeaponDetailCards({ weaponName }: { weaponName: string }) {
 
   // Weapon statuses
   if (weaponId) {
-    for (const ws of getWeaponStatuses(weaponId)) {
+    for (const ws of getWeaponStats(weaponId)) {
       cards.push({ key: `ws-${ws.id}`, label: ws.name, data: ws.serialize() as Record<string, unknown> });
     }
   }

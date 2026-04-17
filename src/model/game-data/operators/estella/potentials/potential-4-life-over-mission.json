@@ -37,7 +37,7 @@
     "name": "Life Over Mission (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Will +{Will:0}, Strength +{Str:0}."
   },
   "metadata": {

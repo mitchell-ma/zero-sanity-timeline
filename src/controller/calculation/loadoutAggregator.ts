@@ -14,7 +14,7 @@
 
 import { GearSetType, StatType, WeaponSkillType } from '../../consts/enums';
 import type { SkillLevel } from '../../consts/types';
-import { getGearSetEffects } from '../../consts/gearSetEffects';
+import { getGears } from '../../consts/gearSetEffects';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
@@ -40,6 +40,8 @@ export interface StatSourceEntry {
   value: number;
   /** Index into DamageSubComponents.statContributions for runtime status sources. */
   contributionIndex?: number;
+  /** Per-stack or component breakdown (e.g. "Per stack: 0.08" for 3-stack status buffs). */
+  subSources?: { source: string; value: number }[];
 }
 
 export interface AggregatedStats {
@@ -316,10 +318,10 @@ export function aggregateLoadoutStats(
   let gearSetType: GearSetType | null = null;
   let gearSetDescription: string | null = null;
   effectCounts.forEach((count, effectType) => {
-    if (count >= 3 && effectType !== 'NONE') {
+    if (count >= 3 && effectType !== GearSetType.NONE) {
       gearSetActive = true;
       gearSetType = effectType as GearSetType;
-      const entry = getGearSetEffects(effectType as GearSetType);
+      const entry = getGears(effectType as GearSetType);
       if (entry) {
         gearSetDescription = entry.label;
         for (const [key, value] of Object.entries(entry.passiveStats)) {

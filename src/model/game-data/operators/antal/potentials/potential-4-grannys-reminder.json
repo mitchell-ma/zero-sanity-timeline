@@ -37,7 +37,7 @@
     "name": "Granny's Reminder (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Intellect +10, Max HP +{MaxHp:0%}."
   },
   "metadata": {

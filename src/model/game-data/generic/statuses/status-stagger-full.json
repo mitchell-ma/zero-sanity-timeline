@@ -18,7 +18,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "Full stagger break. Enemy is fully staggered and takes increased damage."
   },
   "metadata": {

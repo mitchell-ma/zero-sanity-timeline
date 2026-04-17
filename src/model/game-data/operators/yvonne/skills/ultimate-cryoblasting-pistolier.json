@@ -3,7 +3,7 @@
     "name": "Cryoblasting Pistolier",
     "description": "Immediately deploys the support bot Tink-a-Bella and makes Yvonne the controlled operator.\nTemporarily enhances Yvonne's basic attack (BATK). Each enhanced BATK sequence performed grants a stack of Critical Rate buff. After reaching max stacks, Yvonne also gains a Critical DMG buff. When the skill is about to end, Yvonne's last enhanced BATK becomes an enhanced Final Strike that deals massive Cryo DMG.\nIf the enemy is Solidified, Yvonne performs an additional attack that deals Cryo DMG and then consumes the enemy's Solidification.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "id": "CRYOBLASTING_PISTOLIER"
   },
   "clause": [

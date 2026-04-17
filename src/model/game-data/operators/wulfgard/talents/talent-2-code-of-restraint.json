@@ -9,7 +9,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 5/10 SP."
   },
   "metadata": {

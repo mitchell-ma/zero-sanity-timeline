@@ -25,7 +25,7 @@ import { VerbType, NounType, ObjectType, DeterminerType, AdjectiveType, THRESHOL
 import { ELEMENT_TO_INFLICTION_COLUMN as ELEMENT_TO_INFLICTION } from './columnResolution';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills, getAllOperatorStatuses } from '../gameDataStore';
-import { getWeaponTriggerDefs, getWeaponStatusTriggerDefs, getGearTriggerDefs, getGearStatusTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
+import { getWeaponTriggerDefs, getWeaponStatTriggerDefs, getGearTriggerDefs, getGearStatTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import { getStatusDef } from './configCache';
 import type { NormalizedEffectDef } from '../gameDataStore';
 import { ENEMY_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
@@ -162,7 +162,7 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
       duration: rp?.duration as StatusEventDef['properties']['duration'],
       susceptibility: raw.susceptibility ?? (rp?.susceptibility as string),
       cooldownSeconds: raw.cooldownSeconds ?? (rp?.cooldownSeconds as number),
-      ...(raw.eventIdType ? { eventIdType: raw.eventIdType } : {}),
+      ...(raw.eventCategoryType ? { eventCategoryType: raw.eventCategoryType } : {}),
     },
     onTriggerClause: raw.onTriggerClause as StatusEventDef['onTriggerClause'] ?? [],
   } as StatusEventDef;
@@ -404,7 +404,7 @@ export class TriggerIndex {
         skillTriggerDefs.push({
           properties: {
             id: skill.id,
-            eventIdType: skill.eventIdType,
+            eventCategoryType: skill.eventCategoryType,
           },
           onTriggerClause: skill.onTriggerClause as unknown as StatusEventDef['onTriggerClause'],
         } as unknown as StatusEventDef);
@@ -421,7 +421,7 @@ export class TriggerIndex {
         const opId = slotOperatorMap?.[slotId] ?? '';
         idx.processDefsForSlot(slotId, opId, getWeaponTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
         // Weapon status triggers (e.g., BECOME STACKS on Wolven Blood)
-        idx.processDefsForSlot(slotId, opId, getWeaponStatusTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
+        idx.processDefsForSlot(slotId, opId, getWeaponStatTriggerDefs(weaponId).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
       }
     }
 
@@ -432,7 +432,7 @@ export class TriggerIndex {
         const opId = slotOperatorMap?.[slotId] ?? '';
         idx.processDefsForSlot(slotId, opId, getGearTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
         // Gear status triggers
-        idx.processDefsForSlot(slotId, opId, getGearStatusTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
+        idx.processDefsForSlot(slotId, opId, getGearStatTriggerDefs(gearSetType).map(normalizeEquipDef), true, loadoutProperties, operatorSlotMap, allEvents);
       }
     }
 
@@ -483,7 +483,7 @@ export class TriggerIndex {
    */
   private registerLifecycleFromDef(def: StatusEventDef, operatorId: string) {
     if (!def.clause || !Array.isArray(def.clause)) return;
-    const ect = def.properties.eventIdType ?? def.properties.type;
+    const ect = def.properties.eventCategoryType ?? def.properties.type;
     const isTalentOrPotential = ect === NounType.TALENT || ect === NounType.POTENTIAL;
     const talentDur = def.properties.duration;
     const isInfiniteDuration = !talentDur || getDurationFrames(talentDur) >= TOTAL_FRAMES;
@@ -554,7 +554,7 @@ export class TriggerIndex {
       // but only operator-intrinsic defs (talents, potentials) pass through
       // this path to receive a frame-0 presence event. Equip-intrinsic
       // passives are handled by the isEquip block below.
-      const defEventIdType = def.properties.eventIdType ?? def.properties.type;
+      const defEventIdType = def.properties.eventCategoryType ?? def.properties.type;
       if (defEventIdType === NounType.TALENT || defEventIdType === NounType.POTENTIAL) {
         // Description-only defs (no trigger, no clause, no segments) are metadata-only — skip.
         // Their effects are baked into skill frames; the def is just a label.
@@ -634,7 +634,7 @@ export class TriggerIndex {
       // Weapons, gear, consumables, and tacticals can have passive APPLY STAT
       // clauses. Register these for passive stat interpretation at frame 0.
       // Consumables also get a presence event (they're active-at-start buffs).
-      const ect = def.properties.eventIdType ?? def.properties.type;
+      const ect = def.properties.eventCategoryType ?? def.properties.type;
       if (isEquip && ect !== NounType.TALENT && ect !== NounType.POTENTIAL && def.clause && Array.isArray(def.clause)) {
         const hasPassiveStats = (def.clause as { conditions?: unknown[]; effects?: { verb?: string; object?: string }[] }[])
           .some(c => (!c.conditions || c.conditions.length === 0) && c.effects?.some(e => e.verb === VerbType.APPLY && e.object === NounType.STAT));
@@ -670,7 +670,7 @@ export class TriggerIndex {
 
       const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
       const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
-      const ectForSkip = def.properties.eventIdType ?? def.properties.type;
+      const ectForSkip = def.properties.eventCategoryType ?? def.properties.type;
       if (!hasEffects && !hasClauseEffects && ectForSkip !== NounType.TALENT && ectForSkip !== NounType.POTENTIAL) continue;
 
       for (let ci = 0; ci < def.onTriggerClause.length; ci++) {

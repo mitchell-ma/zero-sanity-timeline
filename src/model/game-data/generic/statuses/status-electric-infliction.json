@@ -19,7 +19,7 @@
       "interactionType": "REFRESH"
     },
     "eventType": "STATUS",
-    "eventIdType": "INFLICTION",
+    "eventCategoryType": "INFLICTION",
     "description": "Electric element infliction. Stacks up to 4 times. At 4 stacks, triggers Electrification arts reaction."
   },
   "metadata": {

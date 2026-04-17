@@ -356,7 +356,7 @@ describe('Last Rite — Hypothermic Perfusion Status', () => {
     expect(props.stacks.interactionType).toBe(VerbType.RESET);
     expect(props.to).toBe(NounType.OPERATOR);
     expect(props.toDeterminer).toBe(DeterminerType.CONTROLLED);
-    expect(props.eventIdType).toBe(NounType.SKILL_STATUS);
+    expect(props.eventCategoryType).toBe(NounType.SKILL_STATUS);
   });
 
   it('F2: onTriggerClause — CONTROLLED OPERATOR PERFORM SKILL FINAL_STRIKE', () => {
@@ -570,7 +570,7 @@ describe('Last Rite — T2 Cryogenic Embrittlement DSL', () => {
 
   it('J2: talent is description-only (no onTriggerClause)', () => {
     expect(CRYOGENIC_JSON.onTriggerClause).toBeUndefined();
-    expect(CRYOGENIC_JSON.properties.eventIdType).toBe(NounType.TALENT);
+    expect(CRYOGENIC_JSON.properties.eventCategoryType).toBe(NounType.TALENT);
   });
 
   it('J3: frame-level APPLY STAT does not persist in stat accumulator after frame ends', () => {
@@ -585,12 +585,14 @@ describe('Last Rite — T2 Cryogenic Embrittlement DSL', () => {
       );
     });
 
-    // After the pipeline processes the ult (including its frame-level APPLY STAT),
-    // the stat accumulator should NOT retain any susceptibility stat on the enemy.
-    // Frame-level stats are reversed after each frame's snapshot.
+    // After the pipeline processes the ult (including its frame-level APPLY STAT
+    // SUSCEPTIBILITY CRYO), the stat accumulator should NOT retain the
+    // cryo-susceptibility buff on the enemy. Frame-level stats are reversed
+    // after each frame's snapshot, so the final live-stat value returns to its
+    // baseline (0 with the multiplier-based authoring).
     const accumulator = getLastStatAccumulator();
     expect(accumulator).not.toBeNull();
-    const susceptibility = accumulator!.getStat(ENEMY_ID, StatType.SUSCEPTIBILITY);
+    const susceptibility = accumulator!.getStat(ENEMY_ID, StatType.CRYO_SUSCEPTIBILITY);
     expect(susceptibility).toBe(0);
   });
 });

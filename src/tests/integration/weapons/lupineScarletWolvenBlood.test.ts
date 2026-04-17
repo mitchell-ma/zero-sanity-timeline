@@ -21,7 +21,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType } from '../../../dsl/semantics';
+import { NounType, VerbType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
 import { CritMode, EventStatusType, InteractionModeType, ColumnType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
@@ -44,7 +44,7 @@ const SLOT_ROSSI = 'slot-0';
 const DAMAGE_FRAMES_PER_BS = BATTLE_SKILL_JSON.segments.reduce((total: number, seg: Record<string, unknown>) => {
   const frames = (seg as { frames?: { clause?: { effects?: { verb?: string; object?: string }[] }[] }[] }).frames ?? [];
   return total + frames.filter(f =>
-    f.clause?.some(c => c.effects?.some(e => e.verb === 'DEAL' && e.object === 'DAMAGE')),
+    f.clause?.some(c => c.effects?.some(e => e.verb === VerbType.DEAL && e.object === NounType.DAMAGE)),
   ).length;
 }, 0);
 

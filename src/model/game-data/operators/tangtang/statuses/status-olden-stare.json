@@ -64,7 +64,7 @@
         {
           "verb": "RETURN",
           "object": "SKILL_POINT",
-          "toDeterminer": "THIS",
+          "toDeterminer": "SOURCE",
           "to": "OPERATOR",
           "with": {
             "value": {
@@ -127,7 +127,7 @@
           "verb": "CONSUME",
           "object": "STATUS",
           "objectId": "WHIRLPOOL",
-          "fromDeterminer": "THIS",
+          "fromDeterminer": "SOURCE",
           "from": "OPERATOR"
         },
         {
@@ -1005,7 +1005,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "OLDEN STARE from DA CHIEF SEES YOU! Deals Cryo DMG over time to enemies within its area of effect. When the OLDEN STARE stops evolving, a rogue wave comes crashing down to deal massive Cryo DMG. If the controlled operator performs a dive attack, its evolution ends early and the rogue wave is summoned immediately to deal even more Cryo DMG. Also consumes all nearby Whirlpools to create additional Waterspouts with Riot Bringer DMG bonus."
   },
   "metadata": {

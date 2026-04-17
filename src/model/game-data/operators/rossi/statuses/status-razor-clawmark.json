@@ -1458,7 +1458,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "STATUS",
+    "eventCategoryType": "STATUS",
     "description": "Target takes Physical DMG per second and increased Physical + Heat DMG. Applied by Wolven Ambrage (Nicks and Scratches talent). Non-stacking. Tick interval: 1s."
   },
   "metadata": {

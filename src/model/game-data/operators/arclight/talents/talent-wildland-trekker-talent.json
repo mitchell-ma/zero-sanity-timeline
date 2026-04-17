@@ -79,7 +79,7 @@
       "interactionType": "NONE"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Battle skill Tempestuous Arc improved: Triggering the additional effect 3 time(s) grants the team Electric DMG Dealt +0.05% for every point of Arclight's Intellect. This effect has a 15s duration and cannot stack."
   },
   "metadata": {

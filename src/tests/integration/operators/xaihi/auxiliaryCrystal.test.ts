@@ -170,8 +170,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     const consumed = acAfter.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     const active = acAfter.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(consumed.length).toBe(2); // both originals clamped by restack
-    expect(active.length).toBe(1);   // 1 restacked event with stacks=1
-    expect(active[0].stacks).toBe(1);
+    expect(active.length).toBe(1);   // 1 restacked event
 
     // ── View layer: same pipeline as Steel Oath (II → I transition) ──
     const viewModels = computeTimelinePresentation(
@@ -427,7 +426,6 @@ describe('D. Auxiliary Crystal targeting', () => {
     );
     const acActive = acEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(acActive.length).toBe(1);
-    expect(acActive[0].stacks).toBe(1);
 
     // DDA_AMP should be applied to the controlled operator
     const ddaEvents = result.current.allProcessedEvents.filter(
@@ -564,7 +562,6 @@ describe('E. Auxiliary Crystal — Laevatain cross-operator damage', () => {
     );
     const acActive1 = acAfter1.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(acActive1.length).toBe(1);
-    expect(acActive1[0].stacks).toBe(1);
 
     const ddaAfter1 = result.current.allProcessedEvents.filter(
       ev => ev.name === DDA_STATUS_ID && ev.ownerEntityId === SLOT_LAEV,

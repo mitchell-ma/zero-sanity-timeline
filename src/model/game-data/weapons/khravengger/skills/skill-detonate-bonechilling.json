@@ -85,7 +85,8 @@
   "properties": {
     "name": "Detonate: Bonechilling",
     "description": "Skill DMG Dealt +{dmg_up:0.0%} (for every skill). When the wielder's battle skill applies Cryo Infliction, the wielder gains Cryo DMG Dealt +{cryst_dmg_up:0.0%} for {duration:0}s. When the wielder deals combo skill DMG to an enemy with Cryo Infliction, the wielder gains Cryo DMG Dealt +{cryst_dmg_up2:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
-    "id": "DETONATE_BONECHILLING"
+    "id": "DETONATE_BONECHILLING",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "KHRAVENGGER",

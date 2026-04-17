@@ -6,7 +6,7 @@
     "name": "Rapid Fire Akimbo (Dive)",
     "description": "Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",
     "element": "HEAT",
     "id": "RAPID_FIRE_AKIMBO_DIVE"

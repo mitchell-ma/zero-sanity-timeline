@@ -115,7 +115,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "After hitting an enemy with skills, Chen gains ATK +4%/+8% (L1/L2) for 10s. This effect can reach 5 stacks."
   },
   "metadata": {

@@ -3,7 +3,7 @@
     "name": "Blade Gale",
     "description": "A 7-sequence slash attack that deals Physical DMG with each sequence to the target enemy. The final slash sequence deals even more DMG.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
     "id": "BLADE_GALE"
   },

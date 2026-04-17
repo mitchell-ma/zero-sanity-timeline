@@ -2,7 +2,7 @@
  * Type definitions for user-created custom weapons.
  * See docs/customizationSpec.md § 2.
  */
-import { WeaponType, ElementType } from '../../consts/enums';
+import { WeaponType, ElementType, CustomWeaponSkillKind } from '../../consts/enums';
 import type { Interaction } from '../../dsl/semantics';
 import type { StatType } from '../enums';
 import type { CustomStatusEventDef } from './customStatusEventTypes';
@@ -21,7 +21,7 @@ export interface CustomWeapon {
 
 /** A weapon skill — either a passive stat boost or a triggered named effect. */
 export interface CustomWeaponSkillDef {
-  type: 'STAT_BOOST' | 'NAMED';
+  type: CustomWeaponSkillKind;
   label: string;
   statBoost?: {
     stat: StatType | string;

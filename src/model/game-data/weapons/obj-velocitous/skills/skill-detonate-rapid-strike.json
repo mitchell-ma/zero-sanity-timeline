@@ -37,7 +37,8 @@
   "properties": {
     "name": "Detonate: Rapid Strike",
     "description": "ATK +{atk_up:0.0%}. After the wielder consumes an Arts Infliction, the wielder gains Nature DMG Dealt +[{nature_dmg_up_mult:0.0%}×Stacks Consumed] for {duration:0}s. Effects of the same name cannot stack.",
-    "id": "DETONATE_RAPID_STRIKE"
+    "id": "DETONATE_RAPID_STRIKE",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "OBJ_VELOCITOUS",

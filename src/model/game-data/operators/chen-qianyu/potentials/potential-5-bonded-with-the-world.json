@@ -4,7 +4,7 @@
     "name": "Bonded with the World (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Combo skill Soar to the Stars improved: Length of cooldown is now {coolDown:0}s."
   },
   "metadata": {

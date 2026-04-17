@@ -3,7 +3,7 @@
     "name": "Turbid Avatar",
     "description": "Swings the polearm multiple times to deal 2 hits of Physical DMG, then slams the ground to deal Physical DMG and Knock Down to all enemies in the area of effect. \nIf the enemy struck by the last hit of this skill has no Vulnerability stacks, apply Physical Susceptibility to the said enemy instead.",
     "eventType": "SKILL",
-    "eventIdType": "BATTLE",
+    "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
     "id": "TURBID_AVATAR"
   },

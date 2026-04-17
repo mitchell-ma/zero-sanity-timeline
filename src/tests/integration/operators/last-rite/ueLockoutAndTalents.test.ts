@@ -14,7 +14,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { NounType, VerbType } from '../../../../dsl/semantics';
+import { NounType, VerbType, AdjectiveType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { InteractionModeType, StatType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
@@ -102,7 +102,7 @@ describe('A. Vigil Services UE Lockout — DSL structure', () => {
   });
 
   it('A3: status is talent-type, applied to THIS OPERATOR', () => {
-    expect(UE_LOCKOUT_JSON.properties.eventIdType).toBe(NounType.TALENT);
+    expect(UE_LOCKOUT_JSON.properties.eventCategoryType).toBe(NounType.TALENT);
     expect(UE_LOCKOUT_JSON.properties.to).toBe(NounType.OPERATOR);
     expect(UE_LOCKOUT_JSON.properties.toDeterminer).toBe('THIS');
   });
@@ -336,10 +336,10 @@ describe('C. T2 Cryogenic Embrittlement — DSL structure', () => {
       const applySusc = frame.clause[0].effects.find(
         (e: { verb: string; object: string; objectId?: string }) =>
           e.verb === VerbType.APPLY && e.object === NounType.STAT
-          && e.objectId === 'SUSCEPTIBILITY',
+          && e.objectId === NounType.SUSCEPTIBILITY,
       );
       expect(applySusc).toBeDefined();
-      expect(applySusc.objectQualifier).toBe('CRYO');
+      expect(applySusc.objectQualifier).toBe(AdjectiveType.CRYO);
       expect(applySusc.to).toBe(NounType.ENEMY);
     }
   });
@@ -349,7 +349,7 @@ describe('C. T2 Cryogenic Embrittlement — DSL structure', () => {
     const firstFrame = mainSegment.frames[0];
     const applySusc = firstFrame.clause[0].effects.find(
       (e: { verb: string; objectId?: string }) =>
-        e.verb === VerbType.APPLY && e.objectId === 'SUSCEPTIBILITY',
+        e.verb === VerbType.APPLY && e.objectId === NounType.SUSCEPTIBILITY,
     );
     expect(applySusc.with.multiplier.value[0]).toBe(1); // Talent level 0 — neutral (no multiplier)
     expect(applySusc.with.multiplier.value[1]).toBe(1.2); // Talent level 1
@@ -365,7 +365,7 @@ describe('D. P2 passive stats (STR +20, Cryo DMG Dealt +10%)', () => {
   it('D1: P2 clause has APPLY STAT STRENGTH IS 20', () => {
     const strEffect = POTENTIAL_2_JSON.clause[0].effects.find(
       (e: { verb: string; objectId?: string }) =>
-        e.verb === VerbType.APPLY && e.objectId === 'STRENGTH',
+        e.verb === VerbType.APPLY && e.objectId === StatType.STRENGTH,
     );
     expect(strEffect).toBeDefined();
     expect(strEffect.with.value.value).toBe(20);
@@ -374,8 +374,8 @@ describe('D. P2 passive stats (STR +20, Cryo DMG Dealt +10%)', () => {
   it('D2: P2 clause has APPLY STAT DAMAGE_BONUS CRYO IS 0.1', () => {
     const dmgEffect = POTENTIAL_2_JSON.clause[0].effects.find(
       (e: { verb: string; objectId?: string; objectQualifier?: string }) =>
-        e.verb === VerbType.APPLY && e.objectId === 'DAMAGE_BONUS'
-        && e.objectQualifier === 'CRYO',
+        e.verb === VerbType.APPLY && e.objectId === NounType.DAMAGE_BONUS
+        && e.objectQualifier === AdjectiveType.CRYO,
     );
     expect(dmgEffect).toBeDefined();
     expect(dmgEffect.with.value.value).toBe(0.1);

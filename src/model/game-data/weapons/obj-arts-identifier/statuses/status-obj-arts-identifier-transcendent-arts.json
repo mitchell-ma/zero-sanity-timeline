@@ -85,7 +85,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "OBJ_ARTS_IDENTIFIER",

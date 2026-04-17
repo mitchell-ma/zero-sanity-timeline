@@ -3,7 +3,7 @@
     "name": "\"Razorclaw\" Ambuscade",
     "description": "Rossi flutters her cape and unleashes a flurry of stabs that quickly deals multiple sequences of Heat DMG to the target. She then performs a two-sequence slash attack with her dagger that deals massive Heat DMG and applies Heat Infliction. When this skill successfully scores a critical hit, it deals higher Critical DMG.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "HEAT",
     "id": "RAZORCLAW_AMBUSCADE"
   },

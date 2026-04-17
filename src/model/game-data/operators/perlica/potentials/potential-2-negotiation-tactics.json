@@ -4,8 +4,8 @@
     "name": "Negotiation Tactics (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
-    "description": "Ultimate Protocol \u03b5: 70.41K improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL",
+    "description": "Ultimate Protocol ε: 70.41K improved: Ultimate Energy cost -15%."
   },
   "metadata": {
     "originId": "PERLICA",

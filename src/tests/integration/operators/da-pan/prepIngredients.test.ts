@@ -5,7 +5,10 @@
 /**
  * Da Pan — Prep Ingredients (T2 Salty or Mild) Integration Tests
  *
- * Prep Ingredients is a talent-derived status: 20s duration, limit 2 RESET.
+ * Prep Ingredients is a talent-derived status baked with P2 (Harmonized Flavors):
+ *   - Duration: 20s + VARY_BY POTENTIAL [0,0,10,10,10,10]s → 20s at P0-P1, 30s at P2+
+ *   - Stacks limit: 2 + VARY_BY POTENTIAL [0,0,1,1,1,1] → 2 at P0-P1, 3 at P2+
+ *   - interactionType: RESET
  * Applied by the Salty or Mild talent when Da Pan performs the Ultimate.
  *
  * Interaction: while Prep Ingredients is active, performing Combo Skill
@@ -63,6 +66,16 @@ function setTalentLevels(result: { current: AppResult }, level: number) {
   });
 }
 
+function setPotential(result: { current: AppResult }, potential: number) {
+  const props = result.current.loadoutProperties[SLOT_DA_PAN];
+  act(() => {
+    result.current.handleStatsChange(SLOT_DA_PAN, {
+      ...props,
+      operator: { ...props.operator, potential },
+    });
+  });
+}
+
 function placeUlt(result: { current: AppResult }, atSecond: number) {
   act(() => { setUltimateEnergyToMax(result.current, SLOT_DA_PAN, atSecond * FPS); });
   const col = findColumn(result.current, SLOT_DA_PAN, NounType.ULTIMATE);
@@ -91,10 +104,19 @@ function getPrepEvents(app: AppResult) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Da Pan — Prep Ingredients JSON', () => {
-  it('A1: 20s duration, limit 2, RESET interaction', () => {
+  it('A1: duration 20s + VARY_BY POTENTIAL [0,0,10,10,10,10], limit 2 + VARY_BY POTENTIAL [0,0,1,1,1,1], RESET', () => {
     const p = PREP_JSON.properties;
-    expect(p.duration.value.value).toBe(20);
-    expect(p.stacks.limit.value).toBe(2);
+
+    expect(p.duration.value.operation).toBe('ADD');
+    expect(p.duration.value.left.value).toBe(20);
+    expect(p.duration.value.right.object).toBe(NounType.POTENTIAL);
+    expect(p.duration.value.right.value).toEqual([0, 0, 10, 10, 10, 10]);
+    expect(p.duration.unit).toBe(UnitType.SECOND);
+
+    expect(p.stacks.limit.operation).toBe('ADD');
+    expect(p.stacks.limit.left.value).toBe(2);
+    expect(p.stacks.limit.right.object).toBe(NounType.POTENTIAL);
+    expect(p.stacks.limit.right.value).toEqual([0, 0, 1, 1, 1, 1]);
     expect(p.stacks.interactionType).toBe(StackInteractionType.RESET);
   });
 
@@ -135,19 +157,21 @@ describe('Da Pan — Prep Ingredients JSON', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Da Pan — Ultimate applies Prep Ingredients', () => {
-  it('B1: ultimate → 1 Prep Ingredients stack on Da Pan at 20s duration', () => {
+  it('B1: ultimate at P1 → 1 Prep Ingredients stack on Da Pan at 20s duration', () => {
     const { result } = setupDaPan();
+    setPotential(result, 1);
     placeUlt(result, 2);
 
     const preps = getPrepEvents(result.current);
     expect(preps.length).toBe(1);
-    // 20s base; extended by the ult's 1.4s TIME_STOP animation segment.
+    // 20s base (P1); extended by the ult's 1.4s TIME_STOP animation segment.
     expect(eventDuration(preps[0])).toBeGreaterThanOrEqual(20 * FPS);
     expect(eventDuration(preps[0])).toBeLessThan(22 * FPS);
   });
 
-  it('B2: two ultimates → 2 Prep Ingredients stacks (at cap)', () => {
+  it('B2: two ultimates at P1 → 2 Prep Ingredients stacks (at P1 cap)', () => {
     const { result } = setupDaPan();
+    setPotential(result, 1);
     placeUlt(result, 2);
     placeUlt(result, 8);
 
@@ -157,6 +181,33 @@ describe('Da Pan — Ultimate applies Prep Ingredients', () => {
       (ev) => ev.eventStatus !== EventStatusType.CONSUMED && ev.eventStatus !== EventStatusType.REFRESHED,
     );
     expect(active.length).toBeLessThanOrEqual(2);
+  });
+
+  it('B3: P2 bake-in — ultimate duration resolves to 30s (20 + 10 potential bonus)', () => {
+    const { result } = setupDaPan();
+    setPotential(result, 2);
+    placeUlt(result, 2);
+
+    const preps = getPrepEvents(result.current);
+    expect(preps.length).toBe(1);
+    // 30s at P2 + 1.4s ult animation.
+    expect(eventDuration(preps[0])).toBeGreaterThanOrEqual(30 * FPS);
+    expect(eventDuration(preps[0])).toBeLessThan(32 * FPS);
+  });
+
+  it('B4: P2 bake-in — three ultimates reach the 3-stack cap', () => {
+    const { result } = setupDaPan();
+    setPotential(result, 2);
+    placeUlt(result, 2);
+    placeUlt(result, 8);
+    placeUlt(result, 14);
+
+    const preps = getPrepEvents(result.current);
+    const active = preps.filter(
+      (ev) => ev.eventStatus !== EventStatusType.CONSUMED && ev.eventStatus !== EventStatusType.REFRESHED,
+    );
+    expect(active.length).toBeLessThanOrEqual(3);
+    expect(active.length).toBeGreaterThanOrEqual(2);
   });
 });
 

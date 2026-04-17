@@ -3,7 +3,7 @@
     "name": "Thunderlance: Final Shock",
     "description": "Throws a Thunderlance EX at the target area that deals massive Electric DMG to enemies nearby.",
     "eventType": "SKILL",
-    "eventIdType": "ULTIMATE",
+    "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
     "id": "THUNDERLANCE_FINAL_SHOCK"
   },

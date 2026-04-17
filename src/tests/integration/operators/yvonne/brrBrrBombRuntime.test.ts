@@ -26,6 +26,9 @@ import type { AppResult } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const YVONNE_ID: string = require('../../../../model/game-data/operators/yvonne/yvonne.json').id;
+const BARRAGE_OF_TECHNOLOGY_ID: string = require(
+  '../../../../model/game-data/operators/yvonne/statuses/status-barrage-of-technology.json',
+).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT = 'slot-0';
@@ -223,7 +226,7 @@ describe('E. Multiple cryo infliction stacks', () => {
 describe('F. Barrage of Technology only from BS Solidification', () => {
   function getBarrages(app: AppResult) {
     return app.allProcessedEvents.filter(
-      ev => ev.id === 'BARRAGE_OF_TECHNOLOGY' && ev.ownerEntityId === SLOT,
+      ev => ev.id === BARRAGE_OF_TECHNOLOGY_ID && ev.ownerEntityId === SLOT,
     );
   }
 

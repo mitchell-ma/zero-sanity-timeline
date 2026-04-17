@@ -7,7 +7,7 @@
  * Source of truth is always `frame.clauses` — these helpers replace the
  * deprecated `frame.ultimateEnergyGain` cache field.
  */
-import { NounType, VerbType, AdjectiveType } from '../../dsl/semantics';
+import { NounType, VerbType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import type { Effect, ValueNode } from '../../dsl/semantics';
 import type { FrameClausePredicate, FrameClauseEffect } from '../../model/event-frames/skillEventFrame';
 import { CritMode, type DamageScalingStatType } from '../../consts/enums';
@@ -229,7 +229,7 @@ export function parseJsonClauseArray(
 /** Map dsl `to` + `toDeterminer` onto the legacy target labels. */
 function dslTargetLabel(to?: string, toDeterminer?: string): string | undefined {
   if (to === NounType.TEAM) return 'TEAM';
-  if (to === NounType.OPERATOR) return toDeterminer === 'ALL' ? 'TEAM' : 'SELF';
+  if (to === NounType.OPERATOR) return toDeterminer === DeterminerType.ALL ? 'TEAM' : 'SELF';
   if (to === NounType.ENEMY) return 'ENEMY';
   return undefined;
 }
@@ -370,6 +370,8 @@ const ELEMENT_QUALIFIERS = new Set<string>([
  *   true → hit branch only (predicates/effects), false → else branch only.
  *   undefined → returns the first DEAL DAMAGE found in any branch.
  */
+const enum ChanceBranch { NONE, HIT, ELSE }
+
 export function findDealDamageInClauses(
   clauses: readonly FrameClausePredicate[] | undefined,
   chanceHit?: boolean,
@@ -393,7 +395,6 @@ export function findDealDamageInClauses(
  * builder gates row emission on the frame's pin. Returns null if no DEAL
  * DAMAGE is found.
  */
-const enum ChanceBranch { NONE, HIT, ELSE }
 
 function extractDealDamageFromEffect(
   dsl: Effect,
@@ -466,7 +467,7 @@ function extractDealDamageFromEffect(
       values = [withValue.value];
     } else if (withValue.operation) {
       valueNode = withValue;
-    } else if (withValue.verb === 'IS' && typeof withValue.value === 'number') {
+    } else if (withValue.verb === VerbType.IS && typeof withValue.value === 'number') {
       values = [withValue.value];
     }
   }

@@ -130,7 +130,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventIdType": "SKILL_STATUS",
+    "eventCategoryType": "SKILL_STATUS",
     "description": "A rogue wave summoned early by performing a dive attack during OLDEN STARE. Deals massive Cryo DMG to enemies in its area of effect."
   },
   "metadata": {

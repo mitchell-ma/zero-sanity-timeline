@@ -80,7 +80,7 @@
       "interactionType": "NONE"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "During battle, recovering {atb_gain:0} SP with his own skills grants Fervent Morale for {duration:0}s. Fervent Morale effects: ATK +{atk_up:0%} and Arts Intensity +{physpell_up:0}. This effect can reach 3 stacks. Duration of each stack is counted separately."
   },
   "metadata": {

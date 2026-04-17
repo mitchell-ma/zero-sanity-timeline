@@ -37,7 +37,7 @@
     "name": "Flawless Creation (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventIdType": "POTENTIAL",
+    "eventCategoryType": "POTENTIAL",
     "description": "Intellect +20, Critical Rate +{CriticalRate:0%}."
   },
   "metadata": {

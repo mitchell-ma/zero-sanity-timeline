@@ -3,7 +3,7 @@
     "name": "Instant Protocol: Chain",
     "description": "When controlled operator performs a Final Strike on any enemy. Unleashes stored electro-magnetic energy to bombard the target, dealing Electric DMG and forcibly inflicting temporary Electrification.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
     "id": "INSTANT_PROTOCOL_CHAIN"
   },

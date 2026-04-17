@@ -19,7 +19,7 @@
     }
   ],
   "properties": {
-    "id": "CATASTROPHE",
+    "id": "CATASTROPHE_STAT",
     "name": "Catastrophe",
     "description": "Returns +50 SP on battle skill cast. Once per battle.",
     "duration": {
@@ -41,7 +41,7 @@
       "value": 1
     },
     "eventType": "STATUS",
-    "eventIdType": "GEAR_SET_STATUS"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "CATASTROPHE",

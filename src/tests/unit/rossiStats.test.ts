@@ -22,14 +22,17 @@ import type { LoadoutProperties } from '../../view/InformationPane';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 
 // Mock operatorRegistry to avoid require.context for splash art assets
-jest.mock('../../controller/operators/operatorRegistry', () => ({
-  getOperatorConfig: (id: string) => {
-    if (id !== 'ROSSI') return undefined;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('../../model/game-data/operators/rossi/rossi.json');
-  },
-  ALL_OPERATORS: [],
-}));
+jest.mock('../../controller/operators/operatorRegistry', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const rossiJson = require('../../model/game-data/operators/rossi/rossi.json');
+  return {
+    getOperatorConfig: (id: string) => {
+      if (id !== rossiJson.id) return undefined;
+      return rossiJson;
+    },
+    ALL_OPERATORS: [],
+  };
+});
 
 // Mock loadoutRegistry to avoid require.context for asset discovery
 jest.mock('../../utils/loadoutRegistry', () => {
@@ -75,20 +78,27 @@ jest.mock('../../utils/loadoutRegistry', () => {
 });
 
 // Mock weaponGameData to avoid require.context
-jest.mock('../../model/game-data/weaponGameData', () => ({
-  getSkillValues: (skillType: string, statKey: string) => {
-    if (skillType === 'AGILITY_BOOST_L' && statKey === 'AGILITY')
-      return [20, 36, 52, 68, 84, 100, 116, 132, 156];
-    if (skillType === 'CRITICAL_RATE_BOOST_L' && statKey === 'CRITICAL_RATE')
-      return [0.025, 0.045, 0.065, 0.085, 0.105, 0.125, 0.145, 0.165, 0.195];
-    if (skillType === 'FRACTURE_GNASHING_WOLVES' && statKey === 'ATTACK_BONUS')
-      return [0.16, 0.192, 0.224, 0.256, 0.288, 0.32, 0.352, 0.384, 0.448];
-    return [];
-  },
-  getConditionalValues: () => [],
-  getConditionalScalar: () => null,
-  getBaseAttackForLevel: () => 454,
-}));
+jest.mock('../../model/game-data/weaponGameData', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { WeaponSkillType, StatType } = require('../../consts/enums');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fractureJson = require('../../model/game-data/weapons/lupine-scarlet/skills/skill-fracture-gnashing-wolves.json');
+  const FRACTURE_ID = fractureJson.id;
+  return {
+    getSkillValues: (skillType: string, statKey: string) => {
+      if (skillType === WeaponSkillType.AGILITY_BOOST_L && statKey === StatType.AGILITY)
+        return [20, 36, 52, 68, 84, 100, 116, 132, 156];
+      if (skillType === WeaponSkillType.CRITICAL_RATE_BOOST_L && statKey === StatType.CRITICAL_RATE)
+        return [0.025, 0.045, 0.065, 0.085, 0.105, 0.125, 0.145, 0.165, 0.195];
+      if (skillType === FRACTURE_ID && statKey === StatType.ATTACK_BONUS)
+        return [0.16, 0.192, 0.224, 0.256, 0.288, 0.32, 0.352, 0.384, 0.448];
+      return [];
+    },
+    getConditionalValues: () => [],
+    getConditionalScalar: () => null,
+    getBaseAttackForLevel: () => 454,
+  };
+});
 
 describe('loadoutAggregator — Rossi lv80, Lupine Scarlet lv80', () => {
   const OPERATOR_ID = 'ROSSI';

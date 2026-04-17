@@ -417,7 +417,7 @@
     "name": "Audio Noise",
     "description": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "SKILL",
-    "eventIdType": "BASIC_ATTACK",
+    "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
     "id": "AUDIO_NOISE_BATK"

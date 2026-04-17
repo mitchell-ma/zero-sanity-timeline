@@ -58,7 +58,8 @@
   "properties": {
     "name": "Medicant: Blight Fervor",
     "description": "Treatment Efficiency +{heal_up:0.0%}. After the wielder's skill provides HP treatment, the entire team gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
-    "id": "MEDICANT_BLIGHT_FERVOR"
+    "id": "MEDICANT_BLIGHT_FERVOR",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "CHIVALRIC_VIRTUES",

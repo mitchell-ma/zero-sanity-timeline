@@ -2,7 +2,7 @@
  * Registers/deregisters custom gear sets into the runtime registries.
  *
  * V2: Custom gear sets are stored as game data JSON bundles
- *     (GearSetEffect + GearPiece[] + GearStatus[]).
+ *     (Gear + GearPiece[] + GearStat[]).
  * V1 legacy: Also supports CustomGearSet format via adapter conversion.
  */
 import { GearSetType } from '../../consts/enums';

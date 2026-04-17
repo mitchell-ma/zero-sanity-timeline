@@ -7,7 +7,7 @@
  * See src/model/eventSpec.md for the full specification.
  */
 
-import { UnitType } from '../consts/enums';
+import { UnitType, EventCategoryType } from '../consts/enums';
 import { Reaction } from '../model/combat-statuses/reaction';
 
 // ── Sentinels ───────────────────────────────────────────────────────────────
@@ -181,6 +181,8 @@ export enum NounType {
   STAT = "STAT",
   /** Skill level of the owning operator (1-indexed, 1–12 → array[0–11]). */
   SKILL_LEVEL = "SKILL_LEVEL",
+  /** Weapon level (1-indexed, 1–90). Used as VARY_BY axis for weapon base-attack scaling. */
+  WEAPON_LEVEL = "WEAPON_LEVEL",
   /** Status level — distinct from stacks; a status can have 1 stack at varying levels. */
   STATUS_LEVEL = "STATUS_LEVEL",
   /** Talent level of the current event's talent slot (resolved from operator's talent key-map). */
@@ -192,13 +194,35 @@ export enum NounType {
   PHYSICAL_STATUS = "PHYSICAL_STATUS",
   TALENT = "TALENT",
   SKILL_STATUS = "SKILL_STATUS",
-  WEAPON_STATUS = "WEAPON_STATUS",
-  GEAR_STATUS = "GEAR_STATUS",
-  GEAR_SET_EFFECT = "GEAR_SET_EFFECT",
-  GEAR_SET_STATUS = "GEAR_SET_STATUS",
+  WEAPON = "WEAPON",
+  WEAPON_STAT = "WEAPON_STAT",
+  GEAR = "GEAR",
+  GEAR_STAT = "GEAR_STAT",
   CONSUMABLE = "CONSUMABLE",
   TACTICAL = "TACTICAL",
 }
+
+/**
+ * Maps eventCategoryType (NounType) → EventCategoryType (broader rollup) for
+ * status filter grouping. Only status-relevant NounTypes are included.
+ * Weapon/gear stores set their categoryType directly; this mapping is used
+ * by OperatorStatus and generics.
+ */
+export const EVENT_CATEGORY_TO_GROUP: Partial<Record<string, EventCategoryType>> = {
+  [NounType.SKILL_STATUS]:    EventCategoryType.SKILL,
+  [NounType.TALENT]:          EventCategoryType.TALENT,
+  [NounType.POTENTIAL]:       EventCategoryType.POTENTIAL,
+  [NounType.WEAPON]:          EventCategoryType.WEAPON,
+  [NounType.WEAPON_STAT]:     EventCategoryType.WEAPON,
+  [NounType.GEAR]:            EventCategoryType.GEAR,
+  [NounType.GEAR_STAT]:       EventCategoryType.GEAR,
+  [NounType.CONSUMABLE]:      EventCategoryType.CONSUMABLE,
+  [NounType.TACTICAL]:        EventCategoryType.TACTICAL,
+  [NounType.STATUS]:          EventCategoryType.STATUS,
+  [NounType.INFLICTION]:      EventCategoryType.INFLICTION,
+  [NounType.REACTION]:        EventCategoryType.REACTION,
+  [NounType.PHYSICAL_STATUS]: EventCategoryType.PHYSICAL_STATUS,
+};
 
 // ── Subject ─────────────────────────────────────────────────────────────────
 

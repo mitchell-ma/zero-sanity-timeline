@@ -1,12 +1,11 @@
 /**
- * WeaponStatusesLoader — loads and deserializes weapon status JSON configs
- * into typed WeaponStatus class instances.
+ * Weapon stat store — loads and deserializes weapon status JSON configs
+ * into typed `WeaponStat` class instances.
  *
- * Auto-discovers weapons/weapon-statuses/*.json via require.context.
- * Each file contains an array of weapon status entries sharing an originId.
+ * Auto-discovers weapons/<weapon>/statuses/status-*.json via require.context.
+ * Each file is a status entry that a `WeaponSkill` onTriggerClause applies.
  */
-import { NounType } from '../../dsl/semantics';
-import { UnitType, EventType } from '../../consts/enums';
+import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
 import { VerbType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
@@ -48,7 +47,7 @@ export interface DurationConfig {
 
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventIdType']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
 const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onExitClause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -79,8 +78,8 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
   return errors;
 }
 
-/** Validate a raw weapon status JSON entry. Returns an array of error messages (empty = valid). */
-export function validateWeaponStatus(json: Record<string, unknown>): string[] {
+/** Validate a raw weapon stat JSON entry. Returns an array of error messages (empty = valid). */
+export function validateWeaponStat(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
   errors.push(...validateNonNegativeValues(json, 'root'));
 
@@ -132,10 +131,10 @@ export function validateWeaponStatus(json: Record<string, unknown>): string[] {
   return errors;
 }
 
-// ── WeaponStatus class ──────────────────────────────────────────────────────
+// ── WeaponStat class ────────────────────────────────────────────────────────
 
-/** A single weapon status effect definition. Maps 1:1 to the JSON shape. */
-export class WeaponStatus {
+/** A weapon stat-bearing status definition (eventCategoryType=WEAPON_STAT). */
+export class WeaponStat {
   readonly clause: ClausePredicate[];
   readonly onTriggerClause: TriggerClause[];
   readonly onExitClause: ClausePredicate[];
@@ -147,7 +146,8 @@ export class WeaponStatus {
   readonly duration: DurationConfig;
   readonly stacks: StacksConfig;
   readonly eventType: EventType;
-  readonly eventIdType: string;
+  readonly eventCategoryType: string;
+  readonly categoryType = EventCategoryType.WEAPON;
   readonly originId: string;
 
   constructor(json: Record<string, unknown>) {
@@ -168,7 +168,7 @@ export class WeaponStatus {
       interactionType: 'NONE',
     }) as StacksConfig;
     this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
-    this.eventIdType = props.eventIdType as string ?? NounType.WEAPON_STATUS;
+    this.eventCategoryType = props.eventCategoryType as string;
     this.originId = (meta.originId ?? '') as string;
   }
 
@@ -195,7 +195,7 @@ export class WeaponStatus {
         duration: this.duration,
         stacks: this.stacks,
         eventType: this.eventType,
-        eventIdType: this.eventIdType,
+        eventCategoryType: this.eventCategoryType,
       },
       metadata: {
         originId: this.originId,
@@ -204,60 +204,60 @@ export class WeaponStatus {
   }
 
   /** Deserialize from JSON with validation. */
-  static deserialize(json: Record<string, unknown>, source?: string): WeaponStatus {
-    const errors = validateWeaponStatus(json);
+  static deserialize(json: Record<string, unknown>, source?: string): WeaponStat {
+    const errors = validateWeaponStat(json);
     if (errors.length > 0) {
       const id = (json.properties as Record<string, unknown>)?.id ?? 'unknown';
-      console.warn(`[WeaponStatus] Validation errors in ${source ?? id}:\n  ${errors.join('\n  ')}`);
+      console.warn(`[WeaponStat] Validation errors in ${source ?? id}:\n  ${errors.join('\n  ')}`);
     }
-    return new WeaponStatus(json);
+    return new WeaponStat(json);
   }
 }
 
 // ── Loader ──────────────────────────────────────────────────────────────────
 
-/** All weapon statuses indexed by originId. */
-const weaponStatusCache = new Map<string, WeaponStatus[]>();
+/** All WeaponStats indexed by originId. */
+const weaponStatCache = new Map<string, WeaponStat[]>();
 
 // Load individual status files from weapons/<weapon>/statuses/ and weapons/generic/
-const weaponStatusContext = require.context('./weapons', true, /\/statuses\/status-[^/]+\.json$/);
-for (const key of weaponStatusContext.keys()) {
-  const json = weaponStatusContext(key) as Record<string, unknown>;
-  const status = WeaponStatus.deserialize(json, key);
-  if (status.originId) {
-    if (!weaponStatusCache.has(status.originId)) {
-      weaponStatusCache.set(status.originId, []);
+const weaponStatContext = require.context('./weapons', true, /\/statuses\/status-[^/]+\.json$/);
+for (const key of weaponStatContext.keys()) {
+  const json = weaponStatContext(key) as Record<string, unknown>;
+  const stat = WeaponStat.deserialize(json, key);
+  if (stat.originId) {
+    if (!weaponStatCache.has(stat.originId)) {
+      weaponStatCache.set(stat.originId, []);
     }
-    weaponStatusCache.get(status.originId)!.push(status);
+    weaponStatCache.get(stat.originId)!.push(stat);
   }
 }
 
-// Also load generic weapon statuses
-const genericWeaponStatusContext = require.context('./weapons/generic', false, /^\.\/status-.*\.json$/);
-for (const key of genericWeaponStatusContext.keys()) {
-  const json = genericWeaponStatusContext(key) as Record<string, unknown>;
-  const status = WeaponStatus.deserialize(json, key);
-  if (status.originId) {
-    if (!weaponStatusCache.has(status.originId)) {
-      weaponStatusCache.set(status.originId, []);
+// Also load generic WeaponStats
+const genericWeaponStatContext = require.context('./weapons/generic', false, /^\.\/status-.*\.json$/);
+for (const key of genericWeaponStatContext.keys()) {
+  const json = genericWeaponStatContext(key) as Record<string, unknown>;
+  const stat = WeaponStat.deserialize(json, key);
+  if (stat.originId) {
+    if (!weaponStatCache.has(stat.originId)) {
+      weaponStatCache.set(stat.originId, []);
     }
-    weaponStatusCache.get(status.originId)!.push(status);
+    weaponStatCache.get(stat.originId)!.push(stat);
   }
 }
 
-/** Get all weapon statuses for a weapon by originId (e.g. "FORGEBORN_SCATHE"). */
-export function getWeaponStatuses(originId: string): readonly WeaponStatus[] {
-  return weaponStatusCache.get(originId) ?? [];
+/** Get all WeaponStats for a weapon by originId (e.g. "FORGEBORN_SCATHE"). */
+export function getWeaponStats(originId: string): readonly WeaponStat[] {
+  return weaponStatCache.get(originId) ?? [];
 }
 
-/** Get all registered weapon originIds that have status definitions. */
-export function getAllWeaponStatusOriginIds(): string[] {
-  return Array.from(weaponStatusCache.keys());
+/** Get all registered weapon originIds that have WeaponStat definitions. */
+export function getAllWeaponStatOriginIds(): string[] {
+  return Array.from(weaponStatCache.keys());
 }
 
-/** Get all weapon statuses across all weapons. */
-export function getAllWeaponStatuses(): readonly WeaponStatus[] {
-  const result: WeaponStatus[] = [];
-  weaponStatusCache.forEach(statuses => result.push(...statuses));
+/** Get all WeaponStats across all weapons. */
+export function getAllWeaponStats(): readonly WeaponStat[] {
+  const result: WeaponStat[] = [];
+  weaponStatCache.forEach(stats => result.push(...stats));
   return result;
 }

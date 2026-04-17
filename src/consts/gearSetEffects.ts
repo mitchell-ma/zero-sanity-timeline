@@ -6,7 +6,7 @@
  *
  * Used by loadoutAggregator for passive stat aggregation.
  */
-import { GearSetEffectType, GearSetType, StatType } from './enums';
+import { GearSetType, StatType } from './enums';
 import type { Interaction } from '../dsl/semantics';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -25,11 +25,11 @@ export interface GearEffectBuff {
 }
 
 /** A triggered gear set effect. */
-export interface GearSetEffect {
+export interface Gear {
   /** Display label (e.g. "Hot Work"). */
   label: string;
-  /** GearSetEffectType enum key for this effect. */
-  gearSetEffectType: GearSetEffectType;
+  /** GearSetType enum key for this effect. */
+  gearSetEffectType: GearSetType;
   /** Trigger condition(s) — any match activates. */
   triggers: Interaction[];
   /** Who receives the buff: wielder, team, or enemy. */
@@ -47,7 +47,7 @@ export interface GearSetEffect {
 }
 
 /** All effects for a gear set — passive stats and triggered effects. */
-export interface GearSetEffectsEntry {
+export interface GearsEntry {
   /** The gear set's effect type. */
   gearSetType: GearSetType;
   /** Display name for the gear set. */
@@ -55,12 +55,12 @@ export interface GearSetEffectsEntry {
   /** Always-on stats when 3+ pieces of this set are equipped. */
   passiveStats: Partial<Record<StatType, number>>;
   /** Triggered effects (empty for passive-only sets). */
-  effects: GearSetEffect[];
+  effects: Gear[];
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
-export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
+export const GEAR_SET_EFFECTS: GearsEntry[] = [
   // ── AIC Heavy ──────────────────────────────────────────────────────────────
   // HP +500. After defeating an enemy, restore 100 HP. Cooldown: 5s.
   {
@@ -243,6 +243,6 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
 // ── Lookup helpers ───────────────────────────────────────────────────────────
 
 /** Look up gear set effects by gear set type. */
-export function getGearSetEffects(gearSetType: GearSetType): GearSetEffectsEntry | undefined {
+export function getGears(gearSetType: GearSetType): GearsEntry | undefined {
   return GEAR_SET_EFFECTS.find((e) => e.gearSetType === gearSetType);
 }

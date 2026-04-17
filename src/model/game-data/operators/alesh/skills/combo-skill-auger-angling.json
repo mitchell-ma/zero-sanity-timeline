@@ -3,7 +3,7 @@
     "name": "Auger Angling",
     "description": "When a nearby target's Arts Reaction or Originium Crystals are consumed, opens an angling hole beneath the enemy that deals Physical DMG and recovers SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers extra SP. T2 Veteran Angler improves the Rare Fin catching chance by +0.2%/+0.5% per 10 Intellect (cap +30%). P3 May the Willing Bite applies a 10s +15% ATK team buff on Rare Fin catches.",
     "eventType": "SKILL",
-    "eventIdType": "COMBO",
+    "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
     "id": "AUGER_ANGLING"
   },
@@ -176,21 +176,56 @@
                               "left": {
                                 "verb": "VARY_BY",
                                 "object": "SKILL_LEVEL",
-                                "value": [0.33, 0.37, 0.4, 0.43, 0.47, 0.5, 0.53, 0.57, 0.6, 0.64, 0.69, 0.75],
-                                "of": { "object": "OPERATOR", "determiner": "THIS" }
+                                "value": [
+                                  0.33,
+                                  0.37,
+                                  0.4,
+                                  0.43,
+                                  0.47,
+                                  0.5,
+                                  0.53,
+                                  0.57,
+                                  0.6,
+                                  0.64,
+                                  0.69,
+                                  0.75
+                                ],
+                                "of": {
+                                  "object": "OPERATOR",
+                                  "determiner": "THIS"
+                                }
                               },
                               "right": {
                                 "verb": "VARY_BY",
                                 "object": "SKILL_LEVEL",
-                                "value": [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.93, 2.08, 2.25],
-                                "of": { "object": "OPERATOR", "determiner": "THIS" }
+                                "value": [
+                                  1,
+                                  1.1,
+                                  1.2,
+                                  1.3,
+                                  1.4,
+                                  1.5,
+                                  1.6,
+                                  1.7,
+                                  1.8,
+                                  1.93,
+                                  2.08,
+                                  2.25
+                                ],
+                                "of": {
+                                  "object": "OPERATOR",
+                                  "determiner": "THIS"
+                                }
                               }
                             },
                             "mainStat": {
                               "verb": "IS",
                               "object": "STAT",
                               "objectId": "ATTACK",
-                              "of": { "object": "OPERATOR", "determiner": "THIS" }
+                              "of": {
+                                "object": "OPERATOR",
+                                "determiner": "THIS"
+                              }
                             }
                           }
                         },
@@ -201,8 +236,24 @@
                             "value": {
                               "verb": "VARY_BY",
                               "object": "SKILL_LEVEL",
-                              "value": [20, 20, 20, 20, 20, 22, 22, 22, 22, 25, 25, 25],
-                              "of": { "object": "OPERATOR", "determiner": "THIS" }
+                              "value": [
+                                20,
+                                20,
+                                20,
+                                20,
+                                20,
+                                22,
+                                22,
+                                22,
+                                22,
+                                25,
+                                25,
+                                25
+                              ],
+                              "of": {
+                                "object": "OPERATOR",
+                                "determiner": "THIS"
+                              }
                             }
                           }
                         }
@@ -244,14 +295,33 @@
                         "value": {
                           "verb": "VARY_BY",
                           "object": "SKILL_LEVEL",
-                          "value": [0.33, 0.37, 0.4, 0.43, 0.47, 0.5, 0.53, 0.57, 0.6, 0.64, 0.69, 0.75],
-                          "of": { "object": "OPERATOR", "determiner": "THIS" }
+                          "value": [
+                            0.33,
+                            0.37,
+                            0.4,
+                            0.43,
+                            0.47,
+                            0.5,
+                            0.53,
+                            0.57,
+                            0.6,
+                            0.64,
+                            0.69,
+                            0.75
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         },
                         "mainStat": {
                           "verb": "IS",
                           "object": "STAT",
                           "objectId": "ATTACK",
-                          "of": { "object": "OPERATOR", "determiner": "THIS" }
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       }
                     },
@@ -262,8 +332,24 @@
                         "value": {
                           "verb": "VARY_BY",
                           "object": "SKILL_LEVEL",
-                          "value": [10, 10, 10, 10, 10, 12, 12, 12, 12, 15, 15, 15],
-                          "of": { "object": "OPERATOR", "determiner": "THIS" }
+                          "value": [
+                            10,
+                            10,
+                            10,
+                            10,
+                            10,
+                            12,
+                            12,
+                            12,
+                            12,
+                            15,
+                            15,
+                            15
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
                         }
                       }
                     }

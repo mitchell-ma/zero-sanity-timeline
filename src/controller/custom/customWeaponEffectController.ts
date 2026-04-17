@@ -1,7 +1,7 @@
 /**
  * Business logic for custom weapon effect CRUD operations.
  *
- * V2: Stores game data JSON (WeaponStatus[]) with a wrapper for metadata.
+ * V2: Stores game data JSON (WeaponStat[]) with a wrapper for metadata.
  * The editor still works with CustomWeaponEffect via adapters.
  */
 import { ElementType } from '../../consts/enums';

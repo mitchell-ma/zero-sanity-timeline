@@ -85,7 +85,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventIdType": "TALENT",
+    "eventCategoryType": "TALENT",
     "description": "Fluorite gains DMG Dealt +{dmg_up:0%} against Slowed targets."
   },
   "metadata": {

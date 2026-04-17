@@ -10,7 +10,8 @@
 
 import type { EventSegmentData } from '../consts/viewTypes';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
-import { StackInteractionType, UnitType } from '../consts/enums';
+import { StackInteractionType, UnitType, EventCategoryType } from '../consts/enums';
+import { StatType } from '../model/enums/stats';
 import { VerbType, NounType, DeterminerType, flattenQualifiedId } from '../dsl/semantics';
 import type { Interaction, ValueNode } from '../dsl/semantics';
 import { buildSkillTypeMap, type SkillTypeMap } from '../utils/skillTypeMap';
@@ -68,13 +69,13 @@ import {
 } from '../model/game-data/gearPiecesStore';
 
 import {
-  getGearSetEffect,
-  getAllGearSetEffectIds,
-  getAllGearSetEffects,
-  getGearStatuses,
-  getAllGearStatusOriginIds,
-  type GearSetEffect,
-  type GearStatus,
+  getGear,
+  getAllGearIds,
+  getAllGears,
+  getGearStats,
+  getAllGearStatOriginIds,
+  type Gear,
+  type GearStat,
 } from '../model/game-data/gearStatusesStore';
 
 import {
@@ -87,8 +88,8 @@ import {
 } from '../model/game-data/weaponSkillsStore';
 
 import {
-  getWeaponStatuses,
-  getAllWeaponStatusOriginIds,
+  getWeaponStats,
+  getAllWeaponStatOriginIds,
 } from '../model/game-data/weaponStatusesStore';
 
 import {
@@ -122,8 +123,8 @@ export type {
   OperatorStatus,
   Weapon,
   GearPiece,
-  GearSetEffect,
-  GearStatus,
+  Gear,
+  GearStat,
   WeaponSkill,
   WeaponSkillStatResult,
 };
@@ -149,15 +150,15 @@ export { getGearPiece, getAllGearPieces, getGearPiecesBySet, getGearPiecesByType
 export { registerCustomGearPiece, deregisterCustomGearPiece };
 
 // Gear statuses & set effects
-export { getGearSetEffect, getAllGearSetEffectIds, getAllGearSetEffects };
-export { getGearStatuses, getAllGearStatusOriginIds };
+export { getGear, getAllGearIds, getAllGears };
+export { getGearStats, getAllGearStatOriginIds };
 
 // Weapon skills
 export { getGenericWeaponSkill, getNamedWeaponSkill };
 export { getGenericSkillStats, getNamedSkillPassiveStats };
 
 // Weapon statuses
-export { getWeaponStatuses, getAllWeaponStatusOriginIds };
+export { getWeaponStats, getAllWeaponStatOriginIds };
 
 // Frame pipeline
 export { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence };
@@ -394,7 +395,7 @@ export function getComboSkillIds(operatorId: string): string[] {
   if (!skills) return [];
   const ids: string[] = [];
   skills.forEach(skill => {
-    if (skill.eventIdType === NounType.COMBO) {
+    if (skill.eventCategoryType === NounType.COMBO) {
       ids.push(skill.id);
     }
   });
@@ -535,7 +536,7 @@ export interface NormalizedEffectDef {
   isForced?: boolean;
   enhancementTypes?: string[];
   susceptibility?: Record<string, number[]>;
-  eventIdType?: string;
+  eventCategoryType?: string;
   usageLimit?: number;
   segments?: unknown[];
   stats?: unknown[];
@@ -556,8 +557,8 @@ for (const weapon of getAllWeapons()) {
 interface GearEffectEntry { properties: { type: string; id: string; name: string }; onTriggerClause?: { conditions: Interaction[]; effects: { objectId?: string }[] }[] }
 const GEAR_EFFECT_INDEX: Record<string, GearEffectEntry> = {};
 
-for (const gearSetId of getAllGearSetEffectIds()) {
-  const effect = getGearSetEffect(gearSetId);
+for (const gearSetId of getAllGearIds()) {
+  const effect = getGear(gearSetId);
   if (effect) {
     const serialized = effect.serialize() as unknown as GearEffectEntry;
     GEAR_EFFECT_INDEX[gearSetId] = serialized;
@@ -612,7 +613,7 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
     ...(raw.clause ? { clause: raw.clause as NormalizedEffectDef['clause'] } : {}),
     ...(raw.note ? { note: raw.note as string } : {}),
     ...(raw.cooldownSeconds ?? (props.cooldownSeconds as number | undefined) ? { cooldownSeconds: (raw.cooldownSeconds ?? props.cooldownSeconds) as number } : {}),
-    ...(props.eventIdType ? { eventIdType: props.eventIdType as string } : {}),
+    ...(props.eventCategoryType ? { eventCategoryType: props.eventCategoryType as string } : {}),
     ...(raw.usageLimit != null ? { usageLimit: raw.usageLimit as number }
       : (props.usageLimit as Record<string, unknown> | undefined)?.value != null
         ? { usageLimit: (props.usageLimit as { value?: number }).value! }
@@ -630,7 +631,7 @@ export function getWeaponEffectDefs(weaponId: string): NormalizedEffectDef[] {
   if (customWeaponEffects[weaponId]) return customWeaponEffects[weaponId];
   const originId = WEAPON_ID_TO_ORIGIN[weaponId];
   if (!originId) return [];
-  const statuses = getWeaponStatuses(originId);
+  const statuses = getWeaponStats(originId);
   if (statuses.length === 0) return [];
   const defs = statuses.map(s => normalizeEffectEntry(s.serialize() as Record<string, unknown>));
   const namedSkill = getNamedWeaponSkill(originId);
@@ -650,7 +651,7 @@ export function getWeaponEffectDefs(weaponId: string): NormalizedEffectDef[] {
 
 export function getGearEffectDefs(gearSetType: string): NormalizedEffectDef[] {
   if (customGearEffects[gearSetType]) return customGearEffects[gearSetType];
-  const statuses = getGearStatuses(gearSetType);
+  const statuses = getGearStats(gearSetType);
   if (statuses.length === 0) return [];
   const defs = statuses.map(s => normalizeEffectEntry(s.serialize() as Record<string, unknown>));
   const effectEntry = GEAR_EFFECT_INDEX[gearSetType];
@@ -669,7 +670,7 @@ export function getGearEffectDefs(gearSetType: string): NormalizedEffectDef[] {
 export function getAllWeaponEffectIds(): string[] {
   const ids: string[] = [];
   for (const weapon of getAllWeapons()) {
-    const statuses = getWeaponStatuses(weapon.id);
+    const statuses = getWeaponStats(weapon.id);
     if (statuses.length > 0) ids.push(weapon.id);
   }
   return [...ids, ...Object.keys(customWeaponEffects)];
@@ -739,10 +740,10 @@ export function getWeaponTriggerDefs(weaponId: string): NormalizedEffectDef[] {
 }
 
 /** Get weapon STATUS defs that have onTriggerClause (e.g. BECOME STACKS triggers). */
-export function getWeaponStatusTriggerDefs(weaponId: string): NormalizedEffectDef[] {
+export function getWeaponStatTriggerDefs(weaponId: string): NormalizedEffectDef[] {
   const originId = WEAPON_ID_TO_ORIGIN[weaponId];
   if (!originId) return [];
-  const statuses = getWeaponStatuses(originId);
+  const statuses = getWeaponStats(originId);
   const defs: NormalizedEffectDef[] = [];
   for (const s of statuses) {
     const raw = s.serialize();
@@ -752,8 +753,8 @@ export function getWeaponStatusTriggerDefs(weaponId: string): NormalizedEffectDe
   return defs;
 }
 
-export function getGearStatusTriggerDefs(gearSetType: string): NormalizedEffectDef[] {
-  const statuses = getGearStatuses(gearSetType);
+export function getGearStatTriggerDefs(gearSetType: string): NormalizedEffectDef[] {
+  const statuses = getGearStats(gearSetType);
   const defs: NormalizedEffectDef[] = [];
   for (const s of statuses) {
     const raw = s.serialize();
@@ -768,7 +769,7 @@ export function getGearStatusTriggerDefs(gearSetType: string): NormalizedEffectD
  * Returns one def per gear set with the effect's real ID and all onTriggerClause entries.
  */
 export function getGearTriggerDefs(gearSetType: string): NormalizedEffectDef[] {
-  const effect = getGearSetEffect(gearSetType);
+  const effect = getGear(gearSetType);
   if (!effect) return [];
   if (!effect.onTriggerClause.length) return [];
   return [normalizeEffectEntry(effect.serializeAsTriggerDef())];
@@ -845,7 +846,7 @@ export interface GearSetData {
 
 const GEAR_SET_DATA: Record<string, GearSetData> = {};
 
-for (const effect of getAllGearSetEffects()) {
+for (const effect of getAllGears()) {
   const id = effect.id;
   if (id) {
     GEAR_SET_DATA[id] = {
@@ -876,7 +877,7 @@ for (const [id, setData] of Object.entries(GEAR_SET_DATA)) {
       for (const ef of (c as { effects?: { verb: string; object: string; with?: { value: { verb: string; value: number | number[]; object?: string } } }[] }).effects ?? []) {
         const w = ef.with?.value;
         if (!w) continue;
-        if (ef.object === 'BASE_DEFENSE' && w.verb === VerbType.IS) {
+        if (ef.object === StatType.BASE_DEFENSE && w.verb === VerbType.IS) {
           defense = w.value as number;
           continue;
         }
@@ -994,7 +995,7 @@ function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
     ...(metadata.isEnabled === false ? { isEnabled: false } : {}),
     target: (props.target ?? raw.target ?? NounType.OPERATOR) as string,
     targetDeterminer: (props.targetDeterminer ?? raw.targetDeterminer ?? DeterminerType.THIS) as string,
-    type: (props.eventIdType ?? props.type) as string | undefined,
+    type: (props.eventCategoryType ?? props.type) as string | undefined,
     element: props.element as string | undefined,
     duration: parseDurationFrames(props),
     ...(sl ? {
@@ -1080,7 +1081,7 @@ function buildTriggerAssociations(): TriggerAssociation[] {
           statusId: se.id,
           originId: se.originId || operatorId,
           triggerClause: se.onTriggerClause,
-          source: se.type === 'TALENT' ? 'talent' : 'status',
+          source: se.type === EventCategoryType.TALENT ? 'talent' : 'status',
           config: se,
         });
       }

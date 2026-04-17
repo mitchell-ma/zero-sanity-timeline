@@ -10,7 +10,8 @@
  *   3. Link picker + New button
  */
 import { useState, useMemo, useCallback } from 'react';
-import { WeaponType, ElementType, ELEMENT_COLORS } from '../../../consts/enums';
+import { WeaponType, ElementType, ELEMENT_COLORS, EventCategoryType } from '../../../consts/enums';
+import { StatType } from '../../../model/enums/stats';
 import { OperatorClassType } from '../../../model/enums/operators';
 import type { CustomOperator, CustomPotentialEntry } from '../../../model/custom/customOperatorTypes';
 import type { SkillType } from '../../../consts/viewTypes';
@@ -91,7 +92,7 @@ function StatGrid({ stats, onChange, title }: {
   title: string;
 }) {
   const entries = Object.entries(stats);
-  const isFixed = (key: string) => key === 'BASE_HP' || key === 'BASE_ATTACK' || key === 'BASE_DEFENSE';
+  const isFixed = (key: string) => key === StatType.BASE_HP || key === StatType.BASE_ATTACK || key === StatType.BASE_DEFENSE;
 
   return (
     <div className="ops-stat-block">
@@ -268,13 +269,13 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
     if (!baseId) return [];
     return getOperatorStatuses(baseId)
       .map((s) => s.serialize() as Record<string, unknown>)
-      .filter((s) => (s.properties as Record<string, unknown> | undefined)?.eventIdType === 'TALENT');
+      .filter((s) => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType === EventCategoryType.TALENT);
   }, [baseId]);
   const builtinStatuses = useMemo(() => {
     if (!baseId) return [];
     return getOperatorStatuses(baseId)
       .map((s) => s.serialize() as Record<string, unknown>)
-      .filter((s) => (s.properties as Record<string, unknown> | undefined)?.eventIdType !== 'TALENT');
+      .filter((s) => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType !== EventCategoryType.TALENT);
   }, [baseId]);
   const builtinSkillEntries = useMemo(() => {
     if (!baseId) return [];

@@ -84,7 +84,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventIdType": "WEAPON_STATUS",
+    "eventCategoryType": "WEAPON_STAT",
     "description": "Nature DMG Dealt +{nature_dmg_up:0.0%}. After the wielder's combo skill applies Lifted, the team gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. For every enemy Lifted, the team gains bonus Arts DMG Dealt +{spell_dmg_up2:0.0%}, up to a max of +{spell_dmg_up2*max_stack:0.0%}. Effects of the same name cannot stack."
   },
   "metadata": {

@@ -60,7 +60,8 @@
   "properties": {
     "name": "Infliction: White Night Nova",
     "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. After the wielder applies Combustion or Electrification, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} and Arts Intensity +{phy_spell_up:0} for {duration:0}s. Effects of the same name cannot stack.",
-    "id": "INFLICTION_WHITE_NIGHT_NOVA"
+    "id": "INFLICTION_WHITE_NIGHT_NOVA",
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "WHITE_NIGHT_NOVA",
