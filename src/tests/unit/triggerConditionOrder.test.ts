@@ -92,8 +92,9 @@ describe('B. HAVE-only clauses use HAVE handler as driver', () => {
   const haveInfliction: Predicate = {
     subject: NounType.ENEMY,
     verb: VerbType.HAVE,
-    object: NounType.INFLICTION,
-    objectId: 'CRYO_INFLICTION',
+    object: NounType.STATUS,
+    objectId: NounType.INFLICTION,
+    objectQualifier: 'CRYO',
   };
 
   test('two HAVE conditions both evaluated — both must pass', () => {

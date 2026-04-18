@@ -1,21 +1,35 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.5
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 10
           },
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "ELECTRIC"
+          "unit": "SECOND"
+        },
+        "name": "Pulser Labs (Electric)"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.5
+                }
+              },
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ELECTRIC"
+            }
+          ]
         }
       ]
     }
@@ -39,10 +53,10 @@
     },
     "description": "Electric DMG +50% for 10s after applying Electrification. Cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "PULSER_LABS",
+    "originId": "PULSER_LABS_STAT",
     "dataStatus": "RECONCILED"
   }
 }

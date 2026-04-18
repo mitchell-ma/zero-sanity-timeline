@@ -1,6 +1,6 @@
 {
   "properties": {
-    "name": "Flashfreezer υ37",
+    "name": "Flashfreezer \u03c537",
     "description": "When the controlled operator performs a Final Strike on an enemy with Solidification. Immediately deploys Frost-e-Bytee next to the enemy. While active, Frost-e-Bytee constantly releases energy to attack nearby enemies, deals Cryo DMG to them, and pulls them towards itself. After Frost-e-Bytee expires, it explodes to forcibly apply Solidification and deal Cryo DMG to nearby enemies. After the combo skill successfully hits the enemy, Yvonne gains additional Ultimate Energy. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
@@ -26,7 +26,8 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -52,7 +53,7 @@
           },
           "unit": "SECOND"
         },
-        "name": "Flashfreezer υ37"
+        "name": "Flashfreezer \u03c537"
       },
       "frames": [
         {
@@ -635,7 +636,6 @@
     "icon": "skills/combo_yvonne.png",
     "dataStatus": "RECONCILED"
   },
-  "clauseType": "ALL",
   "activationWindow": {
     "properties": {
       "maxSkills": 1

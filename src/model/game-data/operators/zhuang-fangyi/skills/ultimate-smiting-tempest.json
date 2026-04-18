@@ -1,0 +1,146 @@
+{
+  "activationClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "IS",
+          "object": "CONTROLLED"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": { "eventComponentType": "SEGMENT" },
+      "properties": {
+        "segmentTypes": ["ANIMATION"],
+        "name": "Animation",
+        "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "IGNORE",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
+            {
+              "verb": "ENABLE", "object": "SKILL", "objectId": "BASIC_ATTACK", "objectQualifier": "JOLTING_ARTS_BATK_ENHANCED",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "DISABLE", "object": "SKILL", "objectId": "BASIC_ATTACK", "objectQualifier": "JOLTING_ARTS_BATK",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "DISABLE", "object": "SKILL", "objectId": "BASIC_ATTACK", "objectQualifier": "FINISHER",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "ENABLE", "object": "SKILL", "objectId": "BATTLE", "objectQualifier": "MANTRA_OF_SUNDERING_ENHANCED",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "DISABLE", "object": "SKILL", "objectId": "BATTLE", "objectQualifier": "MANTRA_OF_SUNDERING",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "ENABLE", "object": "SKILL", "objectId": "COMBO", "objectQualifier": "BREATH_OF_TRANSFORMATION_ENHANCED",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "DISABLE", "object": "SKILL", "objectId": "COMBO", "objectQualifier": "BREATH_OF_TRANSFORMATION",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            }
+          ]
+        },
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "ULTIMATE_ENERGY",
+              "with": {
+                "value": {
+                  "operation": "MULT",
+                  "left": { "verb": "IS", "value": 240 },
+                  "right": {
+                    "verb": "VARY_BY",
+                    "object": "POTENTIAL",
+                    "value": [1, 1, 1, 1, 0.85, 0.85],
+                    "of": { "object": "OPERATOR", "determiner": "THIS" }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "frames": [],
+      "clauseType": "ALL"
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT" },
+      "properties": {
+        "segmentTypes": ["ACTIVE"],
+        "name": "Empyrean of Truth",
+        "duration": { "value": { "verb": "IS", "value": 25 }, "unit": "SECOND" }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "ENABLE", "object": "SKILL", "objectId": "BASIC_ATTACK", "objectQualifier": "JOLTING_ARTS_BATK_ENHANCED",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "DISABLE", "object": "SKILL", "objectId": "BASIC_ATTACK", "objectQualifier": "JOLTING_ARTS_BATK",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "DISABLE", "object": "SKILL", "objectId": "BASIC_ATTACK", "objectQualifier": "FINISHER",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "ENABLE", "object": "SKILL", "objectId": "BATTLE", "objectQualifier": "MANTRA_OF_SUNDERING_ENHANCED",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "DISABLE", "object": "SKILL", "objectId": "BATTLE", "objectQualifier": "MANTRA_OF_SUNDERING",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "ENABLE", "object": "SKILL", "objectId": "COMBO", "objectQualifier": "BREATH_OF_TRANSFORMATION_ENHANCED",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            },
+            {
+              "verb": "DISABLE", "object": "SKILL", "objectId": "COMBO", "objectQualifier": "BREATH_OF_TRANSFORMATION",
+              "of": { "determiner": "THIS", "object": "OPERATOR" }
+            }
+          ]
+        }
+      ],
+      "frames": [],
+      "clauseType": "ALL"
+    }
+  ],
+  "properties": {
+    "name": "Smiting Tempest",
+    "description": "Transforms into the Empyrean of Truth that grants these enhancements: Zhuang Fangyi's basic attacks are enhanced and her actions are harder to interrupt; Battle skill Mantra of Sundering gains a higher DMG multiplier and an increased effect range, and the final Thunder Strike also applies Electric Infliction to the target hit. Combo skill Breath of Transformation gains a higher DMG multiplier, cooldown becomes 4 times faster, and effects are applied to enemies within a small area. The first casting of the battle skill Mantra of Sundering on an available target does not consume SP nor Electrification, and is guaranteed to create 3 Sunderblades even if the target has no Electrification.",
+    "eventType": "SKILL",
+    "eventCategoryType": "ULTIMATE",
+    "id": "SMITING_TEMPEST"
+  },
+  "metadata": {
+    "originId": "ZHUANG_FANGYI",
+    "dataStatus": "RECONCILED"
+  }
+}

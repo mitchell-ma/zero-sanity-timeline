@@ -500,7 +500,7 @@ describe('F. Combo Skill — Whirlpool Creation', () => {
       ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
     expect(whirlpools.length).toBeGreaterThanOrEqual(1);
-    expect(whirlpools[0].sourceSkillName).toBe(COMBO_ID);
+    expect(whirlpools[0].sourceSkillId).toBe(COMBO_ID);
 
     // ── View layer: whirlpool in operator status column ──
     const statusCol = findMatchingColumn(result.current, SLOT_TANGTANG, WHIRLPOOL_ID)
@@ -560,7 +560,7 @@ describe('G. Battle Skill — Waterspout Creation', () => {
       ev => ev.columnId === WATERSPOUT_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(waterspouts.length).toBeGreaterThanOrEqual(1);
-    expect(waterspouts[0].sourceSkillName).toBe(BATTLE_SKILL_ID);
+    expect(waterspouts[0].sourceSkillId).toBe(BATTLE_SKILL_ID);
     expect(waterspouts[0].sourceEntityId).toBe(TANGTANG_ID);
 
     // ── View layer: waterspout in enemy status ──
@@ -606,7 +606,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
       ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
-    expect(oldenStare[0].sourceSkillName).toBe(ULTIMATE_ID);
+    expect(oldenStare[0].sourceSkillId).toBe(ULTIMATE_ID);
 
     // ── View layer: OLDEN_STARE in enemy status ──
     const enemyStatusCol = findMatchingColumn(result.current, ENEMY_ID, OLDEN_STARE_ID)
@@ -701,7 +701,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     expect(rogueNode).toBeDefined();
   });
 
-  it('H7: OLDEN_STARE sourceSkillName traces to ULTIMATE', () => {
+  it('H7: OLDEN_STARE sourceSkillId traces to ULTIMATE', () => {
     const { result } = setupTangtang();
     act(() => { setUltimateEnergyToMax(result.current, SLOT_TANGTANG, 0); });
     placeUlt(result.current, 5 * FPS);
@@ -710,11 +710,11 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
       ev => ev.columnId === OLDEN_STARE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(oldenStare.length).toBeGreaterThanOrEqual(1);
-    expect(oldenStare[0].sourceSkillName).toBe(ULTIMATE_ID);
+    expect(oldenStare[0].sourceSkillId).toBe(ULTIMATE_ID);
     expect(oldenStare[0].sourceEntityId).toBe(TANGTANG_ID);
   });
 
-  it('H8: EARLY_ROGUE_WAVE sourceSkillName traces to ULTIMATE (not DIVE)', () => {
+  it('H8: EARLY_ROGUE_WAVE sourceSkillId traces to ULTIMATE (not DIVE)', () => {
     const { result } = setupTangtang();
     act(() => { setUltimateEnergyToMax(result.current, SLOT_TANGTANG, 0); });
 
@@ -732,7 +732,7 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     );
     expect(earlyWave.length).toBeGreaterThanOrEqual(1);
     // Attributed to ULTIMATE, not BASIC_ATTACK/DIVE
-    expect(earlyWave[0].sourceSkillName).toBe(ULTIMATE_ID);
+    expect(earlyWave[0].sourceSkillId).toBe(ULTIMATE_ID);
     expect(earlyWave[0].sourceEntityId).toBe(TANGTANG_ID);
   });
 
@@ -933,7 +933,7 @@ describe('I. Full Rotation Chain', () => {
       ev => ev.columnId === EARLY_ROGUE_WAVE_ID && ev.ownerEntityId === ENEMY_ID && ev.startFrame > 0,
     );
     expect(earlyWaves.length).toBeGreaterThanOrEqual(1);
-    expect(earlyWaves[0].sourceSkillName).toBe(ULTIMATE_ID);
+    expect(earlyWaves[0].sourceSkillId).toBe(ULTIMATE_ID);
 
     // Cryo infliction from BS
     const cryoInflictions = result.current.allProcessedEvents.filter(
@@ -1514,8 +1514,8 @@ describe('P. Talent & Potential Config Verification', () => {
       '../../../../model/game-data/operators/tangtang/talents/talent-riot-bringer-talent.json',
     );
     // T2 effects are baked into WATERSPOUT_ULT and OLDEN_STARE statuses
-    expect(t2.clause).toBeUndefined();
-    expect(t2.clauseType).toBeUndefined();
+    expect(t2.segments?.[0]?.clause).toBeUndefined();
+    expect(t2.segments?.[0]?.clauseType).toBeUndefined();
   });
 
   it('P2: P5 has no active clause (orphan removed)', () => {
@@ -1524,8 +1524,8 @@ describe('P. Talent & Potential Config Verification', () => {
       '../../../../model/game-data/operators/tangtang/potentials/potential-5-chiefs-all-eldritch-gaze.json',
     );
     // P5 effects are baked into OLDEN_STARE (×1.15) and WATERSPOUT_ULT (+80%)
-    expect(p5.clause).toBeUndefined();
-    expect(p5.clauseType).toBeUndefined();
+    expect(p5.segments?.[0]?.clause).toBeUndefined();
+    expect(p5.segments?.[0]?.clauseType).toBeUndefined();
   });
 
   it('P3: Talent 1 (Fam of Honor) applies HASTE to all operators and SLOW to enemy', () => {
@@ -1533,10 +1533,10 @@ describe('P. Talent & Potential Config Verification', () => {
     const t1 = require(
       '../../../../model/game-data/operators/tangtang/talents/talent-fam-of-honor-talent.json',
     );
-    expect(t1.clause).toBeDefined();
-    expect(t1.clause.length).toBeGreaterThanOrEqual(1);
+    expect(t1.segments[0].clause).toBeDefined();
+    expect(t1.segments[0].clause.length).toBeGreaterThanOrEqual(1);
 
-    const effects = t1.clause[0].effects;
+    const effects = t1.segments[0].clause[0].effects;
     // HASTE to ALL OPERATOR
     const hasteEffect = effects.find(
       (e: { verb: string; object?: string }) => e.verb === VerbType.APPLY && e.object === NounType.STAT,
@@ -1826,7 +1826,7 @@ describe('Q. Early Rogue Wave — Negative Trigger Tests', () => {
     );
     expect(earlyWave.length).toBeGreaterThanOrEqual(1);
     // EARLY_ROGUE_WAVE is attributed to ULTIMATE (not DIVE/BASIC_ATTACK)
-    expect(earlyWave[0].sourceSkillName).toBe(ULTIMATE_ID);
+    expect(earlyWave[0].sourceSkillId).toBe(ULTIMATE_ID);
     expect(earlyWave[0].sourceEntityId).toBe(TANGTANG_ID);
 
     // ── View layer ──

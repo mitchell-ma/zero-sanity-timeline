@@ -1,35 +1,50 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "STRENGTH",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 15
-            }
-          }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
         },
+        "name": "Calm and Tranquil (P2)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "INTELLECT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 15
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "STRENGTH",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 15
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "INTELLECT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 15
+                }
+              }
             }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -43,6 +58,5 @@
   "metadata": {
     "originId": "ALESH",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

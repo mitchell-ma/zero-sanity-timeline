@@ -1,8 +1,8 @@
-import { DamageFactorType, ElementType, ELEMENT_COLORS, ELEMENT_LABELS, StatusType } from '../../consts/enums';
+import { ElementType, ELEMENT_COLORS, ELEMENT_LABELS, StatusType } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SkillType, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
 import { getAllSkillLabels, getAllStatusLabels, getAllInflictionLabels } from '../gameDataStore';
 import { REACTION_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS } from '../../model/channels';
-import { VerbType, NounType, interactionToLabel, THRESHOLD_MAX } from '../../dsl/semantics';
+import { VerbType, NounType, interactionToLabel, isQualifiedId, THRESHOLD_MAX } from '../../dsl/semantics';
 import type { Interaction, Effect, Predicate, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, getLeafValue } from '../../controller/calculation/valueResolver';
 import { translateEffect } from '../../dsl/semanticsTranslation';
@@ -65,7 +65,6 @@ interface JsonSkill {
       onTriggerClause?: Predicate[];
     };
   };
-  clause?: Predicate[];
   segments?: JsonSegment[];
   frames?: JsonFrame[];
   statusEvents?: StatusEventDetail[];
@@ -179,10 +178,10 @@ export function resolveEventIdentity(
       sourceName = sourceSlot.operator.name;
       sourceColor = sourceSlot.operator.color;
     }
-    if (event.sourceSkillName) {
-      sourceSkillLabel = getAllSkillLabels()[event.sourceSkillName as string]
-        ?? getAllStatusLabels()[event.sourceSkillName as StatusType]
-        ?? event.sourceSkillName;
+    if (event.sourceSkillId) {
+      sourceSkillLabel = getAllSkillLabels()[event.sourceSkillId as string]
+        ?? getAllStatusLabels()[event.sourceSkillId as StatusType]
+        ?? event.sourceSkillId;
     }
   }
 
@@ -277,10 +276,10 @@ export function resolveComboChain(
       if (!bestMatch || e.startFrame > bestMatch.startFrame) bestMatch = e;
     }
 
-    const originalSkillLabel = bestMatch?.sourceSkillName
-      ? (getAllSkillLabels()[bestMatch.sourceSkillName as string]
-        ?? getAllStatusLabels()[bestMatch.sourceSkillName as StatusType]
-        ?? bestMatch.sourceSkillName)
+    const originalSkillLabel = bestMatch?.sourceSkillId
+      ? (getAllSkillLabels()[bestMatch.sourceSkillId as string]
+        ?? getAllStatusLabels()[bestMatch.sourceSkillId as StatusType]
+        ?? bestMatch.sourceSkillId)
       : undefined;
 
     // Link 1: Source operator + original skill
@@ -302,10 +301,10 @@ export function resolveComboChain(
     });
   } else {
     // Direct operator trigger (e.g. FINAL_STRIKE from basic attack)
-    const skillLabel = window.sourceSkillName
-      ? (getAllSkillLabels()[window.sourceSkillName as string]
-        ?? getAllStatusLabels()[window.sourceSkillName as StatusType]
-        ?? window.sourceSkillName)
+    const skillLabel = window.sourceSkillId
+      ? (getAllSkillLabels()[window.sourceSkillId as string]
+        ?? getAllStatusLabels()[window.sourceSkillId as StatusType]
+        ?? window.sourceSkillId)
       : undefined;
 
     chain.push({
@@ -436,7 +435,7 @@ export function resolveActiveModifiers(
   for (const ev of allProcessedEvents) {
     if (!isActiveAt(ev, midFrame)) continue;
 
-    if (ev.damageFactorType === DamageFactorType.AMP) {
+    if (isQualifiedId(ev.columnId, NounType.AMP)) {
       const bonus = ev.statusValue ?? DEFAULT_AMP_BONUS;
       modifiers.push({
         label: ev.name ?? 'Amp',
@@ -618,16 +617,6 @@ export function resolveEventDsl(
     }
   }
 
-  // Skill-level clause
-  if (skillCat.clause && Array.isArray(skillCat.clause)) {
-    for (const pred of skillCat.clause) {
-      predicates.push({
-        conditions: (pred.conditions ?? []).map((c: Interaction) => interactionToText(c)),
-        effects: (pred.effects ?? []).map((e: Effect) => effectToText(e)),
-      });
-    }
-  }
-
   // Segment-level data
   const segments: JsonSegment[] = skillCat.segments ?? [];
   for (let si = 0; si < segments.length; si++) {
@@ -669,14 +658,7 @@ export function resolveEventDsl(
     }
   }
 
-  // Skill-level effects from clause predicates
-  const skillClauseEffects = (skillCat.clause ?? []).flatMap((p: Predicate) => p.effects ?? []);
-  if (skillClauseEffects.length > 0) {
-    const filtered = skillClauseEffects
-      .filter((e: Effect) => !isRedundantEffect(e))
-      .map((e: Effect) => effectToText(e));
-    if (filtered.length > 0) segmentEffects[-1] = filtered;
-  }
+  // Skill-level effects (event-start clause) now live in segments[0].clause
 
   const hasData = predicates.length > 0 ||
     triggerPredicates.length > 0 ||
@@ -703,8 +685,6 @@ export interface EventFullDetail {
   properties: Record<string, { value: number | string; unit?: string }> | null;
   /** Status event data if this skill has statusEvents */
   statusEvents: StatusEventDetail[] | null;
-  /** Skill-level clause (raw predicates) */
-  clause: Predicate[] | null;
   /** Segment details */
   segments: {
     index: number;
@@ -801,7 +781,6 @@ export function resolveEventFullDetail(
     description: ((skillCat.properties as Record<string, unknown>)?.description as string) ?? null,
     properties: skillCat.properties ?? null,
     statusEvents: skillCat.statusEvents ?? null,
-    clause: skillCat.clause ?? null,
     segments,
     metadata: skillCat.metadata ?? null,
     skillTypeMapping,

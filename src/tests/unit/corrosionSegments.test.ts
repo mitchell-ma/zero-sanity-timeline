@@ -91,43 +91,62 @@ describe('corrosion segments', () => {
 
   // ── Segment structure ──────────────────────────────────────────────────
 
-  it('creates one segment per second of duration', () => {
+  it('15s corrosion produces 9 ramp ticks + 1 final hold segment (10 total)', () => {
     const ev = corrosionEvent('c1', 0, 15 * FPS); // 15 seconds
     const [result] = attachReactionFrames([ev]);
 
     expect(result.segments).toBeDefined();
-    expect(result.segments!.length).toBe(15);
+    expect(result.segments!.length).toBe(10);
+    // First 9 segments are 1s each (ramp ticks at t=1..9)
+    for (let i = 0; i < 9; i++) {
+      expect(result.segments![i].properties.duration).toBe(FPS);
+    }
+    // Final segment carries the remaining 6s (t=9 → t=15) at max value
+    expect(result.segments![9].properties.duration).toBe(6 * FPS);
   });
 
-  it('each segment is 1 second (120 frames)', () => {
+  it('exactly-10s corrosion produces 9 ramp ticks + 1 final hold (10 total)', () => {
     const ev = corrosionEvent('c1', 0, 10 * FPS);
     const [result] = attachReactionFrames([ev]);
 
+    expect(result.segments!.length).toBe(10);
+    // Segments 0..8: 1s ramp ticks. Segment 9: final hold, 1s remainder.
+    for (let i = 0; i < 9; i++) {
+      expect(result.segments![i].properties.duration).toBe(FPS);
+    }
+    expect(result.segments![9].properties.duration).toBe(FPS);
+  });
+
+  it('short corrosion (5s) produces 4 ramp ticks + 1 final segment (5 total)', () => {
+    const ev = corrosionEvent('c1', 0, 5 * FPS);
+    const [result] = attachReactionFrames([ev]);
+
+    expect(result.segments!.length).toBe(5);
+    // All segments are 1s — the final one just carries the ramp value at t=5.
     for (const seg of result.segments!) {
       expect(seg.properties.duration).toBe(FPS);
     }
   });
 
-  it('first segment is named "Corrosion I", subsequent have no name', () => {
+  it('first segment is named "Corrosion I" for level 1, subsequent get sequential roman numerals', () => {
     const ev = corrosionEvent('c1', 0, 5 * FPS);
     const [result] = attachReactionFrames([ev]);
     const segs = result.segments!;
 
     expect(segs[0].properties.name).toBe('Corrosion I');
-    expect(segs[1].properties.name).toBeUndefined();
-    expect(segs[2].properties.name).toBeUndefined();
-    expect(segs[3].properties.name).toBeUndefined();
-    expect(segs[4].properties.name).toBeUndefined();
+    expect(segs[1].properties.name).toBe('II');
+    expect(segs[2].properties.name).toBe('III');
+    expect(segs[3].properties.name).toBe('IV');
+    expect(segs[4].properties.name).toBe('V');
   });
 
-  it('first segment has visual label with roman numeral status level', () => {
+  it('first segment uses status-level roman; subsequent are sequential', () => {
     const ev = corrosionEvent('c1', 0, 3 * FPS, { statusLevel: 2 });
     const [result] = attachReactionFrames([ev]);
 
     expect(result.segments![0].properties.name).toBe('Corrosion II');
-    // Other segments have no visual label
-    expect(result.segments![1].properties.name).toBeUndefined();
-    expect(result.segments![2].properties.name).toBeUndefined();
+    expect(result.segments![1].properties.name).toBe('II');
+    expect(result.segments![2].properties.name).toBe('III');
   });
 
   // ── Resistance reduction ramping ───────────────────────────────────────
@@ -148,8 +167,8 @@ describe('corrosion segments', () => {
     const [result] = attachReactionFrames([ev]);
     const segs = result.segments!;
 
-    // Verify each segment matches the formula (level 1: initial 3.6, max 12, ramps over 10s)
-    for (let i = 0; i < 15; i++) {
+    // First 9 ramp segments interpolate values at t=1..9
+    for (let i = 0; i < 9; i++) {
       const expected = getCorrosionBaseReduction(1 as StatusLevel, i + 1);
       expect(segs[i].unknown?.statusLabel).toBe(`-${expected.toFixed(1)} Res`);
     }
@@ -160,21 +179,22 @@ describe('corrosion segments', () => {
     const [result] = attachReactionFrames([ev]);
     const segs = result.segments!;
 
-    for (let i = 0; i < 12; i++) {
+    // First 9 ramp segments interpolate values at t=1..9; segment 9 is the final hold at max.
+    for (let i = 0; i < 9; i++) {
       const expected = getCorrosionBaseReduction(2 as StatusLevel, i + 1);
       expect(segs[i].unknown?.statusLabel).toBe(`-${expected.toFixed(1)} Res`);
     }
   });
 
-  it('reduction reaches maximum at 10 seconds and stays flat', () => {
+  it('final hold segment carries max reduction; 15s corrosion is 10 segments', () => {
     const ev = corrosionEvent('c1', 0, 15 * FPS, { statusLevel: 1 });
     const [result] = attachReactionFrames([ev]);
     const segs = result.segments!;
 
-    // At t=10, 11, 12... all should be max (12.0 for level 1)
-    for (let i = 9; i < 15; i++) {
-      expect(segs[i].unknown?.statusLabel).toBe('-12.0 Res');
-    }
+    // 9 ramp + 1 final = 10 segments
+    expect(segs.length).toBe(10);
+    // Final segment (index 9) carries the max reduction = 12.0 for level 1
+    expect(segs[9].unknown?.statusLabel).toBe('-12.0 Res');
   });
 
   // ── Initial damage frame ─────────────────────────────────────────────
@@ -249,16 +269,17 @@ describe('corrosion arts intensity', () => {
     const multiplier = getCorrosionReductionMultiplier(ai);
     expect(multiplier).toBe(2);
 
+    // 9 ramp ticks + 1 final hold = 10 segments
+    expect(segs.length).toBe(10);
+
     // Level 1: base initial=3.6, max=12 → scaled: 7.2, 24
     // First segment (t=1): base = 3.6 + (12-3.6)*1/10 = 4.44 → scaled = 8.88
     const firstExpected = getCorrosionBaseReduction(1 as StatusLevel, 1) * multiplier;
     expect(segs[0].unknown?.statusLabel).toBe(`-${firstExpected.toFixed(1)} Res`);
 
-    // At 10s+: base = 12.0 → scaled = 24.0
+    // Final hold segment (segs[9]) at scaled max.
     const maxExpected = getCorrosionBaseReduction(1 as StatusLevel, 10) * multiplier;
     expect(segs[9].unknown?.statusLabel).toBe(`-${maxExpected.toFixed(1)} Res`);
-    expect(segs[10].unknown?.statusLabel).toBe(`-${maxExpected.toFixed(1)} Res`);
-    expect(segs[11].unknown?.statusLabel).toBe(`-${maxExpected.toFixed(1)} Res`);
   });
 
   it('zero arts intensity uses base reduction values', () => {
@@ -433,7 +454,7 @@ describe('corrosion time stop interaction', () => {
       columnId: REACTION_COLUMNS.CORROSION,
       startFrame: 0,
       segments: [{ properties: { duration: 5 * FPS } }],
-      sourceSkillName: 'Freeform',
+      sourceSkillId: 'Freeform',
       // No stacks — freeform events don't set this
     };
 

@@ -180,7 +180,7 @@ describe('A. Basic Attack (Rocky Whispers)', () => {
     const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.INFLICTION)).toBeUndefined();
       }
     }
   });
@@ -225,7 +225,7 @@ describe('B. Battle Skill (Dolly Rush)', () => {
 
   test('B2: Battle skill costs 100 SP', () => {
     const battleSkill = mockJson.skills.BATTLE;
-    const spCost = battleSkill.clause[0].effects.find(
+    const spCost = battleSkill.segments[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
     expect(spCost).toBeDefined();
@@ -234,7 +234,7 @@ describe('B. Battle Skill (Dolly Rush)', () => {
 
   test('B3: Battle skill has SP cost effect in clause', () => {
     const battleSkill = mockJson.skills.BATTLE;
-    const effects = battleSkill.clause[0].effects;
+    const effects = battleSkill.segments[0].clause[0].effects;
     const spCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
@@ -387,7 +387,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
   });
 
   test('C9: Combo recovers 10 ultimate energy to self', () => {
-    const effects = mockJson.skills.COMBO.clause[0].effects;
+    const effects = mockJson.skills.COMBO.segments[0].clause[0].effects;
     const energy = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.RECOVER
     );
@@ -419,7 +419,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
 
 describe('D. Ultimate (Wooly Party)', () => {
   test('D1: Ultimate energy cost is MULT(base, VARY_BY POTENTIAL)', () => {
-    const effects = mockJson.skills.ULTIMATE.clause[0].effects;
+    const effects = mockJson.skills.ULTIMATE.segments[0].clause[0].effects;
     const energyCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );

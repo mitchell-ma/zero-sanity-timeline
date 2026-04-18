@@ -18,23 +18,6 @@
       ]
     }
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "SKILL_POINT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 100
-            }
-          }
-        }
-      ]
-    }
-  ],
   "onEntryClause": [
     {
       "conditions": [],
@@ -276,7 +259,25 @@
           ],
           "clauseType": "ALL"
         }
-      ]
+      ],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "SKILL_POINT",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 100
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     }
   ],
   "metadata": {
@@ -287,6 +288,5 @@
       "ENDFIELD_WIKI"
     ],
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

@@ -87,8 +87,8 @@ beforeEach(() => { localStorage.clear(); });
 
 describe('A. Vigil Services UE Lockout — DSL structure', () => {
   it('A1: status has IGNORE ULTIMATE_ENERGY clause', () => {
-    expect(UE_LOCKOUT_JSON.clause).toHaveLength(1);
-    const effect = UE_LOCKOUT_JSON.clause[0].effects[0];
+    expect(UE_LOCKOUT_JSON.segments[0].clause).toHaveLength(1);
+    const effect = UE_LOCKOUT_JSON.segments[0].clause[0].effects[0];
     expect(effect.verb).toBe(VerbType.IGNORE);
     expect(effect.object).toBe(NounType.ULTIMATE_ENERGY);
     expect(effect.toDeterminer).toBe('THIS');
@@ -363,7 +363,7 @@ describe('C. T2 Cryogenic Embrittlement — DSL structure', () => {
 
 describe('D. P2 passive stats (STR +20, Cryo DMG Dealt +10%)', () => {
   it('D1: P2 clause has APPLY STAT STRENGTH IS 20', () => {
-    const strEffect = POTENTIAL_2_JSON.clause[0].effects.find(
+    const strEffect = POTENTIAL_2_JSON.segments[0].clause[0].effects.find(
       (e: { verb: string; objectId?: string }) =>
         e.verb === VerbType.APPLY && e.objectId === StatType.STRENGTH,
     );
@@ -372,7 +372,7 @@ describe('D. P2 passive stats (STR +20, Cryo DMG Dealt +10%)', () => {
   });
 
   it('D2: P2 clause has APPLY STAT DAMAGE_BONUS CRYO IS 0.1', () => {
-    const dmgEffect = POTENTIAL_2_JSON.clause[0].effects.find(
+    const dmgEffect = POTENTIAL_2_JSON.segments[0].clause[0].effects.find(
       (e: { verb: string; objectId?: string; objectQualifier?: string }) =>
         e.verb === VerbType.APPLY && e.objectId === NounType.DAMAGE_BONUS
         && e.objectQualifier === AdjectiveType.CRYO,
@@ -420,7 +420,7 @@ describe('E. P3 damage multiplier baked into CS and ULT', () => {
 
 describe('F. P4 UE cost reduction (240 → 204)', () => {
   it('F1: ult cost VARY_BY POTENTIAL [1, 1, 1, 1, 0.85, 0.85]', () => {
-    const consumeEffect = ULTIMATE_JSON.clause[0].effects[0];
+    const consumeEffect = ULTIMATE_JSON.segments[0].clause[0].effects[0];
     expect(consumeEffect.verb).toBe(VerbType.CONSUME);
     expect(consumeEffect.object).toBe(NounType.ULTIMATE_ENERGY);
     const potMult = consumeEffect.with.value.right.value;
@@ -458,7 +458,7 @@ describe('H. P5 — SP return and ult cost', () => {
   });
 
   it('H2: ult cost VARY_BY POTENTIAL — P5 reduced to 0.85× (240 → 204)', () => {
-    const consumeEffect = ULTIMATE_JSON.clause[0].effects[0];
+    const consumeEffect = ULTIMATE_JSON.segments[0].clause[0].effects[0];
     const potMult = consumeEffect.with.value.right.value;
     expect(potMult[5]).toBe(0.85); // P5: 240 × 0.85 = 204
   });

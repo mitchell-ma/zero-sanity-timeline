@@ -1,25 +1,39 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "to": "TEAM",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.16
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
           },
-          "objectId": "DAMAGE_BONUS"
+          "unit": "SECOND"
+        },
+        "name": "Frontiers"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "to": "TEAM",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.16
+                }
+              },
+              "objectId": "DAMAGE_BONUS"
+            }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "FRONTIERS_STAT",
+    "id": "FRONTIERS",
     "name": "Frontiers",
     "duration": {
       "value": {
@@ -37,10 +51,10 @@
     },
     "description": "Team DMG +16%",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "FRONTIERS",
+    "originId": "FRONTIERS_STAT",
     "dataStatus": "RECONCILED"
   }
 }

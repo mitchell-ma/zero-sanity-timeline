@@ -7,25 +7,6 @@
     "element": "PHYSICAL",
     "id": "DISTORTION"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 10
-            }
-          }
-        }
-      ]
-    }
-  ],
   "segments": [
     {
       "metadata": {
@@ -46,7 +27,27 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "RECOVER",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 10
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -109,7 +110,7 @@
               ]
             },
             {
-              "_note": "Path A — enemy NOT solidified: single base physical hit.",
+              "_note": "Path A \u2014 enemy NOT solidified: single base physical hit.",
               "conditions": [
                 {
                   "subject": "ENEMY",
@@ -163,7 +164,7 @@
               ]
             },
             {
-              "_note": "Path B — enemy IS solidified: single bigger physical hit + Physical Susceptibility. Mutually exclusive with Path A.",
+              "_note": "Path B \u2014 enemy IS solidified: single bigger physical hit + Physical Susceptibility. Mutually exclusive with Path A.",
               "conditions": [
                 {
                   "subject": "ENEMY",
@@ -322,7 +323,6 @@
     "icon": "skills/combo_estella.png",
     "dataStatus": "VERIFIED"
   },
-  "clauseType": "ALL",
   "activationWindow": {
     "properties": {
       "maxSkills": 1

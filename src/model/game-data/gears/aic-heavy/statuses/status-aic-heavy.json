@@ -1,25 +1,39 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        },
+        "name": "AIC Heavy"
+      },
+      "clause": [
         {
-          "verb": "RECOVER",
-          "object": "HP",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 100
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "RECOVER",
+              "object": "HP",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 100
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "AIC_HEAVY_STAT",
+    "id": "AIC_HEAVY",
     "name": "AIC Heavy",
     "duration": {
       "value": {
@@ -38,10 +52,10 @@
     "cooldownSeconds": 5,
     "description": "Restores 100 HP on defeating an enemy. 5s cooldown.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "AIC_HEAVY",
+    "originId": "AIC_HEAVY_STAT",
     "dataStatus": "RECONCILED"
   }
 }

@@ -1,35 +1,49 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Assault: Armament Prep"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "FLAT_ATTACK",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                12,
-                14.4,
-                16.8,
-                19.2,
-                21.6,
-                24,
-                26.4,
-                28.8,
-                33.6
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "FLAT_ATTACK",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    12,
+                    14.4,
+                    16.8,
+                    19.2,
+                    21.6,
+                    24,
+                    26.4,
+                    28.8,
+                    33.6
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ]
     }

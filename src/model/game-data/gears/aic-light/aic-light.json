@@ -13,21 +13,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "AIC_LIGHT_STAT",
+          "objectId": "AIC_LIGHT",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "AIC Light"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "FLAT_HP",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 500
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "AIC_LIGHT",
+    "id": "AIC_LIGHT_STAT",
     "name": "AIC Light",
     "rarity": 2,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer gains ATK +{atk_up} for {duration}s.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

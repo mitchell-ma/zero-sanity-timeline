@@ -1,39 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "CRITICAL_DAMAGE",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.03,
-                0.036,
-                0.042,
-                0.048,
-                0.054,
-                0.06,
-                0.066,
-                0.072,
-                0.084
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -57,11 +22,60 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Brutality: Cemented Fury"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "CRITICAL_DAMAGE",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.03,
+                    0.036,
+                    0.042,
+                    0.048,
+                    0.054,
+                    0.06,
+                    0.066,
+                    0.072,
+                    0.084
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Brutality: Cemented Fury",
     "description": "Critical Rate +{crit_up:0.0%}. When the wielder applies Vulnerability to an enemy with no Vulnerability stacks, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
     "id": "BRUTALITY_CEMENTED_FURY",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "CHIMERIC_JUSTICE",

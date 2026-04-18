@@ -1,36 +1,50 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.033333335,
-                0.06,
-                0.086666666,
-                0.11333334,
-                0.14,
-                0.16666667,
-                0.19333333,
-                0.22,
-                0.26
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "ARTS"
+          "unit": "SECOND"
+        },
+        "name": "Arts Boost [S]"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.033333335,
+                    0.06,
+                    0.086666666,
+                    0.11333334,
+                    0.14,
+                    0.16666667,
+                    0.19333333,
+                    0.22,
+                    0.26
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ARTS"
+            }
+          ]
         }
       ]
     }

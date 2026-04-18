@@ -93,7 +93,7 @@
     "id": "MI_SECURITY_HANDS_PPE",
     "name": "MI Security Hands PPE",
     "gearType": "GLOVES",
-    "gearSet": "MI_SECURITY"
+    "gearSet": "MI_SECURITY_STAT"
   },
   "metadata": {
     "originId": "game",

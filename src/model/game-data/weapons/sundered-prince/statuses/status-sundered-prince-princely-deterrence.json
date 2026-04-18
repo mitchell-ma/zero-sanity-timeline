@@ -1,59 +1,73 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.1,
-                0.12,
-                0.14,
-                0.16,
-                0.18,
-                0.2,
-                0.22,
-                0.24,
-                0.28
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 8
           },
-          "objectId": "ATTACK_BONUS"
+          "unit": "SECOND"
         },
+        "name": "Princely Deterrence"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.12,
-                0.144,
-                0.168,
-                0.192,
-                0.216,
-                0.24,
-                0.264,
-                0.288,
-                0.336
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.1,
+                    0.12,
+                    0.14,
+                    0.16,
+                    0.18,
+                    0.2,
+                    0.22,
+                    0.24,
+                    0.28
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "ATTACK_BONUS"
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.12,
+                    0.144,
+                    0.168,
+                    0.192,
+                    0.216,
+                    0.24,
+                    0.264,
+                    0.288,
+                    0.336
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "STAGGER_EFFICIENCY_BONUS"
             }
-          },
-          "objectId": "STAGGER_EFFICIENCY_BONUS"
+          ]
         }
       ]
     }
@@ -79,7 +93,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT"
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "SUNDERED_PRINCE",

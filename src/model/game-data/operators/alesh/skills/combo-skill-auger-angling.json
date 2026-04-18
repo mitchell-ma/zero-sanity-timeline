@@ -7,43 +7,6 @@
     "element": "PHYSICAL",
     "id": "AUGER_ANGLING"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                10,
-                10,
-                10,
-                10,
-                10,
-                12,
-                12,
-                12,
-                12,
-                13,
-                13,
-                15
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "segments": [
     {
       "metadata": {
@@ -64,7 +27,45 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "RECOVER",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    10,
+                    10,
+                    10,
+                    10,
+                    10,
+                    12,
+                    12,
+                    12,
+                    12,
+                    13,
+                    13,
+                    15
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -407,7 +408,6 @@
     "icon": "skills/combo_alesh.png",
     "dataStatus": "VERIFIED"
   },
-  "clauseType": "ALL",
   "activationWindow": {
     "properties": {
       "maxSkills": 1

@@ -92,7 +92,7 @@
     "id": "CATASTROPHE_FILTER",
     "name": "Catastrophe Filter",
     "gearType": "KIT",
-    "gearSet": "CATASTROPHE"
+    "gearSet": "CATASTROPHE_STAT"
   },
   "metadata": {
     "originId": "game",

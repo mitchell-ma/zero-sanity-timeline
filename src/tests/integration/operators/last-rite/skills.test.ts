@@ -384,7 +384,7 @@ describe('Last Rite — Hypothermic Perfusion Status', () => {
   });
 
   it('F4: P1 passive clause — APPLY STAT DAMAGE_BONUS FINAL_STRIKE', () => {
-    const clause = PERFUSION_JSON.clause[0];
+    const clause = PERFUSION_JSON.segments[0].clause[0];
     // Gated by HAVE POTENTIAL >= 1
     const cond = clause.conditions[0];
     expect(cond.verb).toBe(VerbType.HAVE);

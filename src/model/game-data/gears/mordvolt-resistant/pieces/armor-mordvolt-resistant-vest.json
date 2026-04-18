@@ -92,7 +92,7 @@
     "id": "MORDVOLT_RESISTANT_VEST",
     "name": "Mordvolt Resistant Vest",
     "gearType": "ARMOR",
-    "gearSet": "MORDVOLT_RESISTANT"
+    "gearSet": "MORDVOLT_RESISTANT_STAT"
   },
   "metadata": {
     "originId": "game",

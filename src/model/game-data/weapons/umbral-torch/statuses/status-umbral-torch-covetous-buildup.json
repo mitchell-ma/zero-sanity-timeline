@@ -1,87 +1,101 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.08,
-                0.096,
-                0.112,
-                0.128,
-                0.144,
-                0.16,
-                0.176,
-                0.192,
-                0.224
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "HEAT"
+          "unit": "SECOND"
         },
+        "name": "Covetous Buildup"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.08,
-                0.096,
-                0.112,
-                0.128,
-                0.144,
-                0.16,
-                0.176,
-                0.192,
-                0.224
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.08,
+                    0.096,
+                    0.112,
+                    0.128,
+                    0.144,
+                    0.16,
+                    0.176,
+                    0.192,
+                    0.224
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "HEAT"
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.08,
+                    0.096,
+                    0.112,
+                    0.128,
+                    0.144,
+                    0.16,
+                    0.176,
+                    0.192,
+                    0.224
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "NATURE"
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.07,
+                    0.084,
+                    0.098,
+                    0.112,
+                    0.126,
+                    0.14,
+                    0.154,
+                    0.168,
+                    0.196
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "ATTACK_BONUS"
             }
-          },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "NATURE"
-        },
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.07,
-                0.084,
-                0.098,
-                0.112,
-                0.126,
-                0.14,
-                0.154,
-                0.168,
-                0.196
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          },
-          "objectId": "ATTACK_BONUS"
+          ]
         }
       ]
     }
@@ -106,7 +120,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT",
+    "eventCategoryType": "WEAPON",
     "description": "ATK +{atk_up:0.0%}. Whenever Combustion or Corrosion is applied to an enemy, the wielder gains Heat and Nature DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s."
   },
   "metadata": {

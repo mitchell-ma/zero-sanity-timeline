@@ -93,7 +93,7 @@
     "id": "SWORDMANCER_MICRO_FILTER",
     "name": "Swordmancer Micro Filter",
     "gearType": "KIT",
-    "gearSet": "SWORDMANCER"
+    "gearSet": "SWORDMANCER_STAT"
   },
   "metadata": {
     "originId": "game",

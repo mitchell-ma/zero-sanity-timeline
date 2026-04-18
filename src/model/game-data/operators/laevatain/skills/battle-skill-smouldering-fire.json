@@ -10,23 +10,6 @@
     "element": "HEAT",
     "id": "SMOULDERING_FIRE"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "SKILL_POINT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 100
-            }
-          }
-        }
-      ]
-    }
-  ],
   "metadata": {
     "originId": "LAEVATAIN",
     "icon": "skills/skill_laevatain.png",
@@ -825,8 +808,25 @@
           "unit": "SECOND"
         },
         "element": "HEAT"
-      }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "SKILL_POINT",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 100
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     }
-  ],
-  "clauseType": "ALL"
+  ]
 }

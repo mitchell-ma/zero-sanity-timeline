@@ -23,6 +23,8 @@ import type { LoadoutProperties } from '../../view/InformationPane';
  */
 export interface StatusStacksQuery {
   getActiveStatusStacks(frame: number, ownerEntityId: string, statusId: string): number;
+  /** Max `statusLevel` across active matching events — used for STATUS_LEVEL ValueStatus reads. */
+  getActiveStatusLevel?(frame: number, ownerEntityId: string, statusId: string): number;
   /** Per-element susceptibility query — handles generic SUSCEPTIBILITY events carrying per-element values. Optional. */
   getActiveSusceptibilityStacks?(frame: number, element: ElementType): number;
 }
@@ -174,6 +176,9 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
         && isQualifiedId(statusId, StatusType.SUSCEPTIBILITY)) {
       const element = statusId.slice(0, -(StatusType.SUSCEPTIBILITY.length + 1)) as ElementType;
       return ctx.statusQuery.getActiveSusceptibilityStacks(ctx.frame, element);
+    }
+    if (node.object === NounType.STATUS_LEVEL) {
+      return ctx.statusQuery.getActiveStatusLevel?.(ctx.frame, owner, statusId) ?? 0;
     }
     return ctx.statusQuery.getActiveStatusStacks(ctx.frame, owner, statusId);
   }

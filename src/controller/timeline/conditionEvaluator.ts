@@ -68,6 +68,11 @@ export interface ConditionContext {
   /** Override for BECOME: the stack count before this specific trigger was created.
    *  When set, BECOME uses this instead of querying frame-1 state. */
   previousStackCount?: number;
+  /** Status/event id of the trigger currently being evaluated. Populated by the
+   *  engine-context trigger path (`handleEngineTrigger`) from the def's
+   *  `properties.id`. Used by `THIS EVENT IS OCCURRENCE` to count prior
+   *  instances of the same trigger status on the resolved owner. */
+  currentTriggerStatusId?: string;
 }
 
 // ── Subject resolution ───────────────────────────────────────────────────
@@ -333,6 +338,40 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
     if (!ctx.getControlledSlotAtFrame || !ownerEntityId) return false;
     const result = ctx.getControlledSlotAtFrame(ctx.frame) === ownerEntityId;
     return cond.negated ? !result : result;
+  }
+
+  // "THIS EVENT IS OCCURRENCE WITH VALUE IS N" — true when this trigger is
+  // firing for the Nth time on the resolved owner's timeline. Counts prior
+  // applied instances of the current trigger's status id (events with columnId
+  // === currentTriggerStatusId, same owner, startFrame < ctx.frame), adds 1
+  // for the instance this trigger would create, and compares to the target.
+  if (cond.subject === NounType.EVENT && cond.object === NounType.OCCURRENCE) {
+    const statusId = ctx.currentTriggerStatusId;
+    if (!statusId) return cond.negated ? true : false;
+    const ownerEntityId = resolveEntityId(cond.subject, ctx, cond.subjectDeterminer);
+    if (!ownerEntityId) return cond.negated ? true : false;
+    let priorCount = 0;
+    for (const ev of ctx.events) {
+      if (ev.ownerEntityId !== ownerEntityId) continue;
+      if (ev.columnId !== statusId) continue;
+      if (ev.startFrame >= ctx.frame) continue;
+      priorCount += 1;
+    }
+    const occurrenceNumber = priorCount + 1;
+    const condValue = cond.value ?? (cond as unknown as { with?: { value?: ValueNode } }).with?.value;
+    const valueCtx = ctx.potential != null
+      ? { ...DEFAULT_VALUE_CONTEXT, potential: ctx.potential }
+      : DEFAULT_VALUE_CONTEXT;
+    const target = condValue != null ? resolveValueNode(condValue as ValueNode, valueCtx) : 1;
+    let match: boolean;
+    switch (cond.cardinalityConstraint) {
+      case CardinalityConstraintType.GREATER_THAN:       match = occurrenceNumber > target; break;
+      case CardinalityConstraintType.GREATER_THAN_EQUAL: match = occurrenceNumber >= target; break;
+      case CardinalityConstraintType.LESS_THAN:          match = occurrenceNumber < target; break;
+      case CardinalityConstraintType.LESS_THAN_EQUAL:    match = occurrenceNumber <= target; break;
+      default:                                           match = occurrenceNumber === target; break;
+    }
+    return cond.negated ? !match : match;
   }
 
   const columnId = stateToColumn[cond.object];

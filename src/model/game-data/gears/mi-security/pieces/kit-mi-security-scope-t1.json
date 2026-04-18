@@ -92,7 +92,7 @@
     "id": "MI_SECURITY_SCOPE_T1",
     "name": "MI Security Scope T1",
     "gearType": "KIT",
-    "gearSet": "MI_SECURITY"
+    "gearSet": "MI_SECURITY_STAT"
   },
   "metadata": {
     "originId": "game",

@@ -6,48 +6,6 @@
     "eventCategoryType": "ULTIMATE",
     "id": "OVERCLOCKED_MOMENT"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "ULTIMATE_ENERGY",
-          "with": {
-            "value": {
-              "operation": "MULT",
-              "left": {
-                "verb": "IS",
-                "value": 100
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "POTENTIAL",
-                "value": [
-                  1,
-                  1,
-                  0.9,
-                  0.9,
-                  0.9,
-                  0.9
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              }
-            }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "OVERCLOCKED_MOMENT_AMP",
-          "to": "TEAM"
-        }
-      ]
-    }
-  ],
   "segments": [
     {
       "metadata": {
@@ -68,7 +26,50 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "ULTIMATE_ENERGY",
+              "with": {
+                "value": {
+                  "operation": "MULT",
+                  "left": {
+                    "verb": "IS",
+                    "value": 100
+                  },
+                  "right": {
+                    "verb": "VARY_BY",
+                    "object": "POTENTIAL",
+                    "value": [
+                      1,
+                      1,
+                      0.9,
+                      0.9,
+                      0.9,
+                      0.9
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "OVERCLOCKED_MOMENT_AMP",
+              "to": "TEAM"
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -120,6 +121,5 @@
     "originId": "ANTAL",
     "icon": "skills/ult_antal.png",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

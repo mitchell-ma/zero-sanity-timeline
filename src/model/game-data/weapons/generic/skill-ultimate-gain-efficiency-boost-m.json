@@ -1,35 +1,49 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Ultimate Gain Efficiency Boost [M]"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "ULTIMATE_GAIN_EFFICIENCY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.04761905,
-                0.08571429,
-                0.123809524,
-                0.16190477,
-                0.2,
-                0.23809524,
-                0.2761905,
-                0.31428573,
-                0.37142858
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ULTIMATE_GAIN_EFFICIENCY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.04761905,
+                    0.08571429,
+                    0.123809524,
+                    0.16190477,
+                    0.2,
+                    0.23809524,
+                    0.2761905,
+                    0.31428573,
+                    0.37142858
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ]
     }

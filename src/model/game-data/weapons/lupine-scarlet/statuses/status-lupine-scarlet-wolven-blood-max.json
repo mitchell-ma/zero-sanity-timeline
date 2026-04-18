@@ -1,69 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "PHYSICAL",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.24,
-                0.288,
-                0.336,
-                0.384,
-                0.432,
-                0.48,
-                0.528,
-                0.576,
-                0.672
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "HEAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.24,
-                0.288,
-                0.336,
-                0.384,
-                0.432,
-                0.48,
-                0.528,
-                0.576,
-                0.672
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "onExitClause": [
     {
       "conditions": [],
@@ -77,6 +12,85 @@
           "with": {
             "stacks": "MAX"
           }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
+          },
+          "unit": "SECOND"
+        },
+        "name": "Wolven Blood (Max Stacks)"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "PHYSICAL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.24,
+                    0.288,
+                    0.336,
+                    0.384,
+                    0.432,
+                    0.48,
+                    0.528,
+                    0.576,
+                    0.672
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "HEAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.24,
+                    0.288,
+                    0.336,
+                    0.384,
+                    0.432,
+                    0.48,
+                    0.528,
+                    0.576,
+                    0.672
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            }
+          ]
         }
       ]
     }
@@ -102,7 +116,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT"
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "LUPINE_SCARLET",

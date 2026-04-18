@@ -66,7 +66,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
     ev.startFrame = frame;
     ev.segments = [{ properties: { duration: durationFrames } }];
     ev.sourceEntityId = source.ownerEntityId;
-    ev.sourceSkillName = source.skillName;
+    ev.sourceSkillId = source.skillName;
     if (options?.event) Object.assign(ev, options.event);
 
 
@@ -141,10 +141,6 @@ export class ConfigDrivenStatusColumn implements EventColumn {
    * Consume N oldest with restacking — clamps ALL active, re-creates remaining
    * events to produce a visual stack-count split (e.g. Steel Oath V → IV → III).
    */
-  /**
-   * Consume N oldest with restacking — clamps ALL active, re-creates remaining
-   * events to produce a visual stack-count split (e.g. Steel Oath V → IV → III).
-   */
   private consumeWithRestack(ownerEntityId: string, frame: number, count: number, source: EventSource) {
     const allActive = this.host.activeEventsIn(this.columnId, ownerEntityId, frame)
       .sort((a, b) => a.startFrame - b.startFrame);
@@ -182,7 +178,7 @@ export class ConfigDrivenStatusColumn implements EventColumn {
         ev.startFrame = frame;
         ev.segments = [{ properties: { duration: maxRemainingDuration } }];
         ev.sourceEntityId = templateEvent.sourceEntityId;
-        ev.sourceSkillName = templateEvent.sourceSkillName;
+        ev.sourceSkillId = templateEvent.sourceSkillId;
         this.host.pushEvent(ev);
       }
     }

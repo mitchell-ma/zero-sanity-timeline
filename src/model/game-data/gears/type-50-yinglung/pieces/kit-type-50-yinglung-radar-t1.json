@@ -93,7 +93,7 @@
     "id": "TYPE_50_YINGLUNG_RADAR_T1",
     "name": "Type 50 Yinglung Radar T1",
     "gearType": "KIT",
-    "gearSet": "TYPE_50_YINGLUNG"
+    "gearSet": "TYPE_50_YINGLUNG_STAT"
   },
   "metadata": {
     "originId": "game",

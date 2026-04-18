@@ -1,33 +1,47 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.1,
-                0.12,
-                0.14,
-                0.16,
-                0.18,
-                0.2,
-                0.22,
-                0.24,
-                0.28
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
           },
-          "objectId": "WILL_BONUS"
+          "unit": "SECOND"
+        },
+        "name": "Imposing Champion"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.1,
+                    0.12,
+                    0.14,
+                    0.16,
+                    0.18,
+                    0.2,
+                    0.22,
+                    0.24,
+                    0.28
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "WILL_BONUS"
+            }
+          ]
         }
       ]
     }
@@ -53,7 +67,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT"
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "DETONATION_UNIT",

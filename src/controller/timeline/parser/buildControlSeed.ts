@@ -23,6 +23,6 @@ export function buildControlSeed(
   ev.startFrame = 0;
   ev.segments = [{ properties: { duration: TOTAL_FRAMES } }];
   ev.sourceEntityId = operatorId ?? firstOccupiedSlotId;
-  ev.sourceSkillName = NounType.CONTROL;
+  ev.sourceSkillId = NounType.CONTROL;
   return ev;
 }

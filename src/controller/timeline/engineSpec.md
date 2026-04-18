@@ -151,6 +151,30 @@ Post-pipeline (app layer):
 
 ---
 
+## DSL Grammar Invariants
+
+**`INFLICTION` / `REACTION` are `objectId` values only.** They are never valid as `object` or `subject`. The canonical shape for an infliction effect is
+`{object: STATUS, objectId: INFLICTION, objectQualifier: <ELEMENT|VULNERABLE>}`;
+for a reaction it's `{object: STATUS, objectId: REACTION, objectQualifier: <COMBUSTION|SOLIDIFICATION|…>}`.
+`validationUtils.ts::warnInvalidInflictionReactionPosition` (shared by
+`validateEffect` and `validateInteraction`) rejects the legacy `{object: INFLICTION}` form. A data-invariant unit test (`tests/unit/dataGrammarInvariants.test.ts`) sweeps every JSON under `src/model/game-data/` to keep the migration from drifting.
+
+**Clauses live inside `segments[i].clause` — no root-level `clause`.** Operator / weapon / gear status defs have zero top-level `clause`. The loader validators (`operatorStatusesStore.validateOperatorStatus`, etc.) reject any such JSON. `resolveClauseEffects` reads `segments[0].clause` only.
+
+**Per-bucket clause evaluation mode.** Instead of a single root-level `clauseType`, each clause bucket has its own evaluation-mode field:
+
+| Bucket | Field | Default |
+|--------|-------|---------|
+| `onTriggerClause` | `onTriggerClauseType` | `ALL` (every matching clause fires) |
+| `onEntryClause`   | `onEntryClauseType`   | `ALL` |
+| `onExitClause`    | `onExitClauseType`    | `ALL` |
+
+Set the field to `"FIRST_MATCH"` when clauses are a base + refinement pattern (e.g. Endministrator's Essence Disintegration: base `CONSUME CRYSTAL` clause + `P>=2` gated refinement clause that also fires a team-buff). Without `FIRST_MATCH`, both clauses fire and the RESET stack limit clamps the earlier application to zero duration. Segment-level `clauseType` still exists for `segments[i].clauseType`; the per-bucket fields are additional at the def root.
+
+**Status event `sourceSkillId` holds IDs, not display names.** The field was renamed from `sourceSkillName` across the engine and persisted event shape. The status-source label surfaced in `params.sub.statSources` (and downstream in `buildMultiplierEntries`) resolves the display name at the `pushStatSource` call via `getStatusDef(parentStatusId).properties.name` — the ID never leaks into the breakdown.
+
+---
+
 ## Status Clause Effects — Per-Status, Not Per-Stack
 
 Status `clause` effects describe the **status's total contribution**, not a per-stack delta. `MULT(0.03, STACKS)` means the status contributes `0.03 × currentStackCount` in total — evaluated once against the current stack count, not accumulated per event instance.
@@ -205,7 +229,7 @@ Triggers fire on the 0→positive transition (BECOME) and positive→0 transitio
 
 Skill-triggered applications (e.g. a battle skill's APPLY clause) reach the same `doApply → applyEvent → runStatusCreationLifecycle` path via the skill event's own PROCESS_FRAME dispatch. One codepath from the APPLY-clause frame inward.
 
-**`inheritDuration`:** Freeform wrappers' APPLY clauses set `inheritDuration: true`, so `doApply` uses the wrapper's remaining duration instead of the status config's fixed duration — user drag-resizing the freeform event propagates to the applied event.
+**Wrapper duration injection:** Freeform wrappers propagate their remaining segment duration to the applied child via `injectWrapperDuration` in `handleProcessFrame`. The helper rewrites the clause's APPLY effect to include `with.duration = parentSegEnd - absFrame`, so the applied event inherits the wrapper's (possibly user-resized) span without a special `inheritDuration` flag on the effect itself. Non-freeform (skill-originated) APPLY clauses don't go through the injector — they use their configured duration.
 
 **Runtime-user-edited fields (`susceptibility`):** Qualified-susceptibility and FOCUS wrappers carry a per-element `susceptibility` record the user edits via info pane `jsonOverrides`. At dispatch, `handleProcessFrame` sets `ctx.sourceEvent = wrapper`. `doApply`'s generic qualified-status path copies `ctx.sourceEvent.susceptibility` onto the applied event's `eventProps.susceptibility` when the applied columnId matches the wrapper's. That's the single exception threaded through `InterpretContext` — everything else is carried by the static DSL clause.
 

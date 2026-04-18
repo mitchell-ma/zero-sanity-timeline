@@ -138,6 +138,12 @@ export enum NounType {
   PROTECTED = "PROTECTED",
   /** Damage reduction debuff on enemy. Qualified by element. Separate damage factor from SUSCEPTIBILITY. */
   FRAGILITY = "FRAGILITY",
+  /** Operator-side resistance-ignore stat. Qualified by element (`<EL>_RESISTANCE_IGNORE`).
+   *  Sums into the resistance addback bucket alongside enemy RESISTANCE_REDUCTION. */
+  RESISTANCE_IGNORE = "RESISTANCE_IGNORE",
+  /** Enemy-side resistance-reduction stat. Qualified by element (`<EL>_RESISTANCE_REDUCTION`).
+   *  Sums into the resistance addback bucket alongside operator RESISTANCE_IGNORE. */
+  RESISTANCE_REDUCTION = "RESISTANCE_REDUCTION",
   /** Damage reduction buff on operator (in-game: Sanctuary). */
   SANCTUARY = "SANCTUARY",
   /** Absorptive shield barrier on operator. */
@@ -171,6 +177,14 @@ export enum NounType {
   ACTIVE = "ACTIVE",
   /** The operator is currently controlled by the player. */
   CONTROLLED_STATE = "CONTROLLED",
+  /**
+   * Event occurrence counter — used as the object of a `subject: EVENT, verb: IS`
+   * condition. "THIS EVENT IS OCCURRENCE WITH VALUE IS N" resolves true when
+   * this trigger is firing for the Nth time on the current owner's timeline
+   * (prior occurrence count + 1 === N). N=1 gates "first ever" behavior like
+   * Zhuang Fangyi P1 "first battle skill casting creates one extra Sunderblade".
+   */
+  OCCURRENCE = "OCCURRENCE",
 
   // Supplied parameters (user-input runtime values)
   /** A user-supplied parameter (e.g. ENEMY_HIT). Used as condition subject. */
@@ -417,26 +431,30 @@ export const ObjectType = { ...NounType, ...AdjectiveType } as typeof NounType &
  * Defines which NounType/ObjectType values each verb can take as its object.
  */
 export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
-  [VerbType.APPLY]:      [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAT, ObjectType.STAGGER, ObjectType.SUSCEPTIBILITY, ObjectType.FRAGILITY, ObjectType.TIME_STOP, ObjectType.EVENT],
-  [VerbType.CONSUME]:    [ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT, ObjectType.SKILL],
+  // INFLICTION and REACTION are NEVER valid as `object`. They appear as
+  // `objectId` under `object: STATUS` (e.g. APPLY STATUS INFLICTION HEAT)
+  // or as status identifiers at other positions. The validator rejects
+  // `object: INFLICTION` / `object: REACTION` to keep DSL data in a single shape.
+  [VerbType.APPLY]:      [ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAT, ObjectType.STAGGER, ObjectType.SUSCEPTIBILITY, ObjectType.FRAGILITY, ObjectType.TIME_STOP, ObjectType.EVENT],
+  [VerbType.CONSUME]:    [ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT, ObjectType.SKILL],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
   [VerbType.DEAL]:       [ObjectType.DAMAGE, ObjectType.STAGGER],
   [VerbType.PERFORM]:    [ObjectType.SKILL, ObjectType.NORMAL_ATTACK, ObjectType.CHARGE, ObjectType.CRITICAL_HIT],
   [VerbType.HIT]:        [ObjectType.ENEMY],
   [VerbType.DEFEAT]:     [ObjectType.ENEMY],
-  [VerbType.REFRESH]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION],
-  [VerbType.EXTEND]:     [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION],
-  [VerbType.MERGE]:      [ObjectType.STATUS, ObjectType.INFLICTION],
+  [VerbType.REFRESH]:    [ObjectType.STATUS],
+  [VerbType.EXTEND]:     [ObjectType.STATUS],
+  [VerbType.MERGE]:      [ObjectType.STATUS],
   [VerbType.RESET]:      [ObjectType.STACKS],
   [VerbType.IGNORE]:     [ObjectType.STATUS, ObjectType.STAT, ObjectType.ULTIMATE_ENERGY],
   [VerbType.ENABLE]:     [ObjectType.SKILL],
   [VerbType.DISABLE]:    [ObjectType.SKILL],
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
-  [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP, ObjectType.POTENTIAL, ObjectType.CHARGE],
-  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.SLOWED, ObjectType.STAGGERED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.CRYO_INFLICTED, ObjectType.HEAT_INFLICTED, ObjectType.NATURE_INFLICTED, ObjectType.ELECTRIC_INFLICTED, ObjectType.ARTS_INFLICTED, ObjectType.VULNERABLE_INFLICTED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED, ObjectType.STACKS],
+  [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP, ObjectType.POTENTIAL, ObjectType.CHARGE],
+  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.SLOWED, ObjectType.STAGGERED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.CRYO_INFLICTED, ObjectType.HEAT_INFLICTED, ObjectType.NATURE_INFLICTED, ObjectType.ELECTRIC_INFLICTED, ObjectType.ARTS_INFLICTED, ObjectType.VULNERABLE_INFLICTED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED, ObjectType.STACKS, ObjectType.OCCURRENCE],
   [VerbType.BECOME]:     [ObjectType.STACKS, ObjectType.ACTIVE, ObjectType.STAGGERED, ObjectType.SLOWED, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.CRYO_INFLICTED, ObjectType.HEAT_INFLICTED, ObjectType.NATURE_INFLICTED, ObjectType.ELECTRIC_INFLICTED, ObjectType.ARTS_INFLICTED, ObjectType.VULNERABLE_INFLICTED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
-  [VerbType.RECEIVE]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STAGGER],
+  [VerbType.RECEIVE]:    [ObjectType.STATUS, ObjectType.STAGGER],
   [VerbType.OVERHEAL]:   [ObjectType.HP],
   [VerbType.REDUCE]:     [ObjectType.COOLDOWN],
 };
@@ -726,8 +744,8 @@ export interface ValueStat {
  */
 export interface ValueStatus {
   verb: VerbType.IS;
-  /** The status property to read (STACKS). */
-  object: NounType.STACKS;
+  /** The status property to read (STACKS or STATUS_LEVEL). */
+  object: NounType.STACKS | NounType.STATUS_LEVEL;
   /** Possessor chain — which status and whose entity. */
   of?: OfClause;
 }
@@ -788,7 +806,9 @@ export function isValueStat(node: ValueNode): node is ValueStat {
 export function isValueStatus(node: ValueNode): node is ValueStatus {
   if (node == null || typeof node !== 'object') return false;
   if (!('verb' in node) || node.verb !== VerbType.IS) return false;
-  return 'object' in node && (node as ValueStatus).object === NounType.STACKS;
+  if (!('object' in node)) return false;
+  const obj = (node as ValueStatus).object;
+  return obj === NounType.STACKS || obj === NounType.STATUS_LEVEL;
 }
 
 export function isValueIdentity(node: ValueNode): node is ValueIdentity {
@@ -916,14 +936,6 @@ export interface Effect {
    * full strength; binary side-effects fire fully when their branch fires.
    */
   elseEffects?: Effect[];
-
-  /**
-   * When true, the created status inherits its duration from the parent event's
-   * remaining duration instead of using the status config's fixed duration.
-   * Used by freeform status placement so user-resized segments propagate to the
-   * derived status effect.
-   */
-  inheritDuration?: boolean;
 }
 
 // ── Predicate ──────────────────────────────────────────────────────────────

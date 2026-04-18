@@ -1,36 +1,51 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "AGILITY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 15
-            }
-          }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
         },
+        "name": "Heirloom Martial Arts (P2)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "PHYSICAL",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.08
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "AGILITY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 15
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "PHYSICAL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.08
+                }
+              }
             }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -44,6 +59,5 @@
   "metadata": {
     "originId": "CHEN_QIANYU",
     "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+  }
 }

@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "INFLICTION",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
           "objectQualifier": "VULNERABLE",
           "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "with": {
@@ -35,37 +36,51 @@
       ]
     }
   ],
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 10
+          },
+          "unit": "SECOND"
+        },
+        "name": "Reduce and Thicken (T1)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "PHYSICAL",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0.04,
-                0.06
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "PHYSICAL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.04,
+                    0.06
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
-  "clauseType": "ALL",
   "properties": {
     "id": "REDUCE_AND_THICKEN_TALENT",
     "maxLevel": {

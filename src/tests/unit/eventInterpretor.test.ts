@@ -47,7 +47,7 @@ function makeCtx(_interp: EventInterpretorController, overrides?: Partial<Interp
   return {
     frame: 100,
     sourceEntityId: 'op-1',
-    sourceSkillName: 'TEST_SKILL',
+    sourceSkillId: 'TEST_SKILL',
     ...overrides,
   };
 }
@@ -86,7 +86,8 @@ describe('EventInterpretorController: APPLY', () => {
 
     const effect: Effect = {
       verb: VerbType.APPLY,
-      object: ObjectType.INFLICTION,
+      object: ObjectType.STATUS,
+      objectId: NounType.INFLICTION,
       objectQualifier: AdjectiveType.HEAT,
       to: NounType.ENEMY,
     };
@@ -132,7 +133,7 @@ describe('EventInterpretorController: APPLY', () => {
       objectQualifier: AdjectiveType.COMBUSTION,
       to: NounType.ENEMY,
       with: {
-        stacks: { verb: VerbType.IS, value: 2 },
+        statusLevel: { verb: VerbType.IS, value: 2 },
       },
     };
 
@@ -173,7 +174,8 @@ describe('EventInterpretorController: CONSUME', () => {
 
     const effect: Effect = {
       verb: VerbType.CONSUME,
-      object: ObjectType.INFLICTION,
+      object: ObjectType.STATUS,
+      objectId: NounType.INFLICTION,
       objectQualifier: AdjectiveType.HEAT,
       from: NounType.ENEMY,
       with: {
@@ -194,7 +196,8 @@ describe('EventInterpretorController: CONSUME', () => {
 
     const effect: Effect = {
       verb: VerbType.CONSUME,
-      object: ObjectType.INFLICTION,
+      object: ObjectType.STATUS,
+      objectId: NounType.INFLICTION,
       objectQualifier: AdjectiveType.HEAT,
       from: NounType.ENEMY,
       with: {
@@ -242,7 +245,8 @@ describe('EventInterpretorController: CONSUME', () => {
 
     const effect: Effect = {
       verb: VerbType.CONSUME,
-      object: ObjectType.INFLICTION,
+      object: ObjectType.STATUS,
+      objectId: NounType.INFLICTION,
       objectQualifier: AdjectiveType.HEAT,
       from: NounType.ENEMY,
       // No with.stacks — should warn
@@ -282,7 +286,8 @@ describe('EventInterpretorController: ALL', () => {
         effects: [
           {
             verb: VerbType.CONSUME,
-            object: ObjectType.INFLICTION,
+            object: ObjectType.STATUS,
+            objectId: NounType.INFLICTION,
             objectQualifier: AdjectiveType.HEAT,
             from: NounType.ENEMY,
             with: { stacks: { verb: VerbType.IS, value: 1 } },
@@ -330,7 +335,8 @@ describe('EventInterpretorController: ALL', () => {
         effects: [
           {
             verb: VerbType.CONSUME,
-            object: ObjectType.INFLICTION,
+            object: ObjectType.STATUS,
+            objectId: NounType.INFLICTION,
             objectQualifier: AdjectiveType.HEAT,
             from: NounType.ENEMY,
             with: { stacks: { verb: VerbType.IS, value: 1 } },
@@ -368,7 +374,8 @@ describe('EventInterpretorController: ALL', () => {
         effects: [
           {
             verb: VerbType.CONSUME,
-            object: ObjectType.INFLICTION,
+            object: ObjectType.STATUS,
+            objectId: NounType.INFLICTION,
             objectQualifier: AdjectiveType.HEAT,
             from: NounType.ENEMY,
             with: { stacks: { verb: VerbType.IS, value: 1 } },
@@ -461,8 +468,9 @@ describe('EventInterpretorController: ANY', () => {
           conditions: [{
             subject: NounType.ENEMY,
             verb: VerbType.HAVE,
-            object: ObjectType.INFLICTION,
-            element: 'HEAT',
+            object: ObjectType.STATUS,
+            objectId: NounType.INFLICTION,
+            objectQualifier: AdjectiveType.HEAT,
           }],
           effects: [{
             verb: VerbType.APPLY,
@@ -532,13 +540,15 @@ describe('EventInterpretorController: interpretEffects', () => {
     const effects: Effect[] = [
       {
         verb: VerbType.APPLY,
-        object: ObjectType.INFLICTION,
+        object: ObjectType.STATUS,
+        objectId: NounType.INFLICTION,
         objectQualifier: AdjectiveType.HEAT,
         to: NounType.ENEMY,
       },
       {
         verb: VerbType.APPLY,
-        object: ObjectType.INFLICTION,
+        object: ObjectType.STATUS,
+        objectId: NounType.INFLICTION,
         objectQualifier: AdjectiveType.HEAT,
         to: NounType.ENEMY,
       },
@@ -1196,7 +1206,8 @@ describe('EventInterpretorController: sourceEventUid uid propagation', () => {
 
     const effect: Effect = {
       verb: VerbType.APPLY,
-      object: ObjectType.INFLICTION,
+      object: ObjectType.STATUS,
+      objectId: NounType.INFLICTION,
       objectQualifier: AdjectiveType.NATURE,
       to: NounType.ENEMY,
     };
@@ -1215,7 +1226,8 @@ describe('EventInterpretorController: sourceEventUid uid propagation', () => {
 
     const effect: Effect = {
       verb: VerbType.APPLY,
-      object: ObjectType.INFLICTION,
+      object: ObjectType.STATUS,
+      objectId: NounType.INFLICTION,
       objectQualifier: AdjectiveType.NATURE,
       to: NounType.ENEMY,
     };
@@ -1232,7 +1244,8 @@ describe('EventInterpretorController: sourceEventUid uid propagation', () => {
 
     const effect: Effect = {
       verb: VerbType.APPLY,
-      object: ObjectType.INFLICTION,
+      object: ObjectType.STATUS,
+      objectId: NounType.INFLICTION,
       objectQualifier: AdjectiveType.CRYO,
       to: NounType.ENEMY,
     };

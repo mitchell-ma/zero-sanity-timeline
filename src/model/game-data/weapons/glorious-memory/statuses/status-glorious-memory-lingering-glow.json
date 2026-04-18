@@ -1,35 +1,49 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 30
+          },
+          "unit": "SECOND"
+        },
+        "name": "Lingering Glow"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_DEALT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.12,
-                0.144,
-                0.168,
-                0.192,
-                0.216,
-                0.24,
-                0.264,
-                0.288,
-                0.336
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_DEALT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.12,
+                    0.144,
+                    0.168,
+                    0.192,
+                    0.216,
+                    0.24,
+                    0.264,
+                    0.288,
+                    0.336
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ]
     }
@@ -55,7 +69,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT"
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "GLORIOUS_MEMORY",

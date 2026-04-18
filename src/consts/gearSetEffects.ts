@@ -155,6 +155,24 @@ export const GEAR_SET_EFFECTS: GearsEntry[] = [
     effects: [],
   },
 
+  // ── Qingbo ────────────────────────────────────────────────────────────────
+  // After combo skill cast, Skill DMG +20% for 15s (max 2 stacks, per-cast).
+  {
+    gearSetType: GearSetType.QINGBO,
+    label: 'Qingbo',
+    passiveStats: { [StatType.COMBO_SKILL_COOLDOWN_REDUCTION]: 0.15 },
+    effects: [],
+  },
+
+  // ── Xiranflow ─────────────────────────────────────────────────────────────
+  // After consuming Electrification or Corrosion, Electric/Nature DMG +15% for 25s (max 3 stacks).
+  {
+    gearSetType: GearSetType.XIRANFLOW,
+    label: 'Xiranflow',
+    passiveStats: { [StatType.ATTACK_BONUS]: 0.10 },
+    effects: [],
+  },
+
   // ── Eternal Xiranite ───────────────────────────────────────────────────────
   // After applying Amp/Protected/Susceptibility/Weakness, other teammates
   // gain DMG +16% for 15s.

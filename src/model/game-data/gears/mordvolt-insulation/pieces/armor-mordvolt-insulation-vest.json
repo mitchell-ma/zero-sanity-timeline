@@ -92,7 +92,7 @@
     "id": "MORDVOLT_INSULATION_VEST",
     "name": "Mordvolt Insulation Vest",
     "gearType": "ARMOR",
-    "gearSet": "MORDVOLT_INSULATION"
+    "gearSet": "MORDVOLT_INSULATION_STAT"
   },
   "metadata": {
     "originId": "game",

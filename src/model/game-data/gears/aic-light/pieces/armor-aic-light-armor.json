@@ -93,7 +93,7 @@
     "id": "AIC_LIGHT_ARMOR",
     "name": "AIC Light Armor",
     "gearType": "ARMOR",
-    "gearSet": "AIC_LIGHT"
+    "gearSet": "AIC_LIGHT_STAT"
   },
   "metadata": {
     "originId": "game",

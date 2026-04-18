@@ -1,35 +1,49 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.08,
-                0.144,
-                0.208,
-                0.272,
-                0.336,
-                0.4,
-                0.464,
-                0.528,
-                0.624
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
           },
-          "objectId": "HP_BONUS"
+          "unit": "SECOND"
+        },
+        "name": "HP Boost [M]"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.08,
+                    0.144,
+                    0.208,
+                    0.272,
+                    0.336,
+                    0.4,
+                    0.464,
+                    0.528,
+                    0.624
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "HP_BONUS"
+            }
+          ]
         }
       ]
     }

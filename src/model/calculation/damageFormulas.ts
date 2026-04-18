@@ -491,8 +491,13 @@ export interface DamageSubComponents {
   isChance?: boolean;
   // Resistance sub-components
   baseResistance: number;
-  corrosionReduction: number;
+  /** Total ignored-resistance addback for the active element (sum of operator
+   *  RESISTANCE_IGNORE + enemy RESISTANCE_REDUCTION + ARTS umbrella). */
   ignoredResistance: number;
+  /** Per-element resistance sources for full breakdown — operator IGNORE +
+   *  enemy REDUCTION grouped by element. */
+  resistanceSources: MultiplierSource[];
+  allResistanceSources: Partial<Record<ElementType, MultiplierSource[]>>;
   // Fragility sub-components
   fragilityBonus: number;
   fragilitySources: MultiplierSource[];

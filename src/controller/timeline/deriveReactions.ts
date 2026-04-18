@@ -79,7 +79,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         startFrame: incoming.startFrame,
         segments: durationSegment(getReactionDurationFrames(reactionColumnId)),
         sourceEntityId: incoming.sourceEntityId,
-        sourceSkillName: incoming.sourceSkillName,
+        sourceSkillId: incoming.sourceSkillId,
         statusLevel: Math.min(activeOther.length, 2) as StatusLevel,
       });
 

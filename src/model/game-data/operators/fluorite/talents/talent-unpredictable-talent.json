@@ -46,33 +46,48 @@
       ]
     }
   ],
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 10
+          },
+          "unit": "SECOND"
+        },
+        "name": "Unpredictable (T2)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "ATTACK_BONUS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0.1,
-                0.2
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.1,
+                    0.2
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -109,6 +124,5 @@
     ],
     "icon": "skills/fluorite_talent_2_icon.png",
     "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+  }
 }

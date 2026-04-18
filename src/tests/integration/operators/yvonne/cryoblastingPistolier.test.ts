@@ -82,8 +82,10 @@ describe('A. Ultimate JSON structure', () => {
     expect(active.properties.duration.value.value).toBe(7);
   });
 
-  it('A5: animation segment has no clause (ENABLE/DISABLE moved to active)', () => {
-    expect(ULT_JSON.segments[0].clause).toBeUndefined();
+  it('A5: animation segment clause has no ENABLE/DISABLE (moved to active)', () => {
+    const animClause = ULT_JSON.segments[0].clause ?? [];
+    const allEffects = animClause.flatMap((c: { effects: { verb: string }[] }) => c.effects);
+    expect(allEffects.some((e: { verb: string }) => e.verb === VerbType.ENABLE || e.verb === VerbType.DISABLE)).toBe(false);
   });
 });
 

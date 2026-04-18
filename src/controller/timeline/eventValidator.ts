@@ -9,6 +9,7 @@ import { EnhancementType, TimeDependency } from '../../consts/enums';
 import { TEAM_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorSkill, getOperatorSkills, getComboTriggerClause } from '../gameDataStore';
+import { getStatusDef } from './configCache';
 import { VerbType, NounType } from '../../dsl/semantics';
 import type { Interaction, Predicate } from '../../dsl/semantics';
 import { evaluateConditions } from './conditionEvaluator';
@@ -141,14 +142,24 @@ export function getDisabledSegmentIndices(
   const disabled = new Set<number>();
   for (const ev of events) {
     if (ev.ownerEntityId !== ownerEntityId) continue;
+    // Derived status events have bare segments (no clause copied from def);
+    // fall back to the status def's segment clauses when the event itself
+    // doesn't carry them.
+    const def = getStatusDef(ev.id);
+    const defSegments = (def?.segments as { clause?: { effects: { verb: string; objectQualifier?: string; with?: { segments?: number[] } }[] }[] }[] | undefined);
     let cursor = ev.startFrame;
-    for (const seg of ev.segments) {
+    for (let si = 0; si < ev.segments.length; si++) {
+      const seg = ev.segments[si];
       const segEnd = cursor + seg.properties.duration;
-      if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
-        for (const c of seg.clause) {
-          for (const e of c.effects) {
-            if (e.verb === VerbType.DISABLE && e.objectQualifier === variantId && e.with?.segments) {
-              for (const idx of e.with.segments) disabled.add(idx);
+      if (atFrame >= cursor && atFrame < segEnd) {
+        const clauseList = seg.clause ?? defSegments?.[si]?.clause;
+        if (clauseList) {
+          for (const c of clauseList) {
+            for (const e of c.effects) {
+              const segs = e.with?.segments;
+              if (e.verb === VerbType.DISABLE && e.objectQualifier === variantId && Array.isArray(segs)) {
+                for (const idx of segs) disabled.add(idx);
+              }
             }
           }
         }

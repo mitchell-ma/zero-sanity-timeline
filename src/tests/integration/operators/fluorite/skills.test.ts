@@ -432,7 +432,7 @@ describe('F. BS Applies IMPROVISED_EXPLOSIVE', () => {
     );
     expect(ieEvents.length).toBeGreaterThanOrEqual(1);
     const ie = ieEvents[0];
-    expect(ie.sourceSkillName).toBe(BATTLE_SKILL_ID);
+    expect(ie.sourceSkillId).toBe(BATTLE_SKILL_ID);
 
     // Duration matches config (2.97s)
     expect(eventDuration(ie)).toBe(Math.round(2.97 * FPS));
@@ -681,7 +681,7 @@ describe('I. ULT vs IMPROVISED_EXPLOSIVE', () => {
       (ev) => ev.ownerEntityId === ENEMY_ID && ev.columnId === IMPROVISED_EXPLOSIVE_ULT_ID,
     );
     expect(ieUlt.length).toBeGreaterThanOrEqual(1);
-    expect(ieUlt[0].sourceSkillName).toBe(ULTIMATE_ID);
+    expect(ieUlt[0].sourceSkillId).toBe(ULTIMATE_ID);
 
     // ── View layer: visible on enemy status column ──
     const enemyStatusCol = findEnemyStatusCol(result.current)!;

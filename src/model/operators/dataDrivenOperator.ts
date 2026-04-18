@@ -129,7 +129,8 @@ export class DataDrivenOperator {
       const level = (props.level ?? 0) as number;
       if (level > p) continue;
 
-      const clauses = (raw.clause ?? []) as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[];
+      const rawSegments = (raw.segments ?? []) as { clause?: { conditions?: unknown[]; effects?: Record<string, unknown>[] }[] }[];
+      const clauses = rawSegments.flatMap(s => Array.isArray(s.clause) ? s.clause : []);
       for (const clause of clauses) {
         if (clause.conditions && clause.conditions.length > 0) continue;
         for (const eff of (clause.effects ?? [])) {

@@ -1,35 +1,49 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.04,
-                0.072,
-                0.104,
-                0.136,
-                0.168,
-                0.2,
-                0.232,
-                0.264,
-                0.312
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
           },
-          "objectId": "ATTACK_BONUS"
+          "unit": "SECOND"
+        },
+        "name": "ATK Boost [M]"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.04,
+                    0.072,
+                    0.104,
+                    0.136,
+                    0.168,
+                    0.2,
+                    0.232,
+                    0.264,
+                    0.312
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "ATTACK_BONUS"
+            }
+          ]
         }
       ]
     }

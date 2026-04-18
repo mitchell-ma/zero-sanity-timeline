@@ -1,36 +1,51 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "WILL",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 20
-            }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.1
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "PHYSICAL"
+          "unit": "SECOND"
+        },
+        "name": "\"Advance\" (P2)"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "WILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 20
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.1
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "PHYSICAL"
+            }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -44,6 +59,5 @@
   "metadata": {
     "originId": "POGRANICHNIK",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

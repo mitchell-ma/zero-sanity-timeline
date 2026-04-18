@@ -1,0 +1,146 @@
+{
+  "properties": {
+    "enhancementTypes": ["ENHANCED"],
+    "name": "Mantra of Sundering (Enhanced)",
+    "description": "During Smiting Tempest, Mantra of Sundering gains a higher DMG multiplier and increased effect range. The final Thunder Strike also applies Electric Infliction to the target hit.",
+    "eventType": "SKILL",
+    "eventCategoryType": "BATTLE",
+    "element": "ELECTRIC",
+    "id": "MANTRA_OF_SUNDERING_ENHANCED"
+  },
+  "metadata": {
+    "originId": "ZHUANG_FANGYI",
+    "dataStatus": "RECONCILED"
+  },
+  "segments": [
+    {
+      "metadata": { "eventComponentType": "SEGMENT" },
+      "properties": {
+        "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" },
+        "element": "ELECTRIC"
+      },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": { "stacks": { "verb": "IS", "value": 1 } }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": { "value": { "verb": "IS", "value": 15 } }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0.5, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [0.36, 0.4, 0.43, 0.47, 0.5, 0.54, 0.58, 0.61, 0.65, 0.69, 0.75, 0.81],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 1, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [0.36, 0.4, 0.43, 0.47, 0.5, 0.54, 0.58, 0.61, 0.65, 0.69, 0.75, 0.81],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 1.7, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                        "value": [0.36, 0.4, 0.43, 0.47, 0.5, 0.54, 0.58, 0.61, 0.65, 0.69, 0.75, 0.81],
+                        "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      },
+                      "right": { "verb": "IS", "value": 6 }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "ELECTRIC",
+                  "to": "ENEMY",
+                  "with": { "stacks": { "verb": "IS", "value": 1 } }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "SKILL_POINT",
+              "with": { "value": { "verb": "IS", "value": 100 } }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ]
+}

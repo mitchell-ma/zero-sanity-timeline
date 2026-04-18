@@ -1,60 +1,74 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.08,
-                0.096,
-                0.112,
-                0.128,
-                0.144,
-                0.16,
-                0.176,
-                0.192,
-                0.224
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "CRYO"
+          "unit": "SECOND"
         },
+        "name": "Conquest of Icy Peaks"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.12,
-                0.144,
-                0.168,
-                0.192,
-                0.216,
-                0.24,
-                0.264,
-                0.288,
-                0.336
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.08,
+                    0.096,
+                    0.112,
+                    0.128,
+                    0.144,
+                    0.16,
+                    0.176,
+                    0.192,
+                    0.224
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "CRYO"
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.12,
+                    0.144,
+                    0.168,
+                    0.192,
+                    0.216,
+                    0.24,
+                    0.264,
+                    0.288,
+                    0.336
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "ATTACK_BONUS"
             }
-          },
-          "objectId": "ATTACK_BONUS"
+          ]
         }
       ]
     }
@@ -62,7 +76,7 @@
   "properties": {
     "id": "OBJ_RAZORHORN_CONQUEST_OF_ICY_PEAKS",
     "name": "Conquest of Icy Peaks",
-    "description": "vs Cryo/Solid DMG +8-16%; consume Solidification → ATK buff",
+    "description": "vs Cryo/Solid DMG +8-16%; consume Solidification \u2192 ATK buff",
     "duration": {
       "value": {
         "verb": "IS",
@@ -80,7 +94,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT"
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "OBJ_RAZORHORN",

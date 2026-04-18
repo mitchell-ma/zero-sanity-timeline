@@ -1,26 +1,40 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
+          },
+          "unit": "SECOND"
+        },
+        "name": "Eternal Xiranite"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "toDeterminer": "OTHER",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.16
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.16
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "ETERNAL_XIRANITE_STAT",
+    "id": "ETERNAL_XIRANITE",
     "name": "Eternal Xiranite",
     "duration": {
       "value": {
@@ -38,10 +52,10 @@
     },
     "description": "DMG Dealt +16% for 15s to other teammates.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "ETERNAL_XIRANITE",
+    "originId": "ETERNAL_XIRANITE_STAT",
     "dataStatus": "RECONCILED"
   }
 }

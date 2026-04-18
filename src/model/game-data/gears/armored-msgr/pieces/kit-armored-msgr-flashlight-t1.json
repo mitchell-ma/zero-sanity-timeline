@@ -92,7 +92,7 @@
     "id": "ARMORED_MSGR_FLASHLIGHT_T1",
     "name": "Armored MSGR Flashlight T1",
     "gearType": "KIT",
-    "gearSet": "ARMORED_MSGR"
+    "gearSet": "ARMORED_MSGR_STAT"
   },
   "metadata": {
     "originId": "game",

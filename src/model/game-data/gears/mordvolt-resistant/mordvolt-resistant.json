@@ -23,21 +23,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "MORDVOLT_RESISTANT_STAT",
+          "objectId": "MORDVOLT_RESISTANT",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Mordvolt Resistant"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "WILL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 50
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "MORDVOLT_RESISTANT",
+    "id": "MORDVOLT_RESISTANT_STAT",
     "name": "Mordvolt Resistant",
     "rarity": 4,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Will +50. When the wearer's HP drops below 50%, the wearer's Treatment Effect increases by 30%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

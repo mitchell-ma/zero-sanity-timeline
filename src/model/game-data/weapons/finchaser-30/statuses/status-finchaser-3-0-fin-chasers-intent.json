@@ -1,33 +1,47 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
+          },
+          "unit": "SECOND"
+        },
+        "name": "Fin Chaser's Intent"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "CRYO_DAMAGE_TAKEN",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.07,
-                0.084,
-                0.098,
-                0.112,
-                0.126,
-                0.14,
-                0.154,
-                0.168,
-                0.196
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "SOURCE"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "CRYO_DAMAGE_TAKEN",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.07,
+                    0.084,
+                    0.098,
+                    0.112,
+                    0.126,
+                    0.14,
+                    0.154,
+                    0.168,
+                    0.196
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "SOURCE"
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ]
     }
@@ -52,7 +66,7 @@
     },
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT"
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "FINCHASER_3_0",

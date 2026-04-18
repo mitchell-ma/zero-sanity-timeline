@@ -13,21 +13,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "FRONTIERS_STAT",
+          "objectId": "FRONTIERS",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Frontiers"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "COMBO_SKILL_COOLDOWN_REDUCTION",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "FRONTIERS",
+    "id": "FRONTIERS_STAT",
     "name": "Frontiers",
     "rarity": 5,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Combo Skill Cooldown Reduction +{1-comboskill_cooldown:0%}. After the wearer's skill recovers SP, the team gains DMG +{dmg_up:0%} for {duration}s. This effect cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

@@ -93,7 +93,7 @@
     "id": "SWORDMANCER_FLINT",
     "name": "Swordmancer Flint",
     "gearType": "KIT",
-    "gearSet": "SWORDMANCER"
+    "gearSet": "SWORDMANCER_STAT"
   },
   "metadata": {
     "originId": "game",

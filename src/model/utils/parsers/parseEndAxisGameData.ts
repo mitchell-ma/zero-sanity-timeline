@@ -196,15 +196,15 @@ interface AnomalyMapping {
 }
 
 const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
-  blaze_attach:   { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'HEAT' },
-  cold_attach:    { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'CRYO' },
-  emag_attach:    { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'ELECTRIC' },
-  nature_attach:  { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'NATURE' },
+  blaze_attach:   { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.INFLICTION, objectQualifier: 'HEAT' },
+  cold_attach:    { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.INFLICTION, objectQualifier: 'CRYO' },
+  emag_attach:    { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.INFLICTION, objectQualifier: 'ELECTRIC' },
+  nature_attach:  { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.INFLICTION, objectQualifier: 'NATURE' },
   magma_0:        { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.REACTION, objectQualifier: ArtsReactionType.COMBUSTION, isForced: true, stacks: 1 },
-  magma_1:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
-  magma_2:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
-  magma_3:        { verb: VerbType.APPLY, object: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
-  magma_4:        { verb: VerbType.CONSUME, object: NounType.INFLICTION, objectQualifier: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
+  magma_1:        { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
+  magma_2:        { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
+  magma_3:        { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.INFLICTION, objectQualifier: 'MELTING_FLAME' },
+  magma_4:        { verb: VerbType.CONSUME, object: NounType.STATUS, objectId: NounType.INFLICTION, objectQualifier: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
   blaze_burst:    { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.REACTION, objectQualifier: ArtsReactionType.COMBUSTION },
   burning:        { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.REACTION, objectQualifier: ArtsReactionType.COMBUSTION },
   corrosion:      { verb: VerbType.APPLY, object: NounType.STATUS, objectId: NounType.REACTION, objectQualifier: ArtsReactionType.CORROSION, isForced: true },

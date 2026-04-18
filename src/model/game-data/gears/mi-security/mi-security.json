@@ -13,21 +13,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "MI_SECURITY_STAT",
+          "objectId": "MI_SECURITY",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "MI Security"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "CRITICAL_RATE",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.05
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "MI_SECURITY",
+    "id": "MI_SECURITY_STAT",
     "name": "MI Security",
     "rarity": 5,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Critical Rate +{crit_up:0%}. After the wearer scores a critical hit, the wearer gains ATK +{atk_up:0%} for {duration}s. This effect can reach {max_stack:0} stacks. At max stacks, grant an additional Critical Rate +{crit_up2:0%}. This effect cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

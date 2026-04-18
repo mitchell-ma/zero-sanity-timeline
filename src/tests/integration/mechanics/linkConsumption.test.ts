@@ -65,13 +65,12 @@ function linkEvent(startFrame: number, durationFrames: number): TimelineEvent {
               object: NounType.STATUS,
               objectId: StatusType.LINK,
               to: NounType.TEAM,
-              inheritDuration: true,
             },
           }],
         }],
       }],
     }],
-    sourceSkillName: TEST_LINK_SOURCE,
+    sourceSkillId: TEST_LINK_SOURCE,
   };
 }
 

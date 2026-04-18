@@ -7,23 +7,6 @@
     "element": "PHYSICAL",
     "id": "BOMBARDMENT_SEQUENCE"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "ULTIMATE_ENERGY",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 80
-            }
-          }
-        }
-      ]
-    }
-  ],
   "segments": [
     {
       "metadata": {
@@ -44,7 +27,25 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "ULTIMATE_ENERGY",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 80
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -200,6 +201,5 @@
     "originId": "ENDMINISTRATOR",
     "icon": "skills/ult_endministrator.png",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

@@ -218,13 +218,30 @@ export function computeReactionFrameDamage(
   const enemySusceptibility = readEnemyStat(StatusType.SUSCEPTIBILITY);
   const enemyFragility = readEnemyStat(StatusType.FRAGILITY);
 
+  // Resistance addback: enemy <EL>_RESISTANCE_REDUCTION (e.g. Corrosion) +
+  // operator <EL>_RESISTANCE_IGNORE (e.g. Scorching Heart), with ARTS umbrella.
+  const isArtsEl = element === ElementType.HEAT || element === ElementType.CRYO
+    || element === ElementType.NATURE || element === ElementType.ELECTRIC;
+  const readStat = (entityId: string, key: string): number => {
+    if (!(Object.values(StatType) as string[]).includes(key)) return 0;
+    return accumulator?.getStat(entityId, key as StatType) ?? 0;
+  };
+  let resAddback = readStat(ENEMY_ID, `${element}_RESISTANCE_REDUCTION`)
+    + readStat(ev.sourceEntityId ?? '', `${element}_RESISTANCE_IGNORE`);
+  if (isArtsEl) {
+    resAddback += readStat(ENEMY_ID, `${ElementType.ARTS}_RESISTANCE_REDUCTION`)
+      + readStat(ev.sourceEntityId ?? '', `${ElementType.ARTS}_RESISTANCE_IGNORE`);
+  }
+  const baseRes = getResistanceMultiplier(modelEnemy, element);
+  const resMult = resAddback !== 0 ? baseRes + resAddback / 100 : baseRes;
+
   const damage = calculateStatusDamage({
     attack: sourceOp.totalAttack,
     statusBaseMultiplier,
     artsIntensityMultiplier: getArtsIntensityMultiplier(sourceOp.artsIntensity),
     hiddenMultiplier: getArtsHiddenMultiplier(operatorLevel),
     defenseMultiplier: getDamageDefenseMultiplier(modelEnemy.getDef()),
-    resistanceMultiplier: getResistanceMultiplier(modelEnemy, element),
+    resistanceMultiplier: resMult,
     susceptibilityMultiplier: getSusceptibilityMultiplier(enemySusceptibility),
     weaknessMultiplier: 1,
     fragilityMultiplier: getFragilityMultiplier(enemyFragility),

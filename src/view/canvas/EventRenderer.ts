@@ -137,7 +137,7 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): numbe
         if (!dsl) continue;
         const q = dsl.objectQualifier;
         if (dsl.verb === VerbType.APPLY || dsl.verb === VerbType.CONSUME) {
-          if (dsl.object === NounType.INFLICTION && q) { el = q; break outer; }
+          if (dsl.object === NounType.STATUS && dsl.objectId === NounType.INFLICTION && q) { el = q; break outer; }
           if (dsl.object === NounType.STATUS && dsl.objectId === NounType.REACTION && q) {
             el = getStatusElementMap()[q]; break outer;
           }

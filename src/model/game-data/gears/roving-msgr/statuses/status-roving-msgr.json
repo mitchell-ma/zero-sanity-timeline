@@ -1,27 +1,41 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        },
+        "name": "Roving MSGR"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "PHYSICAL",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.2
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "PHYSICAL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.2
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "ROVING_MSGR_STAT",
+    "id": "ROVING_MSGR",
     "name": "Roving MSGR",
     "duration": {
       "value": {
@@ -39,10 +53,10 @@
     },
     "description": "Physical DMG +20% when HP above 80%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "ROVING_MSGR",
+    "originId": "ROVING_MSGR_STAT",
     "dataStatus": "RECONCILED"
   }
 }

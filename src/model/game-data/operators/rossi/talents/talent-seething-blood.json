@@ -33,7 +33,6 @@
       ]
     }
   ],
-  "clauseType": "FIRST_MATCH",
   "segments": [
     {
       "metadata": {
@@ -241,7 +240,8 @@
           ],
           "clauseType": "ALL"
         }
-      ]
+      ],
+      "clauseType": "FIRST_MATCH"
     }
   ],
   "properties": {

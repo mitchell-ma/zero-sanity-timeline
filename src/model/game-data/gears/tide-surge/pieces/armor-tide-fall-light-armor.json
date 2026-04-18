@@ -92,7 +92,7 @@
     "id": "TIDE_FALL_LIGHT_ARMOR",
     "name": "Tide Fall Light Armor",
     "gearType": "ARMOR",
-    "gearSet": "TIDE_SURGE"
+    "gearSet": "TIDE_SURGE_STAT"
   },
   "metadata": {
     "originId": "game",

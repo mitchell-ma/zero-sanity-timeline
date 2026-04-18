@@ -8,12 +8,12 @@ import type { ClausePredicate } from './weaponStatusesStore';
 import { VerbType } from '../../dsl/semantics';
 import { StatType } from '../enums/stats';
 import { resolveEffectStat } from '../enums/stats';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'rarity']);
 const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon', 'nameId', 'dataStatus']);
-const VALID_TOP_KEYS = new Set(['skills', 'properties', 'metadata', 'clause']);
+const VALID_TOP_KEYS = new Set(['skills', 'properties', 'metadata', 'segments']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -43,13 +43,21 @@ export function validateWeapon(json: Record<string, unknown>): string[] {
   if (!Array.isArray(json.skills)) errors.push('root.skills: must be an array');
   else if (json.skills.some(s => typeof s !== 'string')) errors.push('root.skills: all entries must be strings');
 
-  if (json.clause) {
-    if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
-    else (json.clause as Record<string, unknown>[]).forEach((c, i) => {
-      const clauseErrors = checkKeys(c, VALID_CLAUSE_KEYS, `clause[${i}]`);
-      errors.push(...clauseErrors);
-      if (Array.isArray(c.effects)) {
-        (c.effects as Record<string, unknown>[]).forEach((ef, j) => errors.push(...validateLocalEffect(ef, `clause[${i}].effects[${j}]`)));
+  // Root-level `clause` is rejected — clauses MUST live inside segments.
+  if ('clause' in json) errors.push('root.clause: not allowed — move clause effects into segments[0].clause');
+
+  if (json.segments) {
+    if (!Array.isArray(json.segments)) errors.push('root.segments: must be an array');
+    else (json.segments as Record<string, unknown>[]).forEach((s, si) => {
+      const segClause = (s as { clause?: unknown[] }).clause;
+      if (Array.isArray(segClause)) {
+        (segClause as Record<string, unknown>[]).forEach((c, i) => {
+          const clauseErrors = checkKeys(c, VALID_CLAUSE_KEYS, `segments[${si}].clause[${i}]`);
+          errors.push(...clauseErrors);
+          if (Array.isArray(c.effects)) {
+            (c.effects as Record<string, unknown>[]).forEach((ef, j) => errors.push(...validateLocalEffect(ef, `segments[${si}].clause[${i}].effects[${j}]`)));
+          }
+        });
       }
     });
   }
@@ -57,8 +65,7 @@ export function validateWeapon(json: Record<string, unknown>): string[] {
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
-  if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
-  if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
+  errors.push(...checkIdAndName(props, 'properties'));
   if (typeof props.type !== 'string') errors.push('properties.type: must be a string');
   if (typeof props.rarity !== 'number') errors.push('properties.rarity: must be a number');
 
@@ -75,7 +82,7 @@ export function validateWeapon(json: Record<string, unknown>): string[] {
 /** A weapon definition. Maps 1:1 to the JSON shape. */
 export class Weapon {
   readonly skills: string[];
-  readonly clause: ClausePredicate[];
+  readonly segments: { clause?: ClausePredicate[] }[];
   readonly id: string;
   readonly name: string;
   readonly type: string;
@@ -90,13 +97,18 @@ export class Weapon {
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
     this.skills = (json.skills ?? []) as string[];
-    this.clause = (json.clause ?? []) as ClausePredicate[];
+    this.segments = (json.segments ?? []) as { clause?: ClausePredicate[] }[];
     this.id = (props.id ?? '') as string;
     this.name = (props.name ?? '') as string;
     this.type = (props.type ?? '') as string;
     this.rarity = (props.rarity ?? 0) as number;
     this.dataSources = (meta.dataSources ?? []) as string[];
     this.originId = (meta.originId ?? '') as string;
+  }
+
+  /** All clause predicates flattened across segments. */
+  get clause(): ClausePredicate[] {
+    return this.segments.flatMap(s => s.clause ?? []);
   }
 
   /** Get base attack values (from clause APPLY STAT objectId=BASE_ATTACK). */
@@ -142,7 +154,7 @@ export class Weapon {
         ...(this.dataSources.length > 0 ? { dataSources: this.dataSources } : {}),
         originId: this.originId,
       },
-      clause: this.clause,
+      ...(this.segments.length > 0 ? { segments: this.segments } : {}),
     };
   }
 

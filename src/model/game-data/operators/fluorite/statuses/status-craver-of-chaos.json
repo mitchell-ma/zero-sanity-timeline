@@ -6,7 +6,8 @@
           "subjectDeterminer": "ANY",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "INFLICTION",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
           "objectQualifier": "CRYO",
           "to": "ENEMY"
         },
@@ -40,7 +41,8 @@
           "subjectDeterminer": "ANY",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "INFLICTION",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
           "objectQualifier": "NATURE",
           "to": "ENEMY"
         },
@@ -119,7 +121,8 @@
           ],
           "clauseType": "ALL"
         }
-      ]
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -168,6 +171,5 @@
   "metadata": {
     "originId": "FLUORITE",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

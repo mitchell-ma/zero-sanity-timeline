@@ -161,11 +161,11 @@ export class DerivedEventController implements ColumnHost {
     frame: number,
     amount: number,
     sourceEntityId: string,
-    sourceSkillName: string,
+    sourceSkillId: string,
     isReturn: boolean = false,
   ) {
     if (this.spController && amount > 0) {
-      this.spController.addRecovery(frame, amount, sourceEntityId, sourceSkillName, isReturn);
+      this.spController.addRecovery(frame, amount, sourceEntityId, sourceSkillId, isReturn);
     }
   }
 
@@ -477,7 +477,7 @@ export class DerivedEventController implements ColumnHost {
           wiring,
           match.frame,
           match.sourceEntityId,
-          match.sourceSkillName,
+          match.sourceSkillId,
           match.sourceColumnId,
           match.originEntityId,
           match.triggerStacks,
@@ -512,7 +512,7 @@ export class DerivedEventController implements ColumnHost {
     wiring: SlotTriggerWiring,
     triggerFrame: number,
     sourceEntityId: string,
-    sourceSkillName: string,
+    sourceSkillId: string,
     sourceColumnId: string | undefined,
     originEntityId: string | undefined,
     triggerStacks: number | undefined,
@@ -604,7 +604,7 @@ export class DerivedEventController implements ColumnHost {
       columnId: COMBO_WINDOW_COLUMN_ID,
       startFrame: triggerFrame,
       sourceEntityId: sourceEntityId,
-      sourceSkillName: sourceSkillName,
+      sourceSkillId: sourceSkillId,
       comboTriggerColumnId: sourceColumnId,
       triggerEventUid: triggerEventUid,
       triggerStacks: triggerStacks,

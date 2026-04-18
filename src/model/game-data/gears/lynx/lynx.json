@@ -13,21 +13,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "LYNX_STAT",
+          "objectId": "LYNX",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "LYNX"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "TREATMENT_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.2
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "LYNX",
+    "id": "LYNX_STAT",
     "name": "LYNX",
     "rarity": 5,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's HP Treatment Efficiency +{heal_up:0%}. After the wearer gives HP treatment to an allied target, that target also gains {1-dmg_taken_down:0%} DMG Reduction against all types of DMG for {duration}s. If the said treatment exceeds the target's Max HP, the target gains {1-dmg_taken_down2:0%} DMG Reduction against all types of DMG. The aforementioned effects cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

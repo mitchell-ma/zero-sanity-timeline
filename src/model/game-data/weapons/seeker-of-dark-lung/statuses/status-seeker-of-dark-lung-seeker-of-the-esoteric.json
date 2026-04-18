@@ -1,33 +1,47 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.06,
-                0.072,
-                0.084,
-                0.096,
-                0.108,
-                0.12,
-                0.132,
-                0.144,
-                0.168
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 30
           },
-          "objectId": "ATTACK_BONUS"
+          "unit": "SECOND"
+        },
+        "name": "Seeker of the Esoteric"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.06,
+                    0.072,
+                    0.084,
+                    0.096,
+                    0.108,
+                    0.12,
+                    0.132,
+                    0.144,
+                    0.168
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "ATTACK_BONUS"
+            }
+          ]
         }
       ]
     }
@@ -52,7 +66,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT",
+    "eventCategoryType": "WEAPON",
     "description": "Main Attribute +{primary_attr_up:0.0%}. When the wielder applies an Arts Burst, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s."
   },
   "metadata": {

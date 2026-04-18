@@ -1,53 +1,68 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0.04,
-                0.08
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "SOURCE"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
           },
-          "objectId": "ATTACK_BONUS"
+          "unit": "SECOND"
         },
+        "name": "Fervent Morale (T1)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "ARTS_INTENSITY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                4,
-                8
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "SOURCE"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.04,
+                    0.08
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "SOURCE"
+                  }
+                }
+              },
+              "objectId": "ATTACK_BONUS"
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ARTS_INTENSITY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    4,
+                    8
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "SOURCE"
+                  }
+                }
               }
             }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -108,6 +123,5 @@
       "ENDFIELD_WIKI"
     ],
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

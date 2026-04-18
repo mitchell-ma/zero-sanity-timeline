@@ -62,6 +62,11 @@ export enum StatType {
   // AMP, SUSCEPTIBILITY, FRAGILITY must always be qualified in authored DSL
   // (`{object: STAT, objectId: AMP, objectQualifier: <EL>}` → flattened to
   // `<EL>_AMP`). No unqualified AMP/SUSCEPTIBILITY stat exists.
+  PHYSICAL_AMP = "PHYSICAL_AMP",
+  HEAT_AMP = "HEAT_AMP",
+  CRYO_AMP = "CRYO_AMP",
+  NATURE_AMP = "NATURE_AMP",
+  ELECTRIC_AMP = "ELECTRIC_AMP",
   ARTS_AMP = "ARTS_AMP",
   HEAT_SUSCEPTIBILITY = "HEAT_SUSCEPTIBILITY",
   CRYO_SUSCEPTIBILITY = "CRYO_SUSCEPTIBILITY",
@@ -76,6 +81,22 @@ export enum StatType {
   NATURE_FRAGILITY = "NATURE_FRAGILITY",
   ELECTRIC_FRAGILITY = "ELECTRIC_FRAGILITY",
   ARTS_FRAGILITY = "ARTS_FRAGILITY",
+  // RESISTANCE_IGNORE (operator) and RESISTANCE_REDUCTION (enemy) sum into the
+  // same resistance bucket: ResistanceMultiplier = 1 - Resistance + IgnoredResistance.
+  // Authored DSL must qualify by element (`{object: STAT, objectId:
+  // RESISTANCE_IGNORE, objectQualifier: <EL>}` → flattened to `<EL>_RESISTANCE_IGNORE`).
+  PHYSICAL_RESISTANCE_IGNORE = "PHYSICAL_RESISTANCE_IGNORE",
+  HEAT_RESISTANCE_IGNORE = "HEAT_RESISTANCE_IGNORE",
+  CRYO_RESISTANCE_IGNORE = "CRYO_RESISTANCE_IGNORE",
+  NATURE_RESISTANCE_IGNORE = "NATURE_RESISTANCE_IGNORE",
+  ELECTRIC_RESISTANCE_IGNORE = "ELECTRIC_RESISTANCE_IGNORE",
+  ARTS_RESISTANCE_IGNORE = "ARTS_RESISTANCE_IGNORE",
+  PHYSICAL_RESISTANCE_REDUCTION = "PHYSICAL_RESISTANCE_REDUCTION",
+  HEAT_RESISTANCE_REDUCTION = "HEAT_RESISTANCE_REDUCTION",
+  CRYO_RESISTANCE_REDUCTION = "CRYO_RESISTANCE_REDUCTION",
+  NATURE_RESISTANCE_REDUCTION = "NATURE_RESISTANCE_REDUCTION",
+  ELECTRIC_RESISTANCE_REDUCTION = "ELECTRIC_RESISTANCE_REDUCTION",
+  ARTS_RESISTANCE_REDUCTION = "ARTS_RESISTANCE_REDUCTION",
   // ── Debuff stats ─────────────────────────────────────────────────────────────
   /** Damage dealt reduction debuff on enemy (percentage). Damage formula uses (1 - WEAKNESS). */
   WEAKNESS = "WEAKNESS",
@@ -156,6 +177,11 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   // ── Damage factor stats ───────────────────────────────────────────────────
   [StatType.DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
   [StatType.DAMAGE_TAKEN_BONUS]: [StatOwnerType.ENEMY],
+  [StatType.PHYSICAL_AMP]: [StatOwnerType.OPERATOR],
+  [StatType.HEAT_AMP]: [StatOwnerType.OPERATOR],
+  [StatType.CRYO_AMP]: [StatOwnerType.OPERATOR],
+  [StatType.NATURE_AMP]: [StatOwnerType.OPERATOR],
+  [StatType.ELECTRIC_AMP]: [StatOwnerType.OPERATOR],
   [StatType.ARTS_AMP]: [StatOwnerType.OPERATOR],
   [StatType.HEAT_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
   [StatType.CRYO_SUSCEPTIBILITY]: [StatOwnerType.ENEMY],
@@ -169,6 +195,18 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.NATURE_FRAGILITY]: [StatOwnerType.ENEMY],
   [StatType.ELECTRIC_FRAGILITY]: [StatOwnerType.ENEMY],
   [StatType.ARTS_FRAGILITY]: [StatOwnerType.ENEMY],
+  [StatType.PHYSICAL_RESISTANCE_IGNORE]: [StatOwnerType.OPERATOR],
+  [StatType.HEAT_RESISTANCE_IGNORE]: [StatOwnerType.OPERATOR],
+  [StatType.CRYO_RESISTANCE_IGNORE]: [StatOwnerType.OPERATOR],
+  [StatType.NATURE_RESISTANCE_IGNORE]: [StatOwnerType.OPERATOR],
+  [StatType.ELECTRIC_RESISTANCE_IGNORE]: [StatOwnerType.OPERATOR],
+  [StatType.ARTS_RESISTANCE_IGNORE]: [StatOwnerType.OPERATOR],
+  [StatType.PHYSICAL_RESISTANCE_REDUCTION]: [StatOwnerType.ENEMY],
+  [StatType.HEAT_RESISTANCE_REDUCTION]: [StatOwnerType.ENEMY],
+  [StatType.CRYO_RESISTANCE_REDUCTION]: [StatOwnerType.ENEMY],
+  [StatType.NATURE_RESISTANCE_REDUCTION]: [StatOwnerType.ENEMY],
+  [StatType.ELECTRIC_RESISTANCE_REDUCTION]: [StatOwnerType.ENEMY],
+  [StatType.ARTS_RESISTANCE_REDUCTION]: [StatOwnerType.ENEMY],
   // ── Enemy only ────────────────────────────────────────────────────────────
   [StatType.STAGGER_HP]: [StatOwnerType.ENEMY],
   [StatType.STAGGER_RECOVERY]: [StatOwnerType.ENEMY],
@@ -216,8 +254,18 @@ export function resolveEffectStat(
   const obj = typeof effectOrObject === 'string' ? effectOrObject : effectOrObject.object;
   const id = typeof effectOrObject === 'string' ? objectId : effectOrObject.objectId;
   const qual = typeof effectOrObject === 'string' ? objectQualifier : effectOrObject.objectQualifier;
-  const key = obj === STAT_OBJECT
-    ? (qual ? `${qual}_${id}` : id ?? obj)
-    : obj;
-  return STAT_TYPE_SET.has(key) ? key as StatType : undefined;
+  if (obj !== STAT_OBJECT) return STAT_TYPE_SET.has(obj) ? obj as StatType : undefined;
+  if (qual) {
+    // Element qualifiers flatten to `{ELEMENT}_{STAT}` (e.g. HEAT + DAMAGE_BONUS → HEAT_DAMAGE_BONUS).
+    const elementFlat = `${qual}_${id}`;
+    if (STAT_TYPE_SET.has(elementFlat)) return elementFlat as StatType;
+    // Skill-type qualifiers follow the skill-type naming in the StatType enum —
+    // which inserts `_SKILL_` for BATTLE/COMBO and is bare for BASIC_ATTACK/ULTIMATE.
+    // Try the `_SKILL_` form before giving up so DSL effects written as
+    // `{objectId: DAMAGE_BONUS, objectQualifier: BATTLE}` resolve correctly.
+    const skillFlat = `${qual}_SKILL_${id}`;
+    if (STAT_TYPE_SET.has(skillFlat)) return skillFlat as StatType;
+  }
+  const bare = id ?? obj;
+  return STAT_TYPE_SET.has(bare) ? bare as StatType : undefined;
 }

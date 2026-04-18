@@ -1,59 +1,73 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "CRITICAL_RATE",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.03,
-                0.036,
-                0.042,
-                0.048,
-                0.054,
-                0.06,
-                0.066,
-                0.072,
-                0.084
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.15,
-                0.18,
-                0.21,
-                0.24,
-                0.27,
-                0.3,
-                0.33,
-                0.36,
-                0.42
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
           },
-          "objectId": "ATTACK_BONUS"
+          "unit": "SECOND"
+        },
+        "name": "Cemented Fury"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "CRITICAL_RATE",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.03,
+                    0.036,
+                    0.042,
+                    0.048,
+                    0.054,
+                    0.06,
+                    0.066,
+                    0.072,
+                    0.084
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.15,
+                    0.18,
+                    0.21,
+                    0.24,
+                    0.27,
+                    0.3,
+                    0.33,
+                    0.36,
+                    0.42
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "ATTACK_BONUS"
+            }
+          ]
         }
       ]
     }
@@ -79,7 +93,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT"
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "CHIMERIC_JUSTICE",

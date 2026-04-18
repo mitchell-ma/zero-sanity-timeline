@@ -93,7 +93,7 @@
     "id": "SWORDMANCER_TAC_GLOVES",
     "name": "Swordmancer TAC Gloves",
     "gearType": "GLOVES",
-    "gearSet": "SWORDMANCER"
+    "gearSet": "SWORDMANCER_STAT"
   },
   "metadata": {
     "originId": "game",

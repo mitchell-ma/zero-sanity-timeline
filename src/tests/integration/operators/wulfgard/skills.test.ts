@@ -1016,13 +1016,14 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     const ebsRows = calcResult.rows.filter(
       r => r.ownerEntityId === SLOT_WULFGARD && r.columnId === NounType.BATTLE,
     );
-    // Frames 1-3 produce damage; frame 4 row exists but with null damage (shown as "-")
-    expect(ebsRows).toHaveLength(4);
-    const [frame1, frame2, frame3, frame4] = ebsRows;
-    expect(frame1.damage).toBeGreaterThan(0);
-    expect(frame2.damage).toBeGreaterThan(0);
-    expect(frame3.damage).toBeGreaterThan(0);
-    expect(frame4.damage).toBeNull();
+    // Frames 1-3 produce damage. Frame 4's condition fails (Combustion expired
+    // before it could resolve) so the damage-table builder drops the row —
+    // guarded frames are no longer rendered as placeholder "-" rows.
+    expect(ebsRows).toHaveLength(3);
+    for (const row of ebsRows) {
+      expect(row.damage).not.toBeNull();
+      expect(row.damage).toBeGreaterThan(0);
+    }
   });
 });
 

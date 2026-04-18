@@ -1,34 +1,48 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.08,
-                0.096,
-                0.112,
-                0.128,
-                0.144,
-                0.16,
-                0.176,
-                0.192,
-                0.224
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "ARTS"
+          "unit": "SECOND"
+        },
+        "name": "Wedge of Civilization"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.08,
+                    0.096,
+                    0.112,
+                    0.128,
+                    0.144,
+                    0.16,
+                    0.176,
+                    0.192,
+                    0.224
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ARTS"
+            }
+          ]
         }
       ]
     }
@@ -54,7 +68,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT"
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "WEDGE",

@@ -1,27 +1,41 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        },
+        "name": "Mordvolt Insulation"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "ARTS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.2
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ARTS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.2
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "MORDVOLT_INSULATION_STAT",
+    "id": "MORDVOLT_INSULATION",
     "name": "Mordvolt Insulation",
     "duration": {
       "value": {
@@ -39,10 +53,10 @@
     },
     "description": "Arts DMG +20% when HP above 80%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "MORDVOLT_INSULATION",
+    "originId": "MORDVOLT_INSULATION_STAT",
     "dataStatus": "RECONCILED"
   }
 }

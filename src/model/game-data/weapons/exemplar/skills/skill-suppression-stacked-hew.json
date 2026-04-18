@@ -1,40 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.1,
-                0.12,
-                0.14,
-                0.16,
-                0.18,
-                0.2,
-                0.22,
-                0.24,
-                0.28
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "PHYSICAL"
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -57,11 +21,61 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Suppression: Stacked Hew"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.1,
+                    0.12,
+                    0.14,
+                    0.16,
+                    0.18,
+                    0.2,
+                    0.22,
+                    0.24,
+                    0.28
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "PHYSICAL"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Suppression: Stacked Hew",
     "description": "Physical DMG Dealt +{phy_damage_up:0.0%}. When the wielder's battle skill or ultimate hits the enemy, the wielder gains Physical DMG Dealt +{phy_damage_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
     "id": "SUPPRESSION_STACKED_HEW",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "EXEMPLAR",

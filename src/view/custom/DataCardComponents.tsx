@@ -36,6 +36,12 @@ export interface VaryByLoadout {
    * defaults to 'one' (matches the engine's resolveTalentLevel fallback).
    */
   talentSlot?: 'one' | 'two';
+  /**
+   * Pre-resolved 0-based indices for supplied parameters (e.g. ENEMY_HIT).
+   * Computed from the event's parameterValues minus each param's lowerRange
+   * so VARY_BY tables can highlight the user-selected column directly.
+   */
+  parameterIndices?: Record<string, number>;
 }
 
 /** Resolve a VARY_BY dimension → active 0-based array index, or undefined if not mappable. */
@@ -49,7 +55,7 @@ function resolveActiveIndex(loadout: VaryByLoadout | undefined, dimension: strin
       return slot === 'two' ? loadout.talentTwoLevel : loadout.talentOneLevel;
     }
     case NounType.ATTRIBUTE_INCREASE_LEVEL: return loadout.attributeIncreaseLevel;
-    default: return undefined;
+    default: return loadout.parameterIndices?.[dimension];
   }
 }
 
@@ -707,7 +713,7 @@ function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: str
     const of = statOfClause?.determiner ? ` of ${statOfClause.determiner.toLowerCase()} operator` : '';
     return <span className="ops-vt-leaf">{label && <span className="ops-prop-tree-leaf-label">{label}</span>} {stat}{of}</span>;
   }
-  if (node.verb === VerbType.IS && !node.object) return <span className="ops-vt-leaf">{String(node.value)}</span>;
+  if (node.verb === VerbType.IS && !node.object) return <span className="ops-vt-leaf">{label && <span className="ops-prop-tree-leaf-label">{label}</span>} {String(node.value)}</span>;
   if (node.verb === VerbType.VARY_BY && Array.isArray(node.value)) return <VaryByLeaf node={node} label={label} />;
   if (node.object && node.of) {
     // Render the full `of` possessor chain including qualifier and nested of-clause,
@@ -1354,7 +1360,14 @@ export function TabbedSegmentView({ entry, critState, editState }: {
 
   return (
     <div className="ops-seg-view">
-      <div className="ops-conjoined-tabs">
+      <div
+        className="ops-conjoined-tabs"
+        onWheel={(e) => {
+          if (e.deltaY === 0) return;
+          e.currentTarget.scrollLeft += e.deltaY;
+          e.preventDefault();
+        }}
+      >
         <div className="ops-conjoined-row ops-conjoined-row--seg">
           {segments.map((s, si) => {
             const isActiveSeg = safeSeg === si && !viewingFrame;
@@ -1370,19 +1383,16 @@ export function TabbedSegmentView({ entry, critState, editState }: {
             );
           })}
         </div>
-        <div
-          className="ops-conjoined-row ops-conjoined-row--frame"
-          onWheel={(e) => {
-            if (e.deltaY === 0) return;
-            e.currentTarget.scrollLeft += e.deltaY;
-            e.preventDefault();
-          }}
-        >
+        <div className="ops-conjoined-row ops-conjoined-row--frame">
           {segments.map((s, si) => {
             const frames = (s.frames ?? []) as JsonSkillData[];
+            const isEmpty = frames.length === 0;
             return (
-              <div key={si} className="ops-conjoined-frame-group">
-                {frames.length > 0 ? frames.map((_f, fi) => (
+              <div
+                key={si}
+                className={`ops-conjoined-frame-group${isEmpty ? ' ops-conjoined-frame-group--empty' : ''}`}
+              >
+                {frames.map((_f, fi) => (
                   <button
                     key={fi}
                     type="button"
@@ -1391,9 +1401,7 @@ export function TabbedSegmentView({ entry, critState, editState }: {
                   >
                     {toRoman(fi + 1)}
                   </button>
-                )) : (
-                  <span className="ops-conjoined-btn ops-conjoined-btn--empty" />
-                )}
+                ))}
               </div>
             );
           })}

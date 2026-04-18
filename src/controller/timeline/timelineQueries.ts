@@ -76,6 +76,26 @@ export function countActiveStatusStacks(
 }
 
 /**
+ * Max `statusLevel` across active matching events. Returns 0 when none match.
+ * Used for STATUS_LEVEL ValueStatus reads (e.g. `STATUS_LEVEL of ELECTRIFICATION of ENEMY`).
+ */
+export function maxActiveStatusLevel(
+  events: readonly TimelineEvent[],
+  frame: number,
+  ownerEntityId: string,
+  statusId: string,
+): number {
+  let max = 0;
+  for (const ev of events) {
+    if (ev.ownerEntityId !== ownerEntityId || ev.columnId !== statusId) continue;
+    if (!isActiveAtFrame(ev, frame)) continue;
+    const level = ev.statusLevel ?? 0;
+    if (level > max) max = level;
+  }
+  return max;
+}
+
+/**
  * Get active infliction events of a given element at a given frame.
  * Element is mapped to column ID externally.
  */

@@ -92,7 +92,7 @@
     "id": "ARMORED_MSGR_GYRO_T1",
     "name": "Armored MSGR Gyro T1",
     "gearType": "KIT",
-    "gearSet": "ARMORED_MSGR"
+    "gearSet": "ARMORED_MSGR_STAT"
   },
   "metadata": {
     "originId": "game",

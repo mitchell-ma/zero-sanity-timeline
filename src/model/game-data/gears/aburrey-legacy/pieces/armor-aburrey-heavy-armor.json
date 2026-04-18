@@ -93,7 +93,7 @@
     "id": "ABURREY_HEAVY_ARMOR",
     "name": "Aburrey Heavy Armor",
     "gearType": "ARMOR",
-    "gearSet": "ABURREY_LEGACY"
+    "gearSet": "ABURREY_LEGACY_STAT"
   },
   "metadata": {
     "originId": "game",

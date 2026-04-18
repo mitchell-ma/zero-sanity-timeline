@@ -161,7 +161,7 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
     },
     onTriggerClause: raw.onTriggerClause ?? [],
     originId: meta.originId,
-    ...(raw.clause ? { clause: raw.clause } : {}),
+    ...(raw.clause ? { clause: raw.clause } : (raw.segments?.[0]?.clause ? { clause: raw.segments[0].clause } : {})),
     ...(raw.onEntryClause ? { onEntryClause: raw.onEntryClause } : {}),
     ...(raw.onExitClause ? { onExitClause: raw.onExitClause } : {}),
     ...(raw.segments ? { segments: raw.segments } : {}),
@@ -360,7 +360,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
     expect(frames.length).toBeGreaterThan(0);
 
     const frame = frames[0];
-    const inflEffect = frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION);
+    const inflEffect = frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.INFLICTION);
     expect(inflEffect).toBeDefined();
     const qual = Array.isArray(inflEffect!.dslEffect!.objectQualifier) ? inflEffect!.dslEffect!.objectQualifier[0] : inflEffect!.dslEffect!.objectQualifier;
     expect(qual).toBe(AdjectiveType.HEAT);
@@ -370,7 +370,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
     const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.INFLICTION)).toBeUndefined();
       }
     }
   });
@@ -385,9 +385,9 @@ describe('E. Ultimate & Enhanced Variants', () => {
 
   test('E7: Ultimate energy cost is MULT(base, VARY_BY POTENTIAL)', () => {
     const ultSkill = mockLaevatainJson.skills.ULTIMATE;
-    const energyCost = ultSkill.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
-    );
+    const energyCost = ultSkill.segments[0].clause
+      .flatMap((c: { effects: Record<string, unknown>[] }) => c.effects)
+      .find((e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME);
     expect(energyCost).toBeDefined();
     const val = energyCost.with.value;
     expect(val.operation).toBe('MULT');
@@ -446,7 +446,8 @@ describe('H. Cooldown Interactions', () => {
     const cooldownSeg = bs.segments?.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('COOLDOWN'));
     expect(cooldownSeg).toBeUndefined();
     // No COOLDOWN effect in clause
-    const cooldownEffect = bs.clause?.flatMap((c: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ c.effects ?? [])
+    const cooldownEffect = bs.segments?.flatMap((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.clause ?? [])
+      .flatMap((c: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ c.effects ?? [])
       .find((e: Record<string, unknown>) => e.object === NounType.COOLDOWN);
     expect(cooldownEffect).toBeUndefined();
   });
@@ -549,7 +550,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     const akekuriHeat = withApplyFrame(makeEv({
       uid: 'akekuri-heat-1', name: INFLICTION_COLUMNS.HEAT, ownerEntityId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
-      sourceEntityId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
+      sourceEntityId: SLOT_AKEKURI, sourceSkillId: 'BURST_OF_PASSION',
     }), { statusId: INFLICTION_COLUMNS.HEAT, to: NounType.ENEMY });
     // Antal combo with comboTriggerColumnId set (mirrors heat)
     const antalCombo = makeEv({
@@ -623,7 +624,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       startFrame: 0,
       segments: [{ properties: { duration: 4800 } }],
       sourceEntityId: USER_ID,
-      sourceSkillName: 'Freeform',
+      sourceSkillId: 'Freeform',
     }, { statusId: INFLICTION_COLUMNS.HEAT, to: NounType.ENEMY });
 
     const basic: TimelineEvent = {

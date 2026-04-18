@@ -218,7 +218,7 @@ Combo skills define their activation window as an embedded Event structure:
     {
       "conditions": [
         { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "VULNERABLE" },
-        { "subject": "ENEMY", "verb": "HAVE", "object": "INFLICTION", "objectQualifier": "ARTS" }
+        { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "ARTS" }
       ]
     }
   ],

@@ -25,7 +25,7 @@ function mkEvent(partial: Partial<TimelineEvent> & { uid: string; startFrame: nu
     startFrame: partial.startFrame,
     segments: partial.segments ?? [{ properties: { duration: 60 } }],
     sourceEntityId: partial.sourceEntityId,
-    sourceSkillName: partial.sourceSkillName,
+    sourceSkillId: partial.sourceSkillId,
   } as TimelineEvent;
 }
 

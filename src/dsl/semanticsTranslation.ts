@@ -157,6 +157,7 @@ export const OBJECT_LABELS: Record<string, string> = {
   GAME_TIME: t('dsl.object.GAME_TIME'),
   REAL_TIME: t('dsl.object.REAL_TIME'),
   EVENT: t('dsl.object.EVENT'),
+  OCCURRENCE: t('dsl.object.OCCURRENCE'),
   ATTACK_BONUS: t('dsl.object.ATTACK_BONUS'),
   ARTS_REACTION: t('dsl.object.ARTS_REACTION'),
   FINAL_STRIKE: t('dsl.object.FINAL_STRIKE'),
@@ -383,7 +384,7 @@ function formatObject(e: Effect): string {
   // For STATUS/INFLICTION with an objectId, use objectId as the name
   // e.g. APPLY STATUS (FOCUS) → "Apply Focus status"
   // e.g. APPLY STATUS (Empowered Focus) → "Apply Empowered Focus status"
-  if (e.objectId && (e.object === NounType.STATUS || e.object === NounType.INFLICTION)) {
+  if (e.objectId && e.object === NounType.STATUS) {
     const name = titleCase(e.objectId);
     return `${adjStr}${name} ${objLabel}`;
   }

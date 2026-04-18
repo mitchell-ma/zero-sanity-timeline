@@ -23,6 +23,11 @@ export interface EventSource {
 export interface AddOptions {
   uid?: string;
   stacks?: number;
+  /** Reaction level (I–IV). First-class axis distinct from `stacks` — reactions
+   *  have a stack limit of 1 but can exist at any of four power tiers. Picked
+   *  by the context-menu STATUS_LEVEL submenu for freeform reactions and by
+   *  the cross-element trigger count for engine-derived reactions. */
+  statusLevel?: import('../../../consts/types').StatusLevel;
   /** True when this reaction bypassed the usual infliction-stack requirement
    *  (e.g. ult-forced Solidification, user-added reactions in freeform mode). */
   isForced?: boolean;

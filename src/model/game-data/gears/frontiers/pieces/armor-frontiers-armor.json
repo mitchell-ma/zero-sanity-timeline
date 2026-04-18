@@ -93,7 +93,7 @@
     "id": "FRONTIERS_ARMOR",
     "name": "Frontiers Armor",
     "gearType": "ARMOR",
-    "gearSet": "FRONTIERS"
+    "gearSet": "FRONTIERS_STAT"
   },
   "metadata": {
     "originId": "game",

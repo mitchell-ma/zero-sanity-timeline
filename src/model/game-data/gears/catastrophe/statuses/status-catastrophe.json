@@ -1,25 +1,39 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0
+          },
+          "unit": "SECOND"
+        },
+        "name": "Catastrophe"
+      },
+      "clause": [
         {
-          "verb": "RETURN",
-          "object": "SKILL_POINT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 50
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "RETURN",
+              "object": "SKILL_POINT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 50
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "CATASTROPHE_STAT",
+    "id": "CATASTROPHE",
     "name": "Catastrophe",
     "description": "Returns +50 SP on battle skill cast. Once per battle.",
     "duration": {
@@ -41,10 +55,10 @@
       "value": 1
     },
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "CATASTROPHE",
+    "originId": "CATASTROPHE_STAT",
     "dataStatus": "RECONCILED"
   }
 }

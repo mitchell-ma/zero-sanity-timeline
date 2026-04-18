@@ -18,6 +18,7 @@ import type { TimelineEvent } from '../../consts/viewTypes';
 import {
   INFLICTION_COLUMNS,
   PHYSICAL_STATUS_COLUMN_IDS,
+  PHYSICAL_INFLICTION_COLUMN_IDS,
   REACTION_COLUMNS,
   ELEMENT_TO_INFLICTION_COLUMN,
 } from '../../model/channels';
@@ -86,7 +87,12 @@ export function resolveColumnId(
   // Canonical: object=STATUS, objectId is the category
   if (object === NounType.STATUS && objectId) {
     if (objectId === NounType.INFLICTION) {
-      return qualifier ? ELEMENT_TO_INFLICTION_COLUMN[qualifier] : undefined;
+      if (!qualifier) return undefined;
+      const el = ELEMENT_TO_INFLICTION_COLUMN[qualifier];
+      if (el) return el;
+      // Physical inflictions (VULNERABLE) are valid `INFLICTION <qualifier>` too
+      if (PHYSICAL_INFLICTION_COLUMN_IDS.has(qualifier)) return qualifier;
+      return undefined;
     }
     if (objectId === NounType.REACTION) {
       return qualifier ? (REACTION_COLUMNS as Record<string, string>)[qualifier] : undefined;
@@ -95,11 +101,6 @@ export function resolveColumnId(
       return qualifier && PHYSICAL_STATUS_VALUES.has(qualifier) ? qualifier : undefined;
     }
     return objectId;
-  }
-
-  // Legacy direct INFLICTION form
-  if (object === NounType.INFLICTION) {
-    return qualifier ? ELEMENT_TO_INFLICTION_COLUMN[qualifier] : undefined;
   }
 
   return objectId;
@@ -116,17 +117,16 @@ export function resolveColumnIds(
   objectId?: string,
   qualifier?: string,
 ): string[] {
-  // Direct INFLICTION form
-  if (object === NounType.INFLICTION) {
-    if (qualifier === AdjectiveType.ARTS) return Object.values(INFLICTION_COLUMNS);
-    if (qualifier) { const c = ELEMENT_TO_INFLICTION_COLUMN[qualifier]; return c ? [c] : []; }
-    return Object.values(INFLICTION_COLUMNS);
-  }
   if (object !== NounType.STATUS || !objectId) return [];
 
   if (objectId === NounType.INFLICTION) {
     if (qualifier === AdjectiveType.ARTS) return Object.values(INFLICTION_COLUMNS);
-    if (qualifier) { const c = ELEMENT_TO_INFLICTION_COLUMN[qualifier]; return c ? [c] : []; }
+    if (qualifier) {
+      const c = ELEMENT_TO_INFLICTION_COLUMN[qualifier];
+      if (c) return [c];
+      if (PHYSICAL_INFLICTION_COLUMN_IDS.has(qualifier)) return [qualifier];
+      return [];
+    }
     return Object.values(INFLICTION_COLUMNS);
   }
   if (objectId === NounType.REACTION) {
@@ -148,6 +148,38 @@ export function resolveColumnIds(
   }
 
   return [objectId];
+}
+
+/**
+ * Inverse of `resolveColumnIds` — given a concrete column id, return every
+ * DSL category label (`STATUS`, `INFLICTION`, `REACTION`, `PHYSICAL`) under
+ * which trigger predicates can target it. Used by `TriggerIndex.matchEvent`
+ * to let a `APPLY STATUS INFLICTION VULNERABLE` trigger match an event on
+ * column `VULNERABLE`. Keep this function in lockstep with `resolveColumnIds`
+ * — the two are bidirectional: every (category, qualifier) pair that
+ * `resolveColumnIds` maps to a set of columns must report that category
+ * back here for each column it produced.
+ */
+export function resolveColumnCategories(columnId: string): string[] {
+  const categories: string[] = [];
+  const reactionColumns: Set<string> = new Set(Object.values(REACTION_COLUMNS));
+  const inflictionColumns: Set<string> = new Set(Object.values(INFLICTION_COLUMNS));
+  if (reactionColumns.has(columnId)) categories.push(NounType.REACTION);
+  if (inflictionColumns.has(columnId)) categories.push(NounType.INFLICTION);
+  if (PHYSICAL_INFLICTION_COLUMN_IDS.has(columnId)) {
+    // Physical inflictions (VULNERABLE) match both STATUS and INFLICTION
+    // category triggers (`APPLY STATUS INFLICTION VULNERABLE`).
+    categories.push(NounType.STATUS);
+    categories.push(NounType.INFLICTION);
+  } else if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) {
+    categories.push(NounType.STATUS);
+    // `APPLY STATUS PHYSICAL CRUSH`-style triggers reference the PHYSICAL
+    // category; include it so the resolver produces both forms.
+    categories.push(AdjectiveType.PHYSICAL);
+  } else if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) {
+    categories.push(NounType.STATUS);
+  }
+  return categories;
 }
 
 // ────────────────────────────────────────────────────────────────────────────

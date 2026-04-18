@@ -1,40 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.16,
-                0.192,
-                0.224,
-                0.256,
-                0.288,
-                0.32,
-                0.352,
-                0.384,
-                0.448
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "CRYO"
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -56,11 +20,61 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Fracture: Artzy Exaggeration"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.16,
+                    0.192,
+                    0.224,
+                    0.256,
+                    0.288,
+                    0.32,
+                    0.352,
+                    0.384,
+                    0.448
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "CRYO"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Fracture: Artzy Exaggeration",
     "description": "Cryo DMG Dealt +{cryst_dmg_up:0.0%}. After the wielder scores a critical hit with a battle skill or combo skill, the wielder gains Cryo DMG Dealt +{cryst_dmg_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
     "id": "FRACTURE_ARTZY_EXAGGERATION",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "ARTZY_TYRANNICAL",

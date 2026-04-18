@@ -93,7 +93,7 @@
     "id": "TURBID_CUTTING_TORCH",
     "name": "Turbid Cutting Torch",
     "gearType": "KIT",
-    "gearSet": "TIDE_SURGE"
+    "gearSet": "TIDE_SURGE_STAT"
   },
   "metadata": {
     "originId": "game",

@@ -107,13 +107,16 @@ export function runEventQueue(
   if (slotOperatorMap) {
     for (const slotId of Object.keys(slotOperatorMap)) {
       for (const talent of triggerIdx.getTalents(slotId)) {
-        if (!talent.def.clause?.length) continue;
+        const segClauses = Array.isArray(talent.def.segments)
+          ? (talent.def.segments as { clause?: unknown[] }[]).flatMap(s => Array.isArray(s.clause) ? s.clause : [])
+          : [];
+        if (segClauses.length === 0) continue;
         // Triggered talents (talentEvent === null) manage their own lifecycle
         // via onTriggerClause APPLY/CONSUME EVENT THIS. Their clause effects
         // must NOT fire at pipeline start — they fire only when the event is
         // actually active, via the lifecycle trigger path.
         if (talent.talentEvent === null) continue;
-        for (const clause of talent.def.clause as unknown as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[]) {
+        for (const clause of segClauses as { conditions?: unknown[]; effects?: Record<string, unknown>[] }[]) {
           if (!clause.effects?.length) continue;
           for (const raw of clause.effects) {
             // Talent passive clauses fire APPLY STAT and IGNORE UE inline at
@@ -127,7 +130,7 @@ export function runEventQueue(
               frame: 0,
               sourceEntityId: talent.operatorId,
               contextSlotId: talent.operatorSlotId,
-              sourceSkillName: talent.def.properties.id,
+              sourceSkillId: talent.def.properties.id,
             });
           }
         }

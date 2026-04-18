@@ -1,33 +1,5 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0.15,
-                0.3
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          },
-          "objectId": "ATTACK_BONUS"
-        }
-      ]
-    }
-  ],
+  "onTriggerClauseType": "FIRST_MATCH",
   "onTriggerClause": [
     {
       "conditions": [
@@ -96,7 +68,50 @@
       ]
     }
   ],
-  "clauseType": "FIRST_MATCH",
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
+          },
+          "unit": "SECOND"
+        },
+        "name": "Essence Disintegration (T1)"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.15,
+                    0.3
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "ATTACK_BONUS"
+            }
+          ]
+        }
+      ],
+      "clauseType": "FIRST_MATCH"
+    }
+  ],
   "properties": {
     "id": "ESSENCE_DISINTEGRATION_TALENT",
     "maxLevel": {

@@ -93,7 +93,7 @@
     "id": "BONEKRUSHA_HEAVY_ARMOR_T1",
     "name": "Bonekrusha Heavy Armor T1",
     "gearType": "ARMOR",
-    "gearSet": "BONEKRUSHA"
+    "gearSet": "BONEKRUSHA_STAT"
   },
   "metadata": {
     "originId": "game",

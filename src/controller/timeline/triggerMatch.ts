@@ -86,7 +86,7 @@ export interface TriggerSubEffect {
 export interface TriggerMatch {
   frame: number;
   sourceEntityId: string;
-  sourceSkillName: string;
+  sourceSkillId: string;
   /** The operator that caused this event (e.g. who applied the infliction). */
   originEntityId?: string;
   /** The column ID of the source event that matched this trigger. */
@@ -256,7 +256,7 @@ function checkSecondary(ctx: VerbHandlerContext, frame: number, triggerEntityId?
 }
 
 function makeMatch(frame: number, ev: TimelineEvent, effects?: TriggerEffect[]): TriggerMatch {
-  return { frame, sourceEntityId: ev.ownerEntityId, sourceSkillName: ev.id, originEntityId: ev.sourceEntityId, sourceColumnId: ev.columnId, sourceEventUid: ev.uid, triggerStacks: ev.statusLevel ?? ev.stacks, effects };
+  return { frame, sourceEntityId: ev.ownerEntityId, sourceSkillId: ev.id, originEntityId: ev.sourceEntityId, sourceColumnId: ev.columnId, sourceEventUid: ev.uid, triggerStacks: ev.statusLevel ?? ev.stacks, effects };
 }
 
 /**
@@ -677,8 +677,8 @@ const VERB_HANDLER_REGISTRY = new Map<string, VerbHandler>([
  */
 function needsEngineContext(cond: Predicate): boolean {
   if (cond.verb !== VerbType.HAVE && cond.verb !== VerbType.IS) return false;
-  // HAVE STATUS / HAVE INFLICTION — evaluable at scan time (checks event presence)
-  if (cond.object === NounType.STATUS || cond.object === NounType.INFLICTION) return false;
+  // HAVE STATUS (covers STATUS INFLICTION / STATUS REACTION too) — evaluable at scan time
+  if (cond.object === NounType.STATUS) return false;
   // IS/HAVE with state adjectives (ELECTRIFIED, STAGGERED, etc.) — evaluable at scan time
   // via STATE_TO_COLUMN mapping and the IS/BECOME verb handlers
   if (cond.object && STATE_TO_COLUMN[cond.object]) return false;

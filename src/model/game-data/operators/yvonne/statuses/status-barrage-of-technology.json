@@ -1,56 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0.5
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "BASIC_ATTACK"
-        }
-      ]
-    },
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "DISABLE",
-          "object": "SKILL",
-          "objectId": "BASIC_ATTACK",
-          "objectQualifier": "EXUBERANT_TRIGGER_BATK",
-          "of": {
-            "determiner": "THIS",
-            "object": "OPERATOR"
-          },
-          "with": {
-            "segments": [
-              0,
-              1,
-              2,
-              3
-            ]
-          }
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -69,6 +17,73 @@
           "object": "EVENT"
         }
       ]
+    }
+  ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Barrage of Technology (T1)"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.5
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "BASIC_ATTACK"
+            }
+          ]
+        },
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "DISABLE",
+              "object": "SKILL",
+              "objectId": "BASIC_ATTACK",
+              "objectQualifier": "EXUBERANT_TRIGGER_BATK",
+              "of": {
+                "determiner": "THIS",
+                "object": "OPERATOR"
+              },
+              "with": {
+                "segments": [
+                  0,
+                  1,
+                  2,
+                  3
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -92,7 +107,7 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}."
+    "description": "Battle skill Brr-Brr-Bomb \u03b2 improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}."
   },
   "metadata": {
     "originId": "BARRAGE_OF_TECHNOLOGY_TALENT",
@@ -100,6 +115,5 @@
       "ENDFIELD_WIKI"
     ],
     "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+  }
 }

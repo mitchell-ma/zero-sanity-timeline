@@ -871,7 +871,7 @@ describe('I. T1 Resilient Defense — Will-based DEF', () => {
     // T1_ID identity is cross-checked at file load (catcher.json.talents.one
     // must match the talent's own properties.id). Skipping a redundant literal
     // assertion here.
-    const clause = T1_JSON.clause;
+    const clause = T1_JSON.segments[0].clause;
     expect(clause).toHaveLength(1);
     const effect = clause[0].effects[0];
     expect(effect.verb).toBe(VerbType.APPLY);

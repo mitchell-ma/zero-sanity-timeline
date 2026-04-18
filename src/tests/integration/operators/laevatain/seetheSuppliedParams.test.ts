@@ -7,8 +7,10 @@
  *
  * Seethe's RECOVER ULTIMATE_ENERGY uses VARY_BY ENEMY_HIT [25, 30, 35].
  * Verifies:
- *   1. Context menu: Seethe variant has inline parameter buttons (×1, ×2, ×3)
- *   2. Controller: parameterValues propagate to the created event
+ *   1. Context menu: Seethe variant exposes a parameterSubmenu (×1, ×2, ×3)
+ *      — NOT inline buttons, which are reserved for BATK segment chains.
+ *   2. Controller: the item's defaultSkill carries parameterValues defaulted
+ *      to the param's `default` value; callers override by merging.
  *   3. Pipeline: UE gain differs based on ENEMY_HIT value (25 vs 30 vs 35)
  */
 
@@ -59,15 +61,17 @@ function placeSeetheAndGetUE(enemyHit: number) {
   const seetheItem = findSeetheItem(result.current, atFrame);
   expect(seetheItem).toBeDefined();
 
-  // Find the inline button for the desired enemy count
-  const btn = seetheItem!.inlineButtons?.find(b => b.label === `×${enemyHit}`);
-  expect(btn).toBeDefined();
-  const payload = btn!.actionPayload as AddEventPayload;
+  // Use the item's own addEvent payload and merge the desired ENEMY_HIT override
+  // — this mirrors what the view does when the user picks an option from the
+  // parameterSubmenu before clicking the main row.
+  const payload = seetheItem!.actionPayload as AddEventPayload;
+  const skill = {
+    ...payload.defaultSkill,
+    parameterValues: { ...(payload.defaultSkill.parameterValues ?? {}), ENEMY_HIT: enemyHit },
+  };
 
   act(() => {
-    result.current.handleAddEvent(
-      payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
-    );
+    result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, skill);
   });
 
   // Verify the event was created with correct parameterValues
@@ -86,21 +90,28 @@ function placeSeetheAndGetUE(enemyHit: number) {
 
 describe('Laevatain Seethe — suppliedParameters', () => {
 
-  it('context menu shows inline parameter buttons for Seethe', () => {
+  it('context menu exposes a parameterSubmenu for Seethe (not inline buttons)', () => {
     const { result } = setup();
     const seetheItem = findSeetheItem(result.current, 5 * FPS);
     expect(seetheItem).toBeDefined();
-    expect(seetheItem!.inlineButtons).toBeDefined();
-    expect(seetheItem!.inlineButtons!.length).toBe(3);
-    expect(seetheItem!.inlineButtons!.map(b => b.label)).toEqual(['×1', '×2', '×3']);
+    expect(seetheItem!.inlineButtons).toBeUndefined();
+    expect(seetheItem!.parameterSubmenu).toBeDefined();
+    // parameterSubmenu is an array of axes; Seethe has one (ENEMY_HIT).
+    const submenu = seetheItem!.parameterSubmenu!;
+    expect(submenu).toHaveLength(1);
+    const axis = submenu[0];
+    expect(axis.paramId).toBe('ENEMY_HIT');
+    expect(axis.options.map(o => o.label)).toEqual(['×1', '×2', '×3']);
+    expect(axis.options.map(o => o.value)).toEqual([1, 2, 3]);
+    // Default is ENEMY_HIT=1 per Seethe config
+    expect(axis.options.find(o => o.isDefault)?.value).toBe(1);
   });
 
-  it('inline button payloads carry parameterValues', () => {
+  it('default payload carries parameterValues seeded from the param default', () => {
     const { result } = setup();
     const seetheItem = findSeetheItem(result.current, 5 * FPS);
-    const btn2 = seetheItem!.inlineButtons![1];
-    const payload = btn2.actionPayload as AddEventPayload;
-    expect(payload.defaultSkill.parameterValues).toEqual({ ENEMY_HIT: 2 });
+    const payload = seetheItem!.actionPayload as AddEventPayload;
+    expect(payload.defaultSkill.parameterValues).toEqual({ ENEMY_HIT: 1 });
     expect(payload.defaultSkill.suppliedParameters).toBeDefined();
   });
 

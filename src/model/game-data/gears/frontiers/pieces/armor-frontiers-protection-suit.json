@@ -92,7 +92,7 @@
     "id": "FRONTIERS_PROTECTION_SUIT",
     "name": "Frontiers Protection Suit",
     "gearType": "ARMOR",
-    "gearSet": "FRONTIERS"
+    "gearSet": "FRONTIERS_STAT"
   },
   "metadata": {
     "originId": "game",

@@ -482,8 +482,8 @@
           ],
           "clauseType": "ALL"
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
-  ],
-  "clauseType": "ALL"
+  ]
 }

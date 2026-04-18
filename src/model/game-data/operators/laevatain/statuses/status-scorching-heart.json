@@ -1,31 +1,47 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
+          },
+          "unit": "SECOND"
+        },
+        "name": "Scorching Heart"
+      },
+      "clause": [
         {
-          "verb": "IGNORE",
-          "objectQualifier": "HEAT",
-          "object": "STAT",
-          "objectId": "RESISTANCE",
-          "from": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                10,
-                15,
-                20
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "RESISTANCE_IGNORE",
+              "objectQualifier": "HEAT",
+              "to": "OPERATOR",
+              "toDeterminer": "THIS",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    10,
+                    15,
+                    20
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -55,6 +71,5 @@
   "metadata": {
     "originId": "MELTING_FLAME",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

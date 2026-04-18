@@ -117,7 +117,7 @@
     "id": "HANGING_RIVER_O2_TUBE",
     "name": "Hanging River O2 Tube",
     "gearType": "KIT",
-    "gearSet": "TIDE_SURGE"
+    "gearSet": "TIDE_SURGE_STAT"
   },
   "metadata": {
     "originId": "game",

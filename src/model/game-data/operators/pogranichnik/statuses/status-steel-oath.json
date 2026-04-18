@@ -23,7 +23,7 @@
   },
   "onTriggerClause": [
     {
-      "_note": "Decisive Assault — last stack (1 remaining) + Physical Status trigger",
+      "_note": "Decisive Assault \u2014 last stack (1 remaining) + Physical Status trigger",
       "conditions": [
         {
           "subjectDeterminer": "ANY",
@@ -66,7 +66,7 @@
       ]
     },
     {
-      "_note": "Harass — Physical Status trigger (stacks > 1)",
+      "_note": "Harass \u2014 Physical Status trigger (stacks > 1)",
       "conditions": [
         {
           "subjectDeterminer": "ANY",
@@ -97,7 +97,6 @@
       ]
     }
   ],
-  "clauseType": "FIRST_MATCH",
   "metadata": {
     "originId": "SHIELDGUARD_BANNER",
     "dataSources": [

@@ -92,7 +92,7 @@
     "id": "SWORDMANCER_HEAVY_ARMOR",
     "name": "Swordmancer Heavy Armor",
     "gearType": "ARMOR",
-    "gearSet": "SWORDMANCER"
+    "gearSet": "SWORDMANCER_STAT"
   },
   "metadata": {
     "originId": "game",

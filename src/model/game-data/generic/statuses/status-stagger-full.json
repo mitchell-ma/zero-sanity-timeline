@@ -1,4 +1,38 @@
 {
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 5
+          },
+          "unit": "SECOND"
+        },
+        "name": "Stagger (Full)"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "STAGGER_FRAILTY",
+              "to": "ENEMY",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
   "properties": {
     "id": "full-stagger",
     "name": "Stagger (Full)",
@@ -24,25 +58,5 @@
   "metadata": {
     "originId": "game",
     "dataStatus": "RECONCILED"
-  },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "STAGGER_FRAILTY",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 1
-            }
-          }
-        }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+  }
 }

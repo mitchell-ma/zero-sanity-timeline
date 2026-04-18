@@ -261,30 +261,36 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
 | `IS` | Single number | `{ "verb": "IS", "value": 10 }` |
 | `VARY_BY` | Array indexed by dependency | `{ "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [0.5, 0.6, ...] }` |
 
-#### Noun adjuncts
+#### Trigger-source duplication (`objectDeterminer: "TRIGGER"`)
 
-Noun adjuncts are `NounType` values used in adjective position to modify an object. They appear in the `adjective` field of an Effect but are nouns, not adjectives — they act as compound noun modifiers.
-
-| Noun adjunct | Valid objects | Meaning | Example |
-|-------------|-------------|---------|---------|
-| `SOURCE` | `INFLICTION`, `STATUS` | Duplicate the triggering effect — apply another stack of whatever infliction/status triggered this skill | `APPLY SOURCE INFLICTION TO ENEMY` |
+A clause can re-apply whatever caused its trigger to fire by setting
+`objectDeterminer: "TRIGGER"` on an `APPLY STATUS` effect. The engine reads
+the triggering event at dispatch time and fills in the category (infliction,
+physical status, etc.) from the trigger, so one effect covers every form the
+trigger can take.
 
 **Example — Antal combo skill (EMP Test Site):**
 
-Antal's combo triggers when an enemy with Focus suffers a Physical Status or Arts Infliction. On hit, the combo applies another stack of the same effect:
+Antal's combo triggers when an enemy with Focus suffers an Arts Infliction
+or a Physical Status. On hit, the combo applies another stack of the same
+infliction/status that fired the trigger:
 
 ```json
 {
   "effects": [
-    { "verb": "APPLY", "adjective": "SOURCE", "object": "INFLICTION", "toObject": "ENEMY" },
-    { "verb": "APPLY", "adjective": "SOURCE", "object": "STATUS", "toObject": "ENEMY" }
+    { "verb": "APPLY", "objectDeterminer": "TRIGGER", "object": "STATUS", "objectId": "INFLICTION", "to": "ENEMY" },
+    { "verb": "APPLY", "objectDeterminer": "TRIGGER", "object": "STATUS", "objectId": "PHYSICAL", "to": "ENEMY" }
   ]
 }
 ```
 
-Two effects are needed because the combo has two trigger clauses (one for arts infliction, one for physical status). At runtime, only the effect matching the actual trigger fires.
+The two effects cover the two trigger shapes (arts-infliction vs physical-
+status). At runtime only the one matching the triggering event's category
+fires; the other is a no-op.
 
-See `NOUN_ADJUNCTS` in `src/consts/semantics.ts` for the valid noun adjunct map.
+Note: `INFLICTION` and `REACTION` are never valid as `object` in their own
+right. They are `objectId` values under `object: STATUS`. The validator
+rejects the legacy `{object: INFLICTION, objectQualifier: HEAT}` shape.
 
 ### Physical Status Mechanics — Vulnerable Prerequisite
 
@@ -515,7 +521,7 @@ the infliction and applies Melting Flame to Laevatain (PERFORM_ALL with output r
     {
       "conditions": [
         { "subject": "ANY_OPERATOR", "verb": "PERFORM", "object": "FINAL_STRIKE" },
-        { "subject": "ENEMY", "verb": "HAVE", "object": "INFLICTION", "objectId": "HEAT" }
+        { "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "HEAT" }
       ],
       "effects": [
         {
@@ -523,7 +529,7 @@ the infliction and applies Melting Flame to Laevatain (PERFORM_ALL with output r
           "cardinalityConstraint": "LESS_THAN_EQUAL",
           "cardinality": "MAX",
           "effects": [
-            { "verb": "ABSORB", "cardinality": 1, "object": "INFLICTION", "element": "HEAT", "from": "ENEMY" },
+            { "verb": "ABSORB", "cardinality": 1, "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "HEAT", "from": "ENEMY" },
             { "verb": "APPLY", "cardinality": 1, "object": "STATUS", "objectId": "MELTING_FLAME", "toObject": "THIS_OPERATOR" }
           ]
         }
@@ -581,8 +587,9 @@ Provides Heat Resistance Ignore scaling by talent level.
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "INFLICTION",
-          "objectId": "ELECTRIC",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "ELECTRIC",
           "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 2
         }
@@ -641,8 +648,9 @@ Provides Heat Resistance Ignore scaling by talent level.
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "INFLICTION",
-          "objectId": "NATURE",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "NATURE",
           "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 2
         }
@@ -739,8 +747,9 @@ Provides Heat Resistance Ignore scaling by talent level.
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "INFLICTION",
-          "objectId": "HEAT",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "HEAT",
           "cardinalityConstraint": "GREATER_THAN_EQUAL",
           "cardinality": 2
         }
@@ -1181,8 +1190,9 @@ Reads as: "Perform all at most MAX times: absorb 1 heat infliction from enemy, a
         {
           "verb": "ABSORB",
           "cardinality": 1,
-          "object": "INFLICTION",
-          "element": "HEAT",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "HEAT",
           "from": "ENEMY"
         },
         {

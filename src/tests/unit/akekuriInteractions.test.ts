@@ -181,7 +181,7 @@ describe('A. Basic Attack (Sword of Aspiration)', () => {
     const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.INFLICTION)).toBeUndefined();
       }
     }
   });
@@ -222,7 +222,7 @@ describe('B. Battle Skill (Burst of Passion)', () => {
 
   test('B2: Battle skill costs 100 SP', () => {
     const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE[0]];
-    const spCost = battleSkill.clause[0].effects.find(
+    const spCost = battleSkill.segments[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
     expect(spCost).toBeDefined();
@@ -231,7 +231,7 @@ describe('B. Battle Skill (Burst of Passion)', () => {
 
   test('B3: Battle skill has SP cost effect in clause', () => {
     const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE[0]];
-    const spCost = battleSkill.clause[0].effects.find(
+    const spCost = battleSkill.segments[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
     expect(spCost).toBeDefined();
@@ -247,7 +247,7 @@ describe('B. Battle Skill (Burst of Passion)', () => {
   test('B5: Battle skill applies Heat infliction to enemy', () => {
     const battleFrame = mockJson.skills[mockJson.skillTypeMap.BATTLE[0]].segments[0].frames[0];
     const infliction = battleFrame.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.object === NounType.INFLICTION
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectId === NounType.INFLICTION
     );
     expect(infliction).toBeDefined();
     expect(infliction.objectQualifier).toBe(AdjectiveType.HEAT);
@@ -331,7 +331,7 @@ describe('C. Combo Skill (Flash and Dash)', () => {
   });
 
   test('C7: Combo recovers 10 ultimate energy to self', () => {
-    const effects = mockJson.skills[mockJson.skillTypeMap.COMBO[0]].clause[0].effects;
+    const effects = mockJson.skills[mockJson.skillTypeMap.COMBO[0]].segments[0].clause[0].effects;
     const energy = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.RECOVER
     );
@@ -358,7 +358,7 @@ describe('C. Combo Skill (Flash and Dash)', () => {
 
 describe('D. Ultimate (Squad on Me)', () => {
   test('D1: Ultimate energy cost is MULT(base, VARY_BY POTENTIAL)', () => {
-    const effects = mockJson.skills[mockJson.skillTypeMap.ULTIMATE[0]].clause[0].effects;
+    const effects = mockJson.skills[mockJson.skillTypeMap.ULTIMATE[0]].segments[0].clause[0].effects;
     const energyCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );

@@ -146,7 +146,7 @@ interface JsonSkillCategory {
 // replaces the previous local `flattenClauseEffects` / `findEffectValue` /
 // `withValue` helpers that walked raw JSON directly — one query API now.
 
-/** Find a value from a skill category's parsed clause effects. */
+/** Find a value from a skill category's parsed clause effects (searches all segments). */
 function findSkillValue(
   category: JsonSkillCategory | undefined,
   object: string,
@@ -154,8 +154,10 @@ function findSkillValue(
   target?: string,
   ctx?: ValueResolutionContext,
 ): number | undefined {
-  if (!category?.clause) return undefined;
-  const parsed = parseJsonClauseArray(category.clause);
+  const segments = (category?.segments as { clause?: unknown[] }[] | undefined) ?? [];
+  const allClauses = segments.flatMap(s => Array.isArray(s.clause) ? s.clause : []);
+  if (allClauses.length === 0) return undefined;
+  const parsed = parseJsonClauseArray(allClauses as Parameters<typeof parseJsonClauseArray>[0]);
   return findFirstEffectValue(parsed, verb, object, target, ctx);
 }
 
@@ -211,8 +213,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         // ── Parse-time side effects that don't produce a DSL clause ───────
         // These verbs collect metadata during parse and do NOT push a clause
         // effect — the interpreter reads the flags/frameTypes directly.
-        if (ef.verb === VerbType.APPLY && isSource
-            && (ef.object === NounType.INFLICTION || ef.object === NounType.STATUS)) {
+        if (ef.verb === VerbType.APPLY && isSource && ef.object === NounType.STATUS) {
           // `OF TRIGGER` marker — the frame mirrors the triggering source's
           // infliction/status onto the owner at runtime via duplicateTriggerSource.
           duplicateSource = true;
@@ -232,7 +233,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           continue;
         }
         // ── Known-unsupported cases dropped explicitly (not silently) ─────
-        if (ef.verb === VerbType.CONSUME && ef.object === NounType.INFLICTION && ef.conversion) {
+        if (ef.verb === VerbType.CONSUME && ef.object === NounType.STATUS && ef.objectId === NounType.INFLICTION && ef.conversion) {
           // Absorb/exchange conversion — no engine handler yet.
           continue;
         }

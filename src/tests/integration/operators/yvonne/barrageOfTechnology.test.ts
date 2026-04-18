@@ -86,7 +86,7 @@ describe('A. Barrage of Technology JSON structure', () => {
   // A4 (DISABLE JSON structure) removed — behavior tested by C1-C5
 
   it('A5: has APPLY STAT DAMAGE_BONUS with VARY_BY TALENT_LEVEL [0, 0.5]', () => {
-    const statClause = BARRAGE_JSON.clause.find((c: { effects: { verb: string; object: string }[] }) =>
+    const statClause = BARRAGE_JSON.segments[0].clause.find((c: { effects: { verb: string; object: string }[] }) =>
       c.effects.some(e => e.verb === VerbType.APPLY && e.object === NounType.STAT),
     );
     expect(statClause).toBeDefined();

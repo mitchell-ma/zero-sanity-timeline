@@ -7,25 +7,6 @@
     "element": "PHYSICAL",
     "id": "FULL_MOON_SLASH"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 10
-            }
-          }
-        }
-      ]
-    }
-  ],
   "segments": [
     {
       "metadata": {
@@ -46,7 +27,27 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "RECOVER",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 10
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -65,7 +66,7 @@
       },
       "frames": [
         {
-          "_note": "SEQ 1 — always fires (1+ Vulnerability consumed)",
+          "_note": "SEQ 1 \u2014 always fires (1+ Vulnerability consumed)",
           "metadata": {
             "eventComponentType": "FRAME",
             "dataSources": [
@@ -80,7 +81,7 @@
           },
           "clause": [
             {
-              "_note": "Steel Oath Decisive Assault — last stack consumed by combo first hit",
+              "_note": "Steel Oath Decisive Assault \u2014 last stack consumed by combo first hit",
               "conditions": [
                 {
                   "subject": "TEAM",
@@ -118,7 +119,7 @@
               ]
             },
             {
-              "_note": "Steel Oath Harass — stacks > 1 consumed by combo first hit",
+              "_note": "Steel Oath Harass \u2014 stacks > 1 consumed by combo first hit",
               "conditions": [
                 {
                   "subject": "TEAM",
@@ -230,7 +231,7 @@
           "clauseType": "FIRST_MATCH"
         },
         {
-          "_note": "SEQ 2 — fires when 2+ Vulnerability consumed (status level >= 2)",
+          "_note": "SEQ 2 \u2014 fires when 2+ Vulnerability consumed (status level >= 2)",
           "metadata": {
             "eventComponentType": "FRAME",
             "dataSources": [
@@ -326,7 +327,7 @@
           "clauseType": "ALL"
         },
         {
-          "_note": "SEQ 3 — fires when 3+ Vulnerability consumed. FIRST_MATCH: Enhanced (4 stacks) vs Normal (3 stacks).",
+          "_note": "SEQ 3 \u2014 fires when 3+ Vulnerability consumed. FIRST_MATCH: Enhanced (4 stacks) vs Normal (3 stacks).",
           "metadata": {
             "eventComponentType": "FRAME",
             "dataSources": [
@@ -341,7 +342,7 @@
           },
           "clause": [
             {
-              "_note": "Enhanced SEQ 3 — 4 Vulnerability consumed (status level 4)",
+              "_note": "Enhanced SEQ 3 \u2014 4 Vulnerability consumed (status level 4)",
               "conditions": [
                 {
                   "subject": "ENEMY",
@@ -433,7 +434,7 @@
               ]
             },
             {
-              "_note": "Normal SEQ 3 — 3 Vulnerability consumed (status level 3)",
+              "_note": "Normal SEQ 3 \u2014 3 Vulnerability consumed (status level 3)",
               "conditions": [],
               "effects": [
                 {
@@ -561,7 +562,6 @@
     "icon": "skills/combo_pogranichnik.png",
     "dataStatus": "VERIFIED"
   },
-  "clauseType": "ALL",
   "activationWindow": {
     "properties": {
       "maxSkills": 1

@@ -1,39 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.1,
-                0.12,
-                0.14,
-                0.16,
-                0.18,
-                0.2,
-                0.22,
-                0.24,
-                0.28
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -56,11 +21,60 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Pursuit: Aid from the Past"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.1,
+                    0.12,
+                    0.14,
+                    0.16,
+                    0.18,
+                    0.2,
+                    0.22,
+                    0.24,
+                    0.28
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Pursuit: Aid from the Past",
     "description": "Battle Skill DMG +{dmg_up:0.0%}. When the wielder's combo skill applies Arts Burst or Combusted, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
     "id": "PURSUIT_AID_FROM_THE_PAST",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "RATIONAL_FAREWELL",

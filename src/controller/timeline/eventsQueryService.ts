@@ -8,7 +8,7 @@
  */
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { NounType } from '../../dsl/semantics';
-import { DamageFactorType, ElementType, StatType, StatusType } from '../../consts/enums';
+import { ElementType, StatType, StatusType } from '../../consts/enums';
 import { isQualifiedId } from '../../dsl/semantics';
 import { StaggerBreak } from './staggerTimeline';
 import {
@@ -19,11 +19,9 @@ import {
   PHYSICAL_STATUS_COLUMNS,
   REACTION_COLUMNS,
 } from '../../model/channels';
-import { getCorrosionReduction, MultiplierSource } from '../../model/calculation/damageFormulas';
-import { FPS } from '../../utils/timeline';
+import { MultiplierSource } from '../../model/calculation/damageFormulas';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { DerivedEventController } from './derivedEventController';
-import { StatusLevel } from '../../consts/types';
 
 // ── Exported constants ──────────────────────────────────────────────────────
 
@@ -121,7 +119,10 @@ export class EventsQueryService {
     const events = state.getAllEvents();
     this.susceptibilityEvents = events.filter(e => (e.columnId === StatusType.SUSCEPTIBILITY || e.columnId === StatusType.FOCUS || isQualifiedId(e.columnId, StatusType.SUSCEPTIBILITY)) && e.ownerEntityId === ENEMY_ID);
     this.linkEvents = events.filter(e => e.columnId === StatusType.LINK);
-    this.artsAmpEvents = events.filter(e => e.damageFactorType === DamageFactorType.AMP);
+    // AMP events are always qualified in authored DSL (`{object: STATUS,
+    // objectId: AMP, objectQualifier: <EL>}` → flattened to `<EL>_AMP`).
+    // Match by columnId to mirror susceptibility/fragility filters above.
+    this.artsAmpEvents = events.filter(e => isQualifiedId(e.columnId, NounType.AMP));
     this.electrificationEvents = events.filter(e => e.columnId === REACTION_COLUMNS.ELECTRIFICATION);
     this.breachEvents = events.filter(e => e.columnId === PHYSICAL_STATUS_COLUMNS.BREACH);
     this.corrosionEvents = events.filter(e => e.ownerEntityId === ENEMY_ID && e.columnId === REACTION_COLUMNS.CORROSION);
@@ -254,6 +255,22 @@ export class EventsQueryService {
   }
 
   /**
+   * Max `statusLevel` across active matching events on the given column + owner.
+   * Used for STATUS_LEVEL ValueStatus reads (e.g. `STATUS_LEVEL of ELECTRIFICATION of ENEMY`).
+   * Returns 0 if no active event is found.
+   */
+  getActiveStatusLevel(frame: number, ownerEntityId: string, statusId: string): number {
+    let max = 0;
+    for (const ev of this.state.getAllEvents()) {
+      if (ev.ownerEntityId !== ownerEntityId || ev.columnId !== statusId) continue;
+      if (!this.isActive(ev, frame)) continue;
+      const level = ev.statusLevel ?? 0;
+      if (level > max) max = level;
+    }
+    return max;
+  }
+
+  /**
    * Count active enemy susceptibility events at the given frame for the given element.
    * Existence counts — a 0%-value susceptibility event still contributes 1 stack,
    * so DSL formulas referencing `STACKS of <ELEMENT> SUSCEPTIBILITY of ENEMY` see
@@ -321,9 +338,14 @@ export class EventsQueryService {
     let sum = 0;
     for (const ev of this.artsAmpEvents) {
       if (!this.isActive(ev, frame)) continue;
-      // Element-specific AMP (e.g. ELECTRIC_AMP) only applies to matching damage.
-      // Unqualified AMP (no dslObjectQualifier) is a wildcard — applies to all elements.
-      if (element && ev.dslObjectQualifier && ev.dslObjectQualifier !== element) continue;
+      if (element) {
+        // Extract the element prefix from the columnId (e.g. "ELECTRIC" from
+        // "ELECTRIC_AMP"). ARTS_AMP applies to any of the four arts elements.
+        const elem = ev.columnId.slice(0, -(NounType.AMP.length + 1));
+        const matches = elem === element
+          || (elem === ElementType.ARTS && ARTS_ELEMENTS.has(element));
+        if (!matches) continue;
+      }
       sum += ev.statusValue ?? DEFAULT_AMP_BONUS;
     }
     return sum;
@@ -441,22 +463,6 @@ export class EventsQueryService {
     return sum;
   }
 
-  getCorrosionResistanceReduction(frame: number): number {
-    let maxReduction = 0;
-    for (const ev of this.corrosionEvents) {
-      if (!this.isActive(ev, frame)) continue;
-      const cappedStacks = Math.min(ev.stacks ?? 1, 4) as StatusLevel;
-      const elapsedSeconds = (frame - ev.startFrame) / FPS;
-      let artsIntensity = 0;
-      if (ev.sourceEntityId) {
-        const agg = this.aggregatedStats?.[ev.sourceEntityId];
-        if (agg) artsIntensity = agg.stats[StatType.ARTS_INTENSITY] ?? 0;
-      }
-      maxReduction = Math.max(maxReduction, getCorrosionReduction(cappedStacks, elapsedSeconds, artsIntensity));
-    }
-    return maxReduction;
-  }
-
   isCryoInflictionActive(frame: number): boolean {
     return this.cryoInflictionEvents.some(ev => this.isActive(ev, frame));
   }
@@ -538,28 +544,16 @@ export class EventsQueryService {
     const sources: MultiplierSource[] = [];
     for (const ev of this.artsAmpEvents) {
       if (!this.isActive(ev, frame)) continue;
-      if (element && ev.dslObjectQualifier && ev.dslObjectQualifier !== element) continue;
+      if (element) {
+        // Strict element match for breakdown grouping — ARTS_AMP shows under
+        // the dedicated ARTS row only, not duplicated under each arts element.
+        // Damage math (getAmpBonus) still picks it up via arts-expansion.
+        const elem = ev.columnId.slice(0, -(NounType.AMP.length + 1));
+        if (elem !== element) continue;
+      }
       sources.push({ label: ev.name ?? NounType.ARTS_AMP, value: ev.statusValue ?? DEFAULT_AMP_BONUS, category: ev.name ?? NounType.ARTS_AMP });
     }
     return sources;
   }
 
-  /**
-   * Sum ignored resistance from all active status events owned by the attacker
-   * whose element matches. The pipeline resolves IGNORE RESISTANCE clause effects
-   * into statusValue at event creation time.
-   */
-  getIgnoredResistance(frame: number, element: ElementType, attackerEntityId: string): number {
-    let sum = 0;
-    for (const ev of this.state.getAllEvents()) {
-      if (ev.damageFactorType !== DamageFactorType.RESISTANCE) continue;
-      if (ev.ownerEntityId !== attackerEntityId) continue;
-      if (!this.isActive(ev, frame)) continue;
-      // Element-specific ignored resistance only applies to matching damage.
-      // Unqualified (no dslObjectQualifier) is a wildcard.
-      if (ev.dslObjectQualifier && ev.dslObjectQualifier !== element) continue;
-      sum += ev.statusValue ?? 0;
-    }
-    return sum;
-  }
 }

@@ -23,21 +23,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ARMORED_MSGR_STAT",
+          "objectId": "ARMORED_MSGR",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Armored MSGR"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "STRENGTH",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 50
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "ARMORED_MSGR",
+    "id": "ARMORED_MSGR_STAT",
     "name": "Armored MSGR",
     "rarity": 4,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Strength +50. When the wearer's HP drops below 50%, the wearer gains 30% DMG Reduction against all types of DMG.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

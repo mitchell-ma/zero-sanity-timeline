@@ -1,33 +1,47 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.075,
-                0.09,
-                0.105,
-                0.12,
-                0.135,
-                0.15,
-                0.165,
-                0.18,
-                0.21
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
           },
-          "objectId": "ATTACK_BONUS"
+          "unit": "SECOND"
+        },
+        "name": "Sincere Interrogation"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.075,
+                    0.09,
+                    0.105,
+                    0.12,
+                    0.135,
+                    0.15,
+                    0.165,
+                    0.18,
+                    0.21
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "ATTACK_BONUS"
+            }
+          ]
         }
       ]
     }
@@ -52,7 +66,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT",
+    "eventCategoryType": "WEAPON",
     "description": "Secondary Attribute +{second_attr_up:0.0%}. After the wielder consumes an Arts Reaction, ATK +{atk_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately."
   },
   "metadata": {

@@ -112,6 +112,40 @@
               }
             }
           ]
+        },
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "ULTIMATE_ENERGY",
+              "with": {
+                "value": {
+                  "operation": "MULT",
+                  "left": {
+                    "verb": "IS",
+                    "value": 300
+                  },
+                  "right": {
+                    "verb": "VARY_BY",
+                    "object": "POTENTIAL",
+                    "value": [
+                      1,
+                      1,
+                      1,
+                      1,
+                      0.85,
+                      0.85
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  }
+                }
+              }
+            }
+          ]
         }
       ],
       "frames": [],
@@ -215,45 +249,9 @@
       "clauseType": "ALL"
     }
   ],
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "ULTIMATE_ENERGY",
-          "with": {
-            "value": {
-              "operation": "MULT",
-              "left": {
-                "verb": "IS",
-                "value": 300
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "POTENTIAL",
-                "value": [
-                  1,
-                  1,
-                  1,
-                  1,
-                  0.85,
-                  0.85
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "properties": {
     "name": "Twilight",
-    "description": "Laevatain summons her Sviga Lævi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga Lævi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.",
+    "description": "Laevatain summons her Sviga L\u00e6vi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga L\u00e6vi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "id": "TWILIGHT"
@@ -262,6 +260,5 @@
     "originId": "LAEVATAIN",
     "icon": "skills/ult_laevatain.png",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

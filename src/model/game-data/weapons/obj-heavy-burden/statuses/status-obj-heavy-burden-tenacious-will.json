@@ -1,33 +1,47 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
+          },
+          "unit": "SECOND"
+        },
+        "name": "Tenacious Will"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DEF",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.18,
-                0.216,
-                0.252,
-                0.288,
-                0.324,
-                0.36,
-                0.396,
-                0.432,
-                0.504
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DEF",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.18,
+                    0.216,
+                    0.252,
+                    0.288,
+                    0.324,
+                    0.36,
+                    0.396,
+                    0.432,
+                    0.504
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ]
     }
@@ -52,7 +66,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT",
+    "eventCategoryType": "WEAPON",
     "description": "Secondary Attribute +{second_attr_up:0.0%}. When the wielder applies Knocked Down or Weakened, the wielder gains DEF +{def_up:0.0%} for {duration:0}s. Effects of the same name cannot stack."
   },
   "metadata": {

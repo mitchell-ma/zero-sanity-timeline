@@ -173,7 +173,8 @@
           ],
           "clauseType": "ALL"
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -201,6 +202,5 @@
   "metadata": {
     "originId": "AVYWENNA",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

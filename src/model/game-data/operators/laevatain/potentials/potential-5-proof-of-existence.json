@@ -1,16 +1,31 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Proof of Existence (P5)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -24,6 +39,5 @@
   "metadata": {
     "originId": "LAEVATAIN",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

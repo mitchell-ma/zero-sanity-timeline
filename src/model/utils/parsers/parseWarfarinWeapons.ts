@@ -16,7 +16,7 @@ import * as path from 'path';
 import { UnitType } from '../../../consts/enums';
 import { VerbType } from '../../../dsl/semantics';
 
-const WEAPONS_LIST_URL = 'https://api.warfarin.wiki/v1/en/weapons?version=1.1';
+const WEAPONS_LIST_URL = 'https://api.warfarin.wiki/v1/en/weapons?version=1.2';
 const WEAPONS_DETAIL_URL = 'https://api.warfarin.wiki/v1/en/weapons';
 const WEAPONS_DIR = path.resolve(__dirname, '../../game-data/weapons');
 

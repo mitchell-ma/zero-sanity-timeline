@@ -1,40 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "CRYO",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.16,
-                0.192,
-                0.224,
-                0.256,
-                0.288,
-                0.32,
-                0.352,
-                0.384,
-                0.448
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -42,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "INFLICTION",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
           "objectQualifier": "CRYO"
         }
       ],
@@ -77,11 +42,61 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Detonate: Brigand's Bane"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "CRYO",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.16,
+                    0.192,
+                    0.224,
+                    0.256,
+                    0.288,
+                    0.32,
+                    0.352,
+                    0.384,
+                    0.448
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Detonate: Brigand's Bane",
     "description": "Cryo DMG Dealt +{cryst_dmg_up:0.0%}. When the wielder applies Cryo Infliction via battle skills or ultimates, the wielder gains Cryo DMG Dealt +{cryst_dmg_up2:0.0%} for {duration:0}s. When the wielder's battle skill or ultimate applies Arts Susceptibility, the target enemy suffers Arts DMG Taken +{spell_damage_taken_up:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
     "id": "DETONATE_BRIGANDS_BANE",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "BRIGANDS_CALLING",

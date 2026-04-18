@@ -92,7 +92,7 @@
     "id": "PULSER_LABS_DISRUPTOR_SUIT",
     "name": "Pulser Labs Disruptor Suit",
     "gearType": "ARMOR",
-    "gearSet": "PULSER_LABS"
+    "gearSet": "PULSER_LABS_STAT"
   },
   "metadata": {
     "originId": "game",

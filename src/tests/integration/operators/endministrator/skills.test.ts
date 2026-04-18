@@ -64,7 +64,7 @@ const ULTIMATE_JSON = require(
   '../../../../model/game-data/operators/endministrator/skills/ultimate-bombardment-sequence.json',
 );
 const ULTIMATE_ID: string = ULTIMATE_JSON.properties.id;
-const ULTIMATE_ENERGY_COST: number = ULTIMATE_JSON.clause[0].effects[0].with.value.value;
+const ULTIMATE_ENERGY_COST: number = ULTIMATE_JSON.segments[0].clause[0].effects[0].with.value.value;
 
 const REALSPACE_STASIS_ID: string = require(
   '../../../../model/game-data/operators/endministrator/talents/talent-realspace-stasis.json',
@@ -463,7 +463,9 @@ describe('D. Talent-Derived Statuses', () => {
       );
     });
 
-    // Controller: Essence Disintegration (full) on Endministrator
+    // Controller: Essence Disintegration (full) on Endministrator.
+    // Talent onTriggerClauseType=FIRST_MATCH → only the P>=2 clause fires at
+    // P2, not the base clause as well, so there's exactly one live self-buff.
     const selfBuff = result.current.allProcessedEvents.filter(
       ev => ev.columnId === ESSENCE_DISINTEGRATION_ID
         && ev.ownerEntityId === SLOT_ENDMINISTRATOR,
@@ -581,8 +583,8 @@ describe('D2. Realspace Stasis', () => {
     const statusJson = require(
       '../../../../model/game-data/operators/endministrator/talents/talent-realspace-stasis.json',
     );
-    expect(statusJson.clause).toBeDefined();
-    const fragilityEffect = statusJson.clause[0].effects.find(
+    expect(statusJson.segments[0].clause).toBeDefined();
+    const fragilityEffect = statusJson.segments[0].clause[0].effects.find(
       (e: Record<string, unknown>) => e.objectId === NounType.FRAGILITY && e.objectQualifier === AdjectiveType.PHYSICAL,
     );
     expect(fragilityEffect).toBeDefined();

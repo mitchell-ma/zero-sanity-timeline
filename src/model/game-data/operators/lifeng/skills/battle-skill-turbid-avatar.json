@@ -7,23 +7,6 @@
     "element": "PHYSICAL",
     "id": "TURBID_AVATAR"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "SKILL_POINT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 100
-            }
-          }
-        }
-      ]
-    }
-  ],
   "metadata": {
     "originId": "LIFENG",
     "icon": "skills/skill_lifeng.png",
@@ -235,7 +218,8 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "VULNERABLE",
                   "cardinalityConstraint": "LESS_THAN_EQUAL",
                   "value": {
@@ -329,8 +313,25 @@
           "unit": "SECOND"
         },
         "element": "PHYSICAL"
-      }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "SKILL_POINT",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 100
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     }
-  ],
-  "clauseType": "ALL"
+  ]
 }

@@ -7,42 +7,6 @@
     "element": "HEAT",
     "id": "RAZORCLAW_AMBUSCADE"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "ULTIMATE_ENERGY",
-          "with": {
-            "value": {
-              "operation": "MULT",
-              "left": {
-                "verb": "IS",
-                "value": 110
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "POTENTIAL",
-                "value": [
-                  1,
-                  1,
-                  1,
-                  1,
-                  0.85,
-                  0.85
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "metadata": {
     "originId": "ROSSI",
     "dataSources": [
@@ -72,7 +36,44 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "ULTIMATE_ENERGY",
+              "with": {
+                "value": {
+                  "operation": "MULT",
+                  "left": {
+                    "verb": "IS",
+                    "value": 110
+                  },
+                  "right": {
+                    "verb": "VARY_BY",
+                    "object": "POTENTIAL",
+                    "value": [
+                      1,
+                      1,
+                      1,
+                      1,
+                      0.85,
+                      0.85
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -2992,6 +2993,5 @@
         }
       ]
     }
-  ],
-  "clauseType": "ALL"
+  ]
 }

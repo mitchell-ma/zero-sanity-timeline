@@ -1,23 +1,38 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.3
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "PHYSICAL"
+          "unit": "SECOND"
+        },
+        "name": "Fine Cooking"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.3
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "PHYSICAL"
+            }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -49,6 +64,5 @@
       "ENDFIELD_WIKI"
     ],
     "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+  }
 }

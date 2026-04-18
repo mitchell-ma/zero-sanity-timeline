@@ -1,60 +1,74 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.12,
-                0.144,
-                0.168,
-                0.192,
-                0.216,
-                0.24,
-                0.264,
-                0.288,
-                0.336
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "ARTS"
+          "unit": "SECOND"
         },
+        "name": "White Night Nova"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "ARTS_INTENSITY",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                25,
-                30,
-                35,
-                40,
-                45,
-                50,
-                55,
-                60,
-                70
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.12,
+                    0.144,
+                    0.168,
+                    0.192,
+                    0.216,
+                    0.24,
+                    0.264,
+                    0.288,
+                    0.336
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ARTS"
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ARTS_INTENSITY",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    25,
+                    30,
+                    35,
+                    40,
+                    45,
+                    50,
+                    55,
+                    60,
+                    70
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ]
     }
@@ -79,7 +93,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT",
+    "eventCategoryType": "WEAPON",
     "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. After the wielder applies Combustion or Electrification, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} and Arts Intensity +{phy_spell_up:0} for {duration:0}s. Effects of the same name cannot stack."
   },
   "metadata": {

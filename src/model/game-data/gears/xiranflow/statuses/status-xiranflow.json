@@ -1,0 +1,76 @@
+{
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 25
+          },
+          "unit": "SECOND"
+        },
+        "name": "Xiranflow"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ELECTRIC",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.15
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "NATURE",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "XIRANFLOW",
+    "name": "Xiranflow",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 25
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 3
+      },
+      "interactionType": "RESET"
+    },
+    "description": "Electric and Nature DMG +15% per stack for 25s after consuming Electrification or Corrosion. Max 3 stacks.",
+    "eventType": "STATUS",
+    "eventCategoryType": "GEAR"
+  },
+  "metadata": {
+    "originId": "XIRANFLOW_STAT",
+    "dataStatus": "RECONCILED"
+  }
+}

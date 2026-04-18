@@ -174,7 +174,7 @@ describe('A. Basic Attack (Exchange Current)', () => {
     const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.object === NounType.INFLICTION)).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.INFLICTION)).toBeUndefined();
       }
     }
   });
@@ -224,7 +224,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 
   test('B2: Battle skill costs 100 SP', () => {
     const battleSkill = mockAntalJson.skills.BATTLE;
-    const effects = battleSkill.clause[0].effects;
+    const effects = battleSkill.segments[0].clause[0].effects;
     const spCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
@@ -234,7 +234,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 
   test('B3: Battle skill has SP cost effect in clause', () => {
     const battleSkill = mockAntalJson.skills.BATTLE;
-    const effects = battleSkill.clause[0].effects;
+    const effects = battleSkill.segments[0].clause[0].effects;
     const spCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.SKILL_POINT && e.verb === VerbType.CONSUME
     );
@@ -315,7 +315,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     expect(clause.conditions[0].subjectDeterminer).toBe(DeterminerType.ANY);
     expect(clause.conditions[0].subject).toBe(NounType.OPERATOR);
     expect(clause.conditions[0].verb).toBe(VerbType.APPLY);
-    expect(clause.conditions[0].object).toBe(NounType.INFLICTION);
+    expect(clause.conditions[0].objectId).toBe(NounType.INFLICTION);
 
     // Condition 2: enemy has Focus
     expect(clause.conditions[1].subject).toBe(NounType.ENEMY);
@@ -356,7 +356,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C8: Combo recovers 10 ultimate energy to self', () => {
-    const effects = mockAntalJson.skills.COMBO.clause[0].effects;
+    const effects = mockAntalJson.skills.COMBO.segments[0].clause[0].effects;
     const energy = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.RECOVER
     );
@@ -389,7 +389,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     const comboFrame = mockAntalJson.skills.COMBO.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceInfliction = effects.find(
-      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectDeterminer === DeterminerType.TRIGGER && e.object === NounType.INFLICTION
+      (e: Record<string, unknown>) => e.verb === VerbType.APPLY && e.objectDeterminer === DeterminerType.TRIGGER && e.objectId === NounType.INFLICTION
     );
     expect(sourceInfliction).toBeDefined();
     expect(sourceInfliction.to).toBe(NounType.ENEMY);
@@ -443,7 +443,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
 
 describe('D. Ultimate (Overclocked Moment)', () => {
   test('D1: Ultimate energy cost is MULT(base, VARY_BY POTENTIAL)', () => {
-    const effects = mockAntalJson.skills.ULTIMATE.clause[0].effects;
+    const effects = mockAntalJson.skills.ULTIMATE.segments[0].clause[0].effects;
     const energyCost = effects.find(
       (e: Record<string, unknown>) => e.object === NounType.ULTIMATE_ENERGY && e.verb === VerbType.CONSUME
     );
@@ -591,7 +591,7 @@ describe('H. Cooldown Interactions', () => {
 
   test('H2: Battle skill has no COOLDOWN effect in DSL', () => {
     const bs = mockAntalJson.skills.BATTLE;
-    const cooldown = (bs.clause?.[0]?.effects as Record<string, unknown>[] | undefined)?.find(
+    const cooldown = (bs.segments?.[0]?.clause?.[0]?.effects as Record<string, unknown>[] | undefined)?.find(
       (e) => e.object === NounType.COOLDOWN
     );
     expect(cooldown).toBeUndefined();
@@ -681,7 +681,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const bare = makeEv({
       uid, name: INFLICTION_COLUMNS.HEAT, ownerEntityId: ENEMY_ID,
       columnId: INFLICTION_COLUMNS.HEAT, startFrame, segments: [{ properties: { duration } }],
-      sourceEntityId: sourceSlot, sourceSkillName: sourceSkill,
+      sourceEntityId: sourceSlot, sourceSkillId: sourceSkill,
     });
     return withApplyFrame(bare, { statusId: INFLICTION_COLUMNS.HEAT, to: NounType.ENEMY });
   }
@@ -694,7 +694,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -783,7 +783,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'ELECTRIC', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'INFLICTION', objectQualifier: 'ELECTRIC', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -858,7 +858,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceEntityId === SLOT_ANTAL,
     );
     expect(antalHeat.length).toBeGreaterThan(0);
-    expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
+    expect(antalHeat[0].sourceSkillId).toBe('EMP_TEST_SITE');
   });
 
   test('H8: Re-resolve fixes comboTriggerColumnId when Focus appears mid-pipeline', () => {
@@ -891,7 +891,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceEntityId === SLOT_ANTAL,
     );
     expect(antalHeat.length).toBeGreaterThan(0);
-    expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
+    expect(antalHeat[0].sourceSkillId).toBe('EMP_TEST_SITE');
   });
 
   test('H9: Antal own battle skill does NOT self-trigger combo (no electric mirroring)', () => {
@@ -1009,7 +1009,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: FPS },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -1045,7 +1045,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       (e) => e.columnId === INFLICTION_COLUMNS.HEAT && e.sourceEntityId === SLOT_ANTAL,
     );
     expect(antalHeat.length).toBeGreaterThan(0);
-    expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
+    expect(antalHeat[0].sourceSkillId).toBe('EMP_TEST_SITE');
   });
 
   test('H13: Full timeline — Antal BS → Focus, Akekuri BS → heat, Antal combo time-stop extends Akekuri + mirrors heat', () => {
@@ -1073,7 +1073,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: akekuriBattleDur },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS),
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });
@@ -1130,7 +1130,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
         properties: { duration: Math.round(1.33 * FPS) },
         frames: [{
           offsetFrame: Math.round(0.67 * FPS), // Heat infliction at frame 80
-          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
+          clauses: [{ conditions: [], effects: [{ type: 'dsl' as const, dslEffect: { verb: 'APPLY', object: 'STATUS', objectId: 'INFLICTION', objectQualifier: 'HEAT', to: 'ENEMY', with: { stacks: { verb: 'IS', value: 1 } } } as unknown as Effect }] }],
         }],
       }],
     });

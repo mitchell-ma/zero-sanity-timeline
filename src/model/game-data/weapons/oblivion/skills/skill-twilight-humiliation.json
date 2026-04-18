@@ -1,39 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "CRITICAL_DAMAGE",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.05,
-                0.06,
-                0.07,
-                0.08,
-                0.09,
-                0.1,
-                0.11,
-                0.12,
-                0.14
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -56,11 +21,60 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Twilight: Humiliation"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "CRITICAL_DAMAGE",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.05,
+                    0.06,
+                    0.07,
+                    0.08,
+                    0.09,
+                    0.1,
+                    0.11,
+                    0.12,
+                    0.14
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Twilight: Humiliation",
     "description": "Critical Rate +{crit_up:0.0%}. When the wielder casts an ultimate, the wielder gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. When the wielder casts a combo skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
     "id": "TWILIGHT_HUMILIATION",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "OBLIVION",

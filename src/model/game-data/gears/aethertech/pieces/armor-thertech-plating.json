@@ -91,9 +91,9 @@
   ],
   "properties": {
     "id": "THERTECH_PLATING",
-    "name": "Æthertech Plating",
+    "name": "\u00c6thertech Plating",
     "gearType": "ARMOR",
-    "gearSet": "AETHERTECH"
+    "gearSet": "AETHERTECH_STAT"
   },
   "metadata": {
     "originId": "game",

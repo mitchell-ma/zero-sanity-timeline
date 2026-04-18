@@ -1,24 +1,38 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        },
+        "name": "Slow"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "SLOW",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.3
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "SLOW",
+              "to": "ENEMY",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.3
+                }
+              }
             }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
-  "clauseType": "ALL",
   "properties": {
     "id": "SLOW",
     "name": "Slow",

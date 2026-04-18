@@ -1,4 +1,50 @@
 {
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Forged"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "STRENGTH",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "ATTRIBUTE_INCREASE_LEVEL",
+                  "value": [
+                    0,
+                    10,
+                    25,
+                    40,
+                    60
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
   "properties": {
     "id": "FORGED",
     "name": "Forged",
@@ -9,37 +55,5 @@
   "metadata": {
     "originId": "game",
     "dataStatus": "RECONCILED"
-  },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "STRENGTH",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "ATTRIBUTE_INCREASE_LEVEL",
-              "value": [
-                0,
-                10,
-                25,
-                40,
-                60
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
-  "clauseType": "ALL"
+  }
 }

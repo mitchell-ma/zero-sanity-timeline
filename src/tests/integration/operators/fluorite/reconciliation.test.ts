@@ -875,7 +875,7 @@ describe('K. Regression tests', () => {
     // Should have exactly 1: from IE_ULT detonation (natural explosion suppressed)
     expect(natureAfter).toHaveLength(1);
     // The infliction should be from IE_ULT, not from the original IE explosion
-    expect(natureAfter[0].sourceSkillName).toBe(IMPROVISED_EXPLOSIVE_ULT_ID);
+    expect(natureAfter[0].sourceSkillId).toBe(IMPROVISED_EXPLOSIVE_ULT_ID);
   });
 
   it('K4: IE_ULT status has correct properties (2s duration, nature infliction, no SLOW)', () => {
@@ -895,7 +895,7 @@ describe('K. Regression tests', () => {
     // Creates nature infliction (from frame 0 effect)
     const natureFromUlt = result.current.allProcessedEvents.filter(
       (ev) => ev.columnId === INFLICTION_COLUMNS.NATURE && ev.ownerEntityId === ENEMY_ID
-        && ev.sourceSkillName === IMPROVISED_EXPLOSIVE_ULT_ID,
+        && ev.sourceSkillId === IMPROVISED_EXPLOSIVE_ULT_ID,
     );
     expect(natureFromUlt).toHaveLength(1);
 

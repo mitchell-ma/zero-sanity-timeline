@@ -128,18 +128,33 @@ function buildStatusMicroColumn(
   // DSL form. Freeform placements default `isForced=1` so the gate on
   // Vulnerable stacks is bypassed — user can unset to require Vulnerable.
   const isPhysicalStatus = Object.values(PHYSICAL_STATUS_COLUMNS).includes(statusId as typeof PHYSICAL_STATUS_COLUMNS[keyof typeof PHYSICAL_STATUS_COLUMNS]);
+  // Reactions (COMBUSTION / SOLIDIFICATION / CORROSION / ELECTRIFICATION /
+  // SHATTER) route through `doApply`'s canonical APPLY STATUS REACTION branch
+  // via `{ objectId: REACTION, objectQualifier: <X> }`. Freeform placements
+  // carry `with.stacks: 1` (one application) and `with.statusLevel: 1` (default
+  // level I). The context-menu statusLevel picker swaps `with.statusLevel` to
+  // the user's selection before the event is created.
+  const isReaction = cfg?.eventCategoryType === NounType.REACTION;
   const applyEffect: Partial<Effect> = isPhysicalStatus
     ? {
       verb: VerbType.APPLY, object: NounType.STATUS,
       objectId: AdjectiveType.PHYSICAL, objectQualifier: statusId as AdjectiveType,
       to: target, ...(toDeterminer ? { toDeterminer: toDeterminer as DeterminerType } : {}),
       with: { isForced: { verb: VerbType.IS, value: 1 } },
-      inheritDuration: true,
+    }
+    : isReaction
+    ? {
+      verb: VerbType.APPLY, object: NounType.STATUS,
+      objectId: NounType.REACTION, objectQualifier: statusId as NounType,
+      to: target, ...(toDeterminer ? { toDeterminer: toDeterminer as DeterminerType } : {}),
+      with: {
+        stacks: { verb: VerbType.IS, value: 1 },
+        statusLevel: { verb: VerbType.IS, value: 1 },
+      },
     }
     : {
       verb: VerbType.APPLY, object: NounType.STATUS, objectId: statusId,
       to: target, ...(toDeterminer ? { toDeterminer: toDeterminer as DeterminerType } : {}),
-      inheritDuration: true,
     };
 
   // Every freeform-placeable non-skill column uses a synthetic segment with

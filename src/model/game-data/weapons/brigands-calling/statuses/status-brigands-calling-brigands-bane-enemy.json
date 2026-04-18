@@ -1,35 +1,49 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
+          },
+          "unit": "SECOND"
+        },
+        "name": "Brigand's Bane (Enemy)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "ARTS_DAMAGE_TAKEN",
-          "toDeterminer": "THIS",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.06,
-                0.072,
-                0.084,
-                0.096,
-                0.108,
-                0.12,
-                0.132,
-                0.144,
-                0.168
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "SOURCE"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ARTS_DAMAGE_TAKEN",
+              "toDeterminer": "THIS",
+              "to": "ENEMY",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.06,
+                    0.072,
+                    0.084,
+                    0.096,
+                    0.108,
+                    0.12,
+                    0.132,
+                    0.144,
+                    0.168
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "SOURCE"
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ]
     }
@@ -54,7 +68,7 @@
     },
     "to": "ENEMY",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT"
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "BRIGANDS_CALLING",

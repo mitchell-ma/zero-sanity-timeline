@@ -1,0 +1,104 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "SKILL",
+          "objectId": "BATTLE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 5
+          },
+          "unit": "SECOND"
+        },
+        "name": "Force of Nature (T1)"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "AMP",
+              "objectQualifier": "ELECTRIC",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.09,
+                    0.18
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
+  "properties": {
+    "id": "FORCE_OF_NATURE_TALENT",
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
+    "name": "Force of Nature (T1)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "element": "ELECTRIC",
+    "eventType": "STATUS",
+    "eventCategoryType": "TALENT",
+    "description": "Battle skill Mantra of Sundering improved: Casting the battle skill grants Zhuang Fangyi 9%/18% (L1/L2) Electric Amp for 5s. Scoring hits with the battle skill's Thunder Strike increases this effect by +1%/+2% per hit. Every casting of the battle skill resets this Electric Amp effect."
+  },
+  "metadata": {
+    "originId": "ZHUANG_FANGYI",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "RECONCILED"
+  }
+}

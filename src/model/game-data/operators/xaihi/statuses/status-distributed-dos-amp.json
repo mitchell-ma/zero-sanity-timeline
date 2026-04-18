@@ -1,58 +1,72 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 25
+          },
+          "unit": "SECOND"
+        },
+        "name": "Distributed DoS (Amp)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "AMP",
-          "objectQualifier": "ARTS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "operation": "ADD",
-              "left": {
-                "verb": "VARY_BY",
-                "object": "SKILL_LEVEL",
-                "value": [
-                  0.09,
-                  0.09,
-                  0.09,
-                  0.09,
-                  0.09,
-                  0.11,
-                  0.11,
-                  0.11,
-                  0.13,
-                  0.13,
-                  0.13,
-                  0.15
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "POTENTIAL",
-                "value": [
-                  0,
-                  0.05,
-                  0.05,
-                  0.05,
-                  0.05,
-                  0.05
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "AMP",
+              "objectQualifier": "ARTS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "operation": "ADD",
+                  "left": {
+                    "verb": "VARY_BY",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.09,
+                      0.09,
+                      0.09,
+                      0.09,
+                      0.09,
+                      0.11,
+                      0.11,
+                      0.11,
+                      0.13,
+                      0.13,
+                      0.13,
+                      0.15
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  },
+                  "right": {
+                    "verb": "VARY_BY",
+                    "object": "POTENTIAL",
+                    "value": [
+                      0,
+                      0.05,
+                      0.05,
+                      0.05,
+                      0.05,
+                      0.05
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  }
                 }
               }
             }
-          }
+          ]
         }
       ]
     }

@@ -69,7 +69,7 @@
     "id": "LYNX_AEGIS_INJECTOR",
     "name": "LYNX Aegis Injector",
     "gearType": "KIT",
-    "gearSet": "LYNX"
+    "gearSet": "LYNX_STAT"
   },
   "metadata": {
     "originId": "game",

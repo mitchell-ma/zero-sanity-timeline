@@ -55,17 +55,6 @@ describe('resolveColumnId (single-column resolution)', () => {
     });
   });
 
-  describe('legacy direct INFLICTION form', () => {
-    test('INFLICTION + element → element infliction column', () => {
-      expect(resolveColumnId(NounType.INFLICTION, undefined, ElementType.HEAT))
-        .toBe(ELEMENT_TO_INFLICTION_COLUMN[ElementType.HEAT]);
-    });
-
-    test('INFLICTION without qualifier → undefined', () => {
-      expect(resolveColumnId(NounType.INFLICTION)).toBeUndefined();
-    });
-  });
-
   describe('fallthrough', () => {
     test('unknown object + objectId → objectId passthrough', () => {
       expect(resolveColumnId('SOMETHING_ELSE', 'fallthrough-id')).toBe('fallthrough-id');
@@ -108,12 +97,7 @@ describe('resolveColumnIds (multi-column resolution)', () => {
     expect(cols).toEqual([PhysicalStatusType.LIFT]);
   });
 
-  test('direct INFLICTION form (no STATUS wrapper) + element → single element column', () => {
-    const cols = resolveColumnIds(NounType.INFLICTION, undefined, ElementType.HEAT);
-    expect(cols).toEqual([ELEMENT_TO_INFLICTION_COLUMN[ElementType.HEAT]]);
-  });
-
-  test('non-STATUS object without INFLICTION form → empty array', () => {
+  test('non-STATUS object → empty array', () => {
     expect(resolveColumnIds(NounType.STAT, 'ATK')).toEqual([]);
   });
 

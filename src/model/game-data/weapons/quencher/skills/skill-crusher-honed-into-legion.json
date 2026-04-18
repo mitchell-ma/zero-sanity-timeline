@@ -25,7 +25,7 @@
     "name": "Crusher: Honed into Legion",
     "description": "When the wielder performs a Final Strike on the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
     "id": "CRUSHER_HONED_INTO_LEGION",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "QUENCHER",

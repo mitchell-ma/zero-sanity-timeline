@@ -21,14 +21,14 @@ import type { LoadoutProperties } from '../../view/InformationPane';
 import type { StatusEventDef } from './eventQueueTypes';
 import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { ValueNode } from '../../dsl/semantics';
-import { VerbType, NounType, ObjectType, DeterminerType, AdjectiveType, THRESHOLD_MAX } from '../../dsl/semantics';
-import { ELEMENT_TO_INFLICTION_COLUMN as ELEMENT_TO_INFLICTION } from './columnResolution';
+import { VerbType, NounType, ObjectType, DeterminerType, THRESHOLD_MAX } from '../../dsl/semantics';
+import { ELEMENT_TO_INFLICTION_COLUMN as ELEMENT_TO_INFLICTION, resolveColumnCategories } from './columnResolution';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
-import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills, getAllOperatorStatuses } from '../gameDataStore';
+import { getAllOperatorIds, getSkillIds, getEnabledStatusEvents, getOperatorSkills } from '../gameDataStore';
 import { getWeaponTriggerDefs, getWeaponStatTriggerDefs, getGearTriggerDefs, getGearStatTriggerDefs, getConsumablePassiveDef, getTacticalTriggerDef } from '../gameDataStore';
 import { getStatusDef } from './configCache';
 import type { NormalizedEffectDef } from '../gameDataStore';
-import { ENEMY_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { ENEMY_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { TEAM_ID } from '../slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../../utils/timeline';
 import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
@@ -223,15 +223,17 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
     return `${VerbType.PERFORM}:${col}`;
   }
   if (verb === VerbType.APPLY || verb === VerbType.CONSUME || verb === VerbType.RECEIVE) {
+    // STATUS INFLICTION with element qualifier → resolve to infliction column
+    if (cond.object === NounType.STATUS && cond.objectId === NounType.INFLICTION) {
+      const inflElement = cond.element ?? cond.objectQualifier;
+      if (inflElement) {
+        const inflCol = ELEMENT_TO_INFLICTION[inflElement];
+        if (inflCol) return `${verb}:${inflCol}`;
+      }
+    }
     if (cond.objectId) {
       const col = cond.objectId;
       return `${verb}:${col}`;
-    }
-    // INFLICTION with element qualifier → resolve to infliction column
-    const inflElement = cond.element ?? cond.objectQualifier;
-    if (cond.object === NounType.INFLICTION && inflElement) {
-      const inflCol = ELEMENT_TO_INFLICTION[inflElement];
-      if (inflCol) return `${verb}:${inflCol}`;
     }
     return `${verb}:${cond.object ?? '*'}`;
   }
@@ -253,22 +255,6 @@ function resolveTriggerKey(verb: string, cond: Predicate): string {
   return `${verb}:${cond.object}`;
 }
 
-/** Resolve generic category targets that a specific column ID belongs to. */
-function resolveCategories(columnId: string): string[] {
-  const categories: string[] = [];
-  const reactionColumns = new Set<string>(Object.values(REACTION_COLUMNS));
-  const inflictionColumns = new Set<string>(Object.values(INFLICTION_COLUMNS));
-  if (reactionColumns.has(columnId)) categories.push(NounType.REACTION);
-  if (inflictionColumns.has(columnId)) categories.push(NounType.INFLICTION);
-  if (PHYSICAL_STATUS_COLUMN_IDS.has(columnId)) {
-    categories.push(NounType.STATUS);
-    // PHYSICAL as category — matches triggers with objectId: 'PHYSICAL' (e.g. APPLY STATUS PHYSICAL)
-    categories.push(AdjectiveType.PHYSICAL);
-  } else if (!reactionColumns.has(columnId) && !inflictionColumns.has(columnId)) {
-    categories.push(NounType.STATUS);
-  }
-  return categories;
-}
 
 // ── TriggerIndex ────────────────────────────────────────────────────────────
 
@@ -303,7 +289,7 @@ export class TriggerIndex {
   matchEvent(verb: string, columnId: string): readonly TriggerDefEntry[] {
     const results: TriggerDefEntry[] = [];
     // Resolve category for the column ID (e.g. REACTION_COLUMNS.COMBUSTION → REACTION)
-    const categories = resolveCategories(columnId);
+    const categories = resolveColumnCategories(columnId);
     this.index.forEach((entries, key) => {
       const [keyVerb, target] = key.split(':');
       if (keyVerb !== verb) return;
@@ -456,80 +442,7 @@ export class TriggerIndex {
       }
     }
 
-    // ── Register lifecycle entries for generic/unowned statuses ──────────
-    // Generic statuses (SLOW, stagger-node, stagger-full, etc.) are not
-    // attached to any operator slot, so they are never passed to
-    // processDefsForSlot. Scan all status defs and register lifecycle entries
-    // for any status with clause effects that isn't already in the index.
-    for (const status of getAllOperatorStatuses()) {
-      if (!status.id || idx.lifecycleIndex.has(status.id)) continue;
-      const def = getStatusDef(status.id);
-      if (def) idx.registerLifecycleFromDef(def, '');
-    }
-
     return idx;
-  }
-
-  /**
-   * Register a lifecycle entry for a status def that wasn't processed through
-   * processDefsForSlot (e.g. generic/freeform statuses with no operator owner).
-   *
-   * Passive definition: a def is passive only when it has no triggers managing its
-   * lifecycle (no onTriggerClause with APPLY/CONSUME EVENT THIS) AND has infinite/
-   * missing duration. Passive talents/potentials apply their clause via a
-   * presence event created at frame 0, so skip lifecycle registration for those.
-   * Triggered talents/potentials (even with 99999s duration) need lifecycle
-   * registration because their clauses only apply while actively APPLYed.
-   */
-  private registerLifecycleFromDef(def: StatusEventDef, operatorId: string) {
-    if (!def.clause || !Array.isArray(def.clause)) return;
-    const ect = def.properties.eventCategoryType ?? def.properties.type;
-    const isTalentOrPotential = ect === NounType.TALENT || ect === NounType.POTENTIAL;
-    const talentDur = def.properties.duration;
-    const isInfiniteDuration = !talentDur || getDurationFrames(talentDur) >= TOTAL_FRAMES;
-    const hasSelfApplyConsume = (def.onTriggerClause ?? []).some(
-      (tc: { effects?: { verb?: string; object?: string }[] }) => tc.effects?.some(
-        e => (e.verb === VerbType.APPLY || e.verb === VerbType.CONSUME) && e.object === NounType.EVENT,
-      ),
-    );
-    const isPassive = isTalentOrPotential && isInfiniteDuration && !hasSelfApplyConsume;
-    if (isPassive) return;
-
-    const maxStacks = def.properties.stacks?.limit
-      ? getMaxStacks(def.properties.stacks.limit)
-      : 1;
-    const clauseGroups: LifecycleClauseGroup[] = [];
-    for (const c of def.clause) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const clause = c as any;
-      const conditions = clause.conditions ?? [];
-      const effects = clause.effects ?? [];
-      if (effects.length === 0) continue;
-      const haveConds = conditions.filter((p: { verb?: string }) => p.verb === VerbType.HAVE);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const resolvedConds = haveConds.map((cond: any) => {
-        if (cond.object === NounType.STACKS) {
-          return {
-            ...cond,
-            object: NounType.STATUS,
-            objectId: def.properties.id,
-            value: cond.value === THRESHOLD_MAX ? { verb: VerbType.IS, value: maxStacks } : cond.value,
-          };
-        }
-        return cond;
-      });
-      clauseGroups.push({ haveConditions: resolvedConds, effects });
-    }
-    if (clauseGroups.length > 0) {
-      this.lifecycleIndex.set(def.properties.id, {
-        def: def as StatusEventDef,
-        operatorId,
-        clauseGroups,
-        ...(def.clauseType ? { clauseType: def.clauseType } : {}),
-        fullDef: def,
-        maxStacks,
-      });
-    }
   }
 
   // ── Internal ────────────────────────────────────────────────────────────
@@ -556,12 +469,11 @@ export class TriggerIndex {
       // passives are handled by the isEquip block below.
       const defEventIdType = def.properties.eventCategoryType ?? def.properties.type;
       if (defEventIdType === NounType.TALENT || defEventIdType === NounType.POTENTIAL) {
-        // Description-only defs (no trigger, no clause, no segments) are metadata-only — skip.
+        // Description-only defs (no trigger, no segments) are metadata-only — skip.
         // Their effects are baked into skill frames; the def is just a label.
         const hasTrigger = def.onTriggerClause && def.onTriggerClause.length > 0;
-        const hasClause = def.clause && def.clause.length > 0;
         const hasSegments = def.segments && def.segments.length > 0;
-        if (!hasTrigger && !hasClause && !hasSegments) continue;
+        if (!hasTrigger && !hasSegments) continue;
 
         const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
@@ -620,7 +532,7 @@ export class TriggerIndex {
             startFrame: 0,
             segments: durationSegment(talentDurationFrames),
             sourceEntityId: operatorId,
-            sourceSkillName: def.properties.id,
+            sourceSkillId: def.properties.id,
           };
 
           const existing = this.talentsBySlot.get(slotId) ?? [];
@@ -632,11 +544,14 @@ export class TriggerIndex {
 
       // ── Non-talent equip defs with passive clauses ──────────────
       // Weapons, gear, consumables, and tacticals can have passive APPLY STAT
-      // clauses. Register these for passive stat interpretation at frame 0.
-      // Consumables also get a presence event (they're active-at-start buffs).
+      // clauses (in segments[i].clause). Register these for passive stat
+      // interpretation at frame 0. Consumables also get a presence event
+      // (they're active-at-start buffs).
       const ect = def.properties.eventCategoryType ?? def.properties.type;
-      if (isEquip && ect !== NounType.TALENT && ect !== NounType.POTENTIAL && def.clause && Array.isArray(def.clause)) {
-        const hasPassiveStats = (def.clause as { conditions?: unknown[]; effects?: { verb?: string; object?: string }[] }[])
+      if (isEquip && ect !== NounType.TALENT && ect !== NounType.POTENTIAL && Array.isArray(def.segments)) {
+        const flatClauses = (def.segments as { clause?: unknown[] }[])
+          .flatMap(seg => Array.isArray(seg.clause) ? seg.clause : []) as { conditions?: unknown[]; effects?: { verb?: string; object?: string }[] }[];
+        const hasPassiveStats = flatClauses
           .some(c => (!c.conditions || c.conditions.length === 0) && c.effects?.some(e => e.verb === VerbType.APPLY && e.object === NounType.STAT));
         if (hasPassiveStats) {
           // Consumables are active-at-start buffs — create a presence event like talents.
@@ -653,7 +568,7 @@ export class TriggerIndex {
               startFrame: 0,
               segments: durationSegment(dur),
               sourceEntityId: operatorId,
-              sourceSkillName: def.properties.id,
+              sourceSkillId: def.properties.id,
             };
           }
           const existing = this.talentsBySlot.get(slotId) ?? [];
@@ -662,16 +577,15 @@ export class TriggerIndex {
         }
       }
 
-      // ── Lifecycle clauses (all clause effects registered for trigger dispatch) ──
-      this.registerLifecycleFromDef(def, operatorId);
-
       // ── onTriggerClause defs ─────────────────────────────────────────
       if (!def.onTriggerClause || def.onTriggerClause.length === 0) continue;
 
       const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
-      const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
+      const hasSegmentClauseEffects = Array.isArray(def.segments)
+        && (def.segments as { clause?: { effects?: unknown[] }[] }[])
+          .some(seg => Array.isArray(seg.clause) && seg.clause.some(c => c.effects && c.effects.length > 0));
       const ectForSkip = def.properties.eventCategoryType ?? def.properties.type;
-      if (!hasEffects && !hasClauseEffects && ectForSkip !== NounType.TALENT && ectForSkip !== NounType.POTENTIAL) continue;
+      if (!hasEffects && !hasSegmentClauseEffects && ectForSkip !== NounType.TALENT && ectForSkip !== NounType.POTENTIAL) continue;
 
       for (let ci = 0; ci < def.onTriggerClause.length; ci++) {
         const clause = def.onTriggerClause[ci];

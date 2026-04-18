@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "id": "SUNDERBLADE",
+    "name": "Sunderblade",
+    "target": "OPERATOR",
+    "targetDeterminer": "THIS",
+    "element": "ELECTRIC",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 9
+      },
+      "interactionType": "RESET"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 36
+      },
+      "unit": "SECOND"
+    },
+    "eventType": "STATUS",
+    "eventCategoryType": "SKILL_STATUS",
+    "description": "Created by battle skill Mantra of Sundering. Each Sunderblade is channeled into a Thunder Strike during the battle skill. Max stacks: 9. Duration: 36s."
+  },
+  "metadata": {
+    "originId": "MANTRA_OF_SUNDERING",
+    "dataStatus": "RECONCILED"
+  }
+}

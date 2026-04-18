@@ -92,7 +92,7 @@
     "id": "MORDVOLT_INSULATION_GLOVES_T1",
     "name": "Mordvolt Insulation Gloves T1",
     "gearType": "GLOVES",
-    "gearSet": "MORDVOLT_INSULATION"
+    "gearSet": "MORDVOLT_INSULATION_STAT"
   },
   "metadata": {
     "originId": "game",

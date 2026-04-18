@@ -219,7 +219,7 @@ describe('C. Battle Skill SP return', () => {
 describe('D. Battle Skill UE recovery', () => {
   it('D1: BS clause declares RECOVER 16 UE to THIS OPERATOR', () => {
     // Verify JSON: RECOVER ULTIMATE_ENERGY to THIS OPERATOR with IS 16
-    const ueEffect = BATTLE_SKILL_JSON.clause[0].effects.find(
+    const ueEffect = BATTLE_SKILL_JSON.segments[0].clause[0].effects.find(
       (e: { verb: string; object: string }) => e.verb === VerbType.RECOVER && e.object === NounType.ULTIMATE_ENERGY,
     );
     expect(ueEffect).toBeDefined();
@@ -328,7 +328,7 @@ describe('F. P1 gated effects on Hypothermic Perfusion', () => {
   });
 
   it('F3: Hypothermic Perfusion passive gated by SOURCE OPERATOR HAVE POTENTIAL >= 1, applies 20% DAMAGE_BONUS', () => {
-    const passiveClause = PERFUSION_JSON.clause[0];
+    const passiveClause = PERFUSION_JSON.segments[0].clause[0];
     expect(passiveClause.conditions[0].subjectDeterminer).toBe(DeterminerType.SOURCE);
     expect(passiveClause.conditions[0].verb).toBe(VerbType.HAVE);
     expect(passiveClause.conditions[0].object).toBe(NounType.POTENTIAL);
@@ -386,7 +386,7 @@ describe('H. Hypothermic Perfusion (Mirage) — config verification', () => {
     expect(dealDmg.objectQualifier).toBe('CRYO');
 
     const applyInfliction = effects.find(
-      (e: { verb: string; object: string }) => e.verb === VerbType.APPLY && e.object === NounType.INFLICTION,
+      (e: { verb: string; object: string; objectId?: string }) => e.verb === VerbType.APPLY && e.objectId === NounType.INFLICTION,
     );
     expect(applyInfliction).toBeDefined();
     expect(applyInfliction.objectQualifier).toBe('CRYO');

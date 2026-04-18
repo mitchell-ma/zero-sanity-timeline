@@ -485,10 +485,9 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
       source: params.resistanceMultiplier < 0.999 ? 'Enemy resists this element'
         : params.resistanceMultiplier > 1.001 ? 'Enemy weak to this element'
         : 'No elemental resistance',
-      subEntries: sub && (sub.corrosionReduction > 0 || sub.ignoredResistance > 0) ? [
+      subEntries: sub?.allResistanceSources ? [
         makeSubEntry('Base Resistance', sub.baseResistance, 'Enemy elemental resistance', 'multiplier'),
-        ...(sub.corrosionReduction > 0 ? [makeSubEntry('Corrosion', sub.corrosionReduction, 'Resistance reduction from Corrosion', 'flat')] : []),
-        ...(sub.ignoredResistance > 0 ? [makeSubEntry('Ignored Resistance', sub.ignoredResistance, 'Resistance ignored (Scorching Heart, etc.)', 'flat')] : []),
+        ...buildPerElementSubEntries(sub.allResistanceSources, sub.element),
       ] : undefined,
     },
     ...((params.specialMultiplier ?? 1) !== 1 ? [{

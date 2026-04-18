@@ -6,42 +6,6 @@
     "eventCategoryType": "ULTIMATE",
     "id": "STACK_OVERFLOW"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "ULTIMATE_ENERGY",
-          "with": {
-            "value": {
-              "operation": "MULT",
-              "left": {
-                "verb": "IS",
-                "value": 80
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "POTENTIAL",
-                "value": [
-                  1,
-                  1,
-                  0.9,
-                  0.9,
-                  0.9,
-                  0.9
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "segments": [
     {
       "metadata": {
@@ -62,7 +26,44 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "ULTIMATE_ENERGY",
+              "with": {
+                "value": {
+                  "operation": "MULT",
+                  "left": {
+                    "verb": "IS",
+                    "value": 80
+                  },
+                  "right": {
+                    "verb": "VARY_BY",
+                    "object": "POTENTIAL",
+                    "value": [
+                      1,
+                      1,
+                      0.9,
+                      0.9,
+                      0.9,
+                      0.9
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -349,7 +350,8 @@
               "effects": [
                 {
                   "verb": "CONSUME",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "CRYO",
                   "fromDeterminer": "ALL",
                   "from": "OPERATOR",
@@ -379,6 +381,5 @@
     "originId": "XAIHI",
     "icon": "skills/ult_xaihi.png",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

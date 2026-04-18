@@ -92,7 +92,7 @@
     "id": "FRONTIERS_EXTRA_O2_TUBE",
     "name": "Frontiers Extra O2 Tube",
     "gearType": "KIT",
-    "gearSet": "FRONTIERS"
+    "gearSet": "FRONTIERS_STAT"
   },
   "metadata": {
     "originId": "game",

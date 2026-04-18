@@ -336,13 +336,14 @@ export function createEvent(
     timeDependency?: import('../../consts/enums').TimeDependency;
     skillPointCost?: number;
     sourceEntityId?: string;
-    sourceSkillName?: string;
+    sourceSkillId?: string;
     enhancementType?: import('../../consts/enums').EnhancementType;
     stacks?: Record<string, unknown>;
     segmentOrigin?: number[];
     suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
     parameterValues?: Record<string, number>;
     susceptibility?: Partial<Record<import('../../consts/enums').ElementType, number>>;
+    statusLevel?: number;
   } | null,
   interactionMode?: import('../../consts/enums').InteractionModeType,
 ): TimelineEvent {
@@ -378,13 +379,14 @@ export function createEvent(
     ...(defaultSkill?.timeDependency ? { timeDependency: defaultSkill.timeDependency } : {}),
     ...(defaultSkill?.skillPointCost != null ? { skillPointCost: defaultSkill.skillPointCost } : {}),
     sourceEntityId: defaultSkill?.sourceEntityId ?? ownerEntityId,
-    sourceSkillName: defaultSkill?.sourceSkillName ?? 'Freeform',
+    sourceSkillId: defaultSkill?.sourceSkillId ?? 'Freeform',
     ...(defaultSkill?.enhancementType ? { enhancementType: defaultSkill.enhancementType } : {}),
     ...(interactionMode ? { creationInteractionMode: interactionMode } : {}),
     ...(defaultSkill?.segmentOrigin ? { segmentOrigin: defaultSkill.segmentOrigin } : {}),
     ...(defaultSkill?.suppliedParameters ? { suppliedParameters: defaultSkill.suppliedParameters } : {}),
     ...(defaultSkill?.parameterValues ? { parameterValues: defaultSkill.parameterValues } : {}),
     ...(defaultSkill?.susceptibility ? { susceptibility: defaultSkill.susceptibility } : {}),
+    ...(defaultSkill?.statusLevel != null ? { statusLevel: defaultSkill.statusLevel as import('../../consts/types').StatusLevel } : {}),
   };
 }
 

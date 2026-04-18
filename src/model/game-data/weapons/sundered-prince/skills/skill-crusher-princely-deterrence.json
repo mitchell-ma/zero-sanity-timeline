@@ -25,7 +25,7 @@
     "name": "Crusher: Princely Deterrence",
     "description": "When the wielder performs a Final Strike on the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. If the wielder is also the controlled operator, double the ATK increase gained and buff the Final Strike so that it deals Stagger +{poise_up:0.0%} to the enemy. Effects of the same name cannot stack.",
     "id": "CRUSHER_PRINCELY_DETERRENCE",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "SUNDERED_PRINCE",

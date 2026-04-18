@@ -1,35 +1,49 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Infliction: Lone and Distant Sail"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "CRITICAL_RATE",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.035,
-                0.042,
-                0.049,
-                0.056,
-                0.063,
-                0.07,
-                0.077,
-                0.084,
-                0.098
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "CRITICAL_RATE",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.035,
+                    0.042,
+                    0.049,
+                    0.056,
+                    0.063,
+                    0.07,
+                    0.077,
+                    0.084,
+                    0.098
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ]
     }
@@ -38,7 +52,7 @@
     "name": "Infliction: Lone and Distant Sail",
     "description": "Critical Rate +{crit_up:0.0%}. When Solidification or Corrosion is applied to enemies, the wielder gains Cryo DMG Dealt and Nature DMG Dealt +{dmg_up:0.0%}, and Critical Rate +{crit_up2:0.0%} for {duration:0}s. If this effect is triggered by the wielder, double the increase gained. Effects of the same name cannot stack.",
     "id": "INFLICTION_LONE_AND_DISTANT_SAIL",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "NAVIGATOR",

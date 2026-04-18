@@ -172,7 +172,7 @@ export function skillToFriendly(json: GameDataJson, skillId?: string): CustomSki
   const durationSeconds = dur ? extractDurationSeconds(dur) : 0;
 
   // Extract resource interactions from clause effects
-  const clauseArr = (json.clause ?? []) as { conditions?: unknown[]; effects?: GameDataJson[] }[];
+  const clauseArr = ((json.segments ?? []) as GameDataJson[]).flatMap(s => (s.clause ?? []) as { conditions?: unknown[]; effects?: GameDataJson[] }[]);
   const resourceInteractions: CustomSkillResourceInteraction[] = [];
   for (const clause of clauseArr) {
     for (const ef of (clause.effects ?? [])) {
@@ -241,8 +241,8 @@ export function skillFromFriendly(skill: CustomSkill, operatorId?: string): Game
     with: { value: isNode(r.value) },
   }));
 
-  // Build segments
-  const segments = (skill.segments ?? []).map(seg => ({
+  // Build segments — place resource-interaction clause on the first segment
+  const rawSegments = (skill.segments ?? []).map(seg => ({
     metadata: { eventComponentType: 'SEGMENT' },
     properties: {
       ...(seg.name ? { name: seg.name } : {}),
@@ -250,10 +250,19 @@ export function skillFromFriendly(skill: CustomSkill, operatorId?: string): Game
     },
     frames: [],
   }));
+  const segments = effects.length > 0
+    ? (rawSegments.length > 0
+      ? rawSegments.map((seg, i) => i === 0 ? { ...seg, clause: [{ conditions: [], effects }] } : seg)
+      : [{
+        metadata: { eventComponentType: 'SEGMENT' },
+        properties: { duration: dslDuration(skill.durationSeconds ?? 0) },
+        frames: [],
+        clause: [{ conditions: [], effects }],
+      }])
+    : rawSegments;
 
   return {
     ...(segments.length > 0 ? { segments } : {}),
-    ...(effects.length > 0 ? { clause: [{ conditions: [], effects }] } : {}),
     properties: {
       id,
       name: skill.name,
@@ -362,7 +371,7 @@ export function weaponToFriendly(json: GameDataJson, weaponSkills?: GameDataJson
   if (weaponStatuses && weaponStatuses.length > 0) {
     for (const statusJson of weaponStatuses) {
       const statusProps = (statusJson.properties ?? {}) as GameDataJson;
-      const statusClause = (statusJson.clause ?? []) as { conditions?: unknown[]; effects?: GameDataJson[] }[];
+      const statusClause = ((statusJson.segments ?? []) as GameDataJson[]).flatMap(s => (s.clause ?? []) as { conditions?: unknown[]; effects?: GameDataJson[] }[]);
 
       const buffs = statusClause.flatMap(c => (c.effects ?? []))
         .filter(e => e.verb === VerbType.APPLY && (e.with as GameDataJson)?.value)
@@ -461,21 +470,29 @@ export function weaponNamedEffectsToStatuses(weapon: CustomWeapon): GameDataJson
 
     const statusId = `${originId}_${toGameDataId(ne.name)}`;
 
+    const namedEffects = ne.buffs.map(b => ({
+      verb: VerbType.APPLY,
+      object: NounType.STAT,
+      objectId: b.stat,
+      toDeterminer: DeterminerType.THIS,
+      to: NounType.OPERATOR,
+      with: {
+        value: b.perStack
+          ? { verb: VerbType.VARY_BY, object: NounType.STATUS_LEVEL, valueMin: b.valueMin, valueMax: b.valueMax }
+          : isNode(b.valueMax || b.valueMin),
+      },
+    }));
+
     statuses.push({
-      clause: [{
-        conditions: [],
-        effects: ne.buffs.map(b => ({
-          verb: VerbType.APPLY,
-          object: NounType.STAT,
-          objectId: b.stat,
-          toDeterminer: DeterminerType.THIS,
-          to: NounType.OPERATOR,
-          with: {
-            value: b.perStack
-              ? { verb: VerbType.VARY_BY, object: NounType.STATUS_LEVEL, valueMin: b.valueMin, valueMax: b.valueMax }
-              : isNode(b.valueMax || b.valueMin),
-          },
-        })),
+      segments: [{
+        properties: {
+          duration: dslDuration(ne.durationSeconds),
+          name: ne.name,
+        },
+        clause: [{
+          conditions: [],
+          effects: namedEffects,
+        }],
       }],
       properties: {
         id: statusId,
@@ -488,7 +505,7 @@ export function weaponNamedEffectsToStatuses(weapon: CustomWeapon): GameDataJson
           interactionType: ne.maxStacks > 1 ? StackInteractionType.NONE : StackInteractionType.RESET,
         },
         eventType: EventType.STATUS,
-        eventCategoryType: NounType.WEAPON_STAT,
+        eventCategoryType: NounType.WEAPON,
         ...(ne.cooldownSeconds ? { cooldownSeconds: ne.cooldownSeconds } : {}),
       },
       onTriggerClause: ne.triggers.map(t => ({ conditions: [t] })),
@@ -517,7 +534,7 @@ export function weaponEffectToFriendly(statuses: GameDataJson[], effectId: strin
 /** Convert CustomWeaponEffect → game data WeaponStat JSONs. */
 export function weaponEffectFromFriendly(effect: CustomWeaponEffect): GameDataJson[] {
   return effect.statusEvents.map(se =>
-    customDefToStatusJson(se, effect.weaponId ?? effect.id, NounType.WEAPON_STAT),
+    customDefToStatusJson(se, effect.weaponId ?? effect.id, NounType.WEAPON),
   );
 }
 
@@ -572,7 +589,7 @@ export function gearSetToFriendly(
   if (gearStatuses.length > 0 || setEffectJson) {
     const effects: CustomGearEffectDef[] = gearStatuses.map(gs => {
       const gsProps = (gs.properties ?? {}) as GameDataJson;
-      const gsClause = (gs.clause ?? []) as { conditions?: unknown[]; effects?: GameDataJson[] }[];
+      const gsClause = ((gs.segments ?? []) as GameDataJson[]).flatMap(s => (s.clause ?? []) as { conditions?: unknown[]; effects?: GameDataJson[] }[]);
 
       return {
         label: (gsProps.name ?? gsProps.id ?? '') as string,
@@ -685,7 +702,7 @@ export function gearSetEffectFromFriendly(gearSet: CustomGearSet): GameDataJson 
       name: gearSet.setName,
       rarity: gearSet.rarity,
       eventType: EventType.STATUS,
-      eventCategoryType: NounType.GEAR,
+      eventCategoryType: NounType.GEAR_STAT,
     },
     metadata: {
       originId: gearSetId,
@@ -702,19 +719,27 @@ export function gearSetStatusesFromFriendly(gearSet: CustomGearSet): GameDataJso
   return gearSet.setEffect.effects.map(ef => {
     const statusId = `${gearSetId}_${toGameDataId(ef.label)}`;
 
+    const buffEffects = ef.buffs.map(b => ({
+      verb: VerbType.APPLY,
+      object: NounType.STAT,
+      objectId: b.stat,
+      with: {
+        value: b.perStack
+          ? { verb: VerbType.VARY_BY, object: NounType.STATUS_LEVEL, value: b.value }
+          : isNode(b.value),
+      },
+    }));
+
     return {
-      clause: [{
-        conditions: [],
-        effects: ef.buffs.map(b => ({
-          verb: VerbType.APPLY,
-          object: NounType.STAT,
-          objectId: b.stat,
-          with: {
-            value: b.perStack
-              ? { verb: VerbType.VARY_BY, object: NounType.STATUS_LEVEL, value: b.value }
-              : isNode(b.value),
-          },
-        })),
+      segments: [{
+        properties: {
+          duration: dslDuration(ef.durationSeconds),
+          name: ef.label,
+        },
+        clause: [{
+          conditions: [],
+          effects: buffEffects,
+        }],
       }],
       properties: {
         id: statusId,
@@ -726,7 +751,7 @@ export function gearSetStatusesFromFriendly(gearSet: CustomGearSet): GameDataJso
         },
         ...(ef.cooldownSeconds ? { cooldownSeconds: ef.cooldownSeconds } : {}),
         eventType: EventType.STATUS,
-        eventCategoryType: NounType.GEAR_STAT,
+        eventCategoryType: NounType.GEAR,
       },
       metadata: {
         originId: gearSetId,
@@ -751,7 +776,7 @@ export function gearEffectToFriendly(statuses: GameDataJson[], effectId: string,
 /** Convert CustomGearEffect → game data GearStat JSONs. */
 export function gearEffectFromFriendly(effect: CustomGearEffect): GameDataJson[] {
   return effect.statusEvents.map(se =>
-    customDefToStatusJson(se, effect.gearSetId ?? effect.id, NounType.GEAR_STAT),
+    customDefToStatusJson(se, effect.gearSetId ?? effect.id, NounType.GEAR),
   );
 }
 
@@ -760,7 +785,7 @@ export function gearEffectFromFriendly(effect: CustomGearEffect): GameDataJson[]
 /** Convert a game data status JSON → CustomStatusEventDef. */
 function statusJsonToCustomDef(json: GameDataJson): CustomStatusEventDef {
   const props = (json.properties ?? {}) as GameDataJson;
-  const clause = (json.clause ?? []) as Clause;
+  const clause = ((json.segments ?? []) as GameDataJson[]).flatMap(s => (s.clause ?? []) as unknown[]) as Clause;
   const onTriggerClause = (json.onTriggerClause ?? []) as Clause;
 
   // Extract duration values
@@ -839,17 +864,28 @@ function customDefToStatusJson(def: CustomStatusEventDef, originId: string, even
 
   const maxStacks = Array.isArray(def.stack.max) ? Math.max(...def.stack.max) : def.stack.max;
 
+  // Build segments, placing the status clause on the first segment (segments-based schema)
+  const rawSegments = (def.segments && def.segments.length > 0)
+    ? def.segments.map(seg => ({
+      properties: {
+        ...(seg.name ? { name: seg.name } : {}),
+        duration: dslDuration(seg.durationSeconds),
+      },
+    }))
+    : [{
+      properties: {
+        duration: dslDuration(def.durationValues[0] ?? 0),
+        ...(def.name ? { name: def.name } : {}),
+      },
+    }];
+  const hasClause = clause && (clause as unknown[]).length > 0;
+  const segmentsOut = hasClause
+    ? rawSegments.map((seg, i) => i === 0 ? { ...seg, clause } : seg)
+    : rawSegments;
+
   return {
-    ...(clause && (clause as unknown[]).length > 0 ? { clause } : {}),
     ...(def.onTriggerClause && (def.onTriggerClause as unknown[]).length > 0 ? { onTriggerClause: def.onTriggerClause } : {}),
-    ...(def.segments && def.segments.length > 0 ? {
-      segments: def.segments.map(seg => ({
-        properties: {
-          ...(seg.name ? { name: seg.name } : {}),
-          duration: dslDuration(seg.durationSeconds),
-        },
-      })),
-    } : {}),
+    segments: segmentsOut,
     properties: {
       id: statusId,
       name: def.name,
@@ -907,7 +943,7 @@ function resolveTargetDeterminer(target: string): string | undefined {
 
 /** Extract values array from a weapon skill JSON. */
 function extractWeaponSkillValues(json: GameDataJson): number[] {
-  const clause = (json.clause ?? []) as { effects?: GameDataJson[] }[];
+  const clause = ((json.segments ?? []) as GameDataJson[]).flatMap(s => (s.clause ?? []) as { effects?: GameDataJson[] }[]);
   for (const c of clause) {
     for (const ef of (c.effects ?? [])) {
       const wv = (ef.with as GameDataJson)?.value as { value?: number | number[] } | undefined;

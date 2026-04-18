@@ -92,7 +92,7 @@
     "id": "CATASTROPHE_HEAVY_ARMOR_T1",
     "name": "Catastrophe Heavy Armor T1",
     "gearType": "ARMOR",
-    "gearSet": "CATASTROPHE"
+    "gearSet": "CATASTROPHE_STAT"
   },
   "metadata": {
     "originId": "game",

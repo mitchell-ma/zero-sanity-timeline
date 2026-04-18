@@ -1,27 +1,41 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.35
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
           },
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "ARTS"
+          "unit": "SECOND"
+        },
+        "name": "Tide Surge"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.35
+                }
+              },
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ARTS"
+            }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "TIDE_SURGE_STAT",
+    "id": "TIDE_SURGE",
     "name": "Tide Surge",
     "duration": {
       "value": {
@@ -39,10 +53,10 @@
     },
     "description": "Arts DMG +35% for 15s after applying 2+ stacks of Arts Infliction. Cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "TIDE_SURGE",
+    "originId": "TIDE_SURGE_STAT",
     "dataStatus": "RECONCILED"
   }
 }

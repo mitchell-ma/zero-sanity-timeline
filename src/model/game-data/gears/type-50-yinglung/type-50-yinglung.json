@@ -14,21 +14,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "TYPE_50_YINGLUNG_STAT",
+          "objectId": "TYPE_50_YINGLUNG",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Type 50 Yinglung"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "TYPE_50_YINGLUNG",
+    "id": "TYPE_50_YINGLUNG_STAT",
     "name": "Type 50 Yinglung",
     "rarity": 5,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. When any operator in the team casts a battle skill, the wearer gains 1 stack of Yinglung's Edge that gives DMG +{dmg_up:0%} to the wearer's next combo skill. Yinglung's Edge can stack {max_stack:0} time(s).",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

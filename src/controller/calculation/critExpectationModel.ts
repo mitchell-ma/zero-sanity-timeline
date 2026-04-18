@@ -152,8 +152,10 @@ function extractStatusConfig(entry: TriggerDefEntry, skillLevel: number): CritSt
   const thresholdStats: CritStatusConfig['thresholdStats'] = [];
   let isFeedback = false;
 
-  if (def.clause && Array.isArray(def.clause)) {
-    for (const clause of def.clause) {
+  const defSegmentClauses = (def.segments as { clause?: unknown[] }[] | undefined ?? [])
+    .flatMap(s => Array.isArray(s.clause) ? s.clause : []);
+  if (defSegmentClauses.length > 0) {
+    for (const clause of defSegmentClauses) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const c = clause as any;
       const conditions = c.conditions ?? [];
@@ -243,8 +245,10 @@ function extractStatusConfig(entry: TriggerDefEntry, skillLevel: number): CritSt
         lifecycle = { buffStatusId, buffDurationFrames };
 
         // Also extract stat effects from the buff status
-        if (buffDef.clause && Array.isArray(buffDef.clause)) {
-          for (const bc of buffDef.clause) {
+        const buffSegmentClauses = (buffDef.segments as { clause?: unknown[] }[] | undefined ?? [])
+          .flatMap(s => Array.isArray(s.clause) ? s.clause : []);
+        if (buffSegmentClauses.length > 0) {
+          for (const bc of buffSegmentClauses) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const bEffects = (bc as any).effects ?? [];
             for (const bEffect of bEffects) {

@@ -1,0 +1,90 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "SKILL",
+          "objectId": "BATTLE"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "value": { "verb": "IS", "value": 1 }
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "EVENT",
+          "verb": "IS",
+          "object": "OCCURRENCE",
+          "cardinalityConstraint": "EXACTLY",
+          "with": { "value": { "verb": "IS", "value": 1 } }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": { "eventComponentType": "SEGMENT" },
+      "properties": {
+        "name": "Four Symbols of Harmony (P1)",
+        "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" }
+      },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME" },
+          "properties": { "offset": { "value": 0, "unit": "SECOND" } },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": { "stacks": { "verb": "IS", "value": 1 } }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FOUR_SYMBOLS_OF_HARMONY_P1",
+    "level": 1,
+    "name": "Four Symbols of Harmony (P1)",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "POTENTIAL",
+    "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" },
+    "stacks": {
+      "limit": { "verb": "IS", "value": 1 },
+      "interactionType": "RESET"
+    },
+    "description": "Battle skill Mantra of Sundering improved: DMG multiplier is increased to 1.15 times the original. After entering battle, Zhuang Fangyi's first battle skill casting also creates 1 more Sunderblade (can exceed the per-casting creation limit)."
+  },
+  "metadata": {
+    "originId": "ZHUANG_FANGYI",
+    "dataStatus": "RECONCILED"
+  }
+}

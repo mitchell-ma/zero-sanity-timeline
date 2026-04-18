@@ -1,18 +1,21 @@
 /**
  * Gear store — loads and deserializes gear JSON configs into typed `Gear`
- * (set-level effect/trigger-source) and `GearStat` (applied stat-bearing
- * status) class instances.
+ * (wrapper: permanent stat + on-trigger source) and `GearStat` (the in-game
+ * visible gear buff status applied by the wrapper) class instances.
  *
- * Auto-discovers `gears/<set>/<set>.json` (→ `Gear`) and
- * `gears/<set>/statuses/status-*.json` (→ `GearStat`) via require.context.
+ * Routing is by `eventCategoryType`, NOT file path:
+ * - `GEAR_STAT` → `Gear` (wrapper)
+ * - `GEAR`      → `GearStat` (in-game buff)
+ *
+ * Paths are informational only; reorganizing files will not break the loader.
  */
 import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
 import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
-import type { ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
+import type { StacksConfig, DurationConfig, StatusSegment } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues, validateSegmentShape } from './validationUtils';
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -36,17 +39,9 @@ function validateLocalEffect(ef: Record<string, unknown>, path: string): string[
   return errors;
 }
 
-function validateClause(clause: Record<string, unknown>, path: string): string[] {
-  const errors = checkKeys(clause, VALID_CLAUSE_KEYS, path);
-  if (!Array.isArray(clause.conditions)) errors.push(`${path}.conditions: must be an array`);
-  if (!Array.isArray(clause.effects)) errors.push(`${path}.effects: must be an array`);
-  else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateLocalEffect(ef, `${path}.effects[${i}]`)));
-  return errors;
-}
-
 // ── Gear validation ─────────────────────────────────────────────────────────
 
-const VALID_GEAR_TOP_KEYS = new Set(['onTriggerClause', 'properties', 'metadata']);
+const VALID_GEAR_TOP_KEYS = new Set(['segments', 'onTriggerClause', 'properties', 'metadata']);
 const VALID_GEAR_PROPS_KEYS = new Set(['id', 'name', 'rarity', 'piecesRequired', 'description', 'eventType', 'eventCategoryType']);
 
 /** Validate a raw Gear (set-level effect) JSON entry. */
@@ -64,11 +59,26 @@ export function validateGear(json: Record<string, unknown>): string[] {
     });
   }
 
+  // Root-level `clause` is rejected — clauses MUST live inside segments.
+  if ('clause' in json) errors.push('root.clause: not allowed — move clause effects into segments[0].clause');
+
+  // Placeholder gear definitions (no onTriggerClause, no segments) are allowed.
+  // Otherwise, segments is required.
+  const hasRuntimeHook = Array.isArray(json.onTriggerClause) && (json.onTriggerClause as unknown[]).length > 0;
+  if (json.segments) {
+    if (!Array.isArray(json.segments) || (json.segments as unknown[]).length === 0) {
+      errors.push('root.segments: must be a non-empty array');
+    } else {
+      (json.segments as Record<string, unknown>[]).forEach((s, i) => errors.push(...validateSegmentShape(s, `segments[${i}]`)));
+    }
+  } else if (hasRuntimeHook) {
+    errors.push('root.segments: required when onTriggerClause is present');
+  }
+
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_GEAR_PROPS_KEYS, 'properties'));
-  if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
-  if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
+  errors.push(...checkIdAndName(props, 'properties'));
 
   const meta = json.metadata as Record<string, unknown> | undefined;
   if (meta) errors.push(...checkKeys(meta, VALID_METADATA_KEYS, 'metadata'));
@@ -78,7 +88,7 @@ export function validateGear(json: Record<string, unknown>): string[] {
 
 // ── GearStat validation ─────────────────────────────────────────────────────
 
-const VALID_GEAR_STAT_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
+const VALID_GEAR_STAT_TOP_KEYS = new Set(['segments', 'properties', 'metadata']);
 const VALID_GEAR_STAT_PROPS_KEYS = new Set(['id', 'name', 'description', 'duration', 'stacks', 'cooldownSeconds', 'usageLimit', 'enhancementType', 'eventType', 'eventCategoryType']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
@@ -88,14 +98,19 @@ export function validateGearStat(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_GEAR_STAT_TOP_KEYS, 'root');
   errors.push(...validateNonNegativeValues(json, 'root'));
 
-  if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
-  else (json.clause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `clause[${i}]`)));
+  // Root-level `clause` is rejected — clauses MUST live inside segments.
+  if ('clause' in json) errors.push('root.clause: not allowed — move clause effects into segments[0].clause');
+
+  if (!Array.isArray(json.segments) || (json.segments as unknown[]).length === 0) {
+    errors.push('root.segments: required and must be a non-empty array');
+  } else {
+    (json.segments as Record<string, unknown>[]).forEach((s, i) => errors.push(...validateSegmentShape(s, `segments[${i}]`)));
+  }
 
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_GEAR_STAT_PROPS_KEYS, 'properties'));
-  if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
-  if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
+  errors.push(...checkIdAndName(props, 'properties'));
 
   if (props.duration) {
     const dur = props.duration as Record<string, unknown>;
@@ -127,9 +142,11 @@ interface TriggerClauseEntry {
   effects: { verb: string; object: string; objectId?: string }[];
 }
 
-/** A gear definition (eventCategoryType=GEAR). Set-level metadata + triggers
- *  that apply GearStat statuses. */
+/** A gear definition (eventCategoryType=GEAR_STAT). Set-level metadata,
+ *  `segments` carrying the permanent-effect clause, and `onTriggerClause`
+ *  that apply in-game Gear statuses (eventCategoryType=GEAR). */
 export class Gear {
+  readonly segments: StatusSegment[];
   readonly onTriggerClause: TriggerClauseEntry[];
   readonly id: string;
   readonly name: string;
@@ -146,6 +163,7 @@ export class Gear {
     const props = (json.properties ?? {}) as Record<string, unknown>;
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
+    this.segments = (json.segments ?? []) as StatusSegment[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClauseEntry[];
     this.id = (props.id ?? '') as string;
     this.name = (props.name ?? '') as string;
@@ -168,6 +186,7 @@ export class Gear {
 
   serialize(): Record<string, unknown> {
     return {
+      ...(this.segments.length > 0 ? { segments: this.segments } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
         id: this.id,
@@ -188,6 +207,7 @@ export class Gear {
   /** Serialize as a trigger-source def for the event pipeline. */
   serializeAsTriggerDef(): Record<string, unknown> {
     return {
+      ...(this.segments.length > 0 ? { segments: this.segments } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
         id: this.id,
@@ -195,7 +215,7 @@ export class Gear {
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
         eventType: EventType.STATUS,
-        eventCategoryType: NounType.GEAR,
+        eventCategoryType: NounType.GEAR_STAT,
       },
       metadata: {
         originId: this.originId,
@@ -215,9 +235,10 @@ export class Gear {
 
 // ── GearStat class ──────────────────────────────────────────────────────────
 
-/** A single gear stat-bearing status definition (eventCategoryType=GEAR_STAT). */
+/** The in-game-visible gear buff status (eventCategoryType=GEAR), applied by
+ *  the wrapping `Gear` via its onTriggerClause. */
 export class GearStat {
-  readonly clause: ClausePredicate[];
+  readonly segments: StatusSegment[];
   readonly id: string;
   readonly name: string;
   readonly description?: string;
@@ -234,7 +255,7 @@ export class GearStat {
     const props = (json.properties ?? {}) as Record<string, unknown>;
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
-    this.clause = (json.clause ?? []) as ClausePredicate[];
+    this.segments = (json.segments ?? []) as StatusSegment[];
     this.id = (props.id ?? '') as string;
     this.name = (props.name ?? '') as string;
     if (props.description) this.description = props.description as string;
@@ -260,7 +281,7 @@ export class GearStat {
 
   serialize(): Record<string, unknown> {
     return {
-      clause: this.clause,
+      ...(this.segments.length > 0 ? { segments: this.segments } : {}),
       properties: {
         id: this.id,
         name: this.name,
@@ -295,28 +316,26 @@ const gearCache = new Map<string, Gear>();
 /** Gear stats indexed by originId (gear set id). */
 const gearStatCache = new Map<string, GearStat[]>();
 
-// Load gears: base JSON in each gear set directory (e.g. ./hot-work/hot-work.json)
-const gearContext = require.context('./gears', true, /\/[^/]+\/[^/]+\.json$/);
+// Load all gear JSONs (excluding pieces) and route by eventCategoryType.
+// Paths are informational only — routing depends solely on the category value
+// so files can be reorganized without breaking the loader.
+const gearContext = require.context('./gears', true, /\.json$/);
 for (const key of gearContext.keys()) {
-  // Skip pieces/ and statuses/ subdirs
-  if (key.includes('/pieces/') || key.includes('/statuses/')) continue;
+  if (key.includes('/pieces/')) continue;
   const json = gearContext(key) as Record<string, unknown>;
   const catType = ((json.properties ?? {}) as Record<string, unknown>).eventCategoryType as string;
-  if (catType === NounType.GEAR) {
+  if (catType === NounType.GEAR_STAT) {
+    // Gear wrapper: holds onTriggerClause + permanent `clause`.
     const gear = Gear.deserialize(json, key);
     if (gear.id) gearCache.set(gear.id, gear);
-  }
-}
-
-// Load gear stats: individual files in gears/<set>/statuses/
-const gearStatContext = require.context('./gears', true, /\/statuses\/status-[^/]+\.json$/);
-for (const key of gearStatContext.keys()) {
-  const json = gearStatContext(key) as Record<string, unknown>;
-  const stat = GearStat.deserialize(json, key);
-  if (stat.originId) {
-    const list = gearStatCache.get(stat.originId) ?? [];
-    list.push(stat);
-    gearStatCache.set(stat.originId, list);
+  } else if (catType === NounType.GEAR) {
+    // In-game-visible gear buff status applied by the wrapper.
+    const stat = GearStat.deserialize(json, key);
+    if (stat.originId) {
+      const list = gearStatCache.get(stat.originId) ?? [];
+      list.push(stat);
+      gearStatCache.set(stat.originId, list);
+    }
   }
 }
 

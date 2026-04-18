@@ -119,6 +119,28 @@ function getEnemyFragilityStat(element: ElementType): number {
   return sum;
 }
 
+/** Read one operator stat from the accumulator, guarded by registered StatType. */
+function readOperatorStatIfExists(entityId: string, key: string): number {
+  if (!(Object.values(StatType) as string[]).includes(key)) return 0;
+  return getLastStatAccumulator()?.getStat(entityId, key as StatType) ?? 0;
+}
+
+/** Resistance addback for `element` from operator RESISTANCE_IGNORE +
+ *  enemy RESISTANCE_REDUCTION (with ARTS umbrella for arts elements).
+ *  Corrosion contributes via per-segment APPLY ARTS RESISTANCE_REDUCTION
+ *  STAT clauses (see processInfliction.buildCorrosionSegments) — already
+ *  in the accumulator, no special case needed. */
+function getResistanceAddback(element: ElementType, sourceEntityId: string | undefined): number {
+  let sum = 0;
+  sum += readEnemyStatIfExists(`${element}_RESISTANCE_REDUCTION`);
+  if (sourceEntityId) sum += readOperatorStatIfExists(sourceEntityId, `${element}_RESISTANCE_IGNORE`);
+  if (ARTS_ELEMENTS_FOR_STAT.has(element)) {
+    sum += readEnemyStatIfExists(`${ElementType.ARTS}_RESISTANCE_REDUCTION`);
+    if (sourceEntityId) sum += readOperatorStatIfExists(sourceEntityId, `${ElementType.ARTS}_RESISTANCE_IGNORE`);
+  }
+  return sum;
+}
+
 /**
  * Build the shared base StatusDamageParams for a reaction, minus the
  * status-specific base multiplier (which differs for initial vs DoT/shatter).
@@ -138,18 +160,8 @@ function buildBaseParams(
     defenseMultiplier: getDefenseMultiplier(modelEnemy.getDef()),
     resistanceMultiplier: (() => {
       let res = getResistanceMultiplier(modelEnemy, element);
-      if (statusQuery && frame != null && element !== ElementType.PHYSICAL) {
-        const corrosionReduction = statusQuery.getCorrosionResistanceReduction(frame);
-        if (corrosionReduction > 0) {
-          res += corrosionReduction / 100;
-        }
-        if (sourceEntityId) {
-          const ignoredRes = statusQuery.getIgnoredResistance(frame, element, sourceEntityId);
-          if (ignoredRes > 0) {
-            res += ignoredRes / 100;
-          }
-        }
-      }
+      const addback = getResistanceAddback(element, sourceEntityId);
+      if (addback !== 0) res += addback / 100;
       return res;
     })(),
     susceptibilityMultiplier: getSusceptibilityMultiplier(

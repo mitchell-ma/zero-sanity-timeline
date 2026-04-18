@@ -1,41 +1,56 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Resilient Defense (T1)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "BASE_DEFENSE",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "operation": "MULT",
-              "left": {
-                "operation": "INTEGER_DIV",
-                "left": {
-                  "verb": "IS",
-                  "object": "STAT",
-                  "objectId": "WILL",
-                  "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "BASE_DEFENSE",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "operation": "MULT",
+                  "left": {
+                    "operation": "INTEGER_DIV",
+                    "left": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "WILL",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    },
+                    "right": {
+                      "verb": "IS",
+                      "value": 10
+                    }
+                  },
+                  "right": {
+                    "verb": "IS",
+                    "value": 1.2
                   }
-                },
-                "right": {
-                  "verb": "IS",
-                  "value": 10
                 }
-              },
-              "right": {
-                "verb": "IS",
-                "value": 1.2
               }
             }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -59,6 +74,5 @@
     ],
     "icon": "skills/catcher_talent_1_icon.png",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

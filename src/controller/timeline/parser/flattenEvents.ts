@@ -70,7 +70,7 @@ export function flattenEventsToQueueFrames(
       combo.columnId = event.columnId;
       combo.ownerEntityId = event.ownerEntityId;
       combo.sourceEntityId = event.ownerEntityId;
-      combo.sourceSkillName = event.id;
+      combo.sourceSkillId = event.id;
       combo.maxStacks = 0;
       combo.durationFrames = 0;
       combo.operatorSlotId = event.ownerEntityId;
@@ -119,7 +119,7 @@ function emitNonSkillFrames(
         qf.columnId = event.columnId;
         qf.ownerEntityId = event.ownerEntityId;
         qf.sourceEntityId = event.ownerEntityId;
-        qf.sourceSkillName = event.id;
+        qf.sourceSkillId = event.id;
         qf.maxStacks = 0;
         qf.durationFrames = 0;
         qf.operatorSlotId = event.ownerEntityId;
@@ -152,7 +152,7 @@ function emitSkillLifecycle(
   start.columnId = event.columnId;
   start.ownerEntityId = event.ownerEntityId;
   start.sourceEntityId = event.ownerEntityId;
-  start.sourceSkillName = event.id;
+  start.sourceSkillId = event.id;
   start.maxStacks = 0;
   start.durationFrames = 0;
   start.operatorSlotId = event.ownerEntityId;
@@ -176,7 +176,7 @@ function emitSkillLifecycle(
     segStart.columnId = event.columnId;
     segStart.ownerEntityId = event.ownerEntityId;
     segStart.sourceEntityId = event.ownerEntityId;
-    segStart.sourceSkillName = event.id;
+    segStart.sourceSkillId = event.id;
     segStart.maxStacks = 0;
     segStart.durationFrames = 0;
     segStart.operatorSlotId = event.ownerEntityId;
@@ -197,7 +197,7 @@ function emitSkillLifecycle(
         qf.columnId = event.columnId;
         qf.ownerEntityId = event.ownerEntityId;
         qf.sourceEntityId = event.ownerEntityId;
-        qf.sourceSkillName = event.id;
+        qf.sourceSkillId = event.id;
         qf.maxStacks = 0;
         qf.durationFrames = 0;
         qf.operatorSlotId = event.ownerEntityId;
@@ -220,7 +220,7 @@ function emitSkillLifecycle(
       segEnd.columnId = event.columnId;
       segEnd.ownerEntityId = event.ownerEntityId;
       segEnd.sourceEntityId = event.ownerEntityId;
-      segEnd.sourceSkillName = event.id;
+      segEnd.sourceSkillId = event.id;
       segEnd.maxStacks = 0;
       segEnd.durationFrames = 0;
       segEnd.operatorSlotId = event.ownerEntityId;
@@ -241,7 +241,7 @@ function emitSkillLifecycle(
     end.columnId = event.columnId;
     end.ownerEntityId = event.ownerEntityId;
     end.sourceEntityId = event.ownerEntityId;
-    end.sourceSkillName = event.id;
+    end.sourceSkillId = event.id;
     end.maxStacks = 0;
     end.durationFrames = 0;
     end.operatorSlotId = event.ownerEntityId;

@@ -7,7 +7,6 @@
     "element": "ELECTRIC",
     "id": "THUNDERLANCE_STRIKE"
   },
-  "clause": [],
   "segments": [
     {
       "metadata": {
@@ -28,7 +27,9 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -226,7 +227,6 @@
     "icon": "skills/combo_avywenna.png",
     "dataStatus": "VERIFIED"
   },
-  "clauseType": "ALL",
   "activationWindow": {
     "properties": {
       "maxSkills": 1

@@ -1,31 +1,45 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "STATUS_LEVEL",
-              "value": [
-                0.08
-              ]
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
           },
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "PHYSICAL"
+          "unit": "SECOND"
+        },
+        "name": "\u00c6thertech"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "STATUS_LEVEL",
+                  "value": [
+                    0.08
+                  ]
+                }
+              },
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "PHYSICAL"
+            }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "AETHERTECH_STAT",
-    "name": "Æthertech",
+    "id": "AETHERTECH",
+    "name": "\u00c6thertech",
     "duration": {
       "value": {
         "verb": "IS",
@@ -42,10 +56,10 @@
     },
     "description": "Physical DMG +8% for 15s after applying Vulnerability. Max 4 stacks.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "AETHERTECH",
+    "originId": "AETHERTECH_STAT",
     "dataStatus": "RECONCILED"
   }
 }

@@ -65,7 +65,8 @@
           "effects": [
             {
               "verb": "CONSUME",
-              "object": "INFLICTION",
+              "object": "STATUS",
+              "objectId": "INFLICTION",
               "objectQualifier": "HEAT",
               "from": "ENEMY",
               "with": {
@@ -115,7 +116,8 @@
           "effects": [
             {
               "verb": "CONSUME",
-              "object": "INFLICTION",
+              "object": "STATUS",
+              "objectId": "INFLICTION",
               "objectQualifier": "HEAT",
               "from": "ENEMY",
               "with": {

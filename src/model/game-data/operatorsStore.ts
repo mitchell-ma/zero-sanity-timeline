@@ -4,7 +4,7 @@
  *
  * Auto-discovers operators/*-operator.json via require.context.
  */
-import { checkKeys, VALID_METADATA_KEYS, validateTalentLevelArrays, validateNonNegativeValues } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_METADATA_KEYS, validateTalentLevelArrays, validateNonNegativeValues } from './validationUtils';
 import { NounType, VerbType } from '../../dsl/semantics';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -54,8 +54,7 @@ export function validateOperator(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
   errors.push(...validateNonNegativeValues(json, 'root'));
 
-  if (typeof json.id !== 'string') errors.push('root.id: must be a string');
-  if (typeof json.name !== 'string') errors.push('root.name: must be a string');
+  errors.push(...checkIdAndName(json, 'root'));
   if (typeof json.operatorRarity !== 'number') errors.push('root.operatorRarity: must be a number');
   if (typeof json.operatorClassType !== 'string') errors.push('root.operatorClassType: must be a string');
   if (typeof json.elementType !== 'string') errors.push('root.elementType: must be a string');

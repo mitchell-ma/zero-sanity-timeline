@@ -5,11 +5,13 @@
  * Returns arrays of ContextMenuItemDef with actionId+actionPayload instead of
  * closures, allowing the view to map actionIds to callbacks.
  */
-import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, getAnimationDurationFromSegments } from '../../consts/viewTypes';
-import { NounType } from '../../dsl/semantics';
-import { ColumnType, MicroColumnAssignment, InteractionModeType } from '../../consts/enums';
-import { getAllSkillLabels, getAllInflictionLabels } from '../gameDataStore';
-import { REACTION_LABELS } from '../../model/channels';
+import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, ContextMenuParameterSubmenu, ContextMenuParamAxis, ContextMenuParamOption, EventSegmentData, getAnimationDurationFromSegments } from '../../consts/viewTypes';
+import { NounType, VerbType, type Effect } from '../../dsl/semantics';
+import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
+import { ColumnType, MicroColumnAssignment, InteractionModeType, ContextMenuAxisKind } from '../../consts/enums';
+import { getAllSkillLabels, getAllInflictionLabels, getStatusById } from '../gameDataStore';
+import { REACTION_LABELS, REACTION_COLUMN_IDS } from '../../model/channels';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { t } from '../../locales/locale';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
 import { OPERATOR_COLUMNS, ENEMY_ID } from '../../model/channels';
@@ -42,6 +44,112 @@ export interface ColumnContextMenuContext {
   staggerBreaks?: readonly StaggerBreak[];
   columnPositions: Map<string, { left: number; right: number }>;
   interactionMode?: InteractionModeType;
+}
+
+/** Build a right-side parameter submenu — one axis per supplied parameter,
+ *  each rendered as a single row of inline options (e.g. "Enemies Hit: ×1 ×2 ×3").
+ *  Returns undefined when no params exist. */
+function buildParameterSubmenu(
+  params: readonly { id: string; name: string; lowerRange: number; upperRange: number; default: number }[] | undefined,
+): ContextMenuParameterSubmenu | undefined {
+  if (!params || params.length === 0) return undefined;
+  const axes: ContextMenuParamAxis[] = [];
+  for (const param of params) {
+    const options: ContextMenuParamOption[] = [];
+    for (let val = param.lowerRange; val <= param.upperRange; val++) {
+      options.push({ label: `\u00d7${val}`, value: val, isDefault: val === param.default });
+    }
+    axes.push({ paramId: param.id, paramName: param.name, options, kind: ContextMenuAxisKind.PARAMETER });
+  }
+  return axes;
+}
+
+/** Seed parameterValues with each axis's default value. Skips non-PARAMETER axes
+ *  (stacks/statusLevel do not ride on event.parameterValues). */
+function defaultParamValues(submenu: ContextMenuParameterSubmenu | undefined): Record<string, number> | undefined {
+  if (!submenu || submenu.length === 0) return undefined;
+  const out: Record<string, number> = {};
+  for (const axis of submenu) {
+    if (axis.kind !== ContextMenuAxisKind.PARAMETER) continue;
+    const def = axis.options.find((o) => o.isDefault) ?? axis.options[0];
+    out[axis.paramId] = def.value;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+const ROMAN_NUMERALS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
+/** Resolve the stacks cap for a status/reaction column — reads `stacks.limit`
+ *  from the JSON config. Reactions are hard-capped at 4 (StatusLevel 1..4).
+ *  Returns undefined when the column is not stackable. */
+function resolveStacksCap(columnId: string): number | undefined {
+  if (REACTION_COLUMN_IDS.has(columnId)) return 4;
+  const cfg = getStatusById(columnId);
+  const limitNode = cfg?.stacks?.limit;
+  if (!limitNode) return undefined;
+  const resolved = resolveValueNode(limitNode, DEFAULT_VALUE_CONTEXT);
+  return resolved > 1 ? resolved : undefined;
+}
+
+/**
+ * Bake a chosen reaction `statusLevel` into the freeform APPLY REACTION clause
+ * on the given default-skill segments. Walks segments → frames → clauses →
+ * effects, finds each `APPLY STATUS REACTION <X>` dsl effect, and replaces
+ * `with.statusLevel` with `{ IS, level }`. Non-reaction APPLY effects and
+ * non-dsl effects are passed through unchanged.
+ *
+ * Returns a new segments array — inputs are not mutated.
+ */
+export function injectStatusLevelIntoSegments(
+  segments: readonly EventSegmentData[] | undefined,
+  level: number,
+): EventSegmentData[] | undefined {
+  if (!segments) return undefined;
+  return segments.map((seg) => {
+    if (!seg.frames) return seg;
+    const frames = seg.frames.map((f) => {
+      if (!f.clauses) return f;
+      const clauses: FrameClausePredicate[] = f.clauses.map((clause) => {
+        const effects = clause.effects.map((eff) => {
+          if (eff.type !== 'dsl') return eff;
+          const dsl = eff.dslEffect;
+          if (!dsl || dsl.verb !== VerbType.APPLY || dsl.objectId !== NounType.REACTION) return eff;
+          return {
+            ...eff,
+            dslEffect: {
+              ...dsl,
+              with: { ...(dsl.with ?? {}), statusLevel: { verb: VerbType.IS, value: level } },
+            } as Effect,
+          };
+        });
+        return { ...clause, effects };
+      });
+      return { ...f, clauses };
+    });
+    return { ...seg, frames };
+  });
+}
+
+/** Build a stacks/statusLevel axis for a stackable column.
+ *  - Reactions (REACTION_COLUMN_IDS): STATUS_LEVEL axis, I/II/III/IV labels.
+ *  - Other stackable columns: STACKS axis, 1..cap labels (stepper when cap > 4).
+ *  Default selection is 1 so plain clicks preserve pre-feature behavior. */
+function buildStacksAxis(columnId: string): ContextMenuParamAxis | undefined {
+  const cap = resolveStacksCap(columnId);
+  if (cap == null) return undefined;
+  const isReaction = REACTION_COLUMN_IDS.has(columnId);
+  const kind = isReaction ? ContextMenuAxisKind.STATUS_LEVEL : ContextMenuAxisKind.STACKS;
+  const paramId = isReaction ? NounType.STATUS_LEVEL : NounType.STACKS;
+  const paramName = isReaction ? 'Status Level' : 'Stacks';
+  const useStepper = cap > 4;
+  const options: ContextMenuParamOption[] = useStepper
+    ? [{ label: '1', value: 1, isDefault: true }]
+    : Array.from({ length: cap }, (_, i) => ({
+        label: isReaction ? ROMAN_NUMERALS[i + 1] : String(i + 1),
+        value: i + 1,
+        isDefault: i === 0,
+      }));
+  return { paramId, paramName, options, kind, useStepper, min: 1, max: cap };
 }
 
 /**
@@ -113,12 +221,16 @@ export function buildColumnContextMenu(
         (ev) => ev.ownerEntityId === col.ownerEntityId && (matchSet ? ev.columnId === mc.id : ev.columnId === col.columnId),
       );
       const mcFull = col.maxEvents != null && mcEvents.length >= col.maxEvents;
+      const mcDisabled = mcFull || inTimeStop;
+      const stacksAxis = !mcDisabled ? buildStacksAxis(mc.id) : undefined;
+      const submenu: ContextMenuParameterSubmenu | undefined = stacksAxis ? [stacksAxis] : undefined;
       return {
         label: REACTION_LABELS[mc.id]?.label ?? mc.label,
         actionId: 'addEvent' as const,
         actionPayload: { ownerEntityId: col.ownerEntityId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
-        disabled: mcFull || inTimeStop,
+        disabled: mcDisabled,
         disabledReason: mcFull ? t('ctx.stacksFull', { current: String(mcEvents.length), max: String(col.maxEvents ?? '?') }) : inTimeStop ? timeStopReason : undefined,
+        ...(submenu ? { parameterSubmenu: submenu } : {}),
       };
     }).sort((a, b) => (a.label ?? '').localeCompare(b.label ?? ''));
     return [
@@ -157,20 +269,25 @@ export function buildColumnContextMenu(
     );
 
     if (col.matchColumnIds && col.microColumns) {
-      const mcItems = col.microColumns.map((mc) => ({
-        label: getAllInflictionLabels()[mc.id] ?? mc.label,
-        actionId: 'addEvent' as const,
-        actionPayload: {
-          ownerEntityId: col.ownerEntityId,
-          columnId: mc.id,
-          atFrame,
-          defaultSkill: mc.defaultEvent ?? (col.defaultEvent
-            ? { ...col.defaultEvent, id: mc.id, name: getAllInflictionLabels()[mc.id] ?? mc.id }
-            : null),
-        },
-        disabled: inTimeStop,
-        disabledReason: inTimeStop ? timeStopReason : undefined,
-      })).sort((a, b) => (a.label ?? '').localeCompare(b.label ?? ''));
+      const mcItems = col.microColumns.map((mc) => {
+        const stacksAxis = !inTimeStop ? buildStacksAxis(mc.id) : undefined;
+        const submenu: ContextMenuParameterSubmenu | undefined = stacksAxis ? [stacksAxis] : undefined;
+        return {
+          label: getAllInflictionLabels()[mc.id] ?? mc.label,
+          actionId: 'addEvent' as const,
+          actionPayload: {
+            ownerEntityId: col.ownerEntityId,
+            columnId: mc.id,
+            atFrame,
+            defaultSkill: mc.defaultEvent ?? (col.defaultEvent
+              ? { ...col.defaultEvent, id: mc.id, name: getAllInflictionLabels()[mc.id] ?? mc.id }
+              : null),
+          },
+          disabled: inTimeStop,
+          disabledReason: inTimeStop ? timeStopReason : undefined,
+          ...(submenu ? { parameterSubmenu: submenu } : {}),
+        };
+      }).sort((a, b) => (a.label ?? '').localeCompare(b.label ?? ''));
       return [
         headerItem,
         ...mcItems,
@@ -190,6 +307,8 @@ export function buildColumnContextMenu(
         : beforePrev
           ? t('ctx.stacksOrder', { number: String(existing.length) })
           : '';
+    const singleStacksAxis = !disabled ? buildStacksAxis(col.columnId) : undefined;
+    const singleStacksSubmenu: ContextMenuParameterSubmenu | undefined = singleStacksAxis ? [singleStacksAxis] : undefined;
     return [
       headerItem,
       {
@@ -198,6 +317,7 @@ export function buildColumnContextMenu(
         actionPayload: { ownerEntityId: col.ownerEntityId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
         disabled,
         disabledReason: disabledReason || undefined,
+        ...(singleStacksSubmenu ? { parameterSubmenu: singleStacksSubmenu } : {}),
       },
       ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
@@ -224,27 +344,9 @@ export function buildColumnContextMenu(
             : !comboAvail.available ? comboAvail.reason
             : availability.disabled ? availability.reason
             : overlap ? t('ctx.overlap') : undefined;
-          // Build supplied-parameter expansion buttons for combo variants
-          const comboParamDefs = v.suppliedParameters?.VARY_BY;
-          const comboParamButtons = comboParamDefs && comboParamDefs.length > 0 && !disabled
-            ? comboParamDefs.flatMap((param) => {
-              const buttons: NonNullable<ContextMenuItem['inlineButtons']> = [];
-              for (let val = param.lowerRange; val <= param.upperRange; val++) {
-                buttons.push({
-                  label: `×${val}`,
-                  actionId: 'addEvent' as const,
-                  actionPayload: {
-                    ownerEntityId: col.ownerEntityId,
-                    columnId: col.columnId,
-                    atFrame,
-                    defaultSkill: { ...v, comboTriggerColumnId: comboAvail.comboTriggerColumnId, parameterValues: { [param.id]: val } },
-                  },
-                  disabled: false,
-                });
-              }
-              return buttons;
-            })
-            : undefined;
+          // Build supplied-parameter submenu for combo variants (e.g. Enemies Hit)
+          const comboParamSubmenu = !disabled ? buildParameterSubmenu(v.suppliedParameters?.VARY_BY) : undefined;
+          const comboDefaultParamValues = defaultParamValues(comboParamSubmenu);
           return {
             label: displayName,
             actionId: 'addEvent' as const,
@@ -252,12 +354,15 @@ export function buildColumnContextMenu(
               ownerEntityId: col.ownerEntityId,
               columnId: col.columnId,
               atFrame,
-              defaultSkill: { ...v, comboTriggerColumnId: comboAvail.comboTriggerColumnId },
+              defaultSkill: {
+                ...v,
+                comboTriggerColumnId: comboAvail.comboTriggerColumnId,
+                ...(comboDefaultParamValues ? { parameterValues: comboDefaultParamValues } : {}),
+              },
             },
             disabled,
             disabledReason: reason,
-            ...(comboParamButtons ? { inlineLabel: comboParamDefs![0].name } : {}),
-            inlineButtons: comboParamButtons,
+            ...(comboParamSubmenu ? { parameterSubmenu: comboParamSubmenu } : {}),
           };
         }),
         ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
@@ -271,27 +376,9 @@ export function buildColumnContextMenu(
       : !comboAvail.available ? comboAvail.reason
       : overlap ? t('ctx.overlap') : undefined;
 
-    // Build supplied-parameter expansion buttons for single combo
-    const singleComboParams = col.defaultEvent?.suppliedParameters?.VARY_BY;
-    const singleComboParamButtons = singleComboParams && singleComboParams.length > 0 && !disabled
-      ? singleComboParams.flatMap((param) => {
-        const buttons: NonNullable<ContextMenuItem['inlineButtons']> = [];
-        for (let val = param.lowerRange; val <= param.upperRange; val++) {
-          buttons.push({
-            label: `×${val}`,
-            actionId: 'addEvent' as const,
-            actionPayload: {
-              ownerEntityId: col.ownerEntityId,
-              columnId: col.columnId,
-              atFrame,
-              defaultSkill: { ...col.defaultEvent, comboTriggerColumnId: comboAvail.comboTriggerColumnId, parameterValues: { [param.id]: val } },
-            },
-            disabled: false,
-          });
-        }
-        return buttons;
-      })
-      : undefined;
+    // Build supplied-parameter submenu for single combo
+    const singleComboParamSubmenu = !disabled ? buildParameterSubmenu(col.defaultEvent?.suppliedParameters?.VARY_BY) : undefined;
+    const singleComboDefaultParamValues = defaultParamValues(singleComboParamSubmenu);
 
     return [
       headerItem,
@@ -302,12 +389,15 @@ export function buildColumnContextMenu(
           ownerEntityId: col.ownerEntityId,
           columnId: col.columnId,
           atFrame,
-          defaultSkill: { ...col.defaultEvent, comboTriggerColumnId: comboAvail.comboTriggerColumnId },
+          defaultSkill: {
+            ...col.defaultEvent,
+            comboTriggerColumnId: comboAvail.comboTriggerColumnId,
+            ...(singleComboDefaultParamValues ? { parameterValues: singleComboDefaultParamValues } : {}),
+          },
         },
         disabled,
         disabledReason: reason,
-        ...(singleComboParamButtons ? { inlineLabel: singleComboParams![0].name } : {}),
-        inlineButtons: singleComboParamButtons,
+        ...(singleComboParamSubmenu ? { parameterSubmenu: singleComboParamSubmenu } : {}),
       },
       ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
@@ -390,43 +480,9 @@ export function buildColumnContextMenu(
           })
           : undefined;
 
-        // Build supplied-parameter expansion buttons (e.g. "×1", "×2", "×3" for Enemies Hit)
-        const paramDefs = v.suppliedParameters?.VARY_BY;
-        const paramButtons = paramDefs && paramDefs.length > 0 && !disabled
-          ? paramDefs.flatMap((param) => {
-            const buttons: NonNullable<ContextMenuItem['inlineButtons']> = [];
-            for (let val = param.lowerRange; val <= param.upperRange; val++) {
-              buttons.push({
-                label: `×${val}`,
-                actionId: 'addEvent' as const,
-                actionPayload: {
-                  ownerEntityId: col.ownerEntityId,
-                  columnId: col.columnId,
-                  atFrame,
-                  defaultSkill: {
-                    id: v.id,
-                    name: v.name,
-                    ...(v.segments ? { segments: v.segments } : {}),
-                    ...(v.timeInteraction ? { timeInteraction: v.timeInteraction } : {}),
-                    ...(v.isPerfectDodge ? { isPerfectDodge: v.isPerfectDodge } : {}),
-                    ...(v.timeDependency ? { timeDependency: v.timeDependency } : {}),
-                    ...(v.skillPointCost != null ? { skillPointCost: v.skillPointCost } : {}),
-                    ...(v.enhancementType ? { enhancementType: v.enhancementType } : {}),
-                    ...(v.activationClause ? { activationClause: v.activationClause } : {}),
-                    suppliedParameters: v.suppliedParameters,
-                    parameterValues: { [param.id]: val },
-                  },
-                },
-                disabled: false,
-              });
-            }
-            return buttons;
-          })
-          : undefined;
-
-        // Merge BATK inline buttons with parameter buttons (in practice they won't coexist)
-        const allInlineButtons = inlineButtons ?? paramButtons
-          ?? undefined;
+        // Build supplied-parameter submenu (e.g. Enemies Hit: ×1 / ×2 / ×3)
+        const paramSubmenu = !disabled ? buildParameterSubmenu(v.suppliedParameters?.VARY_BY) : undefined;
+        const paramSubmenuDefaults = defaultParamValues(paramSubmenu);
 
         return {
           label: displayName,
@@ -448,12 +504,13 @@ export function buildColumnContextMenu(
               ...(v.activationClause ? { activationClause: v.activationClause } : {}),
               ...(v.suppliedParameters ? { suppliedParameters: v.suppliedParameters } : {}),
               ...(v.stacks ? { stacks: v.stacks } : {}),
+              ...(paramSubmenuDefaults ? { parameterValues: paramSubmenuDefaults } : {}),
             },
           },
           disabled,
-          ...(paramButtons && paramDefs ? { inlineLabel: paramDefs[0].name } : {}),
           ...(isBatkChain ? { segmentTabs: true } : {}),
-          inlineButtons: allInlineButtons,
+          ...(inlineButtons ? { inlineButtons } : {}),
+          ...(paramSubmenu ? { parameterSubmenu: paramSubmenu } : {}),
         };
       }),
       ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
@@ -478,29 +535,21 @@ export function buildColumnContextMenu(
       { separator: true } as ContextMenuItem,
     ] : []),
     (() => {
-      const defs = col.defaultEvent?.suppliedParameters?.VARY_BY;
-      const defParamButtons = defs && defs.length > 0 && !disabled
-        ? defs.flatMap((param) => {
-          const buttons: NonNullable<ContextMenuItem['inlineButtons']> = [];
-          for (let val = param.lowerRange; val <= param.upperRange; val++) {
-            buttons.push({
-              label: `×${val}`,
-              actionId: 'addEvent' as const,
-              actionPayload: { ownerEntityId: col.ownerEntityId, columnId: col.columnId, atFrame, defaultSkill: { ...col.defaultEvent, parameterValues: { [param.id]: val } } },
-              disabled: false,
-            });
-          }
-          return buttons;
-        })
-        : undefined;
+      const defParamSubmenu = !disabled ? buildParameterSubmenu(col.defaultEvent?.suppliedParameters?.VARY_BY) : undefined;
+      const defDefaultParamValues = defaultParamValues(defParamSubmenu);
+      const defStacksAxis = !disabled ? buildStacksAxis(col.columnId) : undefined;
+      const mergedSubmenu: ContextMenuParameterSubmenu | undefined =
+        defParamSubmenu || defStacksAxis ? [...(defParamSubmenu ?? []), ...(defStacksAxis ? [defStacksAxis] : [])] : undefined;
+      const defaultSkill = col.defaultEvent
+        ? (defDefaultParamValues ? { ...col.defaultEvent, parameterValues: defDefaultParamValues } : col.defaultEvent)
+        : null;
       return {
         label: eventName,
         actionId: 'addEvent' as const,
-        actionPayload: { ownerEntityId: col.ownerEntityId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
+        actionPayload: { ownerEntityId: col.ownerEntityId, columnId: col.columnId, atFrame, defaultSkill },
         disabled,
         disabledReason: reason,
-        ...(defParamButtons && defs ? { inlineLabel: defs[0].name } : {}),
-        inlineButtons: defParamButtons,
+        ...(mergedSubmenu ? { parameterSubmenu: mergedSubmenu } : {}),
       };
     })(),
     ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),

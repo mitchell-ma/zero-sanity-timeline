@@ -93,7 +93,7 @@
     "id": "AIC_TACTICAL_GLOVES",
     "name": "AIC Tactical Gloves",
     "gearType": "GLOVES",
-    "gearSet": "AIC_LIGHT"
+    "gearSet": "AIC_LIGHT_STAT"
   },
   "metadata": {
     "originId": "game",

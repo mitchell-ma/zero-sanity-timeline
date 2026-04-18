@@ -1,26 +1,40 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        },
+        "name": "Mordvolt Resistant"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "TREATMENT_BONUS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.3
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "TREATMENT_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.3
+                }
+              }
             }
-          }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "MORDVOLT_RESISTANT_STAT",
+    "id": "MORDVOLT_RESISTANT",
     "name": "Mordvolt Resistant",
     "duration": {
       "value": {
@@ -38,10 +52,10 @@
     },
     "description": "Treatment Effect +30% when HP below 50%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "MORDVOLT_RESISTANT",
+    "originId": "MORDVOLT_RESISTANT_STAT",
     "dataStatus": "RECONCILED"
   }
 }

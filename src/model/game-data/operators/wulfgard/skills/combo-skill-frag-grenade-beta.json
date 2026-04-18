@@ -1,31 +1,12 @@
 {
   "properties": {
-    "name": "Frag Grenade·β",
+    "name": "Frag Grenade\u00b7\u03b2",
     "description": "When an Arts Infliction is applied to an enemy. Throws a frag grenade at the target's location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "HEAT",
     "id": "FRAG_GRENADE_BETA"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 10
-            }
-          }
-        }
-      ]
-    }
-  ],
   "segments": [
     {
       "metadata": {
@@ -46,7 +27,27 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "RECOVER",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 10
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -61,7 +62,7 @@
           "unit": "SECOND"
         },
         "element": "HEAT",
-        "name": "Frag Grenade·β"
+        "name": "Frag Grenade\u00b7\u03b2"
       },
       "frames": [
         {
@@ -95,7 +96,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "HEAT",
                   "to": "ENEMY",
                   "with": {
@@ -196,7 +198,6 @@
     "icon": "skills/combo_wulfgard.png",
     "dataStatus": "VERIFIED"
   },
-  "clauseType": "ALL",
   "activationWindow": {
     "properties": {
       "maxSkills": 1
@@ -208,8 +209,9 @@
             "subjectDeterminer": "ANY",
             "subject": "OPERATOR",
             "verb": "APPLY",
-            "object": "INFLICTION",
-            "objectId": "ARTS",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "ARTS",
             "to": "ENEMY"
           }
         ]

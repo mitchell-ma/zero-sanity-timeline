@@ -17,7 +17,6 @@ import { NounType, VerbType, type Effect } from '../../dsl/semantics';
 export interface ApplyFrameOptions {
   statusId: string;
   to?: string;
-  inheritDuration?: boolean;
   isForced?: boolean;
   objectId?: string;
   objectQualifier?: string;
@@ -35,7 +34,6 @@ export function applyFrame(opts: ApplyFrameOptions) {
     objectId: (opts.objectId ?? opts.statusId) as Effect['objectId'],
     ...(opts.objectQualifier !== undefined ? { objectQualifier: opts.objectQualifier as Effect['objectQualifier'] } : {}),
     to: (opts.to ?? NounType.ENEMY) as Effect['to'],
-    inheritDuration: opts.inheritDuration ?? true,
     ...(opts.isForced ? { with: { isForced: { verb: VerbType.IS, value: 1 } } } : {}),
   };
   return {

@@ -11,11 +11,11 @@ import { NounType, DeterminerType } from '../../dsl/semantics';
 import { EventType } from '../../consts/enums';
 import type { ClauseEffect, ClausePredicate } from './weaponStatusesStore';
 import { resolveEffectStat } from '../enums/stats';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'eventCategoryType']);
-const VALID_TOP_KEYS = new Set(['clause', 'onTriggerClause', 'properties', 'metadata']);
+const VALID_TOP_KEYS = new Set(['segments', 'onTriggerClause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -62,9 +62,17 @@ export function validateWeaponSkill(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
   errors.push(...validateNonNegativeValues(json, 'root'));
 
-  if (json.clause) {
-    if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
-    else (json.clause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `clause[${i}]`)));
+  // Root-level `clause` is rejected — clauses MUST live inside segments.
+  if ('clause' in json) errors.push('root.clause: not allowed — move clause effects into segments[0].clause');
+
+  if (json.segments) {
+    if (!Array.isArray(json.segments)) errors.push('root.segments: must be an array');
+    else (json.segments as Record<string, unknown>[]).forEach((s, si) => {
+      const segClause = (s as { clause?: unknown[] }).clause;
+      if (Array.isArray(segClause)) {
+        (segClause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `segments[${si}].clause[${i}]`)));
+      }
+    });
   }
 
   if (json.onTriggerClause) {
@@ -75,7 +83,7 @@ export function validateWeaponSkill(json: Record<string, unknown>): string[] {
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
-  if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
+  errors.push(...checkIdAndName(props, 'properties'));
 
   const meta = json.metadata as Record<string, unknown> | undefined;
   if (meta) {
@@ -95,12 +103,12 @@ export interface TriggerClause {
 
 // ── WeaponSkill class ───────────────────────────────────────────────────────
 
-/** A weapon skill definition (eventCategoryType=WEAPON). The trigger-source
- *  wrapper for a weapon's passive stat clauses + conditional effects that
- *  apply WeaponStat statuses. */
+/** A weapon skill definition (eventCategoryType=WEAPON_STAT). The trigger-
+ *  source wrapper: segments[i].clause (passive stats) + `onTriggerClause` that
+ *  applies the in-game-visible WeaponStat status (eventCategoryType=WEAPON). */
 export class WeaponSkill {
   readonly id: string;
-  readonly clause: ClausePredicate[];
+  readonly segments: { clause?: ClausePredicate[] }[];
   readonly onTriggerClause: TriggerClause[];
   readonly name: string;
   readonly description: string;
@@ -112,12 +120,17 @@ export class WeaponSkill {
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
     this.id = (props.id ?? '') as string;
-    this.clause = (json.clause ?? []) as ClausePredicate[];
+    this.segments = (json.segments ?? []) as { clause?: ClausePredicate[] }[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
     this.name = (props.name ?? '') as string;
     this.description = (props.description ?? '') as string;
     this.eventCategoryType = props.eventCategoryType as string;
     if (meta.originId) this.originId = meta.originId as string;
+  }
+
+  /** All clause predicates flattened across segments. */
+  get clause(): ClausePredicate[] {
+    return this.segments.flatMap(s => s.clause ?? []);
   }
 
   /** Get the permanent (passive) effects — clauses with no conditions. */
@@ -142,7 +155,7 @@ export class WeaponSkill {
   /** Serialize back to the JSON shape. */
   serialize(): Record<string, unknown> {
     return {
-      ...(this.clause.length > 0 ? { clause: this.clause } : {}),
+      ...(this.segments.length > 0 ? { segments: this.segments } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
         id: this.id,
@@ -157,7 +170,7 @@ export class WeaponSkill {
   /** Serialize as a trigger-source def for the event pipeline. */
   serializeAsTriggerDef(): Record<string, unknown> {
     return {
-      ...(this.clause.length > 0 ? { clause: this.clause } : {}),
+      ...(this.segments.length > 0 ? { segments: this.segments } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
         id: this.id,
@@ -165,7 +178,7 @@ export class WeaponSkill {
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
         eventType: EventType.STATUS,
-        eventCategoryType: NounType.WEAPON,
+        eventCategoryType: NounType.WEAPON_STAT,
       },
       metadata: {
         ...(this.originId ? { originId: this.originId } : {}),
@@ -205,11 +218,15 @@ for (const key of genericContext.keys()) {
   genericSkillCache.set(skillId, WeaponSkill.deserialize(json, `generic:${skillId}`));
 }
 
-// Named weapon skills: individual files in weapons/<weapon>/skills/
-const namedContext = require.context('./weapons', true, /\/skills\/skill-[^/]+\.json$/);
+// Named weapon skills: route by eventCategoryType=WEAPON_STAT (not by path).
+// The JSON's properties.eventCategoryType determines that this is a named
+// skill; paths are informational only.
+const namedContext = require.context('./weapons', true, /\.json$/);
 for (const key of namedContext.keys()) {
-  if (key.includes('/generic/')) continue;
+  if (key.includes('/generic/') || key.includes('/statuses/')) continue;
   const json = namedContext(key) as Record<string, unknown>;
+  const props = (json.properties ?? {}) as Record<string, unknown>;
+  if (props.eventCategoryType !== NounType.WEAPON_STAT) continue;
   const skill = WeaponSkill.deserialize(json, key);
   if (skill.originId) {
     namedSkillCache.set(skill.originId, skill);

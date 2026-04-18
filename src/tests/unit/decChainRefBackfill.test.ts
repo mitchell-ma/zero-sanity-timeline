@@ -21,7 +21,7 @@ function mkSkillEvent(uid: string, ownerEntityId: string, sourceEntityId?: strin
     startFrame: 0,
     segments: [{ properties: { duration: 60 } }],
     sourceEntityId,
-    sourceSkillName: 'TEST',
+    sourceSkillId: 'TEST',
   } as TimelineEvent;
 }
 

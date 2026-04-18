@@ -1,4 +1,31 @@
 {
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Vigil Services (Ultimate Energy Lockout)"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "IGNORE",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT",
     "name": "Vigil Services (Ultimate Energy Lockout)",
@@ -22,19 +49,6 @@
       "interactionType": "RESET"
     }
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "IGNORE",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
-        }
-      ]
-    }
-  ],
   "metadata": {
     "originId": "LAST_RITE",
     "dataSources": [

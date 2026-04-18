@@ -502,8 +502,8 @@ export function computeEventPresentation(
   // Segment labels from the skill definition (for segment name display).
   // The event's own segments carry frame data; the skill def carries names.
   const srcEntity = ev.sourceEntityId ?? '';
-  const skillDef = ev.sourceSkillName
-    ? (getOperatorSkill(srcEntity, ev.sourceSkillName)
+  const skillDef = ev.sourceSkillId
+    ? (getOperatorSkill(srcEntity, ev.sourceSkillId)
       ?? getOperatorSkill(srcEntity, ev.id))
     : null;
   const defSegs = skillDef?.segments as EventSegmentData[] | undefined;

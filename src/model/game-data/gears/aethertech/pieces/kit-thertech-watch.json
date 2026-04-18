@@ -91,9 +91,9 @@
   ],
   "properties": {
     "id": "THERTECH_WATCH",
-    "name": "Æthertech Watch",
+    "name": "\u00c6thertech Watch",
     "gearType": "KIT",
-    "gearSet": "AETHERTECH"
+    "gearSet": "AETHERTECH_STAT"
   },
   "metadata": {
     "originId": "game",

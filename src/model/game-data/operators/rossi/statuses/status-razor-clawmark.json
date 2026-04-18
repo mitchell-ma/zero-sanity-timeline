@@ -1427,7 +1427,8 @@
           ],
           "clauseType": "ALL"
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -1468,6 +1469,5 @@
       "WARFARIN"
     ],
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

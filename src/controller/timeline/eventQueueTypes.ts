@@ -54,12 +54,17 @@ export interface StatusEventDef {
   metadata?: { originId?: string; isEnabled?: boolean };
   onTriggerClause?: TriggerClause[];
   onEntryClause?: EffectClause[];
-  clause?: EffectClause[];
   onExitClause?: EffectClause[];
   /** Multi-phase segments (e.g. Antal Focus: 20s Focus + 40s Empowered Focus). */
   segments?: StatusSegmentDef[];
-  /** Clause evaluation mode: FIRST_MATCH evaluates clauses in order, fires first match only. */
-  clauseType?: ClauseEvaluationType;
+  /** Evaluation mode for onTriggerClause entries. FIRST_MATCH fires only the
+   *  first matching clause (e.g. talents with a base clause + potential-gated
+   *  refinement). Default (omitted) fires every matching clause. */
+  onTriggerClauseType?: ClauseEvaluationType;
+  /** Evaluation mode for onEntryClause entries. */
+  onEntryClauseType?: ClauseEvaluationType;
+  /** Evaluation mode for onExitClause entries. */
+  onExitClauseType?: ClauseEvaluationType;
 }
 
 interface TriggerClause {
@@ -114,7 +119,7 @@ export interface EngineTriggerContext {
 export interface EngineTriggerEntry {
   frame: number;
   sourceEntityId: string;
-  sourceSkillName: string;
+  sourceSkillId: string;
   /** Slot ID of the operator that triggered this entry (for TRIGGER determiner resolution). */
   triggerSlotId?: string;
   /** Column ID of the event that matched the trigger (e.g. CRYO_INFLICTION). */
@@ -144,7 +149,7 @@ export interface QueueFrame {
   columnId: string;
   ownerEntityId: string;
   sourceEntityId: string;
-  sourceSkillName: string;
+  sourceSkillId: string;
   maxStacks: number;
   durationFrames: number;
   operatorSlotId: string;
@@ -174,6 +179,8 @@ export interface QueueFrame {
   // ── STATUS_EXIT fields ───────────────────────────────────────────────
   /** onExitClause effects to execute at the status end frame. */
   statusExitClauses?: { conditions: unknown[]; effects?: unknown[] }[];
+  /** Evaluation mode for the deferred exit clause (FIRST_MATCH / ALL). */
+  statusExitClauseType?: ClauseEvaluationType;
   /** Owner ID of the parent status (for resolveEntityId context). */
   statusExitEntityId?: string;
 }

@@ -88,7 +88,7 @@ describe('Segment-clause dispatch — Antal OVERCLOCKED_MOMENT_AMP', () => {
     const ampEvents = result.current.allProcessedEvents.filter(
       ev => ev.ownerEntityId === TEAM_ID
         && (ev.id === NounType.ELECTRIC_AMP || ev.id === NounType.HEAT_AMP)
-        && ev.sourceSkillName === OVERCLOCKED_MOMENT_AMP_ID,
+        && ev.sourceSkillId === OVERCLOCKED_MOMENT_AMP_ID,
     );
     expect(ampEvents.length).toBe(2); // ELECTRIC + HEAT
     const elements = new Set(ampEvents.map(e => e.id));

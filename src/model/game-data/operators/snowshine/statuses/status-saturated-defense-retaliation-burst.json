@@ -72,7 +72,8 @@
                 },
                 {
                   "verb": "APPLY",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "CRYO",
                   "to": "ENEMY",
                   "with": {
@@ -176,8 +177,8 @@
           ],
           "clauseType": "ALL"
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
-  ],
-  "clauseType": "ALL"
+  ]
 }

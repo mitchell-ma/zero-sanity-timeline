@@ -1,36 +1,50 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.055555556,
-                0.1,
-                0.14444445,
-                0.18888889,
-                0.23333333,
-                0.2777778,
-                0.32222223,
-                0.36666667,
-                0.43333334
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "CRYO"
+          "unit": "SECOND"
+        },
+        "name": "Cryo DMG Boost [L]"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.055555556,
+                    0.1,
+                    0.14444445,
+                    0.18888889,
+                    0.23333333,
+                    0.2777778,
+                    0.32222223,
+                    0.36666667,
+                    0.43333334
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "CRYO"
+            }
+          ]
         }
       ]
     }

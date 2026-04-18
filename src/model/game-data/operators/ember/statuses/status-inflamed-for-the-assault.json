@@ -1,50 +1,65 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 5
+          },
+          "unit": "SECOND"
+        },
+        "name": "Inflamed for the Assault (T1)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "SANCTUARY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "operation": "ADD",
-              "left": {
-                "verb": "VARY_BY",
-                "object": "TALENT_LEVEL",
-                "value": [
-                  0,
-                  0.3,
-                  0.5
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              },
-              "right": {
-                "verb": "VARY_BY",
-                "object": "POTENTIAL",
-                "value": [
-                  0,
-                  0.2,
-                  0.2,
-                  0.2,
-                  0.2,
-                  0.2
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "SANCTUARY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "operation": "ADD",
+                  "left": {
+                    "verb": "VARY_BY",
+                    "object": "TALENT_LEVEL",
+                    "value": [
+                      0,
+                      0.3,
+                      0.5
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  },
+                  "right": {
+                    "verb": "VARY_BY",
+                    "object": "POTENTIAL",
+                    "value": [
+                      0,
+                      0.2,
+                      0.2,
+                      0.2,
+                      0.2,
+                      0.2
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  }
                 }
               }
             }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -76,6 +91,5 @@
       "ENDFIELD_WIKI"
     ],
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

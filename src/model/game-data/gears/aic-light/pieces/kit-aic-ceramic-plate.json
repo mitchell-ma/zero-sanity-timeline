@@ -70,7 +70,7 @@
     "id": "AIC_CERAMIC_PLATE",
     "name": "AIC Ceramic Plate",
     "gearType": "KIT",
-    "gearSet": "AIC_LIGHT"
+    "gearSet": "AIC_LIGHT_STAT"
   },
   "metadata": {
     "originId": "game",

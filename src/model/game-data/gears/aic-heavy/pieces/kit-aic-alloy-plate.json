@@ -69,7 +69,7 @@
     "id": "AIC_ALLOY_PLATE",
     "name": "AIC Alloy Plate",
     "gearType": "KIT",
-    "gearSet": "AIC_HEAVY"
+    "gearSet": "AIC_HEAVY_STAT"
   },
   "metadata": {
     "originId": "game",

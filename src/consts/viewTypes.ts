@@ -157,7 +157,7 @@ export interface EventSegmentData {
   /** Damage frame markers within this segment. */
   frames?: EventFrameMarker[];
   /** Clause effects active during this segment (from JSON clause data). */
-  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectId?: string; objectQualifier?: string; object: string; toDeterminer?: string; to?: string; of?: Record<string, unknown>; with?: { segments?: number[] } }[] }[];
+  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; objectId?: string; objectQualifier?: string; object: string; toDeterminer?: string; to?: string; of?: Record<string, unknown>; with?: Record<string, unknown> }[] }[];
   /** Absolute start frame on the timeline (set by processCombatSimulation, not raw JSON). */
   absoluteStartFrame?: number;
   /** Catch-all for domain-specific fields not part of the core segment model. */
@@ -221,7 +221,7 @@ export interface TimelineEvent {
   /** Operator slot ID that originally produced this derived event. */
   sourceEntityId?: string;
   /** Skill name of the operator event that produced this derived event. */
-  sourceSkillName?: string;
+  sourceSkillId?: string;
   /** Source damage frame identity ("eventUid:si:fi") for intra-frame ordering.
    *  Set when this status was created by a damage frame's clause effects or trigger chain. */
   sourceFrameKey?: string;
@@ -289,9 +289,52 @@ export interface TimelineEvent {
   dslObjectQualifier?: string;
 }
 
+/** Option within a parameterSubmenu — one value choice for a supplied parameter. */
+export interface ContextMenuParamOption {
+  label: string;
+  value: number;
+  isDefault: boolean;
+}
+
+/** One axis within a parameterSubmenu — a single supplied parameter and its
+ *  selectable values. The submenu may contain multiple axes (one row per axis). */
+export interface ContextMenuParamAxis {
+  paramId: string;
+  paramName: string;
+  options: ContextMenuParamOption[];
+  /** Kind of axis — determines how the value is applied when the item fires.
+   *  PARAMETER rides on event.parameterValues; STACKS places N events; STATUS_LEVEL
+   *  sets statusLevel on the single placed event. */
+  kind: import('./enums').ContextMenuAxisKind;
+  /** When true, render a number-stepper (<<  <  N  >  >>) instead of inline
+   *  buttons. Used when the selectable range exceeds 4 distinct options. */
+  useStepper?: boolean;
+  /** Inclusive min/max for stepper mode. */
+  min?: number;
+  max?: number;
+}
+
+/** Right-side expansion submenu for selecting supplied parameter values.
+ *  Each axis renders as one row of inline options. Selecting an option updates
+ *  the parent item's parameterValues override; it does NOT place the event.
+ *  Event placement is via clicking the main row. */
+export type ContextMenuParameterSubmenu = ContextMenuParamAxis[];
+
+/** Click-time override from a parameterSubmenu selection. The view splits the
+ *  raw selection map by axis kind so the action handler can apply each cleanly:
+ *  parameterValues ride on event.parameterValues, stacks multiplies placements,
+ *  statusLevel stamps the single placed event. */
+export interface ContextMenuItemOverride {
+  parameterValues?: Record<string, number>;
+  stacks?: number;
+  statusLevel?: number;
+}
+
 export interface ContextMenuItem {
   label?: string;
-  action?: () => void;
+  /** Optional override argument lets the view inject current parameter selections
+   *  (from a parameterSubmenu) at click time. */
+  action?: (override?: ContextMenuItemOverride) => void;
   danger?: boolean;
   disabled?: boolean;
   /** Reason shown below label when disabled. */
@@ -320,6 +363,8 @@ export interface ContextMenuItem {
     disabled?: boolean;
     disabledReason?: string;
   }[];
+  /** Right-side flyout submenu for picking a supplied parameter value. */
+  parameterSubmenu?: ContextMenuParameterSubmenu;
 }
 
 export interface ContextMenuState {
@@ -357,7 +402,7 @@ export interface MicroColumn {
     /** Source operator ID for manually-created events (e.g. 'debugger'). */
     sourceEntityId?: string;
     /** Source skill name for manually-created events (e.g. 'Debug'). */
-    sourceSkillName?: string;
+    sourceSkillId?: string;
     /** Stacking config from status JSON (limit, interactionType, duration). */
     stacks?: Record<string, unknown>;
   };

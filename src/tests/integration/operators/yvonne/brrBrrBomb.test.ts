@@ -107,7 +107,7 @@ describe('A. Brr-Brr-Bomb JSON structure', () => {
     expect(effects[1].verb).toBe(VerbType.DEAL);
     expect(effects[1].object).toBe(NounType.DAMAGE);
     expect(effects[2].verb).toBe(VerbType.CONSUME);
-    expect(effects[2].object).toBe(NounType.INFLICTION);
+    expect(effects[2].objectId).toBe(NounType.INFLICTION);
   });
 
   it('A8: Nature branch mirrors Cryo branch structure', () => {
@@ -231,7 +231,7 @@ describe('E. Consume Infliction', () => {
 
   it('E1: Cryo branch consumes CRYO INFLICTION with stacks MAX', () => {
     expect(cryoConsume.verb).toBe(VerbType.CONSUME);
-    expect(cryoConsume.object).toBe(NounType.INFLICTION);
+    expect(cryoConsume.objectId).toBe(NounType.INFLICTION);
     expect(cryoConsume.objectQualifier).toBe(AdjectiveType.CRYO);
     expect(cryoConsume.from).toBe(NounType.ENEMY);
     expect(cryoConsume.with.stacks).toBe(THRESHOLD_MAX);
@@ -239,7 +239,7 @@ describe('E. Consume Infliction', () => {
 
   it('E2: Nature branch consumes NATURE INFLICTION with stacks MAX', () => {
     expect(natureConsume.verb).toBe(VerbType.CONSUME);
-    expect(natureConsume.object).toBe(NounType.INFLICTION);
+    expect(natureConsume.objectId).toBe(NounType.INFLICTION);
     expect(natureConsume.objectQualifier).toBe(AdjectiveType.NATURE);
     expect(natureConsume.from).toBe(NounType.ENEMY);
     expect(natureConsume.with.stacks).toBe(THRESHOLD_MAX);
@@ -252,7 +252,7 @@ describe('E. Consume Infliction', () => {
 
 describe('F. Base damage multipliers & SP cost', () => {
   it('F1: SP cost is 100', () => {
-    const spEffect = BS_JSON.clause[0].effects[0];
+    const spEffect = BS_JSON.segments[0].clause[0].effects[0];
     expect(spEffect.verb).toBe(VerbType.CONSUME);
     expect(spEffect.object).toBe(NounType.SKILL_POINT);
     expect(spEffect.with.value.value).toBe(100);
@@ -349,7 +349,7 @@ describe('H. P4 SINGLE_TARGET supplied parameter', () => {
     expect(enemyHit.upperRange).toBe(2);
   });
 
-  it('H2: BS context menu shows supplied parameter buttons', () => {
+  it('H2: BS context menu exposes a parameterSubmenu for the supplied parameter', () => {
     const { result } = setup();
     const col = findColumn(result.current, SLOT, NounType.BATTLE);
     const menuItems = buildContextMenu(result.current, col!, 5 * FPS);
@@ -360,9 +360,13 @@ describe('H. P4 SINGLE_TARGET supplied parameter', () => {
         && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === BS_ID,
     );
     expect(bsItem).toBeDefined();
-    // Should have inline buttons for the supplied parameter (×0, ×1)
-    expect(bsItem!.inlineButtons).toBeDefined();
-    expect(bsItem!.inlineButtons!.length).toBeGreaterThanOrEqual(2);
+    // Should expose a right-side parameter submenu (×0, ×1) — NOT inline buttons,
+    // which are reserved for BATK segment chains.
+    expect(bsItem!.inlineButtons).toBeUndefined();
+    expect(bsItem!.parameterSubmenu).toBeDefined();
+    // parameterSubmenu is an array of axes; this skill has one (ENEMY_HIT).
+    expect(bsItem!.parameterSubmenu!).toHaveLength(1);
+    expect(bsItem!.parameterSubmenu![0].options.length).toBeGreaterThanOrEqual(2);
   });
 
   it('H3: placed BS event has suppliedParameters with SINGLE_TARGET', () => {

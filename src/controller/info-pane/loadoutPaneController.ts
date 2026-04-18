@@ -262,10 +262,12 @@ export function resolveWeaponBreakdown(
         }
       }
 
-      // Buff lines — extracted from clause effects (APPLY verb with stat object)
+      // Buff lines — extracted from segments[i].clause effects (APPLY verb with stat object)
       const stackSuffix = maxStacks > 1 ? `/stack (max ${maxStacks})` : '';
       interface EffectClause { verb: string; object: string; objectId?: string; objectQualifier?: string; with?: { value?: { verb?: string; object?: string; value?: number; valueMin?: number; valueMax?: number } } }
-      const clauseEffects: EffectClause[] = (def.clause ?? []).flatMap((c) => (c.effects ?? []) as unknown as EffectClause[])
+      const segmentClauses = (def.segments as { clause?: { effects?: unknown[] }[] }[] | undefined ?? [])
+        .flatMap(s => Array.isArray(s.clause) ? s.clause : []);
+      const clauseEffects: EffectClause[] = segmentClauses.flatMap((c) => (c.effects ?? []) as unknown as EffectClause[])
         .filter((e) => e.verb === VerbType.APPLY && e.with?.value);
       const buffs: WeaponEffectBuff[] = clauseEffects.map((e) => {
         const stat = resolveEffectStat(e) ?? e.object;
@@ -656,6 +658,8 @@ export function resolveSubSkills(operatorId: string, skillType: SkillType): SubS
     const skill = getOperatorSkill(operatorId, skillId);
     if (!skill) continue;
     const variantKey = skill.eventQualifierType ?? skillType;
+    const skillSegmentClauses = (skill.segments as { clause?: unknown[] }[] | undefined ?? [])
+      .flatMap(s => Array.isArray(s.clause) ? s.clause : []);
     entries.push({
       variantKey,
       variantLabel: BATK_VARIANT_LABELS[variantKey] ?? variantKey,
@@ -663,7 +667,7 @@ export function resolveSubSkills(operatorId: string, skillType: SkillType): SubS
       skillName: skill.name ?? skillId,
       description: skill.description,
       detail: resolveSkillDetailForId(operatorId, skillId, 0),
-      clause: (skill.clause ?? []) as Clause,
+      clause: skillSegmentClauses as Clause,
     });
   }
   return entries;
@@ -692,13 +696,15 @@ function resolveSkillDetailForId(operatorId: string, skillId: string, potential:
   return { skillId, skillName: skillId, segments, grid: null, description: undefined, element: undefined };
 }
 
-/** Resolve the clause data for a skill type (top-level clause, not per-segment). */
+/** Resolve the clause data for a skill type (flattened across all segments). */
 export function resolveSkillClause(operatorId: string, skillType: SkillType): Clause {
   const typeMap = getSkillTypeMap(operatorId);
   const skillId = typeMap[skillType];
   if (!skillId) return [];
   const skill = getOperatorSkill(operatorId, skillId);
-  return (skill?.clause ?? []) as Clause;
+  if (!skill) return [];
+  const segments = skill.segments as { clause?: unknown[] }[] | undefined ?? [];
+  return segments.flatMap(s => Array.isArray(s.clause) ? s.clause : []) as Clause;
 }
 
 /**

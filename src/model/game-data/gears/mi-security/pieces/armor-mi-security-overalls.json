@@ -93,7 +93,7 @@
     "id": "MI_SECURITY_OVERALLS",
     "name": "MI Security Overalls",
     "gearType": "ARMOR",
-    "gearSet": "MI_SECURITY"
+    "gearSet": "MI_SECURITY_STAT"
   },
   "metadata": {
     "originId": "game",

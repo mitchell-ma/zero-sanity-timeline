@@ -63,13 +63,12 @@ function linkStatusEvent(startFrame: number, durationFrames: number): TimelineEv
               object: NounType.STATUS,
               objectId: StatusType.LINK,
               to: NounType.TEAM,
-              inheritDuration: true,
             },
           }],
         }],
       }],
     }],
-    sourceSkillName: 'Test Link Source',
+    sourceSkillId: 'Test Link Source',
   };
 }
 

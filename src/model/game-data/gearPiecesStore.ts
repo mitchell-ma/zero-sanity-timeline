@@ -9,7 +9,7 @@ import { VerbType, type ValueNode } from '../../dsl/semantics';
 import { StatType } from '../enums/stats';
 import { resolveEffectStat } from '../enums/stats';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'gearType', 'gearSet']);
@@ -54,8 +54,7 @@ export function validateGearPiece(json: Record<string, unknown>): string[] {
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
-  if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
-  if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
+  errors.push(...checkIdAndName(props, 'properties'));
   if (typeof props.gearType !== 'string') errors.push('properties.gearType: must be a string');
   if (typeof props.gearSet !== 'string') errors.push('properties.gearSet: must be a string');
 

@@ -9,16 +9,17 @@
  *   • view-layer stack-label verification via `computeStatusViewOverrides`
  *
  * Regression scope: the gear-set trigger-source previously shared its `id`
- * with the GearStat it applies (both `"MI_SECURITY"`). The self-apply
- * lifecycle gate in `handleEngineTrigger` queried active events by the
- * trigger-source's id, found the GearStat instance, and dropped every APPLY
- * after the first. Symptom (reported via shared loadout URL): the MI Security
- * chip rendered as a single long "MI Security I" banner instead of stacking
- * I → V across the BA's crit frames.
+ * with the GearStat it applies. The self-apply lifecycle gate in
+ * `handleEngineTrigger` queried active events by the trigger-source's id,
+ * found the GearStat instance, and dropped every APPLY after the first.
+ * Symptom (reported via shared loadout URL): the MI Security chip rendered
+ * as a single long "MI Security I" banner instead of stacking I → V across
+ * the BA's crit frames.
  *
- * Fix: split the id namespace. `eventCategoryType: GEAR, id: MI_SECURITY` for
- * the trigger-source; `eventCategoryType: GEAR_STAT, id: MI_SECURITY_STAT`
- * for the applied status. Self-apply gate no longer finds a spurious match.
+ * Fix: split the id namespace. Wrapper (eventCategoryType: GEAR_STAT, id:
+ * MI_SECURITY_STAT) holds the onTriggerClause; the in-game-visible buff
+ * (eventCategoryType: GEAR, id: MI_SECURITY) is the status that gets
+ * applied. Self-apply gate no longer finds a spurious match.
  */
 
 import { renderHook, act } from '@testing-library/react';
@@ -32,9 +33,11 @@ import type { AppResult } from '../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const ROSSI_ID: string = require('../../../model/game-data/operators/rossi/rossi.json').id;
-const MI_SECURITY_STAT_ID: string = require('../../../model/game-data/gears/mi-security/statuses/status-mi-security.json').properties.id;
-const MI_SECURITY_GEAR_ID: string = require('../../../model/game-data/gears/mi-security/mi-security.json').properties.id;
-const MI_SECURITY_STAT_LABEL: string = require('../../../model/game-data/gears/mi-security/statuses/status-mi-security.json').properties.name;
+// Wrapper: eventCategoryType=GEAR_STAT, holds onTriggerClause + permanent APPLY STAT.
+const MI_SECURITY_WRAPPER_ID: string = require('../../../model/game-data/gears/mi-security/mi-security.json').properties.id;
+// In-game visible buff: eventCategoryType=GEAR, what shows on the status bar.
+const MI_SECURITY_BUFF_ID: string = require('../../../model/game-data/gears/mi-security/statuses/status-mi-security.json').properties.id;
+const MI_SECURITY_BUFF_LABEL: string = require('../../../model/game-data/gears/mi-security/statuses/status-mi-security.json').properties.name;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT = 'slot-0';
@@ -71,7 +74,7 @@ function placeBA(app: AppResult, atFrame: number) {
 
 function miStatEvents(app: AppResult) {
   return app.allProcessedEvents
-    .filter(ev => ev.columnId === MI_SECURITY_STAT_ID && ev.ownerEntityId === SLOT)
+    .filter(ev => ev.columnId === MI_SECURITY_BUFF_ID && ev.ownerEntityId === SLOT)
     .sort((a, b) => a.startFrame - b.startFrame);
 }
 
@@ -82,13 +85,13 @@ function miStatLabels(app: AppResult): string[] {
 
 describe('MI Security dual-scope stacking — E2E', () => {
   describe('id namespace (regression against the self-apply gate collision)', () => {
-    it('gear trigger-source id stays "MI_SECURITY"', () => {
-      expect(MI_SECURITY_GEAR_ID).toBe('MI_SECURITY');
+    it('wrapper id is suffixed with _STAT (GEAR_STAT category)', () => {
+      expect(MI_SECURITY_WRAPPER_ID).toBe('MI_SECURITY_STAT');
     });
 
-    it('gear status id is suffixed with _STAT to avoid collision', () => {
-      expect(MI_SECURITY_STAT_ID).toBe('MI_SECURITY_STAT');
-      expect(MI_SECURITY_STAT_ID).not.toBe(MI_SECURITY_GEAR_ID);
+    it('in-game buff id is the bare set name (GEAR category)', () => {
+      expect(MI_SECURITY_BUFF_ID).toBe('MI_SECURITY');
+      expect(MI_SECURITY_BUFF_ID).not.toBe(MI_SECURITY_WRAPPER_ID);
     });
   });
 
@@ -103,8 +106,8 @@ describe('MI Security dual-scope stacking — E2E', () => {
       expect(distinctFrames.size).toBe(events.length);
 
       const labels = miStatLabels(result.current);
-      expect(labels[0]).toBe(`${MI_SECURITY_STAT_LABEL} I`);
-      expect(labels[1]).toBe(`${MI_SECURITY_STAT_LABEL} II`);
+      expect(labels[0]).toBe(`${MI_SECURITY_BUFF_LABEL} I`);
+      expect(labels[1]).toBe(`${MI_SECURITY_BUFF_LABEL} II`);
     });
   });
 
@@ -133,7 +136,7 @@ describe('MI Security dual-scope stacking — E2E', () => {
       // Source attribution: applied by the BA skill on this slot.
       for (const ev of events) {
         expect(ev.sourceEntityId).toBe(ROSSI_ID);
-        expect(ev.sourceSkillName).toBe('SEETHING_WOLFBLOOD_BATK');
+        expect(ev.sourceSkillId).toBe('SEETHING_WOLFBLOOD_BATK');
       }
     });
 
@@ -143,8 +146,8 @@ describe('MI Security dual-scope stacking — E2E', () => {
 
       const labels = miStatLabels(result.current);
       expect(labels.length).toBeGreaterThanOrEqual(2);
-      expect(labels[0]).toBe(`${MI_SECURITY_STAT_LABEL} I`);
-      expect(labels[1]).toBe(`${MI_SECURITY_STAT_LABEL} II`);
+      expect(labels[0]).toBe(`${MI_SECURITY_BUFF_LABEL} I`);
+      expect(labels[1]).toBe(`${MI_SECURITY_BUFF_LABEL} II`);
       // Pre-fix: every label in this array was "MI Security I".
       const uniqueLabels = new Set(labels);
       expect(uniqueLabels.size).toBeGreaterThanOrEqual(2);
@@ -159,7 +162,7 @@ describe('MI Security dual-scope stacking — E2E', () => {
       // over 5 crit frames in ALWAYS mode, so the label must reach V — and
       // must never exceed it.
       expect(labels.length).toBeGreaterThanOrEqual(5);
-      expect(labels).toContain(`${MI_SECURITY_STAT_LABEL} V`);
+      expect(labels).toContain(`${MI_SECURITY_BUFF_LABEL} V`);
       for (const label of labels) {
         expect(label).not.toMatch(/\bVI$/);
         expect(label).not.toMatch(/\bVII$/);
@@ -174,8 +177,8 @@ describe('MI Security dual-scope stacking — E2E', () => {
       // another operator-status column.
       const events = miStatEvents(result.current);
       for (const ev of events) {
-        expect(ev.columnId).toBe(MI_SECURITY_STAT_ID);
-        expect(ev.name).toBe(MI_SECURITY_STAT_ID);
+        expect(ev.columnId).toBe(MI_SECURITY_BUFF_ID);
+        expect(ev.name).toBe(MI_SECURITY_BUFF_ID);
         expect(ev.ownerEntityId).toBe(SLOT);
       }
     });

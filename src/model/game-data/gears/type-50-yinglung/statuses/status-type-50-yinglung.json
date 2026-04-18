@@ -1,30 +1,44 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "STATUS_LEVEL",
-              "value": [
-                0.2
-              ]
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0
           },
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "COMBO"
+          "unit": "SECOND"
+        },
+        "name": "Type 50 Yinglung"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "STATUS_LEVEL",
+                  "value": [
+                    0.2
+                  ]
+                }
+              },
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "COMBO"
+            }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "TYPE_50_YINGLUNG_STAT",
+    "id": "TYPE_50_YINGLUNG",
     "name": "Type 50 Yinglung",
     "duration": {
       "value": {
@@ -42,10 +56,10 @@
     },
     "description": "Consumed on next combo skill cast",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "TYPE_50_YINGLUNG",
+    "originId": "TYPE_50_YINGLUNG_STAT",
     "dataStatus": "RECONCILED"
   }
 }

@@ -1,0 +1,1831 @@
+{
+  "properties": {
+    "name": "Mantra of Sundering",
+    "description": "Consumes the target's Electrification to increase the DMG multiplier of this battle skill and create [Status Level of Electrification consumed +1] Sunderblades (max 3 per cast). If the battlefield has fewer than 3 Sunderblades, Mantra of Sundering can still create 1 Sunderblade, even if it does not consume any target's Electrification. Zhuang Fangyi then channels all Sunderblades nearby to successively unleash Thunder Strikes on the target, dealing Electric DMG and giving bonus Ultimate Energy, with the final Thunder Strike dealing 6 times the DMG. A single battle skill casting can only create a max of 3 Sunderblades. Each Thunder Strike hit also raises the Force of Nature Electric Amp by +1%/+2% (at talent level 1/2); the final strike's amp bump scales with the total Sunderblade count that actually landed. P1 (Four Symbols of Harmony): DMG multiplier \u00d71.15.",
+    "eventType": "SKILL",
+    "eventCategoryType": "BATTLE",
+    "element": "ELECTRIC",
+    "id": "MANTRA_OF_SUNDERING"
+  },
+  "metadata": {
+    "originId": "ZHUANG_FANGYI",
+    "dataStatus": "RECONCILED"
+  },
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        },
+        "element": "ELECTRIC"
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "stacks": {
+                      "operation": "MIN",
+                      "left": {
+                        "verb": "IS",
+                        "value": 3
+                      },
+                      "right": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "IS",
+                          "value": 1
+                        },
+                        "right": {
+                          "verb": "IS",
+                          "object": "STATUS_LEVEL",
+                          "of": {
+                            "object": "STATUS",
+                            "objectId": "ELECTRIFICATION",
+                            "of": {
+                              "object": "ENEMY"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 15
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.5,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 2
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.2,
+                            0.22,
+                            0.24,
+                            0.26,
+                            0.28,
+                            0.3,
+                            0.32,
+                            0.34,
+                            0.36,
+                            0.39,
+                            0.42,
+                            0.45
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "IS",
+                            "object": "STATUS_LEVEL",
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "ELECTRIFICATION",
+                              "of": {
+                                "object": "ENEMY"
+                              }
+                            }
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.03,
+                              0.04,
+                              0.04,
+                              0.04,
+                              0.05,
+                              0.05,
+                              0.05,
+                              0.06,
+                              0.06,
+                              0.07,
+                              0.08,
+                              0.09
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 6
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          0.09,
+                          0.18
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 1
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.01,
+                            0.02
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.65,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 3
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.2,
+                            0.22,
+                            0.24,
+                            0.26,
+                            0.28,
+                            0.3,
+                            0.32,
+                            0.34,
+                            0.36,
+                            0.39,
+                            0.42,
+                            0.45
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "IS",
+                            "object": "STATUS_LEVEL",
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "ELECTRIFICATION",
+                              "of": {
+                                "object": "ENEMY"
+                              }
+                            }
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.03,
+                              0.04,
+                              0.04,
+                              0.04,
+                              0.05,
+                              0.05,
+                              0.05,
+                              0.06,
+                              0.06,
+                              0.07,
+                              0.08,
+                              0.09
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 6
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          0.09,
+                          0.18
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 2
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.01,
+                            0.02
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.8,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 4
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.2,
+                            0.22,
+                            0.24,
+                            0.26,
+                            0.28,
+                            0.3,
+                            0.32,
+                            0.34,
+                            0.36,
+                            0.39,
+                            0.42,
+                            0.45
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "IS",
+                            "object": "STATUS_LEVEL",
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "ELECTRIFICATION",
+                              "of": {
+                                "object": "ENEMY"
+                              }
+                            }
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.03,
+                              0.04,
+                              0.04,
+                              0.04,
+                              0.05,
+                              0.05,
+                              0.05,
+                              0.06,
+                              0.06,
+                              0.07,
+                              0.08,
+                              0.09
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 6
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          0.09,
+                          0.18
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 3
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.01,
+                            0.02
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.95,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 5
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.2,
+                            0.22,
+                            0.24,
+                            0.26,
+                            0.28,
+                            0.3,
+                            0.32,
+                            0.34,
+                            0.36,
+                            0.39,
+                            0.42,
+                            0.45
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "IS",
+                            "object": "STATUS_LEVEL",
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "ELECTRIFICATION",
+                              "of": {
+                                "object": "ENEMY"
+                              }
+                            }
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.03,
+                              0.04,
+                              0.04,
+                              0.04,
+                              0.05,
+                              0.05,
+                              0.05,
+                              0.06,
+                              0.06,
+                              0.07,
+                              0.08,
+                              0.09
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 6
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          0.09,
+                          0.18
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 4
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.01,
+                            0.02
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.1,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 6
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.2,
+                            0.22,
+                            0.24,
+                            0.26,
+                            0.28,
+                            0.3,
+                            0.32,
+                            0.34,
+                            0.36,
+                            0.39,
+                            0.42,
+                            0.45
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "IS",
+                            "object": "STATUS_LEVEL",
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "ELECTRIFICATION",
+                              "of": {
+                                "object": "ENEMY"
+                              }
+                            }
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.03,
+                              0.04,
+                              0.04,
+                              0.04,
+                              0.05,
+                              0.05,
+                              0.05,
+                              0.06,
+                              0.06,
+                              0.07,
+                              0.08,
+                              0.09
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 6
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          0.09,
+                          0.18
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 5
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.01,
+                            0.02
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.25,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 7
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.2,
+                            0.22,
+                            0.24,
+                            0.26,
+                            0.28,
+                            0.3,
+                            0.32,
+                            0.34,
+                            0.36,
+                            0.39,
+                            0.42,
+                            0.45
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "IS",
+                            "object": "STATUS_LEVEL",
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "ELECTRIFICATION",
+                              "of": {
+                                "object": "ENEMY"
+                              }
+                            }
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.03,
+                              0.04,
+                              0.04,
+                              0.04,
+                              0.05,
+                              0.05,
+                              0.05,
+                              0.06,
+                              0.06,
+                              0.07,
+                              0.08,
+                              0.09
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 6
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          0.09,
+                          0.18
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 6
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.01,
+                            0.02
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.4,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 8
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.2,
+                            0.22,
+                            0.24,
+                            0.26,
+                            0.28,
+                            0.3,
+                            0.32,
+                            0.34,
+                            0.36,
+                            0.39,
+                            0.42,
+                            0.45
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "IS",
+                            "object": "STATUS_LEVEL",
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "ELECTRIFICATION",
+                              "of": {
+                                "object": "ENEMY"
+                              }
+                            }
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.03,
+                              0.04,
+                              0.04,
+                              0.04,
+                              0.05,
+                              0.05,
+                              0.05,
+                              0.06,
+                              0.06,
+                              0.07,
+                              0.08,
+                              0.09
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 6
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          0.09,
+                          0.18
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 7
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.01,
+                            0.02
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.55,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "SUNDERBLADE",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 9
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "ADD",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            0.2,
+                            0.22,
+                            0.24,
+                            0.26,
+                            0.28,
+                            0.3,
+                            0.32,
+                            0.34,
+                            0.36,
+                            0.39,
+                            0.42,
+                            0.45
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "IS",
+                            "object": "STATUS_LEVEL",
+                            "of": {
+                              "object": "STATUS",
+                              "objectId": "ELECTRIFICATION",
+                              "of": {
+                                "object": "ENEMY"
+                              }
+                            }
+                          },
+                          "right": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.03,
+                              0.04,
+                              0.04,
+                              0.04,
+                              0.05,
+                              0.05,
+                              0.05,
+                              0.06,
+                              0.06,
+                              0.07,
+                              0.08,
+                              0.09
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "VARY_BY",
+                        "object": "POTENTIAL",
+                        "value": [
+                          1,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15,
+                          1.15
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 6
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          0.09,
+                          0.18
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "value": 8
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.01,
+                            0.02
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        },
+        {
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 1.7,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "operation": "MULT",
+                        "left": {
+                          "operation": "ADD",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "SKILL_LEVEL",
+                            "value": [
+                              0.2,
+                              0.22,
+                              0.24,
+                              0.26,
+                              0.28,
+                              0.3,
+                              0.32,
+                              0.34,
+                              0.36,
+                              0.39,
+                              0.42,
+                              0.45
+                            ],
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          },
+                          "right": {
+                            "operation": "MULT",
+                            "left": {
+                              "verb": "IS",
+                              "object": "STATUS_LEVEL",
+                              "of": {
+                                "object": "STATUS",
+                                "objectId": "ELECTRIFICATION",
+                                "of": {
+                                  "object": "ENEMY"
+                                }
+                              }
+                            },
+                            "right": {
+                              "verb": "VARY_BY",
+                              "object": "SKILL_LEVEL",
+                              "value": [
+                                0.03,
+                                0.04,
+                                0.04,
+                                0.04,
+                                0.05,
+                                0.05,
+                                0.05,
+                                0.06,
+                                0.06,
+                                0.07,
+                                0.08,
+                                0.09
+                              ],
+                              "of": {
+                                "object": "OPERATOR",
+                                "determiner": "THIS"
+                              }
+                            }
+                          }
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "POTENTIAL",
+                          "value": [
+                            1,
+                            1.15,
+                            1.15,
+                            1.15,
+                            1.15,
+                            1.15
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      },
+                      "right": {
+                        "verb": "IS",
+                        "value": 6
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 6
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "to": "OPERATOR",
+                  "toDeterminer": "THIS",
+                  "with": {
+                    "value": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "VARY_BY",
+                        "object": "TALENT_LEVEL",
+                        "value": [
+                          0,
+                          0.09,
+                          0.18
+                        ],
+                        "of": {
+                          "object": "OPERATOR",
+                          "determiner": "THIS"
+                        }
+                      },
+                      "right": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "IS",
+                          "object": "STACKS",
+                          "of": {
+                            "object": "STATUS",
+                            "objectId": "SUNDERBLADE",
+                            "of": {
+                              "object": "OPERATOR",
+                              "determiner": "THIS"
+                            }
+                          }
+                        },
+                        "right": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_LEVEL",
+                          "value": [
+                            0,
+                            0.01,
+                            0.02
+                          ],
+                          "of": {
+                            "object": "OPERATOR",
+                            "determiner": "THIS"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "SKILL_POINT",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 100
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ]
+}

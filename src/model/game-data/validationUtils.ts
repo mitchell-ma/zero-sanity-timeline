@@ -21,6 +21,36 @@ export function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path
   return errors;
 }
 
+/**
+ * IDs whose canonical in-game display is the same all-caps token as the id —
+ * stylized brand/codename writing rather than a placeholder copied from `id`.
+ * These are exempted from the `id !== name` check in `checkIdAndName`.
+ */
+const ID_NAME_EQUALITY_EXCEPTIONS = new Set<string>(['JET', 'LYNX', 'NONE']);
+
+/**
+ * Validate the `id` and `name` pair on a properties-style block. `id` is the
+ * SCREAMING_SNAKE_CASE programmatic identifier; `name` is the human-readable
+ * display string ("Slashing Edge (T1)"). They must both be strings AND must
+ * differ — when they match, `name` is almost certainly a placeholder copied
+ * from `id` instead of a properly cased display string. Stylized all-caps
+ * names (e.g. JET, LYNX) are allowlisted via ID_NAME_EQUALITY_EXCEPTIONS.
+ */
+export function checkIdAndName(obj: Record<string, unknown>, path: string): string[] {
+  const errors: string[] = [];
+  if (typeof obj.id !== 'string') errors.push(`${path}.id: must be a string`);
+  if (typeof obj.name !== 'string') errors.push(`${path}.name: must be a string`);
+  if (
+    typeof obj.id === 'string'
+    && typeof obj.name === 'string'
+    && obj.id === obj.name
+    && !ID_NAME_EQUALITY_EXCEPTIONS.has(obj.id)
+  ) {
+    errors.push(`${path}.name: "${obj.name}" — name must be a human-readable display string, not a copy of id`);
+  }
+  return errors;
+}
+
 // ── Shared valid-key sets ───────────────────────────────────────────────────
 
 export const VALID_VALUE_NODE_KEYS = new Set([
@@ -119,8 +149,8 @@ function frameClauseElementRequirement(frame: Record<string, unknown>): string |
       if (verb === VerbType.DEAL && obj === NounType.DAMAGE && qual && qual !== AdjectiveType.PHYSICAL) {
         return qual;
       }
-      // APPLY <ELEMENT> INFLICTION — qual is the element.
-      if (verb === VerbType.APPLY && obj === NounType.INFLICTION && qual) {
+      // APPLY STATUS INFLICTION <ELEMENT> — qual is the element.
+      if (verb === VerbType.APPLY && obj === NounType.STATUS && objId === NounType.INFLICTION && qual) {
         return qual;
       }
       // APPLY STATUS REACTION <REACTION_NAME> — qual is the reaction name.
@@ -408,14 +438,43 @@ export function validateSegmentShape(seg: Record<string, unknown>, path: string)
 
 // ── Effect validation (all checks driven by semantics.ts mappings) ──────────
 
+/**
+ * INFLICTION and REACTION are objectIds under `object: STATUS` — NEVER valid
+ * as `object` or `subject` in their own right. This check is shared by
+ * `validateEffect` and `validateInteraction` so legacy shapes fail loudly on
+ * both effect and condition sides.
+ *
+ * Returns `{ errors, objectRejected }` — `objectRejected` is true when the
+ * object-position check tripped, so callers can short-circuit further
+ * object-driven validation (e.g. VERB_OBJECTS lookup) that would emit
+ * confusing downstream errors on the same invalid shape.
+ */
+function warnInvalidInflictionReactionPosition(
+  shape: Record<string, unknown>,
+  path: string,
+): { errors: string[]; objectRejected: boolean } {
+  const errors: string[] = [];
+  let objectRejected = false;
+  if (shape.subject === NounType.INFLICTION || shape.subject === NounType.REACTION) {
+    errors.push(`${path}: ${shape.subject} is not a valid subject — use objectId under subject=STATUS or subject=ENEMY/OPERATOR`);
+  }
+  if (shape.object === NounType.INFLICTION || shape.object === NounType.REACTION) {
+    errors.push(`${path}: ${shape.object} is not a valid object — use objectId under object=STATUS (e.g. {object: "STATUS", objectId: "${shape.object}", objectQualifier: "<HEAT|CRYO|...>"})`);
+    objectRejected = true;
+  }
+  return { errors, objectRejected };
+}
+
 /** Validate verb+object combination against VERB_OBJECTS. */
 function warnInvalidVerbObject(ef: Record<string, unknown>, path: string): string[] {
+  const { errors, objectRejected } = warnInvalidInflictionReactionPosition(ef, path);
+  if (objectRejected) return errors;
   const validObjects = VERB_OBJECTS[ef.verb as VerbType];
-  if (!validObjects || !ef.object) return [];
+  if (!validObjects || !ef.object) return errors;
   if (!(validObjects as string[]).includes(ef.object as string)) {
-    return [`${path}: ${ef.verb} ${ef.object} — invalid verb+object combination`];
+    errors.push(`${path}: ${ef.verb} ${ef.object} — invalid verb+object combination`);
   }
-  return [];
+  return errors;
 }
 
 /** Validate objectQualifier against OBJECT_QUALIFIERS; enforce OBJECT_REQUIRED_QUALIFIER. */
@@ -567,6 +626,64 @@ function warnReactionPhysicalIdMisuse(shape: Record<string, unknown>, path: stri
     ];
   }
   return [];
+}
+
+// ── ENEMY determiner check ───────────────────────────────────────────────
+
+/**
+ * Walk a value node / clause tree and flag any `object: ENEMY` reference that
+ * carries a `determiner`. ENEMY is a singleton in the DSL — there is no
+ * `THIS ENEMY` vs `OTHER ENEMY`; the one enemy column is referenced as
+ * `{ "object": "ENEMY" }` with no determiner. A stray `determiner: THIS` on
+ * ENEMY would be silently ignored by the resolver but signals a misreading of
+ * the DSL grammar; flag it loudly so configs stay canonical.
+ */
+export function collectEnemyWithDeterminer(node: unknown, path: string): string[] {
+  if (node === null || typeof node !== 'object') return [];
+  if (Array.isArray(node)) {
+    const errors: string[] = [];
+    for (let i = 0; i < node.length; i++) {
+      errors.push(...collectEnemyWithDeterminer(node[i], `${path}[${i}]`));
+    }
+    return errors;
+  }
+  const obj = node as Record<string, unknown>;
+  const errors: string[] = [];
+
+  // Nested `of` clauses: { object: "ENEMY", determiner: "THIS" }
+  const of = obj.of as Record<string, unknown> | undefined;
+  if (of && of.object === NounType.ENEMY && of.determiner !== undefined) {
+    errors.push(
+      `${path}.of: ENEMY has no determiner in the DSL. Use { "object": "ENEMY" } — there is only one enemy column.`,
+    );
+  }
+
+  // Determiner+noun pairs on the same object (subject/object/to/from with ENEMY).
+  // ENEMY on subject/object/to/from positions is allowed *without* a paired
+  // determiner; the DSL has no THIS/ANY/ALL distinction for ENEMY.
+  const pairs = [
+    ['subject', 'subjectDeterminer'],
+    ['object', 'objectDeterminer'],
+    ['to', 'toDeterminer'],
+    ['from', 'fromDeterminer'],
+  ] as const;
+  for (const [nounKey, detKey] of pairs) {
+    if (obj[nounKey] === NounType.ENEMY && obj[detKey] !== undefined) {
+      errors.push(
+        `${path}: ${nounKey}=ENEMY has no ${detKey} in the DSL. Remove ${detKey}.`,
+      );
+    }
+  }
+
+  // Recurse into every object-valued child so nested value expressions
+  // (left/right) and clause trees are covered.
+  for (const key of Object.keys(obj)) {
+    const child = obj[key];
+    if (child && typeof child === 'object') {
+      errors.push(...collectEnemyWithDeterminer(child, `${path}.${key}`));
+    }
+  }
+  return errors;
 }
 
 // ── TEAM target + THIS OPERATOR value resolution ──────────────────────────
@@ -791,6 +908,7 @@ export function validateEffect(ef: Record<string, unknown>, path: string): strin
  */
 export function validateInteraction(shape: Record<string, unknown>, path: string): string[] {
   return [
+    ...warnInvalidInflictionReactionPosition(shape, path).errors,
     ...warnReactionPhysicalIdMisuse(shape, path),
     ...warnInvalidConditionVerb(shape, path),
     ...warnInvalidQualifier(shape, path),

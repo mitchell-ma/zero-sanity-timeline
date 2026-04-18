@@ -7,25 +7,6 @@
     "element": "ELECTRIC",
     "id": "EMP_TEST_SITE"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "RECOVER",
-          "object": "ULTIMATE_ENERGY",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 10
-            }
-          }
-        }
-      ]
-    }
-  ],
   "segments": [
     {
       "metadata": {
@@ -46,7 +27,27 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "RECOVER",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 10
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -96,7 +97,7 @@
                 {
                   "verb": "APPLY",
                   "objectDeterminer": "TRIGGER",
-                  "object": "INFLICTION",
+                  "object": "STATUS", "objectId": "INFLICTION",
                   "to": "ENEMY"
                 },
                 {
@@ -179,7 +180,6 @@
     "icon": "skills/combo_antal.png",
     "dataStatus": "VERIFIED"
   },
-  "clauseType": "ALL",
   "activationWindow": {
     "properties": {
       "maxSkills": 1
@@ -208,7 +208,7 @@
             "subjectDeterminer": "ANY",
             "subject": "OPERATOR",
             "verb": "APPLY",
-            "object": "INFLICTION"
+            "object": "STATUS", "objectId": "INFLICTION"
           },
           {
             "subject": "ENEMY",

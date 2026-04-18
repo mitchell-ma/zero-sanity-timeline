@@ -1,0 +1,82 @@
+{
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 30
+          },
+          "unit": "SECOND"
+        },
+        "name": "Overlapping Flickers"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.055,
+                    0.066,
+                    0.077,
+                    0.088,
+                    0.099,
+                    0.11,
+                    0.121,
+                    0.132,
+                    0.154
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ELECTRIC"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FLICKERS_IN_THE_MIST_EFFICACY_OVERLAPPING_FLICKERS",
+    "name": "Overlapping Flickers",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 30
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 3
+      },
+      "interactionType": "NONE"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON",
+    "description": "Electric DMG Dealt +{pulse_dmg_up2:0.0%} per stack for {duration:0}s. Gained when the wielder receives Electric Amp. Max {max_stack:0} stacks, per-stack duration."
+  },
+  "metadata": {
+    "originId": "FLICKERS_IN_THE_MIST",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -1,63 +1,77 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.05,
-                0.06,
-                0.07,
-                0.08,
-                0.09,
-                0.1,
-                0.11,
-                0.12,
-                0.14
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
           },
-          "objectId": "SECONDARY_ATTRIBUTE_BONUS"
+          "unit": "SECOND"
         },
+        "name": "Medicant: Glory of Knighthood"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.2,
-                0.24,
-                0.28,
-                0.32,
-                0.36,
-                0.4,
-                0.44,
-                0.48,
-                0.56
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.05,
+                    0.06,
+                    0.07,
+                    0.08,
+                    0.09,
+                    0.1,
+                    0.11,
+                    0.12,
+                    0.14
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "SECONDARY_ATTRIBUTE_BONUS"
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.2,
+                    0.24,
+                    0.28,
+                    0.32,
+                    0.36,
+                    0.4,
+                    0.44,
+                    0.48,
+                    0.56
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "TREATMENT_BONUS"
             }
-          },
-          "objectId": "TREATMENT_BONUS"
+          ]
         }
       ]
     }
@@ -66,7 +80,7 @@
     "name": "Medicant: Glory of Knighthood",
     "description": "Secondary Attribute +{second_attr_up:0.0%}. Combo skill HP treatment effect +{heal_up:0.0%}.",
     "id": "MEDICANT_GLORY_OF_KNIGHTHOOD",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "FINISHING_CALL",

@@ -41,7 +41,8 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -191,7 +192,6 @@
     "icon": "skills/combo_laevatain.png",
     "dataStatus": "VERIFIED"
   },
-  "clauseType": "ALL",
   "activationWindow": {
     "properties": {
       "maxSkills": 1

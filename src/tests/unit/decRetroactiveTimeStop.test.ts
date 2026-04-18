@@ -28,7 +28,7 @@ function mkStatus(uid: string, startFrame: number, rawDuration: number): Timelin
     segments: [
       { properties: { duration: rawDuration } },
     ],
-    sourceSkillName: 'TEST',
+    sourceSkillId: 'TEST',
   } as TimelineEvent;
 }
 
@@ -44,7 +44,7 @@ function mkUltimate(uid: string, startFrame: number, animDuration: number): Time
       { properties: { duration: animDuration, segmentTypes: [SegmentType.ANIMATION] } },
       { properties: { duration: 60, segmentTypes: [SegmentType.ACTIVE] } },
     ],
-    sourceSkillName: 'TEST_ULT',
+    sourceSkillId: 'TEST_ULT',
   } as TimelineEvent;
 }
 
@@ -107,7 +107,7 @@ describe('DEC — retroactive time-stop re-extension', () => {
       columnId: NounType.STATUS,
       startFrame: 0,
       segments: [{ properties: { duration: 300 } }],
-      sourceSkillName: 'TEST',
+      sourceSkillId: 'TEST',
     } as TimelineEvent;
 
     // Enter via the pushEvent path (the ColumnHost callback used by

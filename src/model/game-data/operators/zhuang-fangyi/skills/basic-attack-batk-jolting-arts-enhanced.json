@@ -1,0 +1,116 @@
+{
+  "segments": [
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "dataSources": ["WARFARIN"] },
+      "properties": { "duration": { "value": { "verb": "IS", "value": 0.5 }, "unit": "SECOND" }, "element": "ELECTRIC" },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0.3, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [0.67, 0.73, 0.8, 0.86, 0.93, 1, 1.06, 1.13, 1.2, 1.28, 1.38, 1.5],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "dataSources": ["WARFARIN"] },
+      "properties": { "duration": { "value": { "verb": "IS", "value": 0.6 }, "unit": "SECOND" }, "element": "ELECTRIC" },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0.4, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [0.94, 1.03, 1.12, 1.22, 1.31, 1.4, 1.5, 1.59, 1.68, 1.8, 1.94, 2.1],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "dataSources": ["WARFARIN"] },
+      "properties": { "duration": { "value": { "verb": "IS", "value": 0.7 }, "unit": "SECOND" }, "element": "ELECTRIC" },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0.5, "unit": "SECOND" }, "element": "ELECTRIC", "frameTypes": ["FINAL_STRIKE"] },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "object": "STAGGER", "to": "ENEMY",
+                  "with": { "value": { "verb": "IS", "value": 18 } }
+                },
+                {
+                  "verb": "RECOVER", "object": "SKILL_POINT", "toDeterminer": "THIS", "to": "OPERATOR",
+                  "with": { "value": { "verb": "IS", "value": 20 } }
+                },
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [1.34, 1.47, 1.6, 1.74, 1.87, 2, 2.14, 2.27, 2.4, 2.57, 2.77, 3],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                },
+                {
+                  "verb": "PERFORM", "object": "SKILL", "to": "ENEMY", "objectId": "FINAL_STRIKE"
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "enhancementTypes": ["ENHANCED"],
+    "eventType": "SKILL",
+    "eventCategoryType": "BASIC_ATTACK",
+    "eventQualifierType": "BATK",
+    "element": "ELECTRIC",
+    "id": "JOLTING_ARTS_BATK_ENHANCED",
+    "name": "Jolting Arts (Enhanced)",
+    "description": "During Smiting Tempest, basic attack sequences are enhanced with higher Electric DMG multipliers."
+  },
+  "metadata": {
+    "originId": "ZHUANG_FANGYI",
+    "dataStatus": "RECONCILED"
+  }
+}

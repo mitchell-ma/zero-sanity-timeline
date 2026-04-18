@@ -93,7 +93,7 @@
     "id": "FRONTIERS_BLIGHT_RES_GLOVES",
     "name": "Frontiers Blight RES Gloves",
     "gearType": "GLOVES",
-    "gearSet": "FRONTIERS"
+    "gearSet": "FRONTIERS_STAT"
   },
   "metadata": {
     "originId": "game",

@@ -1,40 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.16,
-                0.192,
-                0.224,
-                0.256,
-                0.288,
-                0.32,
-                0.352,
-                0.384,
-                0.448
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "NATURE"
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -57,11 +21,61 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Pursuit: Duty Fulfilled"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.16,
+                    0.192,
+                    0.224,
+                    0.256,
+                    0.288,
+                    0.32,
+                    0.352,
+                    0.384,
+                    0.448
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "NATURE"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Pursuit: Duty Fulfilled",
     "description": "Nature DMG Dealt +{nature_dmg_up:0.0%}. After the wielder's combo skill applies Lifted, the team gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. For every enemy Lifted, the team gains bonus Arts DMG Dealt +{spell_dmg_up2:0.0%}, up to a max of +{spell_dmg_up2*max_stack:0.0%}. Effects of the same name cannot stack.",
     "id": "PURSUIT_DUTY_FULFILLED",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "DELIVERY_GUARANTEED",

@@ -195,7 +195,7 @@ describe('Laevatain Skills — integration through useApp', () => {
       (ev) => ev.columnId === MELTING_FLAME_ID && ev.ownerEntityId === SLOT_LAEVATAIN,
     );
     expect(mfProcessed).toHaveLength(1);
-    expect(mfProcessed[0].sourceSkillName).toBe(SMOULDERING_FIRE_ID);
+    expect(mfProcessed[0].sourceSkillId).toBe(SMOULDERING_FIRE_ID);
 
     // View layer: MF appears in operator status column
     const viewModels = computeTimelinePresentation(

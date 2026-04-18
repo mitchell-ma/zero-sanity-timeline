@@ -55,6 +55,7 @@ import { computeSlotElementColors, computeEventPresentation, computeTimelinePres
 import { getAllStatusCategories } from '../controller/gameDataStore';
 import {
   buildColumnContextMenu,
+  injectStatusLevelIntoSegments,
 } from '../controller/timeline/contextMenuController';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 import TimelineColumn from './TimelineColumn';
@@ -1698,8 +1699,31 @@ export default React.memo(function CombatPlanner({
     const resolved = resolvedInline ? { ...rest, inlineButtons: resolvedInline } : rest;
     switch (actionId) {
       case 'addEvent': {
-        const p = actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: object | null };
-        return { ...resolved, action: () => onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill) };
+        const p = actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: (object & { parameterValues?: Record<string, number>; segments?: import('../consts/viewTypes').EventSegmentData[] }) | null };
+        return {
+          ...resolved,
+          action: (override?: import('../consts/viewTypes').ContextMenuItemOverride) => {
+            const withParams = override?.parameterValues && p.defaultSkill
+              ? { ...p.defaultSkill, parameterValues: { ...(p.defaultSkill.parameterValues ?? {}), ...override.parameterValues } }
+              : p.defaultSkill;
+            // Reactions → bake the picked level into the wrapper's APPLY
+            // REACTION clause (`with.statusLevel`). The engine reads it at
+            // dispatch time; the wrapper itself doesn't carry statusLevel.
+            if (override?.statusLevel != null && withParams) {
+              const segments = injectStatusLevelIntoSegments(withParams.segments, override.statusLevel);
+              const skill = segments ? { ...withParams, segments } : withParams;
+              onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, skill);
+              return;
+            }
+            // Stacks → place N events at the same frame. The engine + presentation
+            // layer aggregate counts (position-marker or 1-per-stack). The per-column
+            // cap is enforced inside handleAddEvent so extras beyond the limit drop.
+            const stacks = override?.stacks ?? 1;
+            for (let i = 0; i < stacks; i++) {
+              onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, withParams);
+            }
+          },
+        };
       }
       case 'editResource':
         return { ...resolved, action: () => { onEditResource?.(actionPayload as string); onContextMenu(null); } };

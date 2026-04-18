@@ -7,7 +7,7 @@
  */
 import { EventType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
-import { checkKeys, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues } from './validationUtils';
+import { checkKeys, checkIdAndName, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectEnemyWithDeterminer } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -30,7 +30,7 @@ export interface ActivationWindowDef {
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_SKILL_ENTRY_KEYS = new Set([
-  'segments', 'clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'activationClause', 'activationWindow', 'properties', 'metadata',
+  'segments', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'activationClause', 'activationWindow', 'properties', 'metadata',
 ]);
 
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
@@ -110,14 +110,22 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
   }
 
   const props = json.properties as Record<string, unknown> | undefined;
-  if (props) {
+  if (!props) {
+    errors.push(`${path}.properties: required`);
+  } else {
     errors.push(...checkKeys(props, VALID_SKILL_PROPERTIES_KEYS, `${path}.properties`));
+    errors.push(...checkIdAndName(props, `${path}.properties`));
   }
 
   const meta = json.metadata as Record<string, unknown> | undefined;
   if (meta) {
     errors.push(...checkKeys(meta, VALID_SKILL_METADATA_KEYS, `${path}.metadata`));
   }
+
+  // Flag any `object: ENEMY` paired with a `determiner` — ENEMY is a singleton
+  // in the DSL and has no determiner. Walk the whole skill tree so value-node
+  // `of` chains, effect subject/object/to/from, and nested predicates are covered.
+  errors.push(...collectEnemyWithDeterminer(json, path));
 
   return errors;
 }
@@ -128,7 +136,6 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
 export class OperatorSkill {
   readonly id: string;
   readonly segments: unknown[];
-  readonly clause: unknown[];
   readonly activationClause: unknown[];
   readonly onTriggerClause: TriggerClause[];
   readonly onEntryClause: unknown[];
@@ -154,7 +161,6 @@ export class OperatorSkill {
 
     this.id = id;
     this.segments = (json.segments ?? []) as unknown[];
-    this.clause = (json.clause ?? []) as unknown[];
     this.activationClause = (json.activationClause ?? []) as unknown[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
     this.onEntryClause = (json.onEntryClause ?? []) as unknown[];
@@ -179,7 +185,6 @@ export class OperatorSkill {
   serialize(): Record<string, unknown> {
     return {
       ...(this.segments.length > 0 ? { segments: this.segments } : {}),
-      ...(this.clause.length > 0 ? { clause: this.clause } : {}),
       ...(this.activationClause.length > 0 ? { activationClause: this.activationClause } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       ...(this.onEntryClause.length > 0 ? { onEntryClause: this.onEntryClause } : {}),

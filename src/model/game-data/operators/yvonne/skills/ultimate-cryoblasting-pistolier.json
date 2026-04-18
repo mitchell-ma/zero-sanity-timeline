@@ -6,23 +6,6 @@
     "eventCategoryType": "ULTIMATE",
     "id": "CRYOBLASTING_PISTOLIER"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "ULTIMATE_ENERGY",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 220
-            }
-          }
-        }
-      ]
-    }
-  ],
   "segments": [
     {
       "metadata": {
@@ -43,7 +26,25 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "ULTIMATE_ENERGY",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 220
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -346,6 +347,5 @@
     "originId": "YVONNE",
     "icon": "skills/ult_yvonne.png",
     "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+  }
 }

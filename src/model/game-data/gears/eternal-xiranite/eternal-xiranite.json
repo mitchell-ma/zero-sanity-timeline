@@ -17,7 +17,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ETERNAL_XIRANITE_STAT",
+          "objectId": "ETERNAL_XIRANITE",
           "toDeterminer": "ALL_OTHER",
           "to": "OPERATOR"
         }
@@ -38,7 +38,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ETERNAL_XIRANITE_STAT",
+          "objectId": "ETERNAL_XIRANITE",
           "toDeterminer": "ALL_OTHER",
           "to": "OPERATOR"
         }
@@ -60,7 +60,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ETERNAL_XIRANITE_STAT",
+          "objectId": "ETERNAL_XIRANITE",
           "toDeterminer": "ALL_OTHER",
           "to": "OPERATOR"
         }
@@ -81,21 +81,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ETERNAL_XIRANITE_STAT",
+          "objectId": "ETERNAL_XIRANITE",
           "toDeterminer": "ALL_OTHER",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Eternal Xiranite"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "FLAT_HP",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 1000
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "ETERNAL_XIRANITE",
+    "id": "ETERNAL_XIRANITE_STAT",
     "name": "Eternal Xiranite",
     "rarity": 5,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer applies Amp, Protected, Susceptibility, or Weakness, other teammates gain DMG Dealt +{dmg_up:0%} for {duration}s. This effect cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

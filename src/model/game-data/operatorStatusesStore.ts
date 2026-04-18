@@ -6,15 +6,15 @@
  * Each file contains an array of operator status entries sharing an originId.
  */
 import { EventType, EventCategoryType, UNLIMITED_STACKS } from '../../consts/enums';
-import { NounType, EVENT_CATEGORY_TO_GROUP } from '../../dsl/semantics';
+import { NounType, EVENT_CATEGORY_TO_GROUP, ClauseEvaluationType } from '../../dsl/semantics';
 import type { EventSegmentData, EventFrameMarker } from '../../consts/viewTypes';
-import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesStore';
+import type { ClauseEffect, StacksConfig, DurationConfig, StatusSegment } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from '../../controller/calculation/valueResolver';
 import { PERMANENT_DURATION } from '../../consts/enums';
 import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
 
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectThisOperatorInClauses } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectThisOperatorInClauses, collectEnemyWithDeterminer } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -36,21 +36,19 @@ interface TriggerClause {
   effects?: ClauseEffect[];
 }
 
-// ── Segment type ────────────────────────────────────────────────────────────
-
-interface StatusSegment {
-  metadata?: Record<string, unknown>;
-  properties?: Record<string, unknown>;
-  clause?: ClausePredicate[];
-  frames?: unknown[];
-}
-
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType', 'level']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventCategoryType', 'maxLevel', 'crowdControls']);
-const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
+const VALID_TOP_KEYS = new Set([
+  'onTriggerClause', 'onEntryClause', 'onExitClause',
+  // Evaluation mode for each clause bucket — FIRST_MATCH stops after the first
+  // matching clause (e.g. Essence Disintegration: base + P>=2 refinement),
+  // otherwise every matching clause fires. Parallels segment-level `clauseType`.
+  'onTriggerClauseType', 'onEntryClauseType', 'onExitClauseType',
+  'segments', 'properties', 'metadata',
+]);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -70,15 +68,6 @@ function validateStatusEffect(ef: Record<string, unknown>, path: string): string
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
     if (w.value) errors.push(...validateValueNode(w.value as Record<string, unknown>, `${path}.with.value`));
   }
-  return errors;
-}
-
-function validateClause(clause: Record<string, unknown>, path: string): string[] {
-  const errors = checkKeys(clause, VALID_CLAUSE_KEYS, path);
-  if (!Array.isArray(clause.conditions)) errors.push(`${path}.conditions: must be an array`);
-  else (clause.conditions as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateInteraction(c, `${path}.conditions[${i}]`)));
-  if (!Array.isArray(clause.effects)) errors.push(`${path}.effects: must be an array`);
-  else (clause.effects as Record<string, unknown>[]).forEach((ef, i) => errors.push(...validateStatusEffect(ef, `${path}.effects[${i}]`)));
   return errors;
 }
 
@@ -103,9 +92,17 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
   errors.push(...validateNonNegativeValues(json, 'root'));
 
-  if (json.clause) {
-    if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
-    else (json.clause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `clause[${i}]`)));
+  // Root-level `clause`/`clauseType` are rejected — clauses MUST live inside
+  // segments; root-level `clauseType` is replaced by per-bucket
+  // `onTriggerClauseType` / `onEntryClauseType` / `onExitClauseType` which
+  // target the specific clause list they apply to.
+  if ('clause' in json) errors.push('root.clause: not allowed — move clause effects into segments[0].clause');
+  if ('clauseType' in json) errors.push('root.clauseType: not allowed — use onTriggerClauseType / onEntryClauseType / onExitClauseType, or set clauseType on the segment that owns the clause');
+  for (const ctKey of ['onTriggerClauseType', 'onEntryClauseType', 'onExitClauseType'] as const) {
+    const v = json[ctKey];
+    if (v !== undefined && v !== ClauseEvaluationType.FIRST_MATCH && v !== ClauseEvaluationType.ALL) {
+      errors.push(`root.${ctKey}: "${v}" is not a valid ClauseEvaluationType (FIRST_MATCH or ALL)`);
+    }
   }
 
   for (const triggerKey of ['onTriggerClause', 'onEntryClause', 'onExitClause']) {
@@ -115,15 +112,31 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
     }
   }
 
+  // Description-only configs (no onTriggerClause / onEntryClause / onExitClause /
+  // segments) are allowed — they represent passive talents/potentials that only
+  // exist as reference metadata and never fire on the timeline. Otherwise, if a
+  // config has any runtime hook, it must also carry a non-empty `segments` array.
+  const hasRuntimeHook =
+    (Array.isArray(json.onTriggerClause) && (json.onTriggerClause as unknown[]).length > 0) ||
+    (Array.isArray(json.onEntryClause) && (json.onEntryClause as unknown[]).length > 0) ||
+    (Array.isArray(json.onExitClause) && (json.onExitClause as unknown[]).length > 0);
   if (json.segments) {
-    if (!Array.isArray(json.segments)) errors.push('root.segments: must be an array');
-    else (json.segments as Record<string, unknown>[]).forEach((s, i) => errors.push(...validateSegmentShape(s, `segments[${i}]`)));
+    if (!Array.isArray(json.segments) || (json.segments as unknown[]).length === 0) {
+      errors.push('root.segments: must be a non-empty array');
+    } else {
+      (json.segments as Record<string, unknown>[]).forEach((s, i) => errors.push(...validateSegmentShape(s, `segments[${i}]`)));
+    }
+  } else if (!hasRuntimeHook) {
+    // description-only: allowed without segments
+  } else {
+    // hasRuntimeHook but no segments — trigger-only configs (talents that only
+    // dispatch APPLY STATUS/CONSUME EVENT effects) don't need segments.
   }
 
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
-  if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
+  errors.push(...checkIdAndName(props, 'properties'));
 
   // eventCategoryType must be a known category. TALENT_STATUS / POTENTIAL_STATUS are
   // no longer valid — use TALENT / POTENTIAL instead. A TALENT or POTENTIAL is
@@ -158,7 +171,6 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
     const walk = (clauses: unknown, clausePath: string) => {
       errors.push(...collectThisOperatorInClauses(clauses, clausePath, ownerLabel));
     };
-    if (json.clause) walk(json.clause, 'clause');
     if (json.onTriggerClause) walk(json.onTriggerClause, 'onTriggerClause');
     if (json.onEntryClause) walk(json.onEntryClause, 'onEntryClause');
     if (json.onExitClause) walk(json.onExitClause, 'onExitClause');
@@ -197,6 +209,11 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
     if (typeof meta.originId !== 'string') errors.push('metadata.originId: must be a string');
   }
 
+  // Flag any `object: ENEMY` paired with a determiner — ENEMY is a singleton
+  // in the DSL and has no determiner. Covers value-node `of` chains, effect
+  // subject/object/to/from references, and nested predicates everywhere.
+  errors.push(...collectEnemyWithDeterminer(json, 'root'));
+
   return errors;
 }
 
@@ -204,10 +221,12 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
 
 /** An operator status effect definition. Maps 1:1 to the JSON shape. */
 export class OperatorStatus {
-  readonly clause: ClausePredicate[];
   readonly onTriggerClause: TriggerClause[];
   readonly onEntryClause: TriggerClause[];
   readonly onExitClause: TriggerClause[];
+  readonly onTriggerClauseType?: string;
+  readonly onEntryClauseType?: string;
+  readonly onExitClauseType?: string;
   readonly segments: EventSegmentData[];
   private readonly _rawSegments: StatusSegment[];
   readonly id: string;
@@ -229,17 +248,17 @@ export class OperatorStatus {
   readonly originId: string;
   readonly dataSources: string[];
   readonly icon?: string;
-  readonly clauseType?: string;
 
   constructor(json: Record<string, unknown>) {
     const props = (json.properties ?? {}) as Record<string, unknown>;
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
-    this.clause = (json.clause ?? []) as ClausePredicate[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
-    if (json.clauseType) this.clauseType = json.clauseType as string;
     this.onEntryClause = (json.onEntryClause ?? []) as TriggerClause[];
     this.onExitClause = (json.onExitClause ?? []) as TriggerClause[];
+    if (json.onTriggerClauseType) this.onTriggerClauseType = json.onTriggerClauseType as string;
+    if (json.onEntryClauseType) this.onEntryClauseType = json.onEntryClauseType as string;
+    if (json.onExitClauseType) this.onExitClauseType = json.onExitClauseType as string;
     const rawSegments = (json.segments ?? []) as StatusSegment[];
     this._rawSegments = rawSegments;
     this.segments = rawSegments.map(seg => {
@@ -360,11 +379,12 @@ export class OperatorStatus {
   /** Serialize back to the JSON shape. */
   serialize(): Record<string, unknown> {
     return {
-      ...(this.clause.length > 0 ? { clause: this.clause } : {}),
-      ...(this.clauseType ? { clauseType: this.clauseType } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
+      ...(this.onTriggerClauseType ? { onTriggerClauseType: this.onTriggerClauseType } : {}),
       ...(this.onEntryClause.length > 0 ? { onEntryClause: this.onEntryClause } : {}),
+      ...(this.onEntryClauseType ? { onEntryClauseType: this.onEntryClauseType } : {}),
       ...(this.onExitClause.length > 0 ? { onExitClause: this.onExitClause } : {}),
+      ...(this.onExitClauseType ? { onExitClauseType: this.onExitClauseType } : {}),
       ...(this._rawSegments.length > 0 ? { segments: this._rawSegments } : {}),
       properties: {
         id: this.id,

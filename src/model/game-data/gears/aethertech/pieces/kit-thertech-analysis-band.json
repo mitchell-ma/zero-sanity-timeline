@@ -91,9 +91,9 @@
   ],
   "properties": {
     "id": "THERTECH_ANALYSIS_BAND",
-    "name": "Æthertech Analysis Band",
+    "name": "\u00c6thertech Analysis Band",
     "gearType": "KIT",
-    "gearSet": "AETHERTECH"
+    "gearSet": "AETHERTECH_STAT"
   },
   "metadata": {
     "originId": "game",

@@ -31,7 +31,7 @@ export function allocQueueFrame(): QueueFrame {
   return {
     frame: 0, type: QueueFrameType.PROCESS_FRAME,
     statusId: '', columnId: '', ownerEntityId: '',
-    sourceEntityId: '', sourceSkillName: '',
+    sourceEntityId: '', sourceSkillId: '',
     maxStacks: 0, durationFrames: 0, operatorSlotId: '',
   };
 }

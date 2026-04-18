@@ -92,7 +92,7 @@
     "id": "ROVING_MSGR_GYRO_T1",
     "name": "Roving MSGR Gyro T1",
     "gearType": "KIT",
-    "gearSet": "ROVING_MSGR"
+    "gearSet": "ROVING_MSGR_STAT"
   },
   "metadata": {
     "originId": "game",

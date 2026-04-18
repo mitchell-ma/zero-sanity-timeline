@@ -93,7 +93,7 @@
     "id": "ROVING_MSGR_FLASHLIGHT_T1",
     "name": "Roving MSGR Flashlight T1",
     "gearType": "KIT",
-    "gearSet": "ROVING_MSGR"
+    "gearSet": "ROVING_MSGR_STAT"
   },
   "metadata": {
     "originId": "game",

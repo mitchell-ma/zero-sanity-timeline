@@ -527,7 +527,6 @@ export interface NormalizedEffectDef {
     interactionType: string;
   };
   onTriggerClause: { conditions: Interaction[]; effects?: Record<string, unknown>[] }[];
-  clause?: { conditions: Interaction[]; effects: Record<string, unknown>[] }[];
   note?: string;
   cooldownSeconds?: number;
   properties?: { duration?: { value: ValueNode; unit: string } };
@@ -610,7 +609,7 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
       interactionType: (sl.interactionType as string) ?? StackInteractionType.NONE,
     },
     onTriggerClause: (raw.onTriggerClause ?? []) as NormalizedEffectDef['onTriggerClause'],
-    ...(raw.clause ? { clause: raw.clause as NormalizedEffectDef['clause'] } : {}),
+    ...(raw.segments ? { segments: raw.segments as NormalizedEffectDef['segments'] } : {}),
     ...(raw.note ? { note: raw.note as string } : {}),
     ...(raw.cooldownSeconds ?? (props.cooldownSeconds as number | undefined) ? { cooldownSeconds: (raw.cooldownSeconds ?? props.cooldownSeconds) as number } : {}),
     ...(props.eventCategoryType ? { eventCategoryType: props.eventCategoryType as string } : {}),
@@ -633,38 +632,14 @@ export function getWeaponEffectDefs(weaponId: string): NormalizedEffectDef[] {
   if (!originId) return [];
   const statuses = getWeaponStats(originId);
   if (statuses.length === 0) return [];
-  const defs = statuses.map(s => normalizeEffectEntry(s.serialize() as Record<string, unknown>));
-  const namedSkill = getNamedWeaponSkill(originId);
-  const triggers = namedSkill?.onTriggerClause ?? [];
-  for (const def of defs) {
-    if (!def.onTriggerClause || def.onTriggerClause.length === 0) {
-      const trigger = triggers.find(t =>
-        (t as unknown as { effects?: { objectId?: string }[] }).effects?.some(e => e.objectId === def.id)
-      );
-      if (trigger) {
-        def.onTriggerClause = [{ conditions: trigger.conditions }];
-      }
-    }
-  }
-  return defs;
+  return statuses.map(s => normalizeEffectEntry(s.serialize() as Record<string, unknown>));
 }
 
 export function getGearEffectDefs(gearSetType: string): NormalizedEffectDef[] {
   if (customGearEffects[gearSetType]) return customGearEffects[gearSetType];
   const statuses = getGearStats(gearSetType);
   if (statuses.length === 0) return [];
-  const defs = statuses.map(s => normalizeEffectEntry(s.serialize() as Record<string, unknown>));
-  const effectEntry = GEAR_EFFECT_INDEX[gearSetType];
-  const triggers = (effectEntry?.onTriggerClause ?? []) as { conditions: Interaction[]; effects: { objectId?: string }[] }[];
-  for (const def of defs) {
-    if (!def.onTriggerClause || def.onTriggerClause.length === 0) {
-      const trigger = triggers.find(t => t.effects?.some(e => e.objectId === def.id));
-      if (trigger) {
-        def.onTriggerClause = [{ conditions: trigger.conditions }];
-      }
-    }
-  }
-  return defs;
+  return statuses.map(s => normalizeEffectEntry(s.serialize() as Record<string, unknown>));
 }
 
 export function getAllWeaponEffectIds(): string[] {

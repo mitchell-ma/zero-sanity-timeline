@@ -599,6 +599,7 @@
   "dsl.object.TALENT_LEVEL": "Talent Level",
   "dsl.object.ATTRIBUTE_INCREASE_LEVEL": "Attribute Increase Level",
   "dsl.object.EVENT": "Event",
+  "dsl.object.OCCURRENCE": "Occurrence",
   "dsl.object.ATTACK_BONUS": "Attack Bonus",
   "dsl.object.ARTS_REACTION": "Arts Reaction",
   "dsl.object.FINAL_STRIKE": "Final Strike",

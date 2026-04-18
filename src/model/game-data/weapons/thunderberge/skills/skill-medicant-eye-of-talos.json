@@ -1,39 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.24,
-                0.288,
-                0.336,
-                0.384,
-                0.432,
-                0.48,
-                0.528,
-                0.576,
-                0.672
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          },
-          "objectId": "SHIELD_BONUS"
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -55,11 +20,60 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Medicant: Eye of Talos"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.24,
+                    0.288,
+                    0.336,
+                    0.384,
+                    0.432,
+                    0.48,
+                    0.528,
+                    0.576,
+                    0.672
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "SHIELD_BONUS"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Medicant: Eye of Talos",
-    "description": "Shield applied +{shield_up:0.0%}. After the wielder's combo skill provides HP treatment, the controlled operator gains an additional [{hp_ratio:0.0%}×Wielder's Max HP] Shield for {duration:0}s. Effect only triggers once every {cd:0}s.",
+    "description": "Shield applied +{shield_up:0.0%}. After the wielder's combo skill provides HP treatment, the controlled operator gains an additional [{hp_ratio:0.0%}\u00d7Wielder's Max HP] Shield for {duration:0}s. Effect only triggers once every {cd:0}s.",
     "id": "MEDICANT_EYE_OF_TALOS",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "THUNDERBERGE",

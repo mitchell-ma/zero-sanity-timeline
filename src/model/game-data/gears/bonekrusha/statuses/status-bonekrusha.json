@@ -1,30 +1,44 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "STATUS_LEVEL",
-              "value": [
-                0.3
-              ]
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0
           },
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "BATTLE"
+          "unit": "SECOND"
+        },
+        "name": "Bonekrusha"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "STATUS_LEVEL",
+                  "value": [
+                    0.3
+                  ]
+                }
+              },
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "BATTLE"
+            }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "BONEKRUSHA_STAT",
+    "id": "BONEKRUSHA",
     "name": "Bonekrusha",
     "duration": {
       "value": {
@@ -42,10 +56,10 @@
     },
     "description": "Consumed on next battle skill cast",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "BONEKRUSHA",
+    "originId": "BONEKRUSHA_STAT",
     "dataStatus": "RECONCILED"
   }
 }

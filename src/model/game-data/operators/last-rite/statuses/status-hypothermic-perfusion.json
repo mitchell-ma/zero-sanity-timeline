@@ -1,4 +1,51 @@
 {
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 15
+          },
+          "unit": "SECOND"
+        },
+        "name": "Hypothermic Perfusion"
+      },
+      "clause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "SOURCE",
+              "subject": "OPERATOR",
+              "verb": "HAVE",
+              "object": "POTENTIAL",
+              "cardinalityConstraint": "GREATER_THAN_EQUAL",
+              "value": {
+                "verb": "IS",
+                "value": 1
+              }
+            }
+          ],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "FINAL_STRIKE",
+              "toDeterminer": "CONTROLLED",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.2
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "id": "HYPOTHERMIC_PERFUSION",
     "name": "Hypothermic Perfusion",
@@ -44,39 +91,6 @@
           "verb": "CONSUME",
           "object": "EVENT",
           "objectDeterminer": "THIS"
-        }
-      ]
-    }
-  ],
-  "clause": [
-    {
-      "conditions": [
-        {
-          "subjectDeterminer": "SOURCE",
-          "subject": "OPERATOR",
-          "verb": "HAVE",
-          "object": "POTENTIAL",
-          "cardinalityConstraint": "GREATER_THAN_EQUAL",
-          "value": {
-            "verb": "IS",
-            "value": 1
-          }
-        }
-      ],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "FINAL_STRIKE",
-          "toDeterminer": "CONTROLLED",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.2
-            }
-          }
         }
       ]
     }

@@ -7,23 +7,6 @@
     "element": "PHYSICAL",
     "id": "RIGID_INTERDICTION"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "SKILL_POINT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 100
-            }
-          }
-        }
-      ]
-    }
-  ],
   "metadata": {
     "originId": "CATCHER",
     "icon": "skills/skill_catcher.png",
@@ -98,8 +81,25 @@
           "unit": "SECOND"
         },
         "element": "PHYSICAL"
-      }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "SKILL_POINT",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 100
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     }
-  ],
-  "clauseType": "ALL"
+  ]
 }

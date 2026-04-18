@@ -72,7 +72,7 @@ function addUlt(app: AppResult, atFrame: number) {
 
 describe('A. Barrage DAMAGE_BONUS scoped to BASIC_ATTACK', () => {
   it('A1: DAMAGE_BONUS has objectQualifier BASIC_ATTACK', () => {
-    const statEffect = BARRAGE_JSON.clause[0].effects[0];
+    const statEffect = BARRAGE_JSON.segments[0].clause[0].effects[0];
     expect(statEffect.verb).toBe(VerbType.APPLY);
     expect(statEffect.object).toBe(NounType.STAT);
     expect(statEffect.objectId).toBe(NounType.DAMAGE_BONUS);
@@ -80,7 +80,7 @@ describe('A. Barrage DAMAGE_BONUS scoped to BASIC_ATTACK', () => {
   });
 
   it('A2: DAMAGE_BONUS VARY_BY TALENT_LEVEL [0, 0.5]', () => {
-    const value = BARRAGE_JSON.clause[0].effects[0].with.value;
+    const value = BARRAGE_JSON.segments[0].clause[0].effects[0].with.value;
     expect(value.object).toBe(NounType.TALENT_LEVEL);
     expect(value.value).toEqual([0, 0.5]);
   });
@@ -110,14 +110,14 @@ describe('B. Freezing Point — unified talent event with FIRST_MATCH clause', (
   // -- JSON structure --
 
   it('B1: FIRST_MATCH clause uses Solidification branch first, Cryo branch second', () => {
-    expect(FREEZING_POINT_JSON.clauseType).toBe('FIRST_MATCH');
-    expect(FREEZING_POINT_JSON.clause).toHaveLength(2);
-    expect(FREEZING_POINT_JSON.clause[0].conditions[0].objectQualifier).toBe('SOLIDIFICATION');
-    expect(FREEZING_POINT_JSON.clause[1].conditions[0].objectQualifier).toBe('CRYO');
+    expect(FREEZING_POINT_JSON.segments[0].clauseType).toBe('FIRST_MATCH');
+    expect(FREEZING_POINT_JSON.segments[0].clause).toHaveLength(2);
+    expect(FREEZING_POINT_JSON.segments[0].clause[0].conditions[0].objectQualifier).toBe('SOLIDIFICATION');
+    expect(FREEZING_POINT_JSON.segments[0].clause[1].conditions[0].objectQualifier).toBe('CRYO');
   });
 
   it('B1b: Cryo branch applies CRITICAL_DAMAGE with base values (TL [0, 0.1, 0.2] + P3 [0..0.1])', () => {
-    const effect = FREEZING_POINT_JSON.clause[1].effects[0];
+    const effect = FREEZING_POINT_JSON.segments[0].clause[1].effects[0];
     expect(effect.objectId).toBe('CRITICAL_DAMAGE');
     expect(effect.with.value.operation).toBe(ValueOperation.ADD);
     expect(effect.with.value.left.value).toEqual([0, 0.1, 0.2]);
@@ -125,7 +125,7 @@ describe('B. Freezing Point — unified talent event with FIRST_MATCH clause', (
   });
 
   it('B2: Solidification branch applies CRITICAL_DAMAGE with doubled values (TL [0, 0.2, 0.4] + P3 [0..0.2])', () => {
-    const effect = FREEZING_POINT_JSON.clause[0].effects[0];
+    const effect = FREEZING_POINT_JSON.segments[0].clause[0].effects[0];
     expect(effect.objectId).toBe('CRITICAL_DAMAGE');
     expect(effect.with.value.operation).toBe(ValueOperation.ADD);
     expect(effect.with.value.left.value).toEqual([0, 0.2, 0.4]);
@@ -396,7 +396,7 @@ describe('B. Freezing Point — unified talent event with FIRST_MATCH clause', (
 
 describe('C. P2 Flawless Creation stat clauses', () => {
   it('C1: has APPLY STAT INTELLECT +20', () => {
-    const intEffect = P2_JSON.clause[0].effects.find(
+    const intEffect = P2_JSON.segments[0].clause[0].effects.find(
       (e: { objectId: string }) => e.objectId === StatType.INTELLECT,
     );
     expect(intEffect).toBeDefined();
@@ -406,7 +406,7 @@ describe('C. P2 Flawless Creation stat clauses', () => {
   });
 
   it('C2: has APPLY STAT CRITICAL_RATE +0.07', () => {
-    const critEffect = P2_JSON.clause[0].effects.find(
+    const critEffect = P2_JSON.segments[0].clause[0].effects.find(
       (e: { objectId: string }) => e.objectId === StatType.CRITICAL_RATE,
     );
     expect(critEffect).toBeDefined();
@@ -422,7 +422,7 @@ describe('C. P2 Flawless Creation stat clauses', () => {
 
 describe('D. P5 Expert Mechcrafter', () => {
   it('D1: status has ATK +10% and Crit DMG +30%', () => {
-    const effects = EXPERT_STATUS_JSON.clause[0].effects;
+    const effects = EXPERT_STATUS_JSON.segments[0].clause[0].effects;
     const atk = effects.find((e: { objectId: string }) => e.objectId === StatType.ATTACK_BONUS);
     expect(atk).toBeDefined();
     expect(atk.with.value.value).toBe(0.1);
@@ -478,7 +478,7 @@ describe('D. P5 Expert Mechcrafter', () => {
   });
 
   it('D3c: Expert Mechcrafter status has ATK_BONUS and CRITICAL_DAMAGE in its definition', () => {
-    const effects = EXPERT_STATUS_JSON.clause[0].effects;
+    const effects = EXPERT_STATUS_JSON.segments[0].clause[0].effects;
     const statIds = effects.map((e: { objectId: string }) => e.objectId);
     expect(statIds).toContain('ATTACK_BONUS');
     expect(statIds).toContain('CRITICAL_DAMAGE');
@@ -583,7 +583,7 @@ describe('E. Cryoblasting Pistolier (Crit) on EBATK', () => {
   it('E3: CRYOBLASTING_PISTOLIER_CRIT_RATE gives 3% crit rate per stack (max 10) and applies CRIT_DAMAGE status at max', () => {
     expect(CRIT_STACKS_JSON.properties.stacks.limit.value).toBe(10);
     // Crit rate clause: 0.03 per stack (per-stack evaluation)
-    const critRateEffect = CRIT_STACKS_JSON.clause[0].effects[0];
+    const critRateEffect = CRIT_STACKS_JSON.segments[0].clause[0].effects[0];
     expect(critRateEffect.objectId).toBe('CRITICAL_RATE');
     expect(critRateEffect.with.value.value).toBe(0.03);
     // onTriggerClause at MAX stacks applies the separate CRIT_DAMAGE status
@@ -592,7 +592,7 @@ describe('E. Cryoblasting Pistolier (Crit) on EBATK', () => {
     expect(trigger.conditions[0].value).toBe('MAX');
     expect(trigger.effects[0].objectId).toBe(CRIT_DAMAGE_JSON.properties.id);
     // CRIT_DAMAGE status applies +0.6 CRITICAL_DAMAGE
-    const critDmgEffect = CRIT_DAMAGE_JSON.clause[0].effects[0];
+    const critDmgEffect = CRIT_DAMAGE_JSON.segments[0].clause[0].effects[0];
     expect(critDmgEffect.objectId).toBe('CRITICAL_DAMAGE');
     expect(critDmgEffect.with.value.value).toBe(0.6);
   });

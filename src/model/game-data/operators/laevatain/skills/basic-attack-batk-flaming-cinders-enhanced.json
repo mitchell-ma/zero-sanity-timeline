@@ -321,7 +321,8 @@
               "effects": [
                 {
                   "verb": "APPLY",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "HEAT",
                   "to": "ENEMY",
                   "with": {

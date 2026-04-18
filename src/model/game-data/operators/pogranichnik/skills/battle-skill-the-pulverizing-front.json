@@ -18,23 +18,6 @@
       ]
     }
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "SKILL_POINT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 100
-            }
-          }
-        }
-      ]
-    }
-  ],
   "metadata": {
     "originId": "POGRANICHNIK",
     "icon": "skills/skill_pogranichnik.png",
@@ -58,12 +41,13 @@
           },
           "clause": [
             {
-              "_note": "SP return based on Vulnerability stacks — FIRST_MATCH highest to lowest, unconditional clause always fires",
+              "_note": "SP return based on Vulnerability stacks \u2014 FIRST_MATCH highest to lowest, unconditional clause always fires",
               "conditions": [
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "VULNERABLE",
                   "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
@@ -110,7 +94,8 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "VULNERABLE",
                   "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
@@ -157,7 +142,8 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "VULNERABLE",
                   "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
@@ -204,7 +190,8 @@
                 {
                   "subject": "ENEMY",
                   "verb": "HAVE",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "VULNERABLE",
                   "cardinalityConstraint": "GREATER_THAN_EQUAL",
                   "with": {
@@ -413,8 +400,25 @@
           "unit": "SECOND"
         },
         "element": "PHYSICAL"
-      }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "SKILL_POINT",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 100
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     }
-  ],
-  "clauseType": "ALL"
+  ]
 }

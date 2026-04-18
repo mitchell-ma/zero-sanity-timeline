@@ -70,7 +70,7 @@
     "id": "FRONTIERS_ANALYZER",
     "name": "Frontiers Analyzer",
     "gearType": "KIT",
-    "gearSet": "FRONTIERS"
+    "gearSet": "FRONTIERS_STAT"
   },
   "metadata": {
     "originId": "game",

@@ -8,7 +8,7 @@
 import { StatType, UnitType, EventType } from '../../consts/enums';
 import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
-import { checkKeys, VALID_CLAUSE_KEYS, validateNonNegativeValues } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_CLAUSE_KEYS, validateNonNegativeValues } from './validationUtils';
 
 // ── Shared duration type (matches weapon/operator status stores) ────────────
 
@@ -44,8 +44,7 @@ const VALID_METADATA_KEYS = new Set(['dataSources', 'icon', 'originId', 'dataSta
 
 function validateProperties(props: Record<string, unknown>, validKeys: Set<string>): string[] {
   const errors = checkKeys(props, validKeys, 'properties');
-  if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
-  if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
+  errors.push(...checkIdAndName(props, 'properties'));
   if (typeof props.rarity !== 'number') errors.push('properties.rarity: must be a number');
   return errors;
 }

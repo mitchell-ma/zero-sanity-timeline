@@ -238,7 +238,8 @@ export function getStatusWithProperties(statusId: string): string[] {
   for (const status of allStatuses) {
     if (status.id === statusId) {
       const withKeys = new Set<string>();
-      const clauses = [...(status.clause ?? []), ...(status.onTriggerClause ?? [])];
+      const segmentClauses = (status.segments ?? []).flatMap((s: { clause?: unknown[] }) => s.clause ?? []);
+      const clauses = [...segmentClauses, ...(status.onTriggerClause ?? [])];
       for (const c of clauses) {
         const predicate = c as { effects?: { with?: Record<string, unknown> }[] };
         for (const ef of predicate.effects ?? []) {

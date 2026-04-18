@@ -1,55 +1,70 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Fam of Honor (T1)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "HASTE",
-          "toDeterminer": "ALL",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "TALENT_LEVEL",
-              "value": [
-                0,
-                0.1,
-                0.2
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "HASTE",
+              "toDeterminer": "ALL",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.1,
+                    0.2
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "SLOW",
+              "to": "ENEMY",
+              "with": {
+                "value": {
+                  "value": {
+                    "verb": "VARY_BY",
+                    "object": "TALENT_LEVEL",
+                    "value": [
+                      0,
+                      0.2,
+                      0.4
+                    ],
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  },
+                  "unit": "PERCENTAGE"
+                }
               }
             }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "SLOW",
-          "to": "ENEMY",
-          "with": {
-            "value": {
-              "value": {
-                "verb": "VARY_BY",
-                "object": "TALENT_LEVEL",
-                "value": [
-                  0,
-                  0.2,
-                  0.4
-                ],
-                "of": {
-                  "object": "OPERATOR",
-                  "determiner": "THIS"
-                }
-              },
-              "unit": "PERCENTAGE"
-            }
-          }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -73,6 +88,5 @@
     ],
     "icon": "skills/tangtang_talent_1_icon.png",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

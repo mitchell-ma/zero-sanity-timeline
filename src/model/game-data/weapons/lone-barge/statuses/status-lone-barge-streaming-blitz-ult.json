@@ -1,0 +1,82 @@
+{
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 25
+          },
+          "unit": "SECOND"
+        },
+        "name": "Streaming Blitz (Ultimate)"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.4,
+                    0.48,
+                    0.56,
+                    0.64,
+                    0.72,
+                    0.8,
+                    0.88,
+                    0.96,
+                    1.12
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ELECTRIC"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "LONE_BARGE_SUPPRESSION_STREAMING_BLITZ_ULT",
+    "name": "Streaming Blitz (Ultimate)",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 25
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventType": "STATUS",
+    "eventCategoryType": "WEAPON",
+    "description": "Battle Skill Electric DMG Dealt +{pulse_dmg_up3:0.0%} for 25s after ultimate cast. Cannot stack."
+  },
+  "metadata": {
+    "originId": "LONE_BARGE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "RECONCILED"
+  }
+}

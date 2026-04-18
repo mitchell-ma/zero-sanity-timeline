@@ -1,36 +1,50 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.75,
-                0.9,
-                1.05,
-                1.2,
-                1.35,
-                1.5,
-                1.65,
-                1.8,
-                2.1
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "BASIC_ATTACK"
+          "unit": "SECOND"
+        },
+        "name": "Blazing Wail"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.75,
+                    0.9,
+                    1.05,
+                    1.2,
+                    1.35,
+                    1.5,
+                    1.65,
+                    1.8,
+                    2.1
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "BASIC_ATTACK"
+            }
+          ]
         }
       ]
     }
@@ -55,7 +69,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT",
+    "eventCategoryType": "WEAPON",
     "description": "Heat DMG Dealt +{fire_dmg_up:0.0%}. When the wielder casts an ultimate, the wielder gains Basic Attack DMG Dealt +{normal_atk_up:0.0%} for {duration:0.0}s. Effects of the same name cannot stack."
   },
   "metadata": {

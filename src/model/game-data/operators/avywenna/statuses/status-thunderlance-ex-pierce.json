@@ -83,7 +83,7 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "ELECTRIC",
-                  "object": "INFLICTION",
+                  "object": "STATUS", "objectId": "INFLICTION",
                   "to": "ENEMY"
                 },
                 {
@@ -179,7 +179,8 @@
           ],
           "clauseType": "ALL"
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -207,6 +208,5 @@
   "metadata": {
     "originId": "AVYWENNA",
     "dataStatus": "VERIFIED"
-  },
-  "clauseType": "ALL"
+  }
 }

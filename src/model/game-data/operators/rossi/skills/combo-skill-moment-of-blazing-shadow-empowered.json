@@ -23,20 +23,6 @@
     "element": "PHYSICAL",
     "id": "MOMENT_OF_BLAZING_SHADOW_EMPOWERED"
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "STATUS",
-          "objectId": "PERFECT_TIMING",
-          "fromDeterminer": "THIS",
-          "from": "OPERATOR"
-        }
-      ]
-    }
-  ],
   "metadata": {
     "originId": "ROSSI",
     "dataSources": [
@@ -66,7 +52,22 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "STATUS",
+              "objectId": "PERFECT_TIMING",
+              "fromDeterminer": "THIS",
+              "from": "OPERATOR"
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -412,6 +413,5 @@
       },
       "frames": []
     }
-  ],
-  "clauseType": "ALL"
+  ]
 }

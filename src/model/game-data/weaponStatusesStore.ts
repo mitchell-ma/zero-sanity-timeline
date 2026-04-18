@@ -6,10 +6,10 @@
  * Each file is a status entry that a `WeaponSkill` onTriggerClause applies.
  */
 import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
-import { VerbType } from '../../dsl/semantics';
+import { NounType, VerbType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
-import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues, validateSegmentShape } from './validationUtils';
 
 // ── DSL value types ─────────────────────────────────────────────────────────
 
@@ -43,12 +43,21 @@ export interface DurationConfig {
   unit: string;
 }
 
+/** Shape of a single entry in the `segments` array on a status config. */
+export interface StatusSegment {
+  metadata?: Record<string, unknown>;
+  properties?: Record<string, unknown>;
+  clause?: ClausePredicate[];
+  clauseType?: string;
+  frames?: unknown[];
+}
+
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
-const VALID_TOP_KEYS = new Set(['clause', 'clauseType', 'onTriggerClause', 'onExitClause', 'properties', 'metadata']);
+const VALID_TOP_KEYS = new Set(['segments', 'onTriggerClause', 'onExitClause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -83,10 +92,25 @@ export function validateWeaponStat(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_TOP_KEYS, 'root');
   errors.push(...validateNonNegativeValues(json, 'root'));
 
-  if (json.clause) {
-    if (!Array.isArray(json.clause)) errors.push('root.clause: must be an array');
-    else (json.clause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `clause[${i}]`)));
+  // Root-level `clause`/`clauseType` are rejected — clauses MUST live inside segments.
+  if ('clause' in json) errors.push('root.clause: not allowed — move clause effects into segments[0].clause');
+  if ('clauseType' in json) errors.push('root.clauseType: not allowed — set clauseType on segments[0] instead');
+
+  // Marker-only weapon statuses (no onTrigger/onExit, no segments) are allowed —
+  // they exist as visible cooldown/state markers. Otherwise, segments required.
+  const hasRuntimeHook =
+    (Array.isArray(json.onTriggerClause) && (json.onTriggerClause as unknown[]).length > 0) ||
+    (Array.isArray(json.onExitClause) && (json.onExitClause as unknown[]).length > 0);
+  if (json.segments) {
+    if (!Array.isArray(json.segments) || (json.segments as unknown[]).length === 0) {
+      errors.push('root.segments: must be a non-empty array');
+    } else {
+      (json.segments as Record<string, unknown>[]).forEach((s, i) => errors.push(...validateSegmentShape(s, `segments[${i}]`)));
+    }
+  } else if (hasRuntimeHook) {
+    errors.push('root.segments: required when onTriggerClause/onExitClause is present');
   }
+
   if (json.onTriggerClause) {
     if (!Array.isArray(json.onTriggerClause)) errors.push('root.onTriggerClause: must be an array');
     else (json.onTriggerClause as Record<string, unknown>[]).forEach((c, i) => errors.push(...validateClause(c, `onTriggerClause[${i}]`)));
@@ -99,8 +123,7 @@ export function validateWeaponStat(json: Record<string, unknown>): string[] {
   const props = json.properties as Record<string, unknown> | undefined;
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
-  if (typeof props.id !== 'string') errors.push('properties.id: must be a string');
-  if (typeof props.name !== 'string') errors.push('properties.name: must be a string');
+  errors.push(...checkIdAndName(props, 'properties'));
   if (props.to !== undefined && typeof props.to !== 'string') errors.push('properties.to: must be a string');
   if (props.toDeterminer !== undefined && typeof props.toDeterminer !== 'string') errors.push('properties.toDeterminer: must be a string');
 
@@ -135,7 +158,7 @@ export function validateWeaponStat(json: Record<string, unknown>): string[] {
 
 /** A weapon stat-bearing status definition (eventCategoryType=WEAPON_STAT). */
 export class WeaponStat {
-  readonly clause: ClausePredicate[];
+  readonly segments: StatusSegment[];
   readonly onTriggerClause: TriggerClause[];
   readonly onExitClause: ClausePredicate[];
   readonly id: string;
@@ -154,7 +177,7 @@ export class WeaponStat {
     const props = (json.properties ?? {}) as Record<string, unknown>;
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
-    this.clause = (json.clause ?? []) as ClausePredicate[];
+    this.segments = (json.segments ?? []) as StatusSegment[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
     this.onExitClause = (json.onExitClause ?? []) as ClausePredicate[];
     this.id = (props.id ?? '') as string;
@@ -183,7 +206,7 @@ export class WeaponStat {
   /** Serialize back to the JSON shape. */
   serialize(): Record<string, unknown> {
     return {
-      clause: this.clause,
+      ...(this.segments.length > 0 ? { segments: this.segments } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       ...(this.onExitClause.length > 0 ? { onExitClause: this.onExitClause } : {}),
       properties: {
@@ -219,23 +242,14 @@ export class WeaponStat {
 /** All WeaponStats indexed by originId. */
 const weaponStatCache = new Map<string, WeaponStat[]>();
 
-// Load individual status files from weapons/<weapon>/statuses/ and weapons/generic/
-const weaponStatContext = require.context('./weapons', true, /\/statuses\/status-[^/]+\.json$/);
-for (const key of weaponStatContext.keys()) {
-  const json = weaponStatContext(key) as Record<string, unknown>;
-  const stat = WeaponStat.deserialize(json, key);
-  if (stat.originId) {
-    if (!weaponStatCache.has(stat.originId)) {
-      weaponStatCache.set(stat.originId, []);
-    }
-    weaponStatCache.get(stat.originId)!.push(stat);
-  }
-}
-
-// Also load generic WeaponStats
-const genericWeaponStatContext = require.context('./weapons/generic', false, /^\.\/status-.*\.json$/);
-for (const key of genericWeaponStatContext.keys()) {
-  const json = genericWeaponStatContext(key) as Record<string, unknown>;
+// Route by eventCategoryType=WEAPON (not by path). The JSON's
+// properties.eventCategoryType is the source of truth; paths are
+// informational only so files can be reorganized without breaking the loader.
+const weaponContext = require.context('./weapons', true, /\.json$/);
+for (const key of weaponContext.keys()) {
+  const json = weaponContext(key) as Record<string, unknown>;
+  const props = (json.properties ?? {}) as Record<string, unknown>;
+  if (props.eventCategoryType !== NounType.WEAPON) continue;
   const stat = WeaponStat.deserialize(json, key);
   if (stat.originId) {
     if (!weaponStatCache.has(stat.originId)) {

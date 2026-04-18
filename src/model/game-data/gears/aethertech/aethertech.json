@@ -16,7 +16,7 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "AETHERTECH_STAT",
+          "objectId": "AETHERTECH",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
@@ -36,8 +36,9 @@
         {
           "subject": "ENEMY",
           "verb": "HAVE",
-          "object": "INFLICTION",
-          "objectId": "VULNERABLE",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "VULNERABLE",
           "cardinalityConstraint": "EXACTLY",
           "value": {
             "verb": "IS",
@@ -56,14 +57,48 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "\u00c6thertech"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.08
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "AETHERTECH",
-    "name": "Æthertech",
+    "id": "AETHERTECH_STAT",
+    "name": "\u00c6thertech",
     "rarity": 5,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. After the wearer applies Vulnerability, the wearer gains Physical DMG +{phy_dmg_up:0%} for {duration}s. This effect can reach {max_stack:0} stacks. If the target already has 4 stack(s) of Vulnerability, the wearer gains an additional Physical DMG +{phy_dmg_up2:0%} for {duration2}s. This effect cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

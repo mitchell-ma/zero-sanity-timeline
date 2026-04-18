@@ -125,13 +125,13 @@ describe('Da Pan — Reduce and Thicken JSON', () => {
   it('A2: trigger condition is CONSUME VULNERABLE INFLICTION with stacks >= 1', () => {
     const cond = TALENT_JSON.onTriggerClause[0].conditions[0];
     expect(cond.verb).toBe(VerbType.CONSUME);
-    expect(cond.object).toBe(NounType.INFLICTION);
+    expect(cond.objectId).toBe(NounType.INFLICTION);
     expect(cond.objectQualifier).toBe(PhysicalInflictionType.VULNERABLE);
     expect(cond.with.stacks.value).toBe(1);
   });
 
   it('A3: clause applies PHYSICAL DAMAGE_BONUS by talent level [0, 0.04, 0.06]', () => {
-    const ef = TALENT_JSON.clause[0].effects[0];
+    const ef = TALENT_JSON.segments[0].clause[0].effects[0];
     expect(ef.verb).toBe(VerbType.APPLY);
     expect(ef.object).toBe(NounType.STAT);
     expect(ef.objectId).toBe(StatType.DAMAGE_BONUS);
@@ -247,11 +247,15 @@ describe('Da Pan — Reduce and Thicken stacking + RESET', () => {
     expect(active.length).toBe(4);
 
     // At least the 2 oldest (wave 1, started before t=9s) must be marked
-    // CONSUMED/REFRESHED because RESET replaced them.
+    // CONSUMED/REFRESHED or have been clamped (ended) because RESET replaced them.
     const waveOneStacks = rts.filter((ev) => ev.startFrame < 9 * FPS);
     expect(waveOneStacks.length).toBe(2);
     for (const old of waveOneStacks) {
-      expect([EventStatusType.CONSUMED, EventStatusType.REFRESHED]).toContain(old.eventStatus);
+      const end = old.startFrame + (old.segments[0]?.properties.duration ?? 0);
+      const cleared = old.eventStatus === EventStatusType.CONSUMED
+        || old.eventStatus === EventStatusType.REFRESHED
+        || end <= checkFrame;
+      expect(cleared).toBe(true);
     }
   });
 

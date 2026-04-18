@@ -1,65 +1,79 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "OTHER",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.03,
-                0.036,
-                0.042,
-                0.048,
-                0.054,
-                0.06,
-                0.066,
-                0.072,
-                0.084
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
           },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "HEAT"
+          "unit": "SECOND"
         },
+        "name": "Unbridled Edge"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "OTHER",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.03,
-                0.036,
-                0.042,
-                0.048,
-                0.054,
-                0.06,
-                0.066,
-                0.072,
-                0.084
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.03,
+                    0.036,
+                    0.042,
+                    0.048,
+                    0.054,
+                    0.06,
+                    0.066,
+                    0.072,
+                    0.084
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "HEAT"
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.03,
+                    0.036,
+                    0.042,
+                    0.048,
+                    0.054,
+                    0.06,
+                    0.066,
+                    0.072,
+                    0.084
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "DAMAGE_BONUS",
+              "objectQualifier": "ELECTRIC"
             }
-          },
-          "objectId": "DAMAGE_BONUS",
-          "objectQualifier": "ELECTRIC"
+          ]
         }
       ]
     }
@@ -84,7 +98,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON_STAT",
+    "eventCategoryType": "WEAPON",
     "description": "Secondary Attribute +{second_attr_up:0.0%}. After the wielder's skill recovers SP, the entire team gains Heat DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately."
   },
   "metadata": {

@@ -57,7 +57,7 @@ export class InflictionColumn implements EventColumn {
           const reactionParents = [incomingUid, ...otherActive.map(o => o.uid)];
           this.host.applyToColumn(reactionColumnId, ENEMY_ID, frame, reactionDurFrames, source, {
             uid: `${incomingUid}-reaction`,
-            stacks: otherActive.length,
+            statusLevel: Math.min(otherActive.length, 4) as import('../../../consts/types').StatusLevel,
             parents: reactionParents,
             ...(options?.event ? { event: options.event } : {}),
           });
@@ -71,7 +71,7 @@ export class InflictionColumn implements EventColumn {
           consumed.startFrame = frame;
           consumed.segments = [{ properties: { duration: 0 } }];
           consumed.sourceEntityId = source.ownerEntityId;
-          consumed.sourceSkillName = source.skillName;
+          consumed.sourceSkillId = source.skillName;
           consumed.eventStatus = EventStatusType.CONSUMED;
           if (options?.event) Object.assign(consumed, options.event);
           if (source.sourceEventUid) this.host.linkTransition(consumed.uid, source.sourceEventUid);
@@ -102,7 +102,7 @@ export class InflictionColumn implements EventColumn {
     ev.startFrame = frame;
     ev.segments = [{ properties: { duration: durationFrames } }];
     ev.sourceEntityId = source.ownerEntityId;
-    ev.sourceSkillName = source.skillName;
+    ev.sourceSkillId = source.skillName;
     if (isArtsBurst) ev.isArtsBurst = true;
     if (options?.event) Object.assign(ev, options.event);
 

@@ -6,7 +6,7 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "INFLICTION",
+          "object": "STATUS", "objectId": "INFLICTION",
           "stacks": 2,
           "to": "ENEMY"
         }
@@ -15,21 +15,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "TIDE_SURGE_STAT",
+          "objectId": "TIDE_SURGE",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Tide Surge"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "SKILL_DAMAGE_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.2
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "TIDE_SURGE",
+    "id": "TIDE_SURGE_STAT",
     "name": "Tide Surge",
     "rarity": 5,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Skill DMG Dealt +{skill_dmg_up:0%}. After the wearer applies {stack_cond} or more stacks of Arts Infliction on the enemy, the wearer gains Arts DMG Dealt +{spell_dmg_up:0%} for {duration}s. This effect cannot stack.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

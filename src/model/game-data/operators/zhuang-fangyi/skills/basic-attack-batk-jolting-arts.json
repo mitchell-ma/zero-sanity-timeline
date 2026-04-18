@@ -1,0 +1,179 @@
+{
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT",
+        "dataSources": ["WARFARIN"]
+      },
+      "properties": {
+        "duration": { "value": { "verb": "IS", "value": 0.4 }, "unit": "SECOND" },
+        "element": "ELECTRIC"
+      },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0.2, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [0.16, 0.18, 0.19, 0.21, 0.22, 0.24, 0.26, 0.27, 0.29, 0.31, 0.33, 0.36],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "dataSources": ["WARFARIN"] },
+      "properties": { "duration": { "value": { "verb": "IS", "value": 0.4 }, "unit": "SECOND" }, "element": "ELECTRIC" },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0.2, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [0.24, 0.26, 0.29, 0.31, 0.34, 0.36, 0.38, 0.41, 0.43, 0.46, 0.5, 0.54],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "dataSources": ["WARFARIN"] },
+      "properties": { "duration": { "value": { "verb": "IS", "value": 0.5 }, "unit": "SECOND" }, "element": "ELECTRIC" },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0.3, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [0.32, 0.35, 0.39, 0.42, 0.45, 0.48, 0.52, 0.55, 0.58, 0.62, 0.67, 0.72],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "dataSources": ["WARFARIN"] },
+      "properties": { "duration": { "value": { "verb": "IS", "value": 0.5 }, "unit": "SECOND" }, "element": "ELECTRIC" },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0.3, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [0.45, 0.5, 0.54, 0.59, 0.63, 0.68, 0.72, 0.77, 0.81, 0.87, 0.93, 1.01],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "dataSources": ["WARFARIN"] },
+      "properties": { "duration": { "value": { "verb": "IS", "value": 0.6 }, "unit": "SECOND" }, "element": "ELECTRIC" },
+      "frames": [
+        {
+          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
+          "properties": { "offset": { "value": 0.4, "unit": "SECOND" }, "element": "ELECTRIC", "frameTypes": ["FINAL_STRIKE"] },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "DEAL", "object": "STAGGER", "to": "ENEMY",
+                  "with": { "value": { "verb": "IS", "value": 18 } }
+                },
+                {
+                  "verb": "RECOVER", "object": "SKILL_POINT", "toDeterminer": "THIS", "to": "OPERATOR",
+                  "with": { "value": { "verb": "IS", "value": 18 } }
+                },
+                {
+                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
+                      "value": [0.48, 0.53, 0.58, 0.62, 0.67, 0.72, 0.77, 0.82, 0.86, 0.92, 1, 1.08],
+                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                    },
+                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                  }
+                },
+                {
+                  "verb": "PERFORM", "object": "SKILL", "to": "ENEMY", "objectId": "FINAL_STRIKE"
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Jolting Arts",
+    "description": "An attack with up to 5 sequences that deals Electric DMG. As the controlled operator, Final Strike also deals 18 Stagger.",
+    "eventType": "SKILL",
+    "eventCategoryType": "BASIC_ATTACK",
+    "eventQualifierType": "BATK",
+    "element": "ELECTRIC",
+    "id": "JOLTING_ARTS_BATK"
+  },
+  "metadata": {
+    "originId": "ZHUANG_FANGYI",
+    "dataStatus": "RECONCILED"
+  }
+}

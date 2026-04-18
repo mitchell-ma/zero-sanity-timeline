@@ -92,7 +92,7 @@
     "id": "SWORDMANCER_LIGHT_ARMOR",
     "name": "Swordmancer Light Armor",
     "gearType": "ARMOR",
-    "gearSet": "SWORDMANCER"
+    "gearSet": "SWORDMANCER_STAT"
   },
   "metadata": {
     "originId": "game",

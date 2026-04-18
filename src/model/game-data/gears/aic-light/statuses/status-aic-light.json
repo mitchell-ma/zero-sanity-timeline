@@ -1,26 +1,40 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "BASE_ATTACK",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 20
-            }
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 5
           },
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "unit": "SECOND"
+        },
+        "name": "AIC Light"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "BASE_ATTACK",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 20
+                }
+              },
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "AIC_LIGHT_STAT",
+    "id": "AIC_LIGHT",
     "name": "AIC Light",
     "duration": {
       "value": {
@@ -38,10 +52,10 @@
     },
     "description": "ATK +20 for 5s after defeating an enemy.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "AIC_LIGHT",
+    "originId": "AIC_LIGHT_STAT",
     "dataStatus": "RECONCILED"
   }
 }

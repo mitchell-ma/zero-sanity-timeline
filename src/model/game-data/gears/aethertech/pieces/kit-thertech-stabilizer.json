@@ -90,9 +90,9 @@
   ],
   "properties": {
     "id": "THERTECH_STABILIZER",
-    "name": "Æthertech Stabilizer",
+    "name": "\u00c6thertech Stabilizer",
     "gearType": "KIT",
-    "gearSet": "AETHERTECH"
+    "gearSet": "AETHERTECH_STAT"
   },
   "metadata": {
     "originId": "game",

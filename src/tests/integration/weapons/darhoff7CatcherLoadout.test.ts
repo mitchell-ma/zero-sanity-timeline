@@ -64,14 +64,14 @@ expect(DARHOFF_JSON.skills).toEqual(['MAIN_ATTRIBUTE_BOOST_S', 'ASSAULT_ARMAMENT
 
 // Pull skill-level → value tables straight from the JSON so the test follows
 // any future rebalances without hand-rolling the numbers.
-const MAIN_BOOST_S_VALUES: number[] = MAIN_ATTR_BOOST_S_JSON.clause[0].effects[0].with.value.value;
-const ASSAULT_PREP_FLAT_ATK_VALUES: number[] = ASSAULT_ARMAMENT_PREP_JSON.clause[0].effects[0].with.value.value;
+const MAIN_BOOST_S_VALUES: number[] = MAIN_ATTR_BOOST_S_JSON.segments[0].clause[0].effects[0].with.value.value;
+const ASSAULT_PREP_FLAT_ATK_VALUES: number[] = ASSAULT_ARMAMENT_PREP_JSON.segments[0].clause[0].effects[0].with.value.value;
 
 // Assert the JSON shape is what we expect — ASSAULT_ARMAMENT_PREP should have
 // exactly ONE effect (flat ATK). Any future change that adds a second effect
 // or flips it back to a percentage stat fails loudly here.
-expect(ASSAULT_ARMAMENT_PREP_JSON.clause[0].effects).toHaveLength(1);
-expect(ASSAULT_ARMAMENT_PREP_JSON.clause[0].effects[0].objectId).toBe(StatType.FLAT_ATTACK);
+expect(ASSAULT_ARMAMENT_PREP_JSON.segments[0].clause[0].effects).toHaveLength(1);
+expect(ASSAULT_ARMAMENT_PREP_JSON.segments[0].clause[0].effects[0].objectId).toBe(StatType.FLAT_ATTACK);
 
 beforeEach(() => {
   localStorage.clear();

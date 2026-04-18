@@ -1829,21 +1829,32 @@ function BuiltinGearSetView({ id }: { id: string }) {
     <div className="ops-root ops-root--readonly ops-root--split">
       {/* ── LEFT: Set info ── */}
       <div className="ops-split-left">
-        {/* Set effect */}
-        {(hasPassive || hasTriggered || setDesc) && (
+        {/* Set effect — full JSON data (id, name, rarity, eventType,
+             eventCategoryType, originId, dataSources, dataStatus, clauses)
+             via DataCardBody, plus any passive stats registered in
+             gearSetEffects.ts not yet expressed in the DSL clause. */}
+        {(hasPassive || hasTriggered || setDesc || rawEffect) && (
           <ReadonlySection label="GEAR SET EFFECT">
-            {gearSetData?.setEffect?.piecesRequired && <ReadonlyField label="Pieces Required" value={String(gearSetData.setEffect.piecesRequired)} />}
-            {setDesc && <ReadonlyField label="Description" value={setDesc} />}
-            {hasPassive && Object.entries(passiveEntry!.passiveStats).map(([stat, val]) => (
-              <ReadonlyField key={stat} label={stat.replace(/_/g, ' ')} value={`+${formatStatVal(stat, val as number)}`} />
-            ))}
             {rawEffect && (
-              <ClauseTabs
-                clause={(rawEffect.clause ?? []) as unknown[]}
-                onTrigger={(rawEffect.onTriggerClause ?? []) as unknown[]}
-                onEntry={(rawEffect.onEntryClause ?? []) as unknown[]}
-                onExit={(rawEffect.onExitClause ?? []) as unknown[]}
+              <DataCardBody
+                data={rawEffect}
+                extraFields={hasPassive ? (
+                  <>
+                    {Object.entries(passiveEntry!.passiveStats).map(([stat, val]) => (
+                      <ReadonlyField key={stat} label={stat.replace(/_/g, ' ')} value={`+${formatStatVal(stat, val as number)}`} />
+                    ))}
+                  </>
+                ) : undefined}
               />
+            )}
+            {!rawEffect && (
+              <>
+                {gearSetData?.setEffect?.piecesRequired && <ReadonlyField label="Pieces Required" value={String(gearSetData.setEffect.piecesRequired)} />}
+                {setDesc && <ReadonlyField label="Description" value={setDesc} />}
+                {hasPassive && Object.entries(passiveEntry!.passiveStats).map(([stat, val]) => (
+                  <ReadonlyField key={stat} label={stat.replace(/_/g, ' ')} value={`+${formatStatVal(stat, val as number)}`} />
+                ))}
+              </>
             )}
           </ReadonlySection>
         )}

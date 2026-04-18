@@ -1,6 +1,6 @@
 {
   "properties": {
-    "name": "Brr-Brr-Bomb β",
+    "name": "Brr-Brr-Bomb \u03b2",
     "description": "Throws a freezing bomb. The bomb explodes when it hits the enemy to deal Cryo DMG. If hitting an enemy with Cryo Infliction or Nature Infliction, then consume all Arts Infliction stacks, forcibly apply Solidification, and deal Cryo DMG to the target based on the number of stacks consumed.\nAfter the battle skill successfully applies Solidification, Yvonne gains additional Ultimate Energy based on the number of stacks consumed. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
@@ -18,23 +18,6 @@
       ]
     }
   },
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "CONSUME",
-          "object": "SKILL_POINT",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 100
-            }
-          }
-        }
-      ]
-    }
-  ],
   "metadata": {
     "originId": "YVONNE",
     "icon": "skills/skill_yvonne.png",
@@ -298,7 +281,8 @@
                 },
                 {
                   "verb": "CONSUME",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "CRYO",
                   "from": "ENEMY",
                   "with": {
@@ -426,7 +410,8 @@
                 },
                 {
                   "verb": "CONSUME",
-                  "object": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "objectQualifier": "NATURE",
                   "from": "ENEMY",
                   "with": {
@@ -461,8 +446,25 @@
           "unit": "SECOND"
         },
         "element": "CRYO"
-      }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "CONSUME",
+              "object": "SKILL_POINT",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 100
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     }
-  ],
-  "clauseType": "ALL"
+  ]
 }

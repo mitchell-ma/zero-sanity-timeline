@@ -23,21 +23,55 @@
         {
           "verb": "APPLY",
           "object": "STATUS",
-          "objectId": "ROVING_MSGR_STAT",
+          "objectId": "ROVING_MSGR",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Roving MSGR"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "AGILITY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 50
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
-    "id": "ROVING_MSGR",
+    "id": "ROVING_MSGR_STAT",
     "name": "Roving MSGR",
     "rarity": 4,
     "piecesRequired": 3,
     "description": "3-piece set effect: Wearer's Agility +50. When the wearer's HP exceeds 80%, the wearer's Physical DMG increases by 20%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

@@ -118,7 +118,7 @@ describe('A. Config validation', () => {
     expect(conds).toHaveLength(2);
     // Vulnerable + Arts infliction
     expect(conds.some((c: Record<string, unknown>) => c.objectId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE)).toBe(true);
-    expect(conds.some((c: Record<string, unknown>) => c.objectQualifier === AdjectiveType.ARTS && c.object === NounType.INFLICTION)).toBe(true);
+    expect(conds.some((c: Record<string, unknown>) => c.objectQualifier === AdjectiveType.ARTS && c.objectId === NounType.INFLICTION)).toBe(true);
   });
 
   it('A3: empowered combo requires PERFECT_TIMING via activationClause', () => {

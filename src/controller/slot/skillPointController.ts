@@ -167,14 +167,14 @@ export class SkillPointController {
    * @param frame Absolute frame of the recovery.
    * @param amount SP amount recovered (positive).
    * @param sourceEntityId Owner of the skill that produced this recovery.
-   * @param sourceSkillName Skill name that produced this recovery.
+   * @param sourceSkillId Skill name that produced this recovery.
    * @param isReturn True if this is a RETURN refund; false for natural RECOVER.
    */
   addRecovery(
     frame: number,
     amount: number,
     sourceEntityId: string,
-    sourceSkillName: string,
+    sourceSkillId: string,
     isReturn: boolean = false,
   ) {
     if (amount <= 0) return;
@@ -188,7 +188,7 @@ export class SkillPointController {
       startFrame: frame,
       segments: [{ properties: { duration: amount } }],
       sourceEntityId,
-      sourceSkillName,
+      sourceSkillId,
     });
     this.flushSpEvents();
   }

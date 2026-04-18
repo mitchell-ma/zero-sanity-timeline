@@ -30,40 +30,6 @@
       ]
     }
   ],
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "PROTECTION",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.9
-            }
-          }
-        },
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "HP_REGEN",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.05
-            }
-          }
-        }
-      ]
-    }
-  ],
-  "clauseType": "ALL",
   "properties": {
     "id": "RE_IGNITION_TALENT",
     "maxLevel": {
@@ -115,7 +81,41 @@
         },
         "timeDependency": "REAL_TIME"
       },
-      "frames": []
+      "frames": [],
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "PROTECTION",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.9
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "HP_REGEN",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.05
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
     }
   ],
   "metadata": {

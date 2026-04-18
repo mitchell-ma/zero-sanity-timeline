@@ -350,7 +350,7 @@ describe('Stack labels and display name resolution', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('Freeform event source defaults', () => {
-  it('freeform events get sourceEntityId and sourceSkillName by default', () => {
+  it('freeform events get sourceEntityId and sourceSkillId by default', () => {
     const { result } = renderHook(() => useApp());
 
     act(() => {
@@ -371,6 +371,6 @@ describe('Freeform event source defaults', () => {
     );
     expect(rawLink).toBeDefined();
     expect(rawLink!.ownerEntityId).toBeDefined();
-    expect(rawLink!.sourceSkillName).toBeDefined();
+    expect(rawLink!.sourceSkillId).toBeDefined();
   });
 });

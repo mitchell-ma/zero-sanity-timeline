@@ -486,31 +486,72 @@ function buildFragilityStatSources(
   }));
 }
 
-/** Combine event-based AMP sources with runtime stat-accumulator ARTS_AMP
- *  sources. AMP is always qualified in authored DSL; the stat key is
- *  `ARTS_AMP` (the only AMP StatType that exists). */
-function buildAmpSources(
-  eventSources: MultiplierSource[],
-  runtimeDeltas: Partial<Record<StatType, number>> | undefined,
-  ampStatSources: readonly import('./statAccumulator').StatSource[] | undefined,
-): MultiplierSource[] {
-  const ampDelta = runtimeDeltas?.[StatType.ARTS_AMP];
-  if (!ampDelta) return eventSources;
-  if (ampStatSources?.length) {
-    return [...eventSources, ...ampStatSources.map(s => ({
-      label: s.label,
-      value: s.value,
-      category: NounType.ARTS_AMP,
-      subSources: s.subSources?.map(ss => ({ label: ss.label, value: ss.value })),
-    }))];
-  }
-  return [...eventSources, { label: NounType.ARTS_AMP, value: ampDelta, category: NounType.ARTS_AMP }];
+/** Map element → operator AMP StatType (e.g. ELECTRIC → ELECTRIC_AMP). */
+function elementAmpStat(el: ElementType): StatType | undefined {
+  const key = `${el}_${NounType.AMP}`;
+  return (Object.values(StatType) as string[]).includes(key) ? key as StatType : undefined;
 }
 
-/** Build per-element amp source breakdown for display. */
+/** Read the operator's effective AMP stat for `element`: per-element key
+ *  (e.g. ELECTRIC_AMP) plus ARTS_AMP for arts elements. Mirrors
+ *  `readEnemySusceptibilityStat` / `readEnemyFragilityStat`. */
+function readOperatorAmpStat(
+  element: ElementType,
+  runtimeDeltas: Partial<Record<StatType, number>> | undefined,
+): number {
+  let sum = 0;
+  const perEl = elementAmpStat(element);
+  if (perEl) sum += runtimeDeltas?.[perEl] ?? 0;
+  if (isArtsElement(element)) sum += runtimeDeltas?.[StatType.ARTS_AMP] ?? 0;
+  return sum;
+}
+
+/** Convert a runtime stat delta + per-source breakdown into MultiplierSource[].
+ *  Returns the per-source breakdown when the accumulator provided one;
+ *  otherwise falls back to a single aggregate entry. Empty when delta is 0. */
+function ampStatToSources(
+  delta: number | undefined,
+  statSources: readonly import('./statAccumulator').StatSource[] | undefined,
+  category: string,
+): MultiplierSource[] {
+  if (!delta) return [];
+  if (statSources?.length) {
+    return statSources.map(s => ({
+      label: s.label,
+      value: s.value,
+      category,
+      subSources: s.subSources?.map(ss => ({ label: ss.label, value: ss.value })),
+    }));
+  }
+  return [{ label: category, value: delta, category }];
+}
+
+/** Combine event-based AMP sources for `element` with runtime stat-accumulator
+ *  AMP: per-element (e.g. ELECTRIC_AMP) plus ARTS_AMP for arts elements. */
+function buildAmpSources(
+  eventSources: MultiplierSource[],
+  element: ElementType,
+  runtimeDeltas: Partial<Record<StatType, number>> | undefined,
+  perElementAmpStatSources: readonly import('./statAccumulator').StatSource[] | undefined,
+  artsAmpStatSources: readonly import('./statAccumulator').StatSource[] | undefined,
+): MultiplierSource[] {
+  const result: MultiplierSource[] = [...eventSources];
+  const perElKey = elementAmpStat(element);
+  if (perElKey) {
+    result.push(...ampStatToSources(runtimeDeltas?.[perElKey], perElementAmpStatSources, perElKey));
+  }
+  if (isArtsElement(element)) {
+    result.push(...ampStatToSources(runtimeDeltas?.[StatType.ARTS_AMP], artsAmpStatSources, NounType.ARTS_AMP));
+  }
+  return result;
+}
+
+/** Build per-element amp source breakdown for display. Each element row
+ *  shows event-based AMP (filtered by element) plus its per-element runtime
+ *  AMP stat. Arts elements (HEAT/CRYO/NATURE/ELECTRIC) additionally show the
+ *  ARTS_AMP umbrella stat. The dedicated ARTS row shows ARTS_AMP only. */
 function buildAllAmpSources(
   frame: number,
-  activeElement: ElementType,
   query: EventsQueryService | undefined,
   statusDeltas: Partial<Record<StatType, number>> | undefined,
   accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
@@ -518,21 +559,121 @@ function buildAllAmpSources(
   ownerEntityId: string,
 ): Partial<Record<ElementType, MultiplierSource[]>> {
   const result: Partial<Record<ElementType, MultiplierSource[]>> = {};
-  const ampStatSources = mergeStatSources(
+  const artsStatSources = mergeStatSources(
     accumulator?.getFrameStatSources(frameKey, ownerEntityId, StatType.ARTS_AMP),
     accumulator?.getFrameStatSources(frameKey, TEAM_ID, StatType.ARTS_AMP),
   );
   for (const el of ALL_DISPLAY_ELEMENTS) {
-    // Per-element: event-based AMP only (element-filtered), no runtime stat AMP
+    const perElKey = elementAmpStat(el);
+    const perElStatSources = perElKey ? mergeStatSources(
+      accumulator?.getFrameStatSources(frameKey, ownerEntityId, perElKey),
+      accumulator?.getFrameStatSources(frameKey, TEAM_ID, perElKey),
+    ) : undefined;
     const eventSources = query?.getAmpSources(frame, el) ?? [];
-    if (eventSources.length > 0) result[el] = eventSources;
+    const merged = buildAmpSources(eventSources, el, statusDeltas, perElStatSources, artsStatSources);
+    if (merged.length > 0) result[el] = merged;
   }
-  // Runtime ARTS_AMP stat — shown under the ARTS umbrella row (if active element
-  // is arts) or under the active element for physical damage.
-  const statSources = buildAmpSources([], statusDeltas, ampStatSources);
-  if (statSources.length > 0) {
-    const bucket = isArtsElement(activeElement) ? ElementType.ARTS : activeElement;
-    result[bucket] = [...(result[bucket] ?? []), ...statSources];
+  return result;
+}
+
+// ── Resistance (RESISTANCE_IGNORE / RESISTANCE_REDUCTION) ───────────────────
+
+/** Map element → operator RESISTANCE_IGNORE StatType (e.g. HEAT → HEAT_RESISTANCE_IGNORE). */
+function elementResistanceIgnoreStat(el: ElementType): StatType | undefined {
+  const key = `${el}_${NounType.RESISTANCE_IGNORE}`;
+  return (Object.values(StatType) as string[]).includes(key) ? key as StatType : undefined;
+}
+
+/** Map element → enemy RESISTANCE_REDUCTION StatType (e.g. ARTS → ARTS_RESISTANCE_REDUCTION). */
+function elementResistanceReductionStat(el: ElementType): StatType | undefined {
+  const key = `${el}_${NounType.RESISTANCE_REDUCTION}`;
+  return (Object.values(StatType) as string[]).includes(key) ? key as StatType : undefined;
+}
+
+/** Read the addback applied to the resistance multiplier for `element`:
+ *  operator's <EL>_RESISTANCE_IGNORE + enemy's <EL>_RESISTANCE_REDUCTION,
+ *  plus the ARTS umbrella stats when the element is one of the four arts.
+ *  Corrosion contributes via per-segment APPLY ARTS RESISTANCE_REDUCTION
+ *  STAT clauses (see processInfliction.ts buildCorrosionSegments) — those
+ *  flow through the accumulator naturally, no special case needed here. */
+function readResistanceAddback(
+  element: ElementType,
+  operatorRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
+  enemyRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
+): number {
+  let sum = 0;
+  const perElIgnore = elementResistanceIgnoreStat(element);
+  if (perElIgnore) sum += operatorRuntimeDeltas?.[perElIgnore] ?? 0;
+  const perElReduction = elementResistanceReductionStat(element);
+  if (perElReduction) sum += enemyRuntimeDeltas?.[perElReduction] ?? 0;
+  if (isArtsElement(element)) {
+    sum += operatorRuntimeDeltas?.[StatType.ARTS_RESISTANCE_IGNORE] ?? 0;
+    sum += enemyRuntimeDeltas?.[StatType.ARTS_RESISTANCE_REDUCTION] ?? 0;
+  }
+  return sum;
+}
+
+/** Combine per-source breakdowns from operator IGNORE + enemy REDUCTION
+ *  for the active element (with ARTS umbrella where applicable). All
+ *  contributions (Corrosion, Scorching Heart, etc.) flow through their
+ *  per-element stat keys via the accumulator — no virtual sources here. */
+function buildResistanceSources(
+  element: ElementType,
+  operatorRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
+  enemyRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
+  perElIgnoreSources: readonly import('./statAccumulator').StatSource[] | undefined,
+  perElReductionSources: readonly import('./statAccumulator').StatSource[] | undefined,
+  artsIgnoreSources: readonly import('./statAccumulator').StatSource[] | undefined,
+  artsReductionSources: readonly import('./statAccumulator').StatSource[] | undefined,
+): MultiplierSource[] {
+  const result: MultiplierSource[] = [];
+  const perElIgnore = elementResistanceIgnoreStat(element);
+  if (perElIgnore) {
+    result.push(...ampStatToSources(operatorRuntimeDeltas?.[perElIgnore], perElIgnoreSources, perElIgnore));
+  }
+  const perElReduction = elementResistanceReductionStat(element);
+  if (perElReduction) {
+    result.push(...ampStatToSources(enemyRuntimeDeltas?.[perElReduction], perElReductionSources, perElReduction));
+  }
+  if (isArtsElement(element)) {
+    result.push(...ampStatToSources(operatorRuntimeDeltas?.[StatType.ARTS_RESISTANCE_IGNORE], artsIgnoreSources, StatType.ARTS_RESISTANCE_IGNORE));
+    result.push(...ampStatToSources(enemyRuntimeDeltas?.[StatType.ARTS_RESISTANCE_REDUCTION], artsReductionSources, StatType.ARTS_RESISTANCE_REDUCTION));
+  }
+  return result;
+}
+
+/** Per-element resistance source breakdown for display. Each element row
+ *  shows its per-element IGNORE + REDUCTION; arts elements additionally
+ *  pick up the ARTS umbrella entries. The dedicated ARTS row shows the
+ *  ARTS_RESISTANCE_IGNORE + ARTS_RESISTANCE_REDUCTION only. */
+function buildAllResistanceSources(
+  operatorRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
+  enemyRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
+  accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
+  frameKey: string,
+  ownerEntityId: string,
+): Partial<Record<ElementType, MultiplierSource[]>> {
+  const result: Partial<Record<ElementType, MultiplierSource[]>> = {};
+  const artsIgnoreSources = mergeStatSources(
+    accumulator?.getFrameStatSources(frameKey, ownerEntityId, StatType.ARTS_RESISTANCE_IGNORE),
+    accumulator?.getFrameStatSources(frameKey, TEAM_ID, StatType.ARTS_RESISTANCE_IGNORE),
+  );
+  const artsReductionSources = accumulator?.getFrameStatSources(frameKey, ENEMY_ID, StatType.ARTS_RESISTANCE_REDUCTION);
+  for (const el of ALL_DISPLAY_ELEMENTS) {
+    const perElIgnoreKey = elementResistanceIgnoreStat(el);
+    const perElIgnoreSources = perElIgnoreKey ? mergeStatSources(
+      accumulator?.getFrameStatSources(frameKey, ownerEntityId, perElIgnoreKey),
+      accumulator?.getFrameStatSources(frameKey, TEAM_ID, perElIgnoreKey),
+    ) : undefined;
+    const perElReductionKey = elementResistanceReductionStat(el);
+    const perElReductionSources = perElReductionKey
+      ? accumulator?.getFrameStatSources(frameKey, ENEMY_ID, perElReductionKey)
+      : undefined;
+    const merged = buildResistanceSources(
+      el, operatorRuntimeDeltas, enemyRuntimeDeltas,
+      perElIgnoreSources, perElReductionSources, artsIgnoreSources, artsReductionSources,
+    );
+    if (merged.length > 0) result[el] = merged;
   }
   return result;
 }
@@ -691,8 +832,8 @@ export function buildDamageTableRows(
       // Reverse-lookup: source operator ID → slot ID via opToSlotCache
       const sourceSlotId = opToSlotCache.get(ev.sourceEntityId);
       if (sourceSlotId) {
-        const sourceSkillCol = ev.sourceSkillName
-          ? getSourceSkillColumnId(ev.sourceEntityId, ev.sourceSkillName)
+        const sourceSkillCol = ev.sourceSkillId
+          ? getSourceSkillColumnId(ev.sourceEntityId, ev.sourceSkillId)
           : NounType.BATTLE;
         col = colLookup.get(`${sourceSlotId}-${sourceSkillCol}`);
         effectiveColumnId = sourceSkillCol;
@@ -728,10 +869,11 @@ export function buildDamageTableRows(
             // Combat-sheet rows only track damage-producing frames. Skip frames
             // whose clauses contain no DEAL DAMAGE effect (e.g. frames that only
             // RECOVER SP, APPLY STATUS, DEAL STAGGER, etc.) — they would otherwise
-            // render as empty rows with no damage data.
-            // Keep `frameSkipped` frames: their DEAL DAMAGE clause exists but
-            // evaluated to a miss (condition failed); the row shows "-" damage.
-            if (!frame.frameSkipped && !hasDealDamageClause(frame.clauses)) continue;
+            // render as empty rows with no damage data. Guarded frames whose
+            // conditions evaluated false (`frameSkipped`) are likewise dropped —
+            // the row previously rendered as "-" with no damage.
+            if (frame.frameSkipped) continue;
+            if (!hasDealDamageClause(frame.clauses)) continue;
             const absFrame = frame.absoluteFrame ?? (ev.startFrame + segmentFrameOffset + frame.offsetFrame);
 
             // Look up multiplier
@@ -750,9 +892,7 @@ export function buildDamageTableRows(
             // Enemy-side runtime stat deltas (e.g. WEAKNESS applied by status clauses).
             const enemyRuntimeDeltas = accumulator?.getFrameStatDeltas(currentFrameKey, ENEMY_ID);
 
-            if (frame.frameSkipped) {
-              // All conditional clauses evaluated and none matched — row shows "-"
-            } else if (operatorId && opData) {
+            if (operatorId && opData) {
               let segmentMultiplier: number | null;
               let isPerTick = false;
 
@@ -872,25 +1012,21 @@ export function buildDamageTableRows(
                   subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg + subFinalStrikeDmg,
                 );
 
-                // Resistance (with corrosion reduction + ignored resistance)
-                // Formula: 1 - Resistance/100 + IgnoredResistance/100
-                // Can exceed 1.0 when corrosion + ignored resistance push past zero
+                // Resistance — single addback bucket combining operator
+                // RESISTANCE_IGNORE (e.g. Laevatain Scorching Heart) and enemy
+                // RESISTANCE_REDUCTION (e.g. Corrosion). Both stats sum into
+                // ignoredResistance per the formula:
+                //   ResistanceMultiplier = 1 - Resistance/100 + IgnoredResistance/100
+                // Can exceed 1.0 when the addback pushes past zero resistance.
                 const baseResistance = modelEnemy
                   ? getResistanceMultiplier(modelEnemy, element)
                   : 1;
-                let resMultiplier = baseResistance;
-                let subCorrosionReduction = 0;
-                let subIgnoredRes = 0;
-                if (statusQuery && element !== ElementType.PHYSICAL && element !== ElementType.NONE) {
-                  subCorrosionReduction = statusQuery.getCorrosionResistanceReduction(absFrame);
-                  if (subCorrosionReduction > 0) {
-                    resMultiplier += subCorrosionReduction / 100;
-                  }
-                  subIgnoredRes = statusQuery.getIgnoredResistance(absFrame, element, ev.ownerEntityId);
-                  if (subIgnoredRes > 0) {
-                    resMultiplier += subIgnoredRes / 100;
-                  }
-                }
+                const subIgnoredRes = element !== ElementType.NONE
+                  ? readResistanceAddback(element, runtimeDeltas, enemyRuntimeDeltas)
+                  : 0;
+                const resMultiplier = subIgnoredRes !== 0
+                  ? baseResistance + subIgnoredRes / 100
+                  : baseResistance;
 
                 // Crit multiplier — unified via getFrameExpectation()
                 // Deterministic modes (NEVER/ALWAYS/EXPECTED) are authoritative over pins.
@@ -967,8 +1103,27 @@ export function buildDamageTableRows(
                   isCrit: frameCrit,
                   critSnapshot,
                   baseResistance,
-                  corrosionReduction: subCorrosionReduction,
                   ignoredResistance: subIgnoredRes,
+                  resistanceSources: buildResistanceSources(
+                    element,
+                    runtimeDeltas,
+                    enemyRuntimeDeltas,
+                    elementResistanceIgnoreStat(element) ? mergeStatSources(
+                      accumulator?.getFrameStatSources(currentFrameKey, resolvedEntityId, elementResistanceIgnoreStat(element)!),
+                      accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, elementResistanceIgnoreStat(element)!),
+                    ) : undefined,
+                    elementResistanceReductionStat(element)
+                      ? accumulator?.getFrameStatSources(currentFrameKey, ENEMY_ID, elementResistanceReductionStat(element)!)
+                      : undefined,
+                    mergeStatSources(
+                      accumulator?.getFrameStatSources(currentFrameKey, resolvedEntityId, StatType.ARTS_RESISTANCE_IGNORE),
+                      accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, StatType.ARTS_RESISTANCE_IGNORE),
+                    ),
+                    accumulator?.getFrameStatSources(currentFrameKey, ENEMY_ID, StatType.ARTS_RESISTANCE_REDUCTION),
+                  ),
+                  allResistanceSources: buildAllResistanceSources(
+                    runtimeDeltas, enemyRuntimeDeltas, accumulator, currentFrameKey, resolvedEntityId,
+                  ),
                   fragilityBonus: subFragilityBonus,
                   fragilitySources: [
                     ...(statusQuery?.getFragilitySources(absFrame, element) ?? []),
@@ -984,8 +1139,20 @@ export function buildDamageTableRows(
                   allSusceptibilitySources: statusQuery
                     ? buildAllSusceptibilitySources(absFrame, statusQuery, accumulator, currentFrameKey)
                     : {},
-                  ampSources: buildAmpSources(statusQuery?.getAmpSources(absFrame, element) ?? [], statusDeltas, mergeStatSources(accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.ARTS_AMP), accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, StatType.ARTS_AMP))),
-                  allAmpSources: buildAllAmpSources(absFrame, element, statusQuery, statusDeltas, accumulator, currentFrameKey, ev.ownerEntityId),
+                  ampSources: buildAmpSources(
+                    statusQuery?.getAmpSources(absFrame, element) ?? [],
+                    element,
+                    statusDeltas,
+                    elementAmpStat(element) ? mergeStatSources(
+                      accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, elementAmpStat(element)!),
+                      accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, elementAmpStat(element)!),
+                    ) : undefined,
+                    mergeStatSources(
+                      accumulator?.getFrameStatSources(currentFrameKey, ev.ownerEntityId, StatType.ARTS_AMP),
+                      accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, StatType.ARTS_AMP),
+                    ),
+                  ),
+                  allAmpSources: buildAllAmpSources(absFrame, statusQuery, statusDeltas, accumulator, currentFrameKey, ev.ownerEntityId),
                   weaknessStatValue,
                   weaknessSources: (accumulator?.getFrameStatSources(currentFrameKey, ENEMY_ID, StatType.WEAKNESS) ?? []).map(s => ({
                     label: s.label,
@@ -1037,7 +1204,7 @@ export function buildDamageTableRows(
                   critMultiplier: expectedCrit,
                   ampMultiplier: getAmpMultiplier(
                     (statusQuery?.getAmpBonus(absFrame, element) ?? 0)
-                    + (isArtsElement(element) ? (statusDeltas?.[StatType.ARTS_AMP] ?? 0) : 0),
+                    + readOperatorAmpStat(element, statusDeltas),
                   ),
                   staggerMultiplier: getStaggerMultiplier(isStaggered),
                   finisherMultiplier: getFinisherMultiplier(enemyTier, isFinisher),

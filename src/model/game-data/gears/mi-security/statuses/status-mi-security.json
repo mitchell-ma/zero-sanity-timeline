@@ -1,58 +1,72 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "ATTACK_BONUS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "STATUS_LEVEL",
-              "value": [
-                0.05
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "conditions": [
-        {
-          "subject": "EVENT",
-          "verb": "HAVE",
-          "object": "STACKS",
-          "cardinalityConstraint": "EXACTLY",
+      "properties": {
+        "duration": {
           "value": {
             "verb": "IS",
             "value": 5
-          }
-        }
-      ],
-      "effects": [
+          },
+          "unit": "SECOND"
+        },
+        "name": "MI Security"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "CRITICAL_RATE",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "IS",
-              "value": 0.05
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "STATUS_LEVEL",
+                  "value": [
+                    0.05
+                  ]
+                }
+              }
             }
-          }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "subject": "EVENT",
+              "verb": "HAVE",
+              "object": "STACKS",
+              "cardinalityConstraint": "EXACTLY",
+              "value": {
+                "verb": "IS",
+                "value": 5
+              }
+            }
+          ],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "CRITICAL_RATE",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.05
+                }
+              }
+            }
+          ]
         }
       ]
     }
   ],
   "properties": {
-    "id": "MI_SECURITY_STAT",
+    "id": "MI_SECURITY",
     "name": "MI Security",
     "duration": {
       "value": {
@@ -70,10 +84,10 @@
     },
     "description": "ATK +5% per stack for 5s after crit. At 5 stacks, also Critical Rate +5%.",
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR"
   },
   "metadata": {
-    "originId": "MI_SECURITY",
+    "originId": "MI_SECURITY_STAT",
     "dataStatus": "RECONCILED"
   }
 }

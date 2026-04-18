@@ -4,7 +4,7 @@ import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelP
 import { formatPct, formatFlat } from '../../controller/info-pane/loadoutPaneController';
 import { parseMathInput } from '../../utils/mathExpr';
 import { getAllSkillLabels, getAllStatusLabels } from '../../controller/gameDataStore';
-import { ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, SegmentType, StatusType } from '../../consts/enums';
+import { ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventStatusType, InfoLevel, SegmentType, StatusType, UnitType } from '../../consts/enums';
 import { DAMAGE_FACTOR_LABELS } from '../../consts/timelineColumnLabels';
 import { t } from '../../locales/locale';
 import { getStatusElementMap, getStatusById, getAnyStatusSerialized } from '../../controller/gameDataStore';
@@ -109,12 +109,30 @@ function EventPane({
     return entry ? applyCardOverrides(data, entry) : data;
   }, [event, slots, verbose, overrides]);
 
-  // Raw serialized status data for verbose DataCardBody rendering
+  // Raw serialized status data for verbose DataCardBody rendering. When the
+  // status def has no segments (e.g. Corrosion — segments are built at runtime
+  // by buildCorrosionSegments), fall back to the processed event's segments
+  // converted to JsonSkillData shape so per-segment APPLY clauses render.
   const statusCardData = useMemo(() => {
     if (verbose < InfoLevel.DETAILED) return null;
     if (skillCardData) return null; // skill card takes precedence
-    return getAnyStatusSerialized(event.name);
-  }, [event.name, verbose, skillCardData]);
+    const data = getAnyStatusSerialized(event.name);
+    if (!data) return null;
+    if ((data.segments as unknown[] | undefined)?.length) return data;
+    const runtimeSegs = (processedEvent?.segments?.length ? processedEvent.segments : event.segments) ?? [];
+    if (runtimeSegs.length === 0) return data;
+    return {
+      ...data,
+      segments: runtimeSegs.map((seg) => ({
+        properties: {
+          ...(seg.properties.name != null ? { name: seg.properties.name } : {}),
+          duration: { value: seg.properties.duration / FPS, unit: UnitType.SECOND },
+        },
+        ...(seg.clause ? { clause: seg.clause } : {}),
+        ...(seg.frames ? { frames: seg.frames } : {}),
+      })),
+    };
+  }, [event.name, event.segments, processedEvent, verbose, skillCardData]);
 
   // Live loadout dimensions for VARY_BY active-column highlighting. Generic
   // info-presentation concern: every card gets a loadout, unconditionally.
@@ -155,6 +173,20 @@ function EventPane({
       if (originSkill?.eventCategoryType) resolvedSkillLevel = skillByCol[originSkill.eventCategoryType];
     }
 
+    // Resolve supplied-parameter selections (e.g. ENEMY_HIT) to 0-based indices
+    // so VARY_BY tables can highlight the user-picked column. Mirrors the engine:
+    // resolvedParams[def.id] = event.parameterValues[def.id] - def.lowerRange.
+    const parameterIndices: Record<string, number> = {};
+    const paramValues = (event as { parameterValues?: Record<string, number> }).parameterValues;
+    const paramDefsRaw = (event as { suppliedParameters?: Record<string, { id: string; lowerRange: number }[]> }).suppliedParameters;
+    const varyByDefs = paramDefsRaw?.VARY_BY;
+    if (varyByDefs && varyByDefs.length > 0) {
+      for (const def of varyByDefs) {
+        const raw = paramValues?.[def.id] ?? def.lowerRange;
+        parameterIndices[def.id] = raw - def.lowerRange;
+      }
+    }
+
     return {
       skillLevel: resolvedSkillLevel ?? skills?.battleSkillLevel,
       potential: props?.operator?.potential,
@@ -162,8 +194,9 @@ function EventPane({
       talentTwoLevel: props?.operator?.talentTwoLevel,
       attributeIncreaseLevel: props?.operator?.attributeIncreaseLevel,
       talentSlot,
+      ...(Object.keys(parameterIndices).length > 0 ? { parameterIndices } : {}),
     };
-  }, [loadoutProperties, slots, event.sourceEntityId, event.columnId, event.name, skillCardData, statusCardData]);
+  }, [loadoutProperties, slots, event, skillCardData, statusCardData]);
 
   // Inline edit state for status/skill value overrides.
   // Paths are rooted at the TimelineEvent's segments subtree (top-level
@@ -322,10 +355,10 @@ function EventPane({
                     const statusSlot = slots.find((s) => s.slotId === sourceEvent.ownerEntityId) ?? slots.find((s) => s.slotId === sourceEvent.sourceEntityId);
                     const statusOpName = statusSlot?.operator?.name ?? sourceEvent.sourceEntityId ?? sourceUid;
                     const statusOpColor = statusSlot?.operator?.color;
-                    const statusSkillLabel = sourceEvent.sourceSkillName
-                      ? getAllSkillLabels()[sourceEvent.sourceSkillName as string]
-                        ?? getAllStatusLabels()[sourceEvent.sourceSkillName as StatusType]
-                        ?? sourceEvent.sourceSkillName
+                    const statusSkillLabel = sourceEvent.sourceSkillId
+                      ? getAllSkillLabels()[sourceEvent.sourceSkillId as string]
+                        ?? getAllStatusLabels()[sourceEvent.sourceSkillId as StatusType]
+                        ?? sourceEvent.sourceSkillId
                       : null;
                     return (
                       <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>

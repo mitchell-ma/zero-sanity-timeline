@@ -3491,6 +3491,148 @@
   opacity: 0.5;
 }
 
+/* ── Parameter submenu (right-side flyout for suppliedParameters) ─────────── */
+.context-menu-row-with-submenu {
+  position: relative;
+}
+.context-menu-row {
+  display: flex;
+  align-items: stretch;
+}
+.context-menu-row > .context-menu-item {
+  flex: 1;
+  min-width: 0;
+}
+.context-menu-expand {
+  width: 22px;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border-dim);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.08s, color 0.08s;
+  flex-shrink: 0;
+}
+.context-menu-expand:hover,
+.context-menu-expand.open {
+  background: var(--overlay-08);
+  color: var(--text-bright);
+}
+.context-menu-submenu {
+  position: fixed;
+  min-width: 180px;
+  padding: 0.25rem 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-bright);
+  border-left: none;
+  z-index: 501;
+  display: flex;
+  flex-direction: column;
+  animation: ctx-appear 0.08s ease;
+}
+.context-menu-submenu.flipped {
+  border-left: 1px solid var(--border-bright);
+  border-right: none;
+}
+.context-menu-submenu-axis {
+  padding: 0.5rem 0.375rem 0.375rem;
+}
+.context-menu-submenu-axis + .context-menu-submenu-axis {
+  border-top: 1px solid var(--border-dim);
+  margin-top: 0.25rem;
+}
+.context-menu-submenu-label {
+  display: block;
+  padding: 0 0.5rem 0.375rem;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+.context-menu-submenu-row {
+  display: flex;
+}
+.context-menu-submenu-option {
+  flex: 1;
+  min-width: 32px;
+  padding: 0.3125rem 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-right: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.12s;
+}
+.context-menu-submenu-option:last-child {
+  border-right: 1px solid var(--border-dim);
+}
+.context-menu-submenu-option:not(:disabled):hover {
+  color: var(--text-bright);
+  background: var(--bg-elevated);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.context-menu-submenu-option.selected {
+  color: var(--text-bright);
+  background: var(--bg-elevated);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.context-menu-submenu-stepper {
+  display: flex;
+  align-items: stretch;
+}
+.context-menu-stepper-btn {
+  min-width: 24px;
+  padding: 0.3125rem 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-right: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.12s;
+}
+.context-menu-stepper-btn:last-child {
+  border-right: 1px solid var(--border-dim);
+}
+.context-menu-stepper-btn:hover {
+  color: var(--text-bright);
+  background: var(--bg-elevated);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.context-menu-stepper-input {
+  flex: 1;
+  min-width: 44px;
+  padding: 0.3125rem 0.25rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-right: none;
+  color: var(--text-bright);
+  text-align: center;
+  box-shadow: inset 0 -2px 0 var(--accent);
+  -moz-appearance: textfield;
+}
+.context-menu-stepper-input::-webkit-outer-spin-button,
+.context-menu-stepper-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .context-menu-item--toggle {
   display: flex;
   align-items: center;
@@ -9669,10 +9811,29 @@
 /* ── Conjoined segment + frame tabs ──────────────────── */
 .ops-conjoined-tabs {
   margin-bottom: 0.625rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.ops-conjoined-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+.ops-conjoined-tabs::-webkit-scrollbar-button {
+  display: none;
+}
+.ops-conjoined-tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ops-conjoined-tabs::-webkit-scrollbar-thumb {
+  background: var(--border-dim);
+  border-radius: 2px;
 }
 .ops-conjoined-row {
   display: flex;
   gap: 0.375rem;
+  /* Force columns to keep their content width so the parent scrolls horizontally
+     when many segments overflow (e.g. Corrosion's 15 ticks). */
+  width: max-content;
+  min-width: 100%;
 }
 .ops-conjoined-row--seg {
   margin-bottom: 0;
@@ -9682,6 +9843,7 @@
 }
 .ops-conjoined-seg {
   flex: 1;
+  min-width: 4.5rem;
   padding: 0.375rem 0.25rem;
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
@@ -9695,6 +9857,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.12s;
+  white-space: nowrap;
 }
 .ops-conjoined-seg:hover {
   color: var(--text-bright);
@@ -9711,12 +9874,18 @@
 }
 .ops-conjoined-frame-group {
   flex: 1;
+  min-width: 4.5rem;
   display: flex;
   border: 1px solid var(--border-dim);
   border-top: none;
-  min-width: 0;
   overflow-x: auto;
   scrollbar-width: thin;
+}
+/* Empty frame groups (segment has no frames) — no border, no body, just keeps
+   column alignment with the segment row above. */
+.ops-conjoined-frame-group--empty {
+  border: none;
+  visibility: hidden;
 }
 .ops-conjoined-frame-group::-webkit-scrollbar {
   height: 4px;

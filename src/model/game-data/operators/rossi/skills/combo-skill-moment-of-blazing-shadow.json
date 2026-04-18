@@ -36,7 +36,8 @@
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
-      "frames": []
+      "frames": [],
+      "clauseType": "ALL"
     },
     {
       "metadata": {
@@ -348,7 +349,6 @@
       "frames": []
     }
   ],
-  "clauseType": "ALL",
   "activationWindow": {
     "properties": {
       "maxSkills": 2
@@ -365,7 +365,8 @@
           {
             "subject": "ENEMY",
             "verb": "HAVE",
-            "object": "INFLICTION",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
             "objectQualifier": "ARTS"
           }
         ]

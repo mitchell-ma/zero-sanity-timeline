@@ -1,39 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "objectId": "ATTACK_BONUS",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.07,
-                0.084,
-                0.098,
-                0.112,
-                0.126,
-                0.14,
-                0.154,
-                0.168,
-                0.196
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -57,11 +22,60 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Twilight: Lingering Glow"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.07,
+                    0.084,
+                    0.098,
+                    0.112,
+                    0.126,
+                    0.14,
+                    0.154,
+                    0.168,
+                    0.196
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Twilight: Lingering Glow",
     "description": "ATK +{atk_up:0.0%}. When the wielder's skill applies Vulnerability, during the next ultimate cast within {duration:0}s, the wielder gains DMG Dealt +{dmg_up:0.0%}. Max stacks: {max_stack:0}. Duration of each stack is counted separately. Effect is only triggered once every 0.5s.",
     "id": "TWILIGHT_LINGERING_GLOW",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "GLORIOUS_MEMORY",

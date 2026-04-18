@@ -1,39 +1,4 @@
 {
-  "clause": [
-    {
-      "conditions": [],
-      "effects": [
-        {
-          "verb": "APPLY",
-          "object": "STAT",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR",
-          "with": {
-            "value": {
-              "verb": "VARY_BY",
-              "object": "SKILL_LEVEL",
-              "value": [
-                0.05,
-                0.06,
-                0.07,
-                0.08,
-                0.09,
-                0.1,
-                0.11,
-                0.12,
-                0.14
-              ],
-              "of": {
-                "object": "OPERATOR",
-                "determiner": "THIS"
-              }
-            }
-          },
-          "objectId": "ALL_ATTRIBUTE_BONUS"
-        }
-      ]
-    }
-  ],
   "onTriggerClause": [
     {
       "conditions": [
@@ -55,11 +20,60 @@
       ]
     }
   ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Medicant: Redemption of Faith"
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "SKILL_LEVEL",
+                  "value": [
+                    0.05,
+                    0.06,
+                    0.07,
+                    0.08,
+                    0.09,
+                    0.1,
+                    0.11,
+                    0.12,
+                    0.14
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectId": "ALL_ATTRIBUTE_BONUS"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "name": "Medicant: Redemption of Faith",
-    "description": "Main Attribute +{all_attr_up:0.0%}. When the wielder's battle skill provides HP treatment, the controlled operator is restored for another [{hp_will_add:0} + Will×{hp_will_mult:0.0}] HP. Effect only triggers once every {cd:0}s.",
+    "description": "Main Attribute +{all_attr_up:0.0%}. When the wielder's battle skill provides HP treatment, the controlled operator is restored for another [{hp_will_add:0} + Will\u00d7{hp_will_mult:0.0}] HP. Effect only triggers once every {cd:0}s.",
     "id": "MEDICANT_REDEMPTION_OF_FAITH",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON_STAT"
   },
   "metadata": {
     "originId": "FREEDOM_TO_PROSELYTIZE",

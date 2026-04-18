@@ -1,16 +1,31 @@
 {
-  "clause": [
+  "segments": [
     {
-      "conditions": [],
-      "effects": [
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 99999
+          },
+          "unit": "SECOND"
+        },
+        "name": "Special Mail (P5)"
+      },
+      "clause": [
         {
-          "verb": "APPLY",
-          "object": "STATUS",
-          "objectId": "GILBERTA_POTENTIAL5_SPECIAL_MAIL",
-          "toDeterminer": "THIS",
-          "to": "OPERATOR"
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "GILBERTA_POTENTIAL5_SPECIAL_MAIL",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            }
+          ]
         }
-      ]
+      ],
+      "clauseType": "ALL"
     }
   ],
   "properties": {
@@ -24,6 +39,5 @@
   "metadata": {
     "originId": "GILBERTA",
     "dataStatus": "RECONCILED"
-  },
-  "clauseType": "ALL"
+  }
 }
