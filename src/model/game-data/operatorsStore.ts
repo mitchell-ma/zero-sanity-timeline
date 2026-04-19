@@ -6,6 +6,9 @@
  */
 import { checkKeys, checkIdAndName, VALID_METADATA_KEYS, validateTalentLevelArrays, validateNonNegativeValues } from './validationUtils';
 import { NounType, VerbType } from '../../dsl/semantics';
+import {
+  LocaleKey, resolveEventName, resolveEventDescription,
+} from '../../locales/gameDataLocale';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -36,14 +39,14 @@ interface LevelEntry {
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_TOP_KEYS = new Set([
-  'id', 'name', 'operatorRarity', 'operatorClassType',
+  'id', 'operatorRarity', 'operatorClassType',
   'elementType', 'weaponTypes',
   'mainAttributeType', 'secondaryAttributeType',
   'potentials', 'statsByLevel', 'talents', 'metadata',
 ]);
 
 const VALID_TALENT_KEYS = new Set(['one', 'two', 'attributeIncrease']);
-const VALID_ATTR_INCREASE_KEYS = new Set(['id', 'name', 'attribute']);
+const VALID_ATTR_INCREASE_KEYS = new Set(['id', 'attribute']);
 
 
 const VALID_LEVEL_ENTRY_KEYS = new Set(['level', 'operatorPromotionStage', 'attributes']);
@@ -109,7 +112,7 @@ export class OperatorBase {
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
     this.id = (json.id ?? '') as string;
-    this.name = (json.name ?? '') as string;
+    this.name = this.id ? resolveEventName(LocaleKey.operator(this.id)) : '';
     this.operatorRarity = (json.operatorRarity ?? 0) as number;
     this.operatorClassType = (json.operatorClassType ?? '') as string;
     this.elementType = (json.elementType ?? '') as string;
@@ -145,7 +148,6 @@ export class OperatorBase {
   serialize(): Record<string, unknown> {
     return {
       id: this.id,
-      name: this.name,
       operatorRarity: this.operatorRarity,
       operatorClassType: this.operatorClassType,
       elementType: this.elementType,
