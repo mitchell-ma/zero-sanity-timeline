@@ -1,6 +1,12 @@
 {
   "properties": {
     "id": "EXPEDITED_DELIVERY_TALENT",
+    "descriptionParams": {
+      "talent0_usp": 4,
+      "1-talent0_usp": -3,
+      "-talent0_usp": -4,
+      "talent0_usp-1": 3
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

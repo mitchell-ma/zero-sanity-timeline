@@ -1,6 +1,12 @@
 {
   "properties": {
     "id": "FREEZE_PROTOCOL_TALENT",
+    "descriptionParams": {
+      "exist_talent_2": 1,
+      "1-exist_talent_2": 0,
+      "-exist_talent_2": -1,
+      "exist_talent_2-1": 0
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 1

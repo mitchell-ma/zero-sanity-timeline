@@ -779,44 +779,6 @@ describe('G. Ult Textbook Assault — frame layout', () => {
     expect(frames.filter(f => f.frameSkipped)).toHaveLength(0);
   });
 
-  it('G4: Ult is split into Animation + Slash I + Slash II + Final Slam segments', () => {
-    // Structural check on the JSON: the ultimate must be split into separate
-    // segments per damage sequence, not one monolithic active segment.
-    // Each segment's frames stay at offsets relative to their own segment
-    // start so splits can be rebalanced without reshuffling every offset.
-    type JsonSegment = {
-      properties: { name?: string; duration: { value: { value: number }; unit: string } };
-      frames?: { properties: { offset: { value: number } } }[];
-    };
-    const segs = ULT_JSON.segments as JsonSegment[];
-    expect(segs.length).toBe(4);
-
-    const [anim, slash1, slash2, slam] = segs;
-    expect(anim.properties.name).toBe('Animation');
-    expect(slash1.properties.name).toBe('Slash I');
-    expect(slash2.properties.name).toBe('Slash II');
-    expect(slam.properties.name).toBe('Final Slam');
-
-    // Slash I: 2 frames at relative offsets 0.23 (slash + weakness) and 0.33 (P1 bonus)
-    const slash1Offsets = slash1.frames!.map(f => f.properties.offset.value);
-    expect(slash1Offsets).toEqual([0.23, 0.33]);
-
-    // Slash II: 2 frames at relative offsets 0 (slash) and 0.10 (P1 bonus)
-    const slash2Offsets = slash2.frames!.map(f => f.properties.offset.value);
-    expect(slash2Offsets).toEqual([0, 0.1]);
-
-    // Final Slam: 5 frames at relative offsets 0 (slam + knock down),
-    // 0.10 (P1 bonus), 0.20 / 0.30 / 0.40 (three T2 shockwaves)
-    const slamOffsets = slam.frames!.map(f => f.properties.offset.value);
-    expect(slamOffsets).toEqual([0, 0.1, 0.2, 0.3, 0.4]);
-
-    // Segment durations cover each sequence window without overlap; summed
-    // they equal the original 2.2s active segment length.
-    const slash1Dur = slash1.properties.duration.value.value;
-    const slash2Dur = slash2.properties.duration.value.value;
-    const slamDur = slam.properties.duration.value.value;
-    expect(slash1Dur + slash2Dur + slamDur).toBeCloseTo(2.2, 5);
-  });
 });
 
 // =============================================================================

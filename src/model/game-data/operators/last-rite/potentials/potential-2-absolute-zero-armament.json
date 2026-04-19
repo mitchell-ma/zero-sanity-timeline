@@ -49,6 +49,16 @@
   "properties": {
     "id": "LAST_RITE_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "Str": 20,
+      "CrystDamageIncrease": 0.1,
+      "1-Str": -19,
+      "-Str": -20,
+      "Str-1": 19,
+      "1-CrystDamageIncrease": 0.9,
+      "-CrystDamageIncrease": -0.1,
+      "CrystDamageIncrease-1": -0.9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

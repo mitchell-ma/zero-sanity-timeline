@@ -2,6 +2,20 @@
   "properties": {
     "id": "ANTAL_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "potential_3": 1,
+      "atb": 15,
+      "potential_3_atb": 15,
+      "1-potential_3": 0,
+      "-potential_3": -1,
+      "potential_3-1": 0,
+      "1-atb": -14,
+      "-atb": -15,
+      "atb-1": 14,
+      "1-potential_3_atb": -14,
+      "-potential_3_atb": -15,
+      "potential_3_atb-1": 14
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

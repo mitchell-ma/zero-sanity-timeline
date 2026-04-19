@@ -40,7 +40,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Survival is a Win",
         "duration": {
           "value": {
             "verb": "IS",
@@ -94,7 +93,6 @@
         "segmentTypes": [
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "IS",
@@ -109,7 +107,13 @@
   ],
   "properties": {
     "id": "SURVIVAL_IS_A_WIN_P5",
-    "name": "Survival is a Win (P5)",
+    "level": 5,
+    "descriptionParams": {
+      "usp": 5,
+      "1-usp": -4,
+      "-usp": -5,
+      "usp-1": 4
+    },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
@@ -127,8 +131,7 @@
         "value": 1
       },
       "interactionType": "RESET"
-    },
-    "description": "After applying Solidification to an enemy, Estella gains 5 Ultimate Energy. Effect can only trigger once every 1s."
+    }
   },
   "metadata": {
     "originId": "ESTELLA",

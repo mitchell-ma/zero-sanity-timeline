@@ -162,6 +162,12 @@
   ],
   "properties": {
     "id": "MOMENTUM_BREAKER_TALENT",
+    "descriptionParams": {
+      "poise": 10,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

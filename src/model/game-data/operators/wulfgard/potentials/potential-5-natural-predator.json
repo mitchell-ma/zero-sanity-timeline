@@ -32,6 +32,12 @@
   "properties": {
     "id": "WULFGARD_P5_NATURAL_PREDATOR",
     "level": 5,
+    "descriptionParams": {
+      "potential_5": 1,
+      "1-potential_5": 0,
+      "-potential_5": -1,
+      "potential_5-1": 0
+    },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "POTENTIAL_EVENT",

@@ -2,6 +2,16 @@
   "properties": {
     "id": "LIFENG_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "phy_resist_down": 0.05,
+      "num": 2,
+      "1-phy_resist_down": 0.95,
+      "-phy_resist_down": -0.05,
+      "phy_resist_down-1": -0.95,
+      "1-num": -1,
+      "-num": -2,
+      "num-1": 1
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

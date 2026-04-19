@@ -2,6 +2,16 @@
   "properties": {
     "id": "FLUORITE_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "duration_potential": 6,
+      "potential_lv": 3,
+      "1-duration_potential": -5,
+      "-duration_potential": -6,
+      "duration_potential-1": 5,
+      "1-potential_lv": -2,
+      "-potential_lv": -3,
+      "potential_lv-1": 2
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

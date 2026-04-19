@@ -2,6 +2,20 @@
   "properties": {
     "id": "ENDMINISTRATOR_POTENTIAL_4",
     "level": 4,
+    "descriptionParams": {
+      "MaxHp": 0.1,
+      "EtherDamageTakenScalar": -0.1,
+      "Agi": 25,
+      "1-MaxHp": 0.9,
+      "-MaxHp": -0.1,
+      "MaxHp-1": -0.9,
+      "1-EtherDamageTakenScalar": 1.1,
+      "-EtherDamageTakenScalar": 0.1,
+      "EtherDamageTakenScalar-1": -1.1,
+      "1-Agi": -24,
+      "-Agi": -25,
+      "Agi-1": 24
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

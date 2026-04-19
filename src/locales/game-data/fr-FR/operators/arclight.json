@@ -1,0 +1,78 @@
+{
+  "op.ARCLIGHT.event.name": {
+    "text": "Arclight",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Arc orageux : après avoir déclenché des effets supplémentaires, restaure {atb:0} PC supplémentaires.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.1.event.name": {
+    "text": "Fille de la tempête",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.2.event.description": {
+    "text": "Agilité +{Agi:0}, Intelligence +{Wisd:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.2.event.name": {
+    "text": "Contre-la-montre",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.3.event.description": {
+    "text": "Renforce le talent Arpenteuse sauvage : l'effet de DÉG accrus est multiplié par {pulse_up:0.0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.3.event.name": {
+    "text": "« Hanna »",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.4.event.description": {
+    "text": "Renforce l'ultime Blitz explosif : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.4.event.name": {
+    "text": "Enseignements de la Voix-d'aulne",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.5.event.description": {
+    "text": "Renforce le talent Arpenteuse sauvage : les conditions de déclenchement sont abaissées à {count:0} fois.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.5.event.name": {
+    "text": "Servante des terres sauvages",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.EXPLODING_BLITZ.event.description": {
+    "text": "Effectue une brève ruée en avant tout en s'enveloppant d'arcs électriques, ce qui inflige des DÉG électriques et applique une altération électrique à tous les ennemis sur sa trajectoire. Les arcs persistants explosent peu après, infligeant de nouveaux DÉG électriques. Si l'ennemi est victime d'une altération électrique, consomme l'altération électrique et applique une Électrification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.EXPLODING_BLITZ.event.name": {
+    "text": "Blitz explosif",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.PEAL_OF_THUNDER.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi est électrifié ou lorsque l'Électrification d'un ennemi est consommée. Apparaît instantanément près de l'ennemi pour déclencher une tempête d'entailles qui inflige des DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.PEAL_OF_THUNDER.event.name": {
+    "text": "Fracas du tonnerre",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.SEEK_AND_HUNT_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 5 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.SEEK_AND_HUNT_BATK.event.name": {
+    "text": "Recherche et chasse",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.TEMPESTUOUS_ARC.event.description": {
+    "text": "Apparaît instantanément près de l'ennemi pour lâcher 2 entailles qui infligent des DÉG physiques. Si l'ennemi est électrifié, consomme l'effet d'Électrification pour lancer une attaque supplémentaire qui inflige des DÉG électriques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.TEMPESTUOUS_ARC.event.name": {
+    "text": "Arc orageux",
+    "dataStatus": "RECONCILED"
+  }
+}

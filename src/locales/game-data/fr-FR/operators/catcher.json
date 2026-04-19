@@ -1,0 +1,78 @@
+{
+  "op.CATCHER.event.name": {
+    "text": "Catcher",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Interdiction formelle et l'ultime Assaut classique : toucher l'ennemi inflige une nouvelle fois des DÉG physiques équivalents à [{dmg_base:0} + DÉF × {def_scale:0.0}].",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.1.event.name": {
+    "text": "Paré à tout",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.2.event.description": {
+    "text": "DÉF +{Def:0}, Volonté +{Will:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.2.event.name": {
+    "text": "Entraînement spécialisé bonus",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.3.event.description": {
+    "text": "Renforce la compétence de combo Suppression providentielle : durée du bouclier +{potential3_duration:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.3.event.name": {
+    "text": "Poste inébranlable",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.4.event.description": {
+    "text": "Renforce l'ultime Assaut classique : coût en énergie d'ultime -{1-costValue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.4.event.name": {
+    "text": "Souffrance compensée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.5.event.description": {
+    "text": "Renforce la compétence de combat Interdiction formelle : toucher un ennemi alors que le bouclier est actif restaure {potential5_atb:0} PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.5.event.name": {
+    "text": "Choix sans regret",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION_BASIC_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION_BASIC_BATK.event.name": {
+    "text": "Tactiques de base",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION.event.description": {
+    "text": "Lève un bouclier qui peut bloquer des attaques, offrir une protection à soi-même et aux opérateurs à proximité et restaurer immédiatement quelques PC. En cas d'attaque lorsque le bouclier est levé, permet d'effectuer une contre-attaque qui inflige des DÉG physiques et applique 1 cumul de Vulnérabilité à l'ennemi ciblé.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION.event.name": {
+    "text": "Interdiction formelle",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TEXTBOOK_ASSAULT.event.description": {
+    "text": "Manie l'espadon pour assener 2 coups consécutifs afin d'infliger des DÉG physiques et d'appliquer Affaiblissement, puis effectue un puissant écrasement qui inflige d'importants DÉG physiques et renverse tous les ennemis qui se trouvent dans la zone d'effet.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TEXTBOOK_ASSAULT.event.name": {
+    "text": "Assaut classique",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TIMELY_SUPPRESSION.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi commence à charger une compétence ou lorsque l'opérateur contrôlé est attaqué alors que ses PV sont inférieurs à {trigger_hp_ratio:0%}.\nUn puissant coup de poing descendant qui inflige des DÉG physiques à l'ennemi tout en octroyant des boucliers à soi-même et à un autre coéquipier (l'opérateur contrôlé est prioritaire).\nLa DÉF peut augmenter davantage les points de bouclier.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TIMELY_SUPPRESSION.event.name": {
+    "text": "Suppression providentielle",
+    "dataStatus": "RECONCILED"
+  }
+}

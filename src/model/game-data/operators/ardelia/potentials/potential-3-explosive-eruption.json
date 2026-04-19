@@ -2,6 +2,16 @@
   "properties": {
     "id": "ARDELIA_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "potential3_duration": 1,
+      "effect_prob": 1.2,
+      "1-potential3_duration": 0,
+      "-potential3_duration": -1,
+      "potential3_duration-1": 0,
+      "1-effect_prob": -0.19999999999999996,
+      "-effect_prob": -1.2,
+      "effect_prob-1": 0.19999999999999996
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

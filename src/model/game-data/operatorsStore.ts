@@ -7,7 +7,7 @@
 import { checkKeys, checkIdAndName, VALID_METADATA_KEYS, validateTalentLevelArrays, validateNonNegativeValues } from './validationUtils';
 import { NounType, VerbType } from '../../dsl/semantics';
 import {
-  LocaleKey, resolveEventName, resolveEventDescription,
+  LocaleKey, resolveEventName, resolveOptionalEventDescription,
 } from '../../locales/gameDataLocale';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ const VALID_TOP_KEYS = new Set([
   'id', 'operatorRarity', 'operatorClassType',
   'elementType', 'weaponTypes',
   'mainAttributeType', 'secondaryAttributeType',
-  'potentials', 'statsByLevel', 'talents', 'metadata',
+  'statsByLevel', 'talents', 'metadata',
 ]);
 
 const VALID_TALENT_KEYS = new Set(['one', 'two', 'attributeIncrease']);
@@ -215,15 +215,23 @@ function loadPotentialsFromFiles(context: any, operatorDir: string): { resolved:
     if (!match) continue;
     const json = context(key) as Record<string, unknown>;
     const props = (json.properties ?? {}) as Record<string, unknown>;
+    const meta = (json.metadata ?? {}) as Record<string, unknown>;
     const level = (props.level ?? parseInt(match[1])) as number;
     if (!level) continue;
 
     rawPotentials.push(json);
 
+    const operatorId = (meta.originId ?? '') as string;
+    const prefix = LocaleKey.operatorPotential(operatorId, level);
+    // descriptionParams live on the potential file (game-data layer) so one
+    // set of values serves every locale's template. Pass them through to the
+    // resolver so `{Str:0}` / `{PhysicalDamageIncrease:0%}` tokens interpolate.
+    const descriptionParams = props.descriptionParams as Record<string, number> | undefined;
+    const description = resolveOptionalEventDescription(prefix, descriptionParams);
     potentials.push({
       level,
-      name: (props.name ?? '') as string,
-      ...(props.description ? { description: props.description as string } : {}),
+      name: resolveEventName(prefix),
+      ...(description !== undefined ? { description } : {}),
     });
   }
   return {
@@ -264,15 +272,22 @@ function loadTalentsFromFiles(context: any, operatorDir: string): Map<string, Ta
     if (!match) continue;
     const json = context(key) as Record<string, unknown>;
     const props = (json.properties ?? {}) as Record<string, unknown>;
+    const meta = (json.metadata ?? {}) as Record<string, unknown>;
     const id = props.id as string | undefined;
     if (!id) continue;
-    const rawName = (props.name ?? '') as string;
+    const operatorId = (meta.originId ?? '') as string;
+    const prefix = LocaleKey.operatorTalent(operatorId, id);
+    const rawName = resolveEventName(prefix);
+    // descriptionParams carry the talent's blackboard values so tokens like
+    // `{duration:0s}` / `{atk_up:0%}` interpolate in the template.
+    const descriptionParams = props.descriptionParams as Record<string, number> | undefined;
+    const description = resolveOptionalEventDescription(prefix, descriptionParams);
     const entry: TalentEntry = {
       id,
       name: rawName.replace(/ \(Talent\)$/, ''),
       maxLevel: resolveMaxLevel(props.maxLevel) ?? (deriveTalentMaxLevel(json) || 1),
     };
-    if (typeof props.description === 'string') entry.description = props.description;
+    if (description !== undefined) entry.description = description;
     entries.set(id, entry);
   }
   return entries;

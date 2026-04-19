@@ -45,6 +45,16 @@
   ],
   "properties": {
     "id": "WULFGARD_TALENT1_SCORCHING_FANGS",
+    "descriptionParams": {
+      "add": 0.3,
+      "duration": 10,
+      "1-add": 0.7,
+      "-add": -0.3,
+      "add-1": -0.7,
+      "1-duration": -9,
+      "-duration": -10,
+      "duration-1": 9
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

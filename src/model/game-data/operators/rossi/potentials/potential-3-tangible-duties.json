@@ -2,6 +2,20 @@
   "properties": {
     "id": "ROSSI_P3_TANGIBLE_DUTIES",
     "level": 3,
+    "descriptionParams": {
+      "bleed_critical_damage_scale": 0.08,
+      "bleed_critical_damage_interval": -0.5,
+      "heal_scale": 0.04,
+      "1-bleed_critical_damage_scale": 0.92,
+      "-bleed_critical_damage_scale": -0.08,
+      "bleed_critical_damage_scale-1": -0.92,
+      "1-bleed_critical_damage_interval": 1.5,
+      "-bleed_critical_damage_interval": 0.5,
+      "bleed_critical_damage_interval-1": -1.5,
+      "1-heal_scale": 0.96,
+      "-heal_scale": -0.04,
+      "heal_scale-1": -0.96
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

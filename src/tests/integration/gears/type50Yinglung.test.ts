@@ -17,7 +17,7 @@ import { CritMode, InteractionModeType, StatType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, breakdownFor, damageRowAtOrAfter, eventsOnColumn, findEntry,
-  gearLoadout, placeSkill, statContributionFromSource,
+  gearLoadout, placeSkill, statContributionFromSource, statusDisplayName
 } from './helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -72,7 +72,7 @@ describe('Type 50 Yinglung — gear set E2E', () => {
       const row = damageRowAtOrAfter(c, buff.startFrame + 1);
       expect(row).toBeDefined();
 
-      const contribution = statContributionFromSource(row, StatType.COMBO_SKILL_DAMAGE_BONUS, BUFF.name);
+      const contribution = statContributionFromSource(row, StatType.COMBO_SKILL_DAMAGE_BONUS, statusDisplayName(BUFF.id));
       expect(contribution).toBeGreaterThan(0);
 
       const entries = breakdownFor(row);

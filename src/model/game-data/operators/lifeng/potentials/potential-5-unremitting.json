@@ -46,7 +46,6 @@
           },
           "unit": "SECOND"
         },
-        "name": "Unremitting",
         "element": "PHYSICAL"
       },
       "frames": [
@@ -113,7 +112,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "IS",
@@ -128,7 +126,21 @@
   ],
   "properties": {
     "id": "UNREMITTING_P5",
-    "name": "Unremitting",
+    "level": 5,
+    "descriptionParams": {
+      "interval": 15,
+      "atk_scale_potential5": 2.5,
+      "poise_potential5": 5,
+      "1-interval": -14,
+      "-interval": -15,
+      "interval-1": 14,
+      "1-atk_scale_potential5": -1.5,
+      "-atk_scale_potential5": -2.5,
+      "atk_scale_potential5-1": 1.5,
+      "1-poise_potential5": -4,
+      "-poise_potential5": -5,
+      "poise_potential5-1": 4
+    },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
@@ -139,8 +151,7 @@
         "value": 1
       },
       "interactionType": "RESET"
-    },
-    "description": "Talent Subduer of Evil improved: Every 15s, the next effect triggered deals another 250% ATK of Physical DMG and 5 Stagger."
+    }
   },
   "metadata": {
     "originId": "LIFENG",

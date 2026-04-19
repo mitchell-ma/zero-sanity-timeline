@@ -2,6 +2,16 @@
   "properties": {
     "id": "POGRANICHNIK_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "has_potential1": 1,
+      "atb_return": 15,
+      "1-has_potential1": 0,
+      "-has_potential1": -1,
+      "has_potential1-1": 0,
+      "1-atb_return": -14,
+      "-atb_return": -15,
+      "atb_return-1": 14
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

@@ -1,6 +1,12 @@
 {
   "properties": {
     "id": "MOUNTAINPEAK_SURFER_TALENT",
+    "descriptionParams": {
+      "talent1": 1,
+      "1-talent1": 0,
+      "-talent1": -1,
+      "talent1-1": 0
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 1

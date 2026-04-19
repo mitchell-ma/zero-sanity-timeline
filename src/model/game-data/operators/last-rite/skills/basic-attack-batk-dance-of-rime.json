@@ -485,7 +485,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "DANCE_OF_RIME_BATK"
+    "id": "DANCE_OF_RIME_BATK",
+    "descriptionParams": {
+      "atk_scale": 0.77,
+      "poise": 25,
+      "atb": 0,
+      "1-atk_scale": 0.22999999999999998,
+      "-atk_scale": -0.77,
+      "atk_scale-1": -0.22999999999999998,
+      "1-poise": -24,
+      "-poise": -25,
+      "poise-1": 24,
+      "1-atb": 1,
+      "-atb": 0,
+      "atb-1": -1
+    }
   },
   "metadata": {
     "originId": "LAST_RITE",

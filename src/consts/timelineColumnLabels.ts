@@ -39,6 +39,40 @@ export const enum ColumnLabel {
   OTHER                = 'OTHER',
 }
 
+/** Maps `ColumnLabel` values to their locale keys. `ColumnLabel` is a const
+ *  enum whose values are raw English strings used directly as display text,
+ *  so translation has to happen at render time via `localizeColumnLabel`. */
+const COLUMN_LABEL_LOCALE_KEYS: Record<string, string> = {
+  [ColumnLabel.SKILL_POINTS]:        'column.skillPoints',
+  [ColumnLabel.TEAM_STATUS]:         'column.teamStatus',
+  [ColumnLabel.LINK]:                'column.link',
+  [ColumnLabel.SHIELD]:              'column.shield',
+  [ColumnLabel.INFLICTION]:          'column.infliction',
+  [ColumnLabel.ARTS_REACTION]:       'column.artsReaction',
+  [ColumnLabel.PHYSICAL_INFLICTION]: 'column.physicalInfliction',
+  [ColumnLabel.PHYSICAL_STATUS]:     'column.physicalStatus',
+  [ColumnLabel.SUSCEPTIBILITY]:      'column.susceptibility',
+  [ColumnLabel.FRAGILITY]:           'column.fragility',
+  [ColumnLabel.WEAPON_BUFF]:         'column.weapon',
+  [ColumnLabel.GEAR_BUFF]:           'column.gear',
+  [ColumnLabel.TACTICAL]:            'column.tactical',
+  [ColumnLabel.STATUS]:              'column.status',
+  [ColumnLabel.STAGGER]:             'column.stagger',
+  [ColumnLabel.STAGGER_FRAILTY]:     'column.staggerFrailty',
+  [ColumnLabel.ACTION]:              'column.action',
+  [ColumnLabel.CONTROLLED]:          'column.controlled',
+  [ColumnLabel.OTHER]:               'column.other',
+};
+
+/** Translate a raw column label at render time. Only `ColumnLabel` enum
+ *  values go through the locale lookup; skill / status / operator names
+ *  (already localized at build time by `SKILL_LABELS` / `STATUS_LABELS` /
+ *  game-data bundles) pass through unchanged. */
+export function localizeColumnLabel(raw: string): string {
+  const key = COLUMN_LABEL_LOCALE_KEYS[raw];
+  return key ? t(key) : raw;
+}
+
 /** Game-mechanic status labels (non-operator-specific). Operator status labels come from JSON via gameDataController. */
 const GAME_MECHANIC_STATUS_LABELS: Record<string, string> = {
   [StatusType.FOCUS]:           t('status.FOCUS'),

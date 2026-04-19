@@ -1,6 +1,24 @@
 {
   "properties": {
     "id": "ORDAINED_BY_HEAVEN_TALENT",
+    "descriptionParams": {
+      "base_rate": 0.09,
+      "sword_rate": 0.01,
+      "heal": 0.18,
+      "duration": 99,
+      "1-base_rate": 0.91,
+      "-base_rate": -0.09,
+      "base_rate-1": -0.91,
+      "1-sword_rate": 0.99,
+      "-sword_rate": -0.01,
+      "sword_rate-1": -0.99,
+      "1-heal": 0.8200000000000001,
+      "-heal": -0.18,
+      "heal-1": -0.8200000000000001,
+      "1-duration": -98,
+      "-duration": -99,
+      "duration-1": 98
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

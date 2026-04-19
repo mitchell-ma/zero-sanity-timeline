@@ -4,6 +4,24 @@
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
     "id": "BREATH_OF_TRANSFORMATION",
+    "descriptionParams": {
+      "atk_scale": 3.6,
+      "poise": 10,
+      "usp": 10,
+      "usp_extra": 10,
+      "1-atk_scale": -2.6,
+      "-atk_scale": -3.6,
+      "atk_scale-1": 2.6,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-usp_extra": -9,
+      "-usp_extra": -10,
+      "usp_extra-1": 9
+    },
     "suppliedParameters": {
       "VARY_BY": [
         {

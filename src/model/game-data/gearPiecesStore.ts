@@ -10,9 +10,10 @@ import { StatType } from '../enums/stats';
 import { resolveEffectStat } from '../enums/stats';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
+import { LocaleKey, resolveEventName } from '../../locales/gameDataLocale';
 
 // ── Validation ──────────────────────────────────────────────────────────────
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'gearType', 'gearSet']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'gearType', 'gearSet']);
 const VALID_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -93,9 +94,11 @@ export class GearPiece {
 
     this.clause = (json.clause ?? []) as ClausePredicate[];
     this.id = (props.id ?? '') as string;
-    this.name = (props.name ?? '') as string;
     this.gearType = (props.gearType ?? '') as string;
     this.gearSet = (props.gearSet ?? '') as string;
+    this.name = this.id && this.gearSet
+      ? resolveEventName(LocaleKey.gearPiece(this.gearSet, this.id))
+      : '';
   }
 
   /** Get defense value (from clause APPLY STAT objectId=BASE_DEFENSE with IS verb). */

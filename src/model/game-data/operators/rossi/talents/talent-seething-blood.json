@@ -243,6 +243,32 @@
   ],
   "properties": {
     "id": "SEETHING_BLOOD_TALENT",
+    "descriptionParams": {
+      "2": 1,
+      "talent_2_2": 1,
+      "bleed_critical_damage_scale": 0.24,
+      "bleed_critical_damage_interval": 1,
+      "heal_scale": 0.08,
+      "talent2_burning_damage_scale": 1.5,
+      "1-2": 0,
+      "-2": -1,
+      "2-1": 0,
+      "1-talent_2_2": 0,
+      "-talent_2_2": -1,
+      "talent_2_2-1": 0,
+      "1-bleed_critical_damage_scale": 0.76,
+      "-bleed_critical_damage_scale": -0.24,
+      "bleed_critical_damage_scale-1": -0.76,
+      "1-bleed_critical_damage_interval": 0,
+      "-bleed_critical_damage_interval": -1,
+      "bleed_critical_damage_interval-1": 0,
+      "1-heal_scale": 0.92,
+      "-heal_scale": -0.08,
+      "heal_scale-1": -0.92,
+      "1-talent2_burning_damage_scale": -0.5,
+      "-talent2_burning_damage_scale": -1.5,
+      "talent2_burning_damage_scale-1": 0.5
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

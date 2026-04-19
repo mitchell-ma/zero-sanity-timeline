@@ -30,7 +30,6 @@ const YVONNE_ID: string = require('../../../../model/game-data/operators/yvonne/
 const BARRAGE_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-barrage-of-technology.json');
 const FREEZING_POINT_JSON = require('../../../../model/game-data/operators/yvonne/talents/talent-freezing-point-talent.json');
 const P2_JSON = require('../../../../model/game-data/operators/yvonne/potentials/potential-2-flawless-creation.json');
-const P5_JSON = require('../../../../model/game-data/operators/yvonne/potentials/potential-5-expert-mechcrafter.json');
 const EXPERT_STATUS_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-expert-mechcrafter.json');
 const CRIT_STACKS_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-crit-stacks.json');
 const CRIT_DAMAGE_JSON = require('../../../../model/game-data/operators/yvonne/statuses/status-crit-damage.json');
@@ -429,11 +428,6 @@ describe('D. P5 Expert Mechcrafter', () => {
     const critDmg = effects.find((e: { objectId: string }) => e.objectId === StatType.CRITICAL_DAMAGE);
     expect(critDmg).toBeDefined();
     expect(critDmg.with.value.value).toBe(0.3);
-  });
-
-  it('D2: P5 description matches', () => {
-    expect(P5_JSON.properties.description).toContain('ATK +10%');
-    expect(P5_JSON.properties.description).toContain('Critical DMG Dealt +30%');
   });
 
   it('D3: ult at P5 applies Expert Mechcrafter status', () => {

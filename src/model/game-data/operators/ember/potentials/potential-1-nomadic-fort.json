@@ -2,6 +2,20 @@
   "properties": {
     "id": "EMBER_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "potential_1": 1,
+      "extrashelter": 0.2,
+      "extratime": 1.5,
+      "1-potential_1": 0,
+      "-potential_1": -1,
+      "potential_1-1": 0,
+      "1-extrashelter": 0.8,
+      "-extrashelter": -0.2,
+      "extrashelter-1": -0.8,
+      "1-extratime": -0.5,
+      "-extratime": -1.5,
+      "extratime-1": 0.5
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

@@ -68,6 +68,28 @@
   ],
   "properties": {
     "id": "FAM_OF_HONOR_TALENT",
+    "descriptionParams": {
+      "talent1_speed": 1,
+      "ratio_speedreduction": 0.6,
+      "ratio_speed": 0.2,
+      "duration_talent1buff": 3,
+      "range_talent1buff": 5,
+      "1-talent1_speed": 0,
+      "-talent1_speed": -1,
+      "talent1_speed-1": 0,
+      "1-ratio_speedreduction": 0.4,
+      "-ratio_speedreduction": -0.6,
+      "ratio_speedreduction-1": -0.4,
+      "1-ratio_speed": 0.8,
+      "-ratio_speed": -0.2,
+      "ratio_speed-1": -0.8,
+      "1-duration_talent1buff": -2,
+      "-duration_talent1buff": -3,
+      "duration_talent1buff-1": 2,
+      "1-range_talent1buff": -4,
+      "-range_talent1buff": -5,
+      "range_talent1buff-1": 4
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

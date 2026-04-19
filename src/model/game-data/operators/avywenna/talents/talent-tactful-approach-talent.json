@@ -1,6 +1,16 @@
 {
   "properties": {
     "id": "TACTFUL_APPROACH_TALENT",
+    "descriptionParams": {
+      "pulse_vul_rate": 0.1,
+      "pulse_vul_duration": 10,
+      "1-pulse_vul_rate": 0.9,
+      "-pulse_vul_rate": -0.1,
+      "pulse_vul_rate-1": -0.9,
+      "1-pulse_vul_duration": -9,
+      "-pulse_vul_duration": -10,
+      "pulse_vul_duration-1": 9
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

@@ -8,6 +8,10 @@
 import { EventType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { checkKeys, checkIdAndName, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectEnemyWithDeterminer } from './validationUtils';
+import {
+  LocaleKey, resolveEventName, resolveEventDescription,
+  resolveSegmentName, resolveFrameName,
+} from '../../locales/gameDataLocale';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -18,6 +22,37 @@ interface SkillDuration {
 
 interface TriggerClause {
   conditions: Interaction[];
+}
+
+/**
+ * Rewrite a raw `segments` array so each segment and named frame carries its
+ * display name from the locale bundle. Consumers (EventBlock, presentation
+ * controller, tests) read `properties.name` directly; we resolve it at load
+ * time so downstream code is unaware of the locale layer.
+ */
+function injectSegmentNames(segments: unknown[], prefix: string): unknown[] {
+  if (!prefix) return segments;
+  return segments.map((seg, si) => {
+    if (!seg || typeof seg !== 'object') return seg;
+    const s = seg as Record<string, unknown>;
+    const segName = resolveSegmentName(prefix, si);
+    const rawFrames = s.frames as Record<string, unknown>[] | undefined;
+    const frames = Array.isArray(rawFrames) ? rawFrames.map((frame, fi) => {
+      if (!frame || typeof frame !== 'object') return frame;
+      const f = frame as Record<string, unknown>;
+      const frameName = resolveFrameName(prefix, si, fi);
+      if (!frameName) return f;
+      const fprops = (f.properties ?? {}) as Record<string, unknown>;
+      return { ...f, properties: { ...fprops, name: frameName } };
+    }) : undefined;
+    const props = (s.properties ?? {}) as Record<string, unknown>;
+    const nextProps = segName ? { ...props, name: segName } : props;
+    return {
+      ...s,
+      properties: nextProps,
+      ...(frames ? { frames } : {}),
+    };
+  });
 }
 
 /** Activation window embedded Event structure within a combo skill. */
@@ -34,9 +69,13 @@ const VALID_SKILL_ENTRY_KEYS = new Set([
 ]);
 
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
-  'id', 'name', 'description', 'duration', 'windowFrames',
+  'id', 'duration', 'windowFrames',
   'enhancementTypes', 'dependencyTypes', 'element',
   'eventType', 'eventCategoryType', 'eventQualifierType', 'suppliedParameters',
+  // Blackboard values extracted from Warfarin's skill patch table; used by
+  // the locale resolver to interpolate `{poise:0}` / `{atk_scale:0.0}` style
+  // tokens in the skill description.
+  'descriptionParams',
 ]);
 
 const VALID_SKILL_METADATA_KEYS = new Set(['originId', 'eventComponentType', 'dataSources', 'icon', 'dataStatus']);
@@ -160,13 +199,23 @@ export class OperatorSkill {
     const meta = (json.metadata ?? {}) as Record<string, unknown>;
 
     this.id = id;
-    this.segments = (json.segments ?? []) as unknown[];
     this.activationClause = (json.activationClause ?? []) as unknown[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
     this.onEntryClause = (json.onEntryClause ?? []) as unknown[];
     this.onExitClause = (json.onExitClause ?? []) as unknown[];
-    this.name = (props.name ?? '') as string;
-    this.description = (props.description ?? '') as string;
+    const operatorId = (meta.originId ?? '') as string;
+    const prefix = operatorId ? LocaleKey.operatorSkill(operatorId, id) : '';
+    this.name = prefix ? resolveEventName(prefix) : '';
+    // descriptionParams are blackboard values from the skill patch table —
+    // pass them through so `{poise:0}` / `{atk_scale:0.0}` tokens in the
+    // description template interpolate to their numeric values.
+    const descriptionParams = props.descriptionParams as Record<string, number> | undefined;
+    this.description = prefix ? resolveEventDescription(prefix, descriptionParams) : '';
+    if (this.description === `${prefix}.event.description`) this.description = '';
+    // Inject segment and frame names from the locale bundle into the raw JSON
+    // segments so the view layer (`EventBlock`, `allSegmentLabels`) continues
+    // to read them via `segment.properties.name` / `frame.properties.name`.
+    this.segments = injectSegmentNames((json.segments ?? []) as unknown[], prefix);
     if (props.duration) this.duration = props.duration as SkillDuration;
     if (props.windowFrames != null) this.windowFrames = props.windowFrames as number;
     if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
@@ -192,7 +241,8 @@ export class OperatorSkill {
       ...(this.activationWindow ? { activationWindow: this.activationWindow } : {}),
       properties: {
         id: this.id,
-        name: this.name,
+        // Reproject locale-resolved strings so configCache/getStatusDef surfaces them.
+        ...(this.name ? { name: this.name } : {}),
         ...(this.description ? { description: this.description } : {}),
         ...(this.duration ? { duration: this.duration } : {}),
         ...(this.windowFrames != null ? { windowFrames: this.windowFrames } : {}),

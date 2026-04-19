@@ -35,6 +35,22 @@
     "text": "Brief Instant (P4)",
     "dataStatus": "RECONCILED"
   },
+  "op.LIFENG.potential.5.event.description": {
+    "text": "Talent Subduer of Evil improved: Every 15s, the next effect triggered deals another 250% ATK of Physical DMG and 5 Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.5.event.name": {
+    "text": "Unremitting",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.5.segment.0.name": {
+    "text": "Unremitting",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.5.segment.1.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
   "op.LIFENG.skill.ASPECT_OF_WRATH.event.description": {
     "text": "When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. Unleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
     "dataStatus": "RECONCILED"

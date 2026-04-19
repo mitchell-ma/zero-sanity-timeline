@@ -1,0 +1,78 @@
+{
+  "op.AVYWENNA.event.name": {
+    "text": "Avywenna",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.1.event.description": {
+    "text": "Renforce le talent Livraison rapide : gain d'énergie d'ultime +{talent0_usp:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.1.event.name": {
+    "text": "Persistante",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.2.event.description": {
+    "text": "Durée de Lance de foudre et de Lance de foudre EX +{potential_2:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.2.event.name": {
+    "text": "Hallebarde menaçante",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.3.event.description": {
+    "text": "Volonté +{Will:0}, DÉG électriques infligés +{PulseDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.3.event.name": {
+    "text": "Négociatrice endurcie",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.4.event.description": {
+    "text": "Renforce l'ultime Lance de foudre : Choc final : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.4.event.name": {
+    "text": "Chevronnée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.5.event.description": {
+    "text": "Quand les lances de foudre ou lances de foudre EX sur le retour touchent un ennemi sensible à l'électricité, les multiplicateurs de DÉG passent à {potential_5_rate:0.00} fois leur valeur d'origine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.5.event.name": {
+    "text": "Carotte et bâton pointu",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_BLITZ_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 5 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_BLITZ_BATK.event.name": {
+    "text": "Lance de foudre : Attaque-éclair",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_FINAL_SHOCK.event.description": {
+    "text": "Projette une lance de foudre EX dans la zone cible, infligeant de lourds DÉG électriques aux ennemis à proximité.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_FINAL_SHOCK.event.name": {
+    "text": "Lance de foudre : Choc final",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_INTERDICTION.event.description": {
+    "text": "Saute à mi-hauteur et génère un tourbillon avec sa lance, infligeant des DÉG électriques aux ennemis à proximité tout en rappelant à elle toutes les lances de foudre ainsi que les lances de foudre EX sur le champ de bataille. Les lances de foudre rappelées transpercent tous les ennemis sur leur trajectoire et leur infligent des DÉG électriques, tandis que les lances de foudre EX infligent davantage de DÉG électriques ainsi qu'une altération électrique.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_INTERDICTION.event.name": {
+    "text": "Lance de foudre : Interdiction",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_STRIKE.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un opérateur que vous contrôlez lance un Coup final sur une cible victime d'une altération électrique ou de l'effet d'Électrification. Saute à mi-hauteur et projette 3 lances de foudre sur la cible, avant d'infliger 1 salve de DÉG électriques aux ennemis dans la zone d'effet.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_STRIKE.event.name": {
+    "text": "Lance de foudre : Frappe",
+    "dataStatus": "RECONCILED"
+  }
+}

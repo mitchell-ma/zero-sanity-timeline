@@ -18,7 +18,7 @@ import { CritMode, InteractionModeType, StatType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, breakdownFor, damageRowAtOrAfter, eventsOnColumn, findEntry,
-  gearLoadout, placeSkill, statContributionFromSource,
+  gearLoadout, placeSkill, statContributionFromSource, statusDisplayName
 } from './helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -75,7 +75,7 @@ describe('Bonekrusha — gear set E2E', () => {
       const row = damageRowAtOrAfter(c, buff.startFrame + 1);
       expect(row).toBeDefined();
 
-      const contribution = statContributionFromSource(row, StatType.BATTLE_SKILL_DAMAGE_BONUS, BUFF.name);
+      const contribution = statContributionFromSource(row, StatType.BATTLE_SKILL_DAMAGE_BONUS, statusDisplayName(BUFF.id));
       expect(contribution).toBeGreaterThan(0);
 
       const entries = breakdownFor(row);

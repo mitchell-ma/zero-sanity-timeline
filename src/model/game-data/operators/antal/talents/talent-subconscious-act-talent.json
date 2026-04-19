@@ -1,6 +1,20 @@
 {
   "properties": {
     "id": "SUBCONSCIOUS_ACT_TALENT",
+    "descriptionParams": {
+      "healvalue": 45,
+      "probability": 0.3,
+      "heal_scale": 0.38,
+      "1-healvalue": -44,
+      "-healvalue": -45,
+      "healvalue-1": 44,
+      "1-probability": 0.7,
+      "-probability": -0.3,
+      "probability-1": -0.7,
+      "1-heal_scale": 0.62,
+      "-heal_scale": -0.38,
+      "heal_scale-1": -0.62
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

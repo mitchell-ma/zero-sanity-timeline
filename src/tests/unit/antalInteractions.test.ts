@@ -529,11 +529,6 @@ describe('F. Resource Properties', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('G. Operator Identity', () => {
-  test('G1: Operator type and name', () => {
-    expect(mockAntalJson.id).toBe('ANTAL');
-    expect(mockAntalJson.name).toBe('Antal');
-  });
-
   test('G2: 4-star Supporter, Electric element, Arts Unit weapon', () => {
     expect(mockAntalJson.operatorRarity).toBe(4);
     expect(mockAntalJson.operatorClassType).toBe('SUPPORTER');

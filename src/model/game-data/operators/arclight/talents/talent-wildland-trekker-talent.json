@@ -63,6 +63,24 @@
   ],
   "properties": {
     "id": "WILDLAND_TREKKER_TALENT",
+    "descriptionParams": {
+      "talent_1": 1,
+      "duration": 15,
+      "pulse_up": 0.0008,
+      "count": 3,
+      "1-talent_1": 0,
+      "-talent_1": -1,
+      "talent_1-1": 0,
+      "1-duration": -14,
+      "-duration": -15,
+      "duration-1": 14,
+      "1-pulse_up": 0.9992,
+      "-pulse_up": -0.0008,
+      "pulse_up-1": -0.9992,
+      "1-count": -2,
+      "-count": -3,
+      "count-1": 2
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

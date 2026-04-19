@@ -1,0 +1,78 @@
+{
+  "op.ANTAL.event.name": {
+    "text": "Antal",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.1.event.description": {
+    "text": "Renforce l'ultime Surcadençage : les effets d'amplification électrique et d'amplification thermique sont multipliés par {rate:0.0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.1.event.name": {
+    "text": "Talent pour les Arts",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.2.event.description": {
+    "text": "Renforce l'ultime Surcadençage : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.2.event.name": {
+    "text": "Automatisation améliorée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.3.event.description": {
+    "text": "Quand un ennemi avec un malus de Concentration actif est vaincu, restaure {potential_3_atb:0} PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.3.event.name": {
+    "text": "Théorie d'originium appliquée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.4.event.description": {
+    "text": "Intelligence +{Wisd:0}, PV max. +{MaxHp:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.4.event.name": {
+    "text": "Rappel de mamie",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.5.event.description": {
+    "text": "Appliquer Concentration sur la même cible pendant {delay_time:0} s augmente les effets de sensibilité électrique et de sensibilité thermique de {potential_5_rate:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.5.event.name": {
+    "text": "Testeur technique spécialisé",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EMP_TEST_SITE.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi doté d'une Concentration active subit un statut physique ou une altération des Arts. Déclenche 1 explosion d'énergie sur l'ennemi, qui lui inflige des DÉG électriques et applique un cumul supplémentaire du même statut physique ou de la même altération des Arts.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EMP_TEST_SITE.event.name": {
+    "text": "Site d'essais d'IEM",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EXCHANGE_CURRENT_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG électriques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG électriques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG électriques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EXCHANGE_CURRENT_BATK.event.name": {
+    "text": "Courant d'échange",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.OVERCLOCKED_MOMENT.event.description": {
+    "text": "Octroie une amplification électrique et une amplification thermique temporaires à toute l'équipe.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.OVERCLOCKED_MOMENT.event.name": {
+    "text": "Surcadençage",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.SPECIFIED_RESEARCH_SUBJECT.event.description": {
+    "text": "Applique un effet de Concentration longue durée sur l'ennemi et lui inflige des DÉG électriques. Un ennemi avec Concentration souffre également de sensibilité électrique et de sensibilité thermique. L'effet de Concentration ne peut être appliqué qu'à 1 ennemi à la fois.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.SPECIFIED_RESEARCH_SUBJECT.event.name": {
+    "text": "Sujet de recherche spécifié",
+    "dataStatus": "RECONCILED"
+  }
+}

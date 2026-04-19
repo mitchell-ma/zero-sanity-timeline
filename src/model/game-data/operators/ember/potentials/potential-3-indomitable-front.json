@@ -2,6 +2,16 @@
   "properties": {
     "id": "EMBER_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "extracure": 0.5,
+      "potential_3": 1,
+      "1-extracure": 0.5,
+      "-extracure": -0.5,
+      "extracure-1": -0.5,
+      "1-potential_3": 0,
+      "-potential_3": -1,
+      "potential_3-1": 0
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

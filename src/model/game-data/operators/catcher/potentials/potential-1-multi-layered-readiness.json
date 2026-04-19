@@ -2,6 +2,16 @@
   "properties": {
     "id": "CATCHER_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "def_scale": 5,
+      "dmg_base": 300,
+      "1-def_scale": -4,
+      "-def_scale": -5,
+      "def_scale-1": 4,
+      "1-dmg_base": -299,
+      "-dmg_base": -300,
+      "dmg_base-1": 299
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

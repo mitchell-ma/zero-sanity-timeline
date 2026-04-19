@@ -3,7 +3,21 @@
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "CRYO",
-    "id": "STRESS_TESTING"
+    "id": "STRESS_TESTING",
+    "descriptionParams": {
+      "usp": 10,
+      "poise": 10,
+      "atk_scale": 4.5,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-atk_scale": -3.5,
+      "-atk_scale": -4.5,
+      "atk_scale-1": 3.5
+    }
   },
   "segments": [
     {

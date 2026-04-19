@@ -1,6 +1,20 @@
 {
   "properties": {
     "id": "VETERAN_ANGLER_TALENT",
+    "descriptionParams": {
+      "prob_add": 0.005,
+      "prob_max": 0.3,
+      "rate": 10,
+      "1-prob_add": 0.995,
+      "-prob_add": -0.005,
+      "prob_add-1": -0.995,
+      "1-prob_max": 0.7,
+      "-prob_max": -0.3,
+      "prob_max-1": -0.7,
+      "1-rate": -9,
+      "-rate": -10,
+      "rate-1": 9
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

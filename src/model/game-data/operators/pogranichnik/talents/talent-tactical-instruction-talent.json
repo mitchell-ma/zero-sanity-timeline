@@ -41,6 +41,12 @@
   ],
   "properties": {
     "id": "TACTICAL_INSTRUCTION_TALENT",
+    "descriptionParams": {
+      "duration": 10,
+      "1-duration": -9,
+      "-duration": -10,
+      "duration-1": 9
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

@@ -1,0 +1,78 @@
+{
+  "op.DA_PAN.event.name": {
+    "text": "Da Pan",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.1.event.description": {
+    "text": "Renforce l'ultime CUISINE BRUTALE ! : si l'ultime élimine au moins un ennemi, Da Pan inflige +{potential_1_dmg_up:0%} de DÉG physiques pendant {potential_1_duration:0} s. L'effet ne peut pas être cumulé.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.1.event.name": {
+    "text": "Gastronomie",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.2.event.description": {
+    "text": "Renforce le talent Sucré-salé : durée du bonus Préparation des ingrédients +{talent_1_duration:0} s, cumuls max. +{talent_1_stack:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.2.event.name": {
+    "text": "Harmonie des saveurs",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.3.event.description": {
+    "text": "Force +{Str:0}, DÉG physiques infligés +{PhysicalDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.3.event.name": {
+    "text": "Employé modèle",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.4.event.description": {
+    "text": "Renforce l'ultime CUISINE BRUTALE ! : coût en énergie d'ultime -{1-costValue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.4.event.name": {
+    "text": "Mélange spécial",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.5.event.description": {
+    "text": "Renforce la compétence de combat WOK DANS TA FACE ! : si la compétence touche un seul ennemi, applique 1 cumul supplémentaire de Vulnérabilité sur la cible. L'effet se déclenche toutes les {potential_5_interval:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.5.event.name": {
+    "text": "À feu vif",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.CHOP_N_DUNK.event.description": {
+    "text": "Da Pan abat sa planche à découper pour soulever de force tous les ennemis dans la zone d'effet devant lui. Lance ensuite une rafale d'entailles à 6 séquences qui inflige des DÉG physiques. L'étape finale consiste à écraser tous les ennemis au sol pour les renverser de force et leur infliger de lourds DÉG physiques.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.CHOP_N_DUNK.event.name": {
+    "text": "CUISINE BRUTALE !",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.FLIP_DA_WOK.event.description": {
+    "text": "Sort un wok, le charge rapidement, puis exécute un puissant lancer de wok infligeant des DÉG physiques et appliquant Soulèvement à l'ennemi.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.FLIP_DA_WOK.event.name": {
+    "text": "WOK DANS TA FACE !",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.MORE_SPICE.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi atteint 4 cumuls de Vulnérabilité.\nFrappe avec son wok pour infliger de lourds DÉG physiques et broyer l'ennemi. Ce Broyage inflige également davantage de DÉG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.MORE_SPICE.event.name": {
+    "text": "PLUS ÉPICÉ !",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.ROLLING_CUT_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.ROLLING_CUT_BATK.event.name": {
+    "text": "COUPE OBLIQUE !",
+    "dataStatus": "RECONCILED"
+  }
+}

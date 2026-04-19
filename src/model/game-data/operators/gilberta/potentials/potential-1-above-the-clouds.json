@@ -2,6 +2,20 @@
   "properties": {
     "id": "GILBERTA_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "potential": 1,
+      "radiusadd_display": 0.2,
+      "radius": 6.3,
+      "1-potential": 0,
+      "-potential": -1,
+      "potential-1": 0,
+      "1-radiusadd_display": 0.8,
+      "-radiusadd_display": -0.2,
+      "radiusadd_display-1": -0.8,
+      "1-radius": -5.3,
+      "-radius": -6.3,
+      "radius-1": 5.3
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

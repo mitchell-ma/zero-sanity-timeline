@@ -12,6 +12,10 @@ import enUS from './en-US.json';
 import frFR from './fr-FR.json';
 
 const DEFAULT_LOCALE = 'en-US';
+/** Must match `SETTINGS_STORAGE_KEY` in `consts/settings.ts`. Duplicated here
+ *  to avoid pulling the settings module into this file's import chain — the
+ *  self-init below has to run before any consumer module. */
+const SETTINGS_STORAGE_KEY = 'zst-settings';
 
 /** Registry of bundled locale dictionaries, keyed by locale identifier. */
 const LOCALE_REGISTRY: Record<string, Record<string, string>> = {
@@ -28,6 +32,23 @@ export const AVAILABLE_LOCALES: Array<{ id: string; label: string }> = [
 let currentLocale = DEFAULT_LOCALE;
 let translations: Record<string, string> = enUS;
 let fallbackTranslations: Record<string, string> = enUS;
+
+// Self-init from localStorage. Must run at module load — every downstream
+// module that calls `t()` at top level (e.g. `timelineColumnLabels.ts`) reads
+// `translations` once and caches the result, so the correct locale must be
+// active before those imports execute. React's `setLocaleById(settings.locale)`
+// runs in a `useEffect`, which is too late.
+(function initFromStorage() {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(SETTINGS_STORAGE_KEY) : null;
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    const saved = parsed && typeof parsed.locale === 'string' ? parsed.locale : null;
+    if (!saved || !LOCALE_REGISTRY[saved]) return;
+    currentLocale = saved;
+    translations = LOCALE_REGISTRY[saved];
+  } catch { /* ignore */ }
+})();
 
 /**
  * Load a translation dictionary (typically from a JSON import).

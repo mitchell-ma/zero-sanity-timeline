@@ -418,7 +418,25 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "AUDIO_NOISE_BATK"
+    "id": "AUDIO_NOISE_BATK",
+    "descriptionParams": {
+      "atk_scale": 0.9,
+      "atk_scale2": 0.45,
+      "atb": 19,
+      "1-atk_scale": 0.09999999999999998,
+      "-atk_scale": -0.9,
+      "atk_scale-1": -0.09999999999999998,
+      "1-atk_scale2": 0.55,
+      "-atk_scale2": -0.45,
+      "atk_scale2-1": -0.55,
+      "1-atb": -18,
+      "-atb": -19,
+      "atb-1": 18,
+      "poise": 17,
+      "1-poise": -16,
+      "-poise": -17,
+      "poise-1": 16
+    }
   },
   "metadata": {
     "originId": "ESTELLA",

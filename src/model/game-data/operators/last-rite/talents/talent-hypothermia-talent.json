@@ -110,6 +110,16 @@
   ],
   "properties": {
     "id": "HYPOTHERMIA_TALENT",
+    "descriptionParams": {
+      "crystal_up": 0.04,
+      "duration": 15,
+      "1-crystal_up": 0.96,
+      "-crystal_up": -0.04,
+      "crystal_up-1": -0.96,
+      "1-duration": -14,
+      "-duration": -15,
+      "duration-1": 14
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

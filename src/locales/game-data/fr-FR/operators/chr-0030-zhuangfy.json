@@ -1,0 +1,46 @@
+{
+  "op.chr_0030_zhuangfy.event.name": {
+    "text": "Zhuang Fangyi",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Mantra de la séparation : le multiplicateur de DÉG passe à {atk_scale:0.00} fois sa valeur d'origine. Une fois le combat commencé, la première compétence de combat lancée par Zhuang Fangyi crée également 1 tranche-lame supplémentaire.\nLe tranche-lame supplémentaire ainsi généré peut excéder la limite de tranche-lames que la compétence de combat peut créer en un lancement.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.1.event.name": {
+    "text": "Quatre symboles de l'harmonie",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.2.event.description": {
+    "text": "Volonté +{Will:0}, DÉG de compétence de combat infligés +{NormalSkillDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.2.event.name": {
+    "text": "Précision des moindres détails",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.3.event.description": {
+    "text": "Renforce la compétence de combat Mantra de la séparation : après avoir consommé l'Électrification, la compétence de combat restaure {atb_return:0} PC. Durée de tranche-lame +{sword_duration:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.3.event.name": {
+    "text": "Intuition et réaction",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.4.event.description": {
+    "text": "Renforce l'ultime Tempête foudroyante : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.4.event.name": {
+    "text": "Sang-froid absolu",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.5.event.description": {
+    "text": "Lorsque Zhuang Fangyi est transformée en Empyréenne de la Vérité, les DÉG qu'elle inflige ignorent {100*ignore_pulse_resist:0} de la résistance électrique de l'ennemi.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0030_zhuangfy.potential.5.event.name": {
+    "text": "Tempête de transformation",
+    "dataStatus": "RECONCILED"
+  }
+}

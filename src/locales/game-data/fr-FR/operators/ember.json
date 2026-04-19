@@ -1,0 +1,78 @@
+{
+  "op.EMBER.event.name": {
+    "text": "Ember",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.1.event.description": {
+    "text": "Renforce le talent Enflammée avant l'assaut : effet de Protection +{extrashelter:0%}, toucher un ennemi prolonge sa durée de {extratime:0.0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.1.event.name": {
+    "text": "Fort nomade",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.2.event.description": {
+    "text": "Force +{Str:0}, Volonté +{Will:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.2.event.name": {
+    "text": "Vétérane endurcie",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.3.event.description": {
+    "text": "Renforce la compétence de combo Soutien du front : régénère les PV du coéquipier avec le pourcentage de PV le plus faible à hauteur de {extracure:0%} de l'effet de base.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.3.event.name": {
+    "text": "Front indomptable",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.4.event.description": {
+    "text": "Renforce l'ultime Serment ravivé : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.4.event.name": {
+    "text": "Braises éternelles",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.5.event.description": {
+    "text": "Renforce l'ultime Serment ravivé : l'effet de bouclier est multiplié par {extrashield:0.0} ; tant que le bouclier est actif, l'utilisateur obtient +{extraattack:0%} d'ATQ.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.5.event.name": {
+    "text": "Le serment d'acier",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FORWARD_MARCH.event.description": {
+    "text": "Un bond suivi d'un écrasement puissant qui inflige des DÉG thermiques, et applique Renversement et Déséquilibre à tous les ennemis dans une zone en éventail. Si Ember subit des DÉG d'ennemis pendant le lancement, l'écrasement inflige un plus grand Déséquilibre au contact.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FORWARD_MARCH.event.name": {
+    "text": "Marche en avant",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FRONTLINE_SUPPORT.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsque l'opérateur que vous contrôlez est attaqué.\nBondit sur l'ennemi ciblé, et libère un puissant écrasement qui inflige des DÉG physiques et le renverse tout en restaurant des PV de l'opérateur contrôlé. Le trait Volonté augmente la quantité de PV soignés.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FRONTLINE_SUPPORT.event.name": {
+    "text": "Soutien du front",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.RE_IGNITED_OATH.event.description": {
+    "text": "Frappe le sol pour infliger des DÉG thermiques aux ennemis à proximité tout en octroyant à tous les coéquipiers un bouclier qui dépend des PV max. d'Ember.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.RE_IGNITED_OATH.event.name": {
+    "text": "Serment ravivé",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.SWORD_ART_OF_ASSAULT_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.SWORD_ART_OF_ASSAULT_BATK.event.name": {
+    "text": "Épée des arts offensifs",
+    "dataStatus": "RECONCILED"
+  }
+}

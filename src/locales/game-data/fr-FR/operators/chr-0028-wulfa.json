@@ -1,0 +1,46 @@
+{
+  "op.chr_0028_wulfa.event.name": {
+    "text": "Rossi",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Ombre pourpre et la compétence de combo Moment d'ombre ardente : les multiplicateurs de DÉG de ces compétences passent à {atk_scale_3:0.00} fois leur valeur d'origine.\nL'Ambre du loup de la compétence de combat permet également de récupérer {atb_return:0} PC après avoir touché l'ennemi.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.1.event.name": {
+    "text": "Source d'admiration",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.2.event.description": {
+    "text": "Agilité +{Agi:0}, taux de coups critiques +{CriticalRate:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.2.event.name": {
+    "text": "Proche de la perfection",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.3.event.description": {
+    "text": "Renforce le talent Sang bouillonnant : une fois déclenché, il octroie un multiplicateur de DÉG de base +{bleed_critical_damage_scale:0%} et soigne à hauteur de + [Intelligence × {heal_scale:0.00}] PV.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.3.event.name": {
+    "text": "Devoirs concrets",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.4.event.description": {
+    "text": "Renforce l'ultime Embuscade « Griffe acérée » : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.4.event.name": {
+    "text": "Souhait innocent",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.5.event.description": {
+    "text": "Renforce l'ultime Embuscade « Griffe acérée » : les multiplicateurs de DÉG passent à {potential_5_damage_scale:0.0} fois leur valeur d'origine et les DÉG critiques infligés augmentent de {potential_5_critical_damage:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.chr_0028_wulfa.potential.5.event.name": {
+    "text": "Destination légendaire",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -86,6 +86,13 @@ export function getAllGameDataEntries(locale: string): Readonly<GameDataLocaleDi
 
 // ── Key builders — produce the dot-delimited entity prefix ─────────────────
 
+/**
+ * Reserved `weaponId` used by generic weapon skills (stat boosts like
+ * `STRENGTH_BOOST_S`) that are shared across weapons rather than attached to
+ * a single one. Keeps the LocaleKey.weaponSkill surface uniform.
+ */
+export const GENERIC_WEAPON_ID = 'GENERIC';
+
 export const LocaleKey = {
   operator: (operatorId: string) => `op.${operatorId}`,
   operatorSkill: (operatorId: string, skillId: string) => `op.${operatorId}.skill.${skillId}`,
@@ -93,6 +100,8 @@ export const LocaleKey = {
   operatorStatus: (operatorId: string, statusId: string) => `op.${operatorId}.status.${statusId}`,
   operatorPotential: (operatorId: string, level: number) => `op.${operatorId}.potential.${level}`,
   weapon: (weaponId: string) => `weapon.${weaponId}`,
+  weaponSkill: (weaponId: string, skillId: string) => `weapon.${weaponId}.skill.${skillId}`,
+  weaponStatus: (weaponId: string, statusId: string) => `weapon.${weaponId}.status.${statusId}`,
   gear: (gearId: string) => `gear.${gearId}`,
   gearPiece: (gearId: string, pieceId: string) => `gear.${gearId}.piece.${pieceId}`,
   gearStatus: (gearId: string, statusId: string) => `gear.${gearId}.status.${statusId}`,
@@ -121,6 +130,19 @@ export function resolveEventDescription(
   params?: Record<string, string | number>,
 ): string {
   return t(`${entityPrefix}.${EVENT_DESCRIPTION}`, params);
+}
+
+/**
+ * Like `resolveEventDescription` but returns `undefined` when the description
+ * is not defined in any locale (instead of returning the raw key). Use when
+ * the caller treats an absent description as meaningful (e.g. potential
+ * descriptions that are optional).
+ */
+export function resolveOptionalEventDescription(
+  entityPrefix: string,
+  params?: Record<string, string | number>,
+): string | undefined {
+  return tOptional(`${entityPrefix}.${EVENT_DESCRIPTION}`, params);
 }
 
 /** Segment-tier name. Returns `undefined` when not defined in any locale. */

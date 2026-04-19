@@ -32,6 +32,32 @@
   ],
   "properties": {
     "id": "RE_IGNITION_TALENT",
+    "descriptionParams": {
+      "hp_threshold": 0.4,
+      "heal_max_hp": 0.05,
+      "shelter": 0.9,
+      "duration": 8,
+      "cd": 120,
+      "shelter_real": 0.1,
+      "1-hp_threshold": 0.6,
+      "-hp_threshold": -0.4,
+      "hp_threshold-1": -0.6,
+      "1-heal_max_hp": 0.95,
+      "-heal_max_hp": -0.05,
+      "heal_max_hp-1": -0.95,
+      "1-shelter": 0.09999999999999998,
+      "-shelter": -0.9,
+      "shelter-1": -0.09999999999999998,
+      "1-duration": -7,
+      "-duration": -8,
+      "duration-1": 7,
+      "1-cd": -119,
+      "-cd": -120,
+      "cd-1": 119,
+      "1-shelter_real": 0.9,
+      "-shelter_real": -0.1,
+      "shelter_real-1": -0.9
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

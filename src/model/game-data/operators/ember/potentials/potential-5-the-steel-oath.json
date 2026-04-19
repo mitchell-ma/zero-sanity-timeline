@@ -2,6 +2,20 @@
   "properties": {
     "id": "EMBER_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "extrashield": 1.2,
+      "potential_5": 1,
+      "extraattack": 0.1,
+      "1-extrashield": -0.19999999999999996,
+      "-extrashield": -1.2,
+      "extrashield-1": 0.19999999999999996,
+      "1-potential_5": 0,
+      "-potential_5": -1,
+      "potential_5-1": 0,
+      "1-extraattack": 0.9,
+      "-extraattack": -0.1,
+      "extraattack-1": -0.9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

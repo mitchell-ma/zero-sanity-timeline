@@ -3,7 +3,25 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
-    "id": "EXPLODING_BLITZ"
+    "id": "EXPLODING_BLITZ",
+    "descriptionParams": {
+      "atk_scale1": 3.5,
+      "atk_scale2": 5.5,
+      "poise1": 10,
+      "poise2": 10,
+      "1-atk_scale1": -2.5,
+      "-atk_scale1": -3.5,
+      "atk_scale1-1": 2.5,
+      "1-atk_scale2": -4.5,
+      "-atk_scale2": -5.5,
+      "atk_scale2-1": 4.5,
+      "1-poise1": -9,
+      "-poise1": -10,
+      "poise1-1": 9,
+      "1-poise2": -9,
+      "-poise2": -10,
+      "poise2-1": 9
+    }
   },
   "segments": [
     {

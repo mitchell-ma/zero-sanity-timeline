@@ -3,6 +3,18 @@
     "text": "Chen Qianyu",
     "dataStatus": "RECONCILED"
   },
+  "op.CHEN_QIANYU.potential.1.event.description": {
+    "text": "DMG Dealt +20% to enemies below 50% HP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.1.event.name": {
+    "text": "Shadowless (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.1.segment.0.name": {
+    "text": "Shadowless (P1)",
+    "dataStatus": "RECONCILED"
+  },
   "op.CHEN_QIANYU.potential.2.event.description": {
     "text": "Agility +15, Physical DMG Dealt +8%.",
     "dataStatus": "RECONCILED"

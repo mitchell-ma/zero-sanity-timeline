@@ -67,6 +67,20 @@
   ],
   "properties": {
     "id": "FORCE_OF_NATURE_TALENT",
+    "descriptionParams": {
+      "enhance_rate": 0.02,
+      "duration": 5,
+      "base_rate": 0.18,
+      "1-enhance_rate": 0.98,
+      "-enhance_rate": -0.02,
+      "enhance_rate-1": -0.98,
+      "1-duration": -4,
+      "-duration": -5,
+      "duration-1": 4,
+      "1-base_rate": 0.8200000000000001,
+      "-base_rate": -0.18,
+      "base_rate-1": -0.8200000000000001
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

@@ -621,7 +621,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "SOARING_BREAK_BATK"
+    "id": "SOARING_BREAK_BATK",
+    "descriptionParams": {
+      "atk_scale": 0.9,
+      "atb": 18,
+      "1-atk_scale": 0.09999999999999998,
+      "-atk_scale": -0.9,
+      "atk_scale-1": -0.09999999999999998,
+      "1-atb": -17,
+      "-atb": -18,
+      "atb-1": 17,
+      "poise": 16,
+      "1-poise": -15,
+      "-poise": -16,
+      "poise-1": 15
+    }
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

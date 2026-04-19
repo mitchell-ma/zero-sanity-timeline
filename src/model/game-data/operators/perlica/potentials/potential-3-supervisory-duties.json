@@ -2,6 +2,20 @@
   "properties": {
     "id": "PERLICA_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "atk_up": 0.2,
+      "atk_duration": 5,
+      "max_stack": 2,
+      "1-atk_up": 0.8,
+      "-atk_up": -0.2,
+      "atk_up-1": -0.8,
+      "1-atk_duration": -4,
+      "-atk_duration": -5,
+      "atk_duration-1": 4,
+      "1-max_stack": -1,
+      "-max_stack": -2,
+      "max_stack-1": 1
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

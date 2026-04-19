@@ -1,7 +1,17 @@
 {
   "properties": {
     "id": "WHEN_THE_BANNER_FLUTTERS",
-    "name": "When the Banner Flutters (P3)",
+    "level": 3,
+    "descriptionParams": {
+      "atb_gain": 60,
+      "max_stack_owner": 5,
+      "1-atb_gain": -59,
+      "-atb_gain": -60,
+      "atb_gain-1": 59,
+      "1-max_stack_owner": -4,
+      "-max_stack_owner": -5,
+      "max_stack_owner-1": 4
+    },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -19,8 +29,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent The Living Banner improved: Amount of SP recovery needed to gain Fervent Morale is reduced to 60. Max Fervent Morale stacks on self +2."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "POGRANICHNIK",

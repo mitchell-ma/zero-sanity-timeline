@@ -2,6 +2,28 @@
   "properties": {
     "id": "TANGTANG_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "potential3": 1,
+      "rate_spellvulnerable": 0.05,
+      "rate_spellvulnerable_02": 0.05,
+      "atk_scale_1": 1.1,
+      "normalskill_atk_scale01": 1.1,
+      "1-potential3": 0,
+      "-potential3": -1,
+      "potential3-1": 0,
+      "1-rate_spellvulnerable": 0.95,
+      "-rate_spellvulnerable": -0.05,
+      "rate_spellvulnerable-1": -0.95,
+      "1-rate_spellvulnerable_02": 0.95,
+      "-rate_spellvulnerable_02": -0.05,
+      "rate_spellvulnerable_02-1": -0.95,
+      "1-atk_scale_1": -0.10000000000000009,
+      "-atk_scale_1": -1.1,
+      "atk_scale_1-1": 0.10000000000000009,
+      "1-normalskill_atk_scale01": -0.10000000000000009,
+      "-normalskill_atk_scale01": -1.1,
+      "normalskill_atk_scale01-1": 0.10000000000000009
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

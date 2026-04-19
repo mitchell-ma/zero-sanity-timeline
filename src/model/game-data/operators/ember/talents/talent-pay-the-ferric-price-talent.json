@@ -66,6 +66,16 @@
   ],
   "properties": {
     "id": "PAY_THE_FERRIC_PRICE",
+    "descriptionParams": {
+      "attack": 0.09,
+      "duration": 7,
+      "1-attack": 0.91,
+      "-attack": -0.09,
+      "attack-1": -0.91,
+      "1-duration": -6,
+      "-duration": -7,
+      "duration-1": 6
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

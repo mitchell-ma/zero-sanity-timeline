@@ -3,7 +3,25 @@
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
-    "id": "THUNDERLANCE_STRIKE"
+    "id": "THUNDERLANCE_STRIKE",
+    "descriptionParams": {
+      "atk_scale": 3.8,
+      "poise": 10,
+      "usp": 10,
+      "lance_duration": 30,
+      "1-atk_scale": -2.8,
+      "-atk_scale": -3.8,
+      "atk_scale-1": 2.8,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-lance_duration": -29,
+      "-lance_duration": -30,
+      "lance_duration-1": 29
+    }
   },
   "segments": [
     {

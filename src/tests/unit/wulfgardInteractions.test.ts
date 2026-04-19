@@ -655,11 +655,6 @@ describe('G. Potentials', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('H. Operator Identity & Metadata', () => {
-  test('H1: Operator type and name', () => {
-    expect(mockJson.id).toBe('WULFGARD');
-    expect(mockJson.name).toBe('Wulfgard');
-  });
-
   test('H2: 5-star Caster, Heat element, Handcannon weapon', () => {
     expect(mockJson.operatorRarity).toBe(5);
     expect(mockJson.operatorClassType).toBe('CASTER');

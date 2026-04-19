@@ -3,7 +3,29 @@
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "NATURE",
-    "id": "DOLLY_RUSH"
+    "id": "DOLLY_RUSH",
+    "descriptionParams": {
+      "atk_scale": 3.2,
+      "poise": 10,
+      "rate_vul_base": 0.2,
+      "duration_vul": 30,
+      "rate_vul_max": 0.4,
+      "1-atk_scale": -2.2,
+      "-atk_scale": -3.2,
+      "atk_scale-1": 2.2,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-rate_vul_base": 0.8,
+      "-rate_vul_base": -0.2,
+      "rate_vul_base-1": -0.8,
+      "1-duration_vul": -29,
+      "-duration_vul": -30,
+      "duration_vul-1": 29,
+      "1-rate_vul_max": 0.6,
+      "-rate_vul_max": -0.4,
+      "rate_vul_max-1": -0.6
+    }
   },
   "metadata": {
     "originId": "ARDELIA",

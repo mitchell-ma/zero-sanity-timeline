@@ -2,6 +2,12 @@
   "properties": {
     "id": "AVYWENNA_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "potential_2": 20,
+      "1-potential_2": -19,
+      "-potential_2": -20,
+      "potential_2-1": 19
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

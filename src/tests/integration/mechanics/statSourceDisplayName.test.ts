@@ -22,7 +22,7 @@ import { ENEMY_ID, REACTION_COLUMNS } from '../../../model/channels';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, damageRowAtOrAfter, eventsOnColumn,
-  gearLoadout, placeSkill,
+  gearLoadout, placeSkill, statusDisplayName,
 } from '../gears/helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -79,8 +79,9 @@ describe('Stat source label resolves to the status display name', () => {
 
     // Exact match: the source label is the status's display NAME, not its ID.
     // (display name = "Hot Work (Heat)" ; id = "HOT_WORK_HEAT")
-    expect(HEAT_BUFF.name).not.toBe(HEAT_BUFF.id);
-    const hasDisplayName = sources!.some(s => s.source === HEAT_BUFF.name);
+    const displayName = statusDisplayName(HEAT_BUFF.id);
+    expect(displayName).not.toBe(HEAT_BUFF.id);
+    const hasDisplayName = sources!.some(s => s.source === displayName);
     expect(hasDisplayName).toBe(true);
 
     // Negative: no source entry leaks the raw ID.

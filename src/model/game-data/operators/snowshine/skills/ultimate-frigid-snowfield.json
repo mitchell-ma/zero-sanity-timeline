@@ -3,7 +3,33 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "CRYO",
-    "id": "FRIGID_SNOWFIELD"
+    "id": "FRIGID_SNOWFIELD",
+    "descriptionParams": {
+      "atk_scale": 4.5,
+      "atk_scale_loop": 0.65,
+      "poise": 20,
+      "duration": 5,
+      "interval": 0.5,
+      "forst_allow_count": 2,
+      "1-atk_scale": -3.5,
+      "-atk_scale": -4.5,
+      "atk_scale-1": 3.5,
+      "1-atk_scale_loop": 0.35,
+      "-atk_scale_loop": -0.65,
+      "atk_scale_loop-1": -0.35,
+      "1-poise": -19,
+      "-poise": -20,
+      "poise-1": 19,
+      "1-duration": -4,
+      "-duration": -5,
+      "duration-1": 4,
+      "1-interval": 0.5,
+      "-interval": -0.5,
+      "interval-1": -0.5,
+      "1-forst_allow_count": -1,
+      "-forst_allow_count": -2,
+      "forst_allow_count-1": 1
+    }
   },
   "segments": [
     {

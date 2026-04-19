@@ -7,6 +7,7 @@ import {
 } from './timeline';
 import { ContextMenuState } from '../consts/viewTypes';
 import { VERTICAL_AXIS, type AxisMap } from './axisMap';
+import { t } from '../locales/locale';
 
 interface TouchDragState {
   touchId: number;
@@ -133,9 +134,9 @@ export function useTouchHandlers(opts: {
                 x: origin.x,
                 y: origin.y,
                 items: [
-                  { label: 'Edit Event', action: () => { /* caller handles via context menu */ } },
+                  { label: t('ctx.editEvent'), action: () => { /* caller handles via context menu */ } },
                   { separator: true },
-                  { label: 'Remove Event', action: () => {}, danger: true },
+                  { label: t('ctx.removeEvent'), action: () => {}, danger: true },
                 ],
               });
             }

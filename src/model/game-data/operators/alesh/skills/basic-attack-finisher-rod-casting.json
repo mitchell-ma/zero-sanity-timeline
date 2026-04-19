@@ -7,7 +7,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "PHYSICAL",
-    "id": "ROD_CASTING_FINISHER"
+    "id": "ROD_CASTING_FINISHER",
+    "descriptionParams": {
+      "atk_scale_display": 9,
+      "atk_scale1": 1.8,
+      "atk_scale2": 7.2,
+      "1-atk_scale_display": -8,
+      "-atk_scale_display": -9,
+      "atk_scale_display-1": 8,
+      "1-atk_scale1": -0.8,
+      "-atk_scale1": -1.8,
+      "atk_scale1-1": 0.8,
+      "1-atk_scale2": -6.2,
+      "-atk_scale2": -7.2,
+      "atk_scale2-1": 6.2
+    }
   },
   "metadata": {
     "originId": "ALESH",

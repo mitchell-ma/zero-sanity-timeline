@@ -4,6 +4,28 @@
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
     "id": "FRONTLINE_SUPPORT",
+    "descriptionParams": {
+      "atk_scale": 2.3,
+      "heal_base": 675,
+      "usp": 10,
+      "poise": 10,
+      "will_additive": 1.58,
+      "1-atk_scale": -1.2999999999999998,
+      "-atk_scale": -2.3,
+      "atk_scale-1": 1.2999999999999998,
+      "1-heal_base": -674,
+      "-heal_base": -675,
+      "heal_base-1": 674,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-will_additive": -0.5800000000000001,
+      "-will_additive": -1.58,
+      "will_additive-1": 0.5800000000000001
+    },
     "suppliedParameters": {
       "VARY_BY": [
         {

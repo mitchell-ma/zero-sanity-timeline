@@ -7,7 +7,13 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "PHYSICAL",
-    "id": "DESTRUCTIVE_SEQUENCE_FINISHER"
+    "id": "DESTRUCTIVE_SEQUENCE_FINISHER",
+    "descriptionParams": {
+      "atk_scale": 9,
+      "1-atk_scale": -8,
+      "-atk_scale": -9,
+      "atk_scale-1": 8
+    }
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

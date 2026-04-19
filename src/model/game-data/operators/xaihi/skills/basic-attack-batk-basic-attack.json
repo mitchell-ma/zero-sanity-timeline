@@ -505,7 +505,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "COOLDOWN_BATK"
+    "id": "COOLDOWN_BATK",
+    "descriptionParams": {
+      "atk_scale": 0.37,
+      "poise": 15,
+      "atb": 0,
+      "1-atk_scale": 0.63,
+      "-atk_scale": -0.37,
+      "atk_scale-1": -0.63,
+      "1-poise": -14,
+      "-poise": -15,
+      "poise-1": 14,
+      "1-atb": 1,
+      "-atb": 0,
+      "atb-1": -1
+    }
   },
   "metadata": {
     "originId": "XAIHI",

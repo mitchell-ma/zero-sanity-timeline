@@ -64,6 +64,28 @@
   ],
   "properties": {
     "id": "THE_LIVING_BANNER_TALENT",
+    "descriptionParams": {
+      "atb_gain": 80,
+      "duration": 20,
+      "atk_up": 0.08,
+      "physpell_up": 8,
+      "max_stack_owner": 3,
+      "1-atb_gain": -79,
+      "-atb_gain": -80,
+      "atb_gain-1": 79,
+      "1-duration": -19,
+      "-duration": -20,
+      "duration-1": 19,
+      "1-atk_up": 0.92,
+      "-atk_up": -0.08,
+      "atk_up-1": -0.92,
+      "1-physpell_up": -7,
+      "-physpell_up": -8,
+      "physpell_up-1": 7,
+      "1-max_stack_owner": -2,
+      "-max_stack_owner": -3,
+      "max_stack_owner-1": 2
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

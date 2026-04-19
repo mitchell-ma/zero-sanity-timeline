@@ -24,7 +24,7 @@ import { ENEMY_ID, REACTION_COLUMNS } from '../../../model/channels';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, breakdownFor, damageRowAtOrAfter, eventsOnColumn, findEntry,
-  gearLoadout, placeSkill, statContributionFromSource,
+  gearLoadout, placeSkill, statContributionFromSource, statusDisplayName
 } from './helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -102,7 +102,7 @@ describe('Hot Work — gear set E2E', () => {
       expect(row).toBeDefined();
       expect(row!.params!.sub!.element).toBe(ElementType.HEAT);
 
-      const contribution = statContributionFromSource(row, StatType.HEAT_DAMAGE_BONUS, HEAT_BUFF.name);
+      const contribution = statContributionFromSource(row, StatType.HEAT_DAMAGE_BONUS, statusDisplayName(HEAT_BUFF.id));
       expect(contribution).toBeCloseTo(0.5, 4);
 
       const entries = breakdownFor(row);
@@ -110,7 +110,7 @@ describe('Hot Work — gear set E2E', () => {
       expect(heatEntry).toBeDefined();
       expect(heatEntry!.value).toBeGreaterThanOrEqual(0.5 - 1e-6);
       const sources = heatEntry!.subEntries ?? [];
-      const buffSource = sources.find(s => s.label.toLowerCase().includes(HEAT_BUFF.name.toLowerCase()));
+      const buffSource = sources.find(s => s.label.toLowerCase().includes(statusDisplayName(HEAT_BUFF.id).toLowerCase()));
       expect(buffSource).toBeDefined();
       expect(buffSource!.value).toBeCloseTo(0.5, 4);
     });

@@ -2,6 +2,28 @@
   "properties": {
     "id": "YVONNE_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "has_potential1": 1,
+      "radius": 5,
+      "interval": 0.5,
+      "maxcnt": 6,
+      "usp_extra": 25,
+      "1-has_potential1": 0,
+      "-has_potential1": -1,
+      "has_potential1-1": 0,
+      "1-radius": -4,
+      "-radius": -5,
+      "radius-1": 4,
+      "1-interval": 0.5,
+      "-interval": -0.5,
+      "interval-1": -0.5,
+      "1-maxcnt": -5,
+      "-maxcnt": -6,
+      "maxcnt-1": 5,
+      "1-usp_extra": -24,
+      "-usp_extra": -25,
+      "usp_extra-1": 24
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

@@ -2,6 +2,24 @@
   "properties": {
     "id": "DA_PAN_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "stack": 1,
+      "talent_1_stack": 1,
+      "duration": 10,
+      "talent_1_duration": 10,
+      "1-stack": 0,
+      "-stack": -1,
+      "stack-1": 0,
+      "1-talent_1_stack": 0,
+      "-talent_1_stack": -1,
+      "talent_1_stack-1": 0,
+      "1-duration": -9,
+      "-duration": -10,
+      "duration-1": 9,
+      "1-talent_1_duration": -9,
+      "-talent_1_duration": -10,
+      "talent_1_duration-1": 9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

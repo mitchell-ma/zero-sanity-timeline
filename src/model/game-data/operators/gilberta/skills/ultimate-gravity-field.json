@@ -3,7 +3,37 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "NATURE",
-    "id": "GRAVITY_FIELD"
+    "id": "GRAVITY_FIELD",
+    "descriptionParams": {
+      "atk_scale": 7.5,
+      "poise": 20,
+      "spell_vulnerable_rate": 0.3,
+      "move_speed_scalar": 0.8,
+      "duration": 5,
+      "spell_vulnerable_perstack": 0.1,
+      "spell_vulnerable_4stack": 0.42,
+      "1-atk_scale": -6.5,
+      "-atk_scale": -7.5,
+      "atk_scale-1": 6.5,
+      "1-poise": -19,
+      "-poise": -20,
+      "poise-1": 19,
+      "1-spell_vulnerable_rate": 0.7,
+      "-spell_vulnerable_rate": -0.3,
+      "spell_vulnerable_rate-1": -0.7,
+      "1-move_speed_scalar": 0.19999999999999996,
+      "-move_speed_scalar": -0.8,
+      "move_speed_scalar-1": -0.19999999999999996,
+      "1-duration": -4,
+      "-duration": -5,
+      "duration-1": 4,
+      "1-spell_vulnerable_perstack": 0.9,
+      "-spell_vulnerable_perstack": -0.1,
+      "spell_vulnerable_perstack-1": -0.9,
+      "1-spell_vulnerable_4stack": 0.5800000000000001,
+      "-spell_vulnerable_4stack": -0.42,
+      "spell_vulnerable_4stack-1": -0.5800000000000001
+    }
   },
   "segments": [
     {

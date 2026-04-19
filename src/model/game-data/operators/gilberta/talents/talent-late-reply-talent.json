@@ -1,6 +1,16 @@
 {
   "properties": {
     "id": "LATE_REPLY_TALENT",
+    "descriptionParams": {
+      "heal_scale": 0.9,
+      "heal_const": 108,
+      "1-heal_scale": 0.09999999999999998,
+      "-heal_scale": -0.9,
+      "heal_scale-1": -0.09999999999999998,
+      "1-heal_const": -107,
+      "-heal_const": -108,
+      "heal_const-1": 107
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

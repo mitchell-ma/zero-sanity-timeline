@@ -253,7 +253,21 @@
   "properties": {
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
-    "id": "SMITING_TEMPEST"
+    "id": "SMITING_TEMPEST",
+    "descriptionParams": {
+      "duration": 25,
+      "combo_cd_rate": 4,
+      "duration_extra": 1,
+      "1-duration": -24,
+      "-duration": -25,
+      "duration-1": 24,
+      "1-combo_cd_rate": -3,
+      "-combo_cd_rate": -4,
+      "combo_cd_rate-1": 3,
+      "1-duration_extra": 0,
+      "-duration_extra": -1,
+      "duration_extra-1": 0
+    }
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",

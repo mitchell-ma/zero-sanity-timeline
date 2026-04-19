@@ -2,6 +2,28 @@
   "properties": {
     "id": "TANGTANG_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "potential5": 1,
+      "atk_scale_1": 1.15,
+      "atk_scale_2": 1.15,
+      "atk_scale_3": 1.15,
+      "dmg_up_water_ult": 0.8,
+      "1-potential5": 0,
+      "-potential5": -1,
+      "potential5-1": 0,
+      "1-atk_scale_1": -0.1499999999999999,
+      "-atk_scale_1": -1.15,
+      "atk_scale_1-1": 0.1499999999999999,
+      "1-atk_scale_2": -0.1499999999999999,
+      "-atk_scale_2": -1.15,
+      "atk_scale_2-1": 0.1499999999999999,
+      "1-atk_scale_3": -0.1499999999999999,
+      "-atk_scale_3": -1.15,
+      "atk_scale_3-1": 0.1499999999999999,
+      "1-dmg_up_water_ult": 0.19999999999999996,
+      "-dmg_up_water_ult": -0.8,
+      "dmg_up_water_ult-1": -0.19999999999999996
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

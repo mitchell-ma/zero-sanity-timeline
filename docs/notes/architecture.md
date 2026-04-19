@@ -190,12 +190,44 @@ Each `MiniTimeline` column carries:
 - `eventVariants` for skills with enhanced/empowered versions
 - `microColumns` for infliction sub-columns (by element)
 
+## Localization
+
+User-facing strings live in per-area locale bundles under `src/locales/game-data/<locale>/`, keyed by the dotted `LocaleKey` format from `src/locales/gameDataLocale.ts`. Game-data JSON carries IDs and structural data only — no `name` / `description` fields (the validator `checkIdAndName` rejects them).
+
+```
+src/locales/
+  locale.ts               t() / tOptional() / registerLocale() — flat-dict lookup
+                          with {param:format} interpolation + en-US fallback
+  gameDataLocale.ts       LocaleKey builders + resolveEventName /
+                          resolveOptionalEventDescription / resolveSegmentName /
+                          resolveFrameName. Auto-ingests every file under
+                          game-data/<locale>/ at module load via require.context.
+  en-US.json              UI bundle (app chrome, buttons, labels)
+  fr-FR.json              UI bundle (may be partial — falls through to en-US)
+  game-data/
+    en-US/
+      operators/*.json    { "op.X.event.name": { text, dataStatus } }
+      weapons/*.json
+      gears/*.json
+      consumables.json
+      generic.json
+      weapons-generic.json
+    fr-FR/                same shape, Warfarin-ingested per operator
+```
+
+**Template tokens** — `{name}`, `{name:0}` (int), `{name:0%}` (percent), `{name:0s}` (seconds). Values supplied at render time via `params` — potentials / skills / talents carry their blackboard values as `properties.descriptionParams` on the game-data JSON (one numeric map serves every locale).
+
+**Warfarin ingest** — `npx tsx src/model/utils/parsers/parseWarfarinOperator.ts <slug> [--locale=en|fr]` writes the locale bundle and, for `en`, also patches `properties.descriptionParams` on potential files. `scripts/patch_skill_talent_params.py` does the same extraction for skill + talent files. `VERIFIED` locale entries are preserved on re-ingest; `RECONCILED` are overwritten.
+
+**Assets** resolve by `id.toLowerCase()` → `<filename>_icon.png` / `_banner.webp` etc. No name-based fallback; if a file's name diverges from the id convention, rename the asset (not the lookup code).
+
 ## Invariants
 
 1. **Segments required** — All TimelineEvents must have a `segments` array. No legacy `activationDuration`/`activeDuration`/`cooldownDuration` fields.
 2. **No batch processing** — All event transformations happen through DerivedEventController + priority queue, never bulk iteration passes.
 3. **Column IDs are enums** — Use `SKILL_COLUMNS.BASIC`, `REACTION_COLUMNS.COMBUSTION`, etc. Never string literals.
 4. **Models are source of truth** — Domain logic (valid combinations, allowable values, visibility rules) lives in model/consts, never in views or controllers.
+5. **Strings are NOT on game-data JSON** — Every `name` / `description` has moved to `src/locales/game-data/<locale>/`. The validator rejects them; asset paths hard-wired to `id`.
 5. **Time-stop extension** — Game-time durations extended by foreign time-stops; ANIMATION and REAL_TIME segments are never extended.
 6. **Combo chaining** — Overlapping combo animations truncated at the newer combo's start frame.
 7. **Stacking semantics** — RESET clears column, MERGE subsumes older, deque evicts oldest at cap.

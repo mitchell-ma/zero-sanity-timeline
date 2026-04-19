@@ -499,7 +499,25 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "ROD_CASTING_BATK"
+    "id": "ROD_CASTING_BATK",
+    "descriptionParams": {
+      "atk_scale": 0.62,
+      "atb": 19,
+      "1-atk_scale": 0.38,
+      "-atk_scale": -0.62,
+      "atk_scale-1": -0.38,
+      "1-atb": -18,
+      "-atb": -19,
+      "atb-1": 18,
+      "atk_scale_display": 1.24,
+      "poise": 17,
+      "1-atk_scale_display": -0.24,
+      "-atk_scale_display": -1.24,
+      "atk_scale_display-1": 0.24,
+      "1-poise": -16,
+      "-poise": -17,
+      "poise-1": 16
+    }
   },
   "metadata": {
     "originId": "ALESH",

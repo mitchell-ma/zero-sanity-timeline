@@ -1,0 +1,78 @@
+{
+  "op.XAIHI.event.name": {
+    "text": "Xaihi",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.1.event.description": {
+    "text": "L'amplification des Arts octroyée par le cristal auxiliaire augmente de {atk_up:0%} supplémentaires.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.1.event.name": {
+    "text": "Exécution leste",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.2.event.description": {
+    "text": "Renforce l'ultime Dépassement de pile : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.2.event.name": {
+    "text": "Agrégation de liens",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.3.event.description": {
+    "text": "Renforce la compétence de combo Mise à l'épreuve : quand elle touche l'ennemi, l'attaque enchaîne 1 fois et touche 1 cible supplémentaire à proximité.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.3.event.name": {
+    "text": "Nœud cartographique",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.4.event.description": {
+    "text": "Intelligence +{Wisd:0}, efficacité des soins +{HealOutputIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.4.event.name": {
+    "text": "Publication en niveaux de gris",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.5.event.description": {
+    "text": "Renforce l'ultime Dépassement de pile : l'effet d'amplification est multiplié par {atk_up:0.0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.5.event.name": {
+    "text": "Récurrence contrôlée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.BASIC_ATTACK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 5 séquences qui inflige des DÉG cryogéniques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG cryogéniques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG cryogéniques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.BASIC_ATTACK.event.name": {
+    "text": "Refroidissement",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.DISTRIBUTED_DOS.event.description": {
+    "text": "Invoque un cristal auxiliaire qui tourne autour de l'opérateur contrôlé pendant un moment. Lorsque l'opérateur contrôlé exécute un Coup final sur l'ennemi, le cristal auxiliaire lui permet de récupérer des PV. Cet effet peut se déclencher 2 fois. Le trait Volonté augmente la quantité de PV soignés. Lorsque les PV de l'opérateur contrôlé sont déjà au max. lors du déclenchement de l'effet de régénération de PV, celui-ci se voit également octroyer une amplification des Arts temporaire. L'effet ne peut pas être cumulé.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.DISTRIBUTED_DOS.event.name": {
+    "text": "Déni de service",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STACK_OVERFLOW.event.description": {
+    "text": "Octroie une amplification cryogénique et une amplification naturelle à l'équipe tout entière. Le trait Intelligence augmente l'effet de l'amplification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STACK_OVERFLOW.event.name": {
+    "text": "Dépassement de pile",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STRESS_TESTING.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsque le cristal auxiliaire a épuisé ses soins. Charge rapidement le cristal auxiliaire et le projette sur l'ennemi pour lui infliger des DÉG cryogéniques et appliquer une altération cryogénique.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STRESS_TESTING.event.name": {
+    "text": "Mise à l'épreuve",
+    "dataStatus": "RECONCILED"
+  }
+}

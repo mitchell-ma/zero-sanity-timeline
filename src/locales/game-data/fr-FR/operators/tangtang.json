@@ -1,0 +1,78 @@
+{
+  "op.TANGTANG.event.name": {
+    "text": "Tangtang",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.1.event.description": {
+    "text": "Renforce la compétence de combo RIVIÈRE, VIENS À MOI ! : le multiplicateur de DÉG est multiplié par {atk_scale:0.0} et le temps de recharge est désormais de {coolDown:0} s.\nRenforce la compétence de combat JE SURFE SUR LA VAAAGUE ! : pour chaque tourbillon consommé et transformé en trombe, restaure {atb_return:0} PC supplémentaires.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.1.event.name": {
+    "text": "Réserve secrète",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.2.event.description": {
+    "text": "Agilité +{Agi:0}, +{CrystDamageIncrease:0%} de DÉG cryogéniques infligés.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.2.event.name": {
+    "text": "Fille de la rivière",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.3.event.description": {
+    "text": "Renforce la compétence de combat JE SURFE SUR LA VAAAGUE ! : le multiplicateur de DÉG passe à {atk_scale_1:0.0} fois sa valeur d'origine. Lors de la création de plusieurs trombes, l'effet de sensibilité aux Arts augmente de {rate_spellvulnerable_02:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.3.event.name": {
+    "text": "Aura de cheffe",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.4.event.description": {
+    "text": "Renforce l'ultime LA CHEFFE TE VOIT ! : coût de l'énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.4.event.name": {
+    "text": "Méditation de Qingbo",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.5.event.description": {
+    "text": "Renforce l'ultime LA CHEFFE TE VOIT ! : le multiplicateur de DÉG passe à {atk_scale_1:0.00} fois sa valeur d'origine. Amélioration du talent Héraut des émeutes : les dégâts des trombes infligés par l'ultime LA CHEFFE TE VOIT ! augmentent de {dmg_up_water_ult:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.5.event.name": {
+    "text": "Regard surnaturel de cheffe",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.BASIC_ATTACK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 5 séquences qui inflige des DÉG cryogéniques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG cryogéniques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG cryogéniques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.BASIC_ATTACK.event.name": {
+    "text": "TU NE VAS PAS T'EN REMETTRE !",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.BATTLE.event.description": {
+    "text": "Tangtang bondit hors de l'eau et tire à bout portant pour infliger des DÉG cryogéniques à l'ennemi et créer une trombe.\nLancer la compétence de combat consomme aussi tous les tourbillons à proximité pour créer d'autres trombes et restaure quelques PC en fonction du nombre de trombes créées.\nTrombe : applique 1 cumul d'altération cryogénique aux ennemis à portée, et inflige des DÉG cryogéniques continus. Si la compétence de combat crée plusieurs trombes, ces dernières appliquent aussi une sensibilité aux Arts aux ennemis (mais pas d'autre cumul d'altération cryogénique).\nLes DÉG infligés par la trombe sont considérés comme des DÉG de compétence de combat.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.BATTLE.event.name": {
+    "text": "JE SURFE SUR LA VAAAGUE !",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.COMBO.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi est victime d'une altération cryogénique ou qu'il subit des DÉG d'explosion des Arts.\nTangtang libère un jet d'eau puissant qui transperce tous les ennemis sur son passage en leur infligeant des DÉG cryogéniques et crée un tourbillon.\nJusqu'à 2 tourbillons peuvent coexister sur le champ de bataille.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.COMBO.event.name": {
+    "text": "RIVIÈRE, VIENS À MOI !",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ULTIMATE.event.description": {
+    "text": "Tangtang lève son cache-œil et se sert de cet œil pour libérer un REGARD ANCIEN qui immobilise temporairement les ennemis dans la zone d'effet et leur inflige des DÉG cryogéniques continus.\nLorsque l'évolution du REGARD ANCIEN cesse, une vague déferlante frappe violemment les ennemis dans la zone d'effet en leur infligeant des DÉG cryogéniques.\nSi l'opérateur contrôlé exécute une attaque plongeante dans le motif du REGARD ANCIEN, cela fait cesser son évolution et invoque immédiatement la vague déferlante pour infliger davantage de DÉG cryogéniques.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ULTIMATE.event.name": {
+    "text": "LA CHEFFE TE VOIT !",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -3,7 +3,21 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
-    "id": "BOMBARDMENT_SEQUENCE"
+    "id": "BOMBARDMENT_SEQUENCE",
+    "descriptionParams": {
+      "atk_scale": 8,
+      "originum_ult_break_scale": 6,
+      "poise": 25,
+      "1-atk_scale": -7,
+      "-atk_scale": -8,
+      "atk_scale-1": 7,
+      "1-originum_ult_break_scale": -5,
+      "-originum_ult_break_scale": -6,
+      "originum_ult_break_scale-1": 5,
+      "1-poise": -24,
+      "-poise": -25,
+      "poise-1": 24
+    }
   },
   "segments": [
     {

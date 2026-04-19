@@ -49,6 +49,16 @@
   "properties": {
     "id": "XAIHI_POTENTIAL_4",
     "level": 4,
+    "descriptionParams": {
+      "Wisd": 15,
+      "HealOutputIncrease": 0.1,
+      "1-Wisd": -14,
+      "-Wisd": -15,
+      "Wisd-1": 14,
+      "1-HealOutputIncrease": 0.9,
+      "-HealOutputIncrease": -0.1,
+      "HealOutputIncrease-1": -0.9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

@@ -76,9 +76,8 @@ const SLOW_STATUS_ID: string = require(
   '../../../../model/game-data/generic/statuses/status-slow.json',
 ).properties.id;
 
-const IE_DISPLAY_NAME: string = require(
-  '../../../../model/game-data/operators/fluorite/statuses/status-improvised-explosive.json',
-).properties.name;
+// Display name lives in the locale bundle, surfaced via configCache/getStatusDef.
+const IE_DISPLAY_NAME: string = (require('../../../../controller/timeline/configCache').getStatusDef(IMPROVISED_EXPLOSIVE_ID)?.properties as { name?: string } | undefined)?.name ?? IMPROVISED_EXPLOSIVE_ID;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_FLUORITE = 'slot-0';

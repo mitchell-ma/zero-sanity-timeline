@@ -30,6 +30,20 @@
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "extend_duration": 1,
+      "max_duration": 7,
+      "ratio": 1.2,
+      "1-extend_duration": 0,
+      "-extend_duration": -1,
+      "extend_duration-1": 0,
+      "1-max_duration": -6,
+      "-max_duration": -7,
+      "max_duration-1": 6,
+      "1-ratio": -0.19999999999999996,
+      "-ratio": -1.2,
+      "ratio-1": 0.19999999999999996
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

@@ -49,6 +49,16 @@
   "properties": {
     "id": "ARCLIGHT_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "Agi": 15,
+      "Wisd": 15,
+      "1-Agi": -14,
+      "-Agi": -15,
+      "Agi-1": 14,
+      "1-Wisd": -14,
+      "-Wisd": -15,
+      "Wisd-1": 14
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

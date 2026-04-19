@@ -3,7 +3,25 @@
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "MORE_SPICE"
+    "id": "MORE_SPICE",
+    "descriptionParams": {
+      "atk_scale": 6.5,
+      "usp": 10,
+      "crush_multi": 1.2,
+      "poise": 15,
+      "1-atk_scale": -5.5,
+      "-atk_scale": -6.5,
+      "atk_scale-1": 5.5,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-crush_multi": -0.19999999999999996,
+      "-crush_multi": -1.2,
+      "crush_multi-1": 0.19999999999999996,
+      "1-poise": -14,
+      "-poise": -15,
+      "poise-1": 14
+    }
   },
   "segments": [
     {

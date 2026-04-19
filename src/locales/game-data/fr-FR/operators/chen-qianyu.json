@@ -1,0 +1,78 @@
+{
+  "op.CHEN_QIANYU.event.name": {
+    "text": "Chen Qianyu",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.1.event.description": {
+    "text": "Inflige +{extra_dmg:0%} de DÉG aux ennemis dont les PV sont inférieurs à {hp_remain:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.1.event.name": {
+    "text": "« Sans ombre »",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.2.event.description": {
+    "text": "Agilité +{Agi:0}, DÉG physiques infligés +{PhysicalDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.2.event.name": {
+    "text": "Arts martiaux ancestraux",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.3.event.description": {
+    "text": "Renforce la compétence de combat Frappe ascendante, la compétence de combo Ruée vers les étoiles et l'ultime Tempête de lames : le multiplicateur de DÉG passe à {atk_scale1:0.0} fois sa valeur d'origine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.3.event.name": {
+    "text": "Spadamancienne à deux mains",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.4.event.description": {
+    "text": "Renforce l'ultime Tempête de lames : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.4.event.name": {
+    "text": "Chi Xiao improvisé",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.5.event.description": {
+    "text": "Renforce la compétence de combo Ruée vers les étoiles : le temps de recharge est désormais de {coolDown:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.5.event.name": {
+    "text": "Liée au monde",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.ASCENDING_STRIKE.event.description": {
+    "text": "Assène une entaille verticale à l'ennemi ciblé, lui infligeant des DÉG physiques et le soulevant.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.ASCENDING_STRIKE.event.name": {
+    "text": "Frappe ascendante",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.BLADE_GALE.event.description": {
+    "text": "Une attaque tranchante à 7 séquences qui inflige des DÉG physiques à la cible ennemie à chaque séquence. La séquence d'entaille finale inflige encore plus de DÉG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.BLADE_GALE.event.name": {
+    "text": "Tempête de lames",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOAR_TO_THE_STARS.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi est vulnérable. Lance une ruée tranchante qui traverse l'ennemi ciblé, lui inflige des DÉG physiques et soulève tous les ennemis sur sa trajectoire.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOAR_TO_THE_STARS.event.name": {
+    "text": "Ruée vers les étoiles",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOARING_BREAK_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 5 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOARING_BREAK_BATK.event.name": {
+    "text": "Essor fracassant",
+    "dataStatus": "RECONCILED"
+  }
+}

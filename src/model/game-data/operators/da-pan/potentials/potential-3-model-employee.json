@@ -2,6 +2,16 @@
   "properties": {
     "id": "DA_PAN_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "Str": 15,
+      "PhysicalDamageIncrease": 0.08,
+      "1-Str": -14,
+      "-Str": -15,
+      "Str-1": 14,
+      "1-PhysicalDamageIncrease": 0.92,
+      "-PhysicalDamageIncrease": -0.08,
+      "PhysicalDamageIncrease-1": -0.92
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

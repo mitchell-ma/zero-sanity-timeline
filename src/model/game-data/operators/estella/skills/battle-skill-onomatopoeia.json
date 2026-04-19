@@ -3,7 +3,17 @@
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "CRYO",
-    "id": "ONOMATOPOEIA"
+    "id": "ONOMATOPOEIA",
+    "descriptionParams": {
+      "atk_scale": 3.5,
+      "poise": 10,
+      "1-atk_scale": -2.5,
+      "-atk_scale": -3.5,
+      "atk_scale-1": 2.5,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9
+    }
   },
   "metadata": {
     "originId": "ESTELLA",

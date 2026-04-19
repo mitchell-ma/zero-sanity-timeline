@@ -2,6 +2,12 @@
   "properties": {
     "id": "ARDELIA_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "rate_vul_base": 0.08,
+      "1-rate_vul_base": 0.92,
+      "-rate_vul_base": -0.08,
+      "rate_vul_base-1": -0.92
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

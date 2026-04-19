@@ -337,7 +337,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "HYPOTHERMIC_ASSAULT_BATK"
+    "id": "HYPOTHERMIC_ASSAULT_BATK",
+    "descriptionParams": {
+      "atk_scale": 1.32,
+      "poise": 23,
+      "atb": 0,
+      "1-atk_scale": -0.32000000000000006,
+      "-atk_scale": -1.32,
+      "atk_scale-1": 0.32000000000000006,
+      "1-poise": -22,
+      "-poise": -23,
+      "poise-1": 22,
+      "1-atb": 1,
+      "-atb": 0,
+      "atb-1": -1
+    }
   },
   "metadata": {
     "originId": "SNOWSHINE",

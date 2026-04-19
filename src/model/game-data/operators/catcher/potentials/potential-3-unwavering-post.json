@@ -2,6 +2,12 @@
   "properties": {
     "id": "CATCHER_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "potential3_duration": 5,
+      "1-potential3_duration": -4,
+      "-potential3_duration": -5,
+      "potential3_duration-1": 4
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

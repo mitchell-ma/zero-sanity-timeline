@@ -2,6 +2,16 @@
   "properties": {
     "id": "CHEN_QIANYU_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "potential5": 1,
+      "coolDown": -3,
+      "1-coolDown": 4,
+      "-coolDown": 3,
+      "coolDown-1": -4,
+      "1-potential5": 0,
+      "-potential5": -1,
+      "potential5-1": 0
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

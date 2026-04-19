@@ -1,0 +1,78 @@
+{
+  "op.FLUORITE.event.name": {
+    "text": "Fluorite",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.1.event.description": {
+    "text": "Agilité +{Agi:0}, Intelligence +{Wisd:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.1.event.name": {
+    "text": "Artisane aux doigts agiles",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.2.event.description": {
+    "text": "Renforce le talent Imprévisible : chances d'ignorer les DÉG des Arts +{probability:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.2.event.name": {
+    "text": "Technique de télépathie",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.3.event.description": {
+    "text": "Renforce la compétence de combat Petite surprise : après l'explosion de l'explosif improvisé, l'effet Lenteur est appliqué à tous les ennemis touchés pendant {duration_potential:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.3.event.name": {
+    "text": "Triple surprise",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.4.event.description": {
+    "text": "Renforce l'ultime Maîtrise de la farce : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.4.event.name": {
+    "text": "Reine des farces",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.5.event.description": {
+    "text": "Renforce la compétence de combo Cadeaux offerts : lorsque des altérations cryogénique ou naturelle sont appliquées à l'ennemi, le temps de recharge est réduit de {reduce:0} s. L'effet se déclenche toutes les secondes.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.5.event.name": {
+    "text": "Assoiffée de chaos",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.APEX_PRANKSTER.event.description": {
+    "text": "Fluorite se déplace rapidement en arc de cercle et tire sur les ennemis pris dans cet arc, leur infligeant ainsi 4 séquences de DÉG naturels. Si un explosif improvisé est collé à la cible, la compétence le fait détoner immédiatement et augmente les DÉG et la portée de l'explosion.\nSi la séquence finale de DÉG touche une cible avec au moins 2 cumuls d'altération cryogénique ou naturelle, la même altération des Arts s'applique une nouvelle fois.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.APEX_PRANKSTER.event.name": {
+    "text": "Maîtrise de la farce",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.FREE_GIVEAWAY.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi est victime de 2 cumuls ou plus d'altération cryogénique ou naturelle.\nTire sur l'ennemi ciblé pour déclencher une explosion spéciale qui inflige des DÉG naturels et applique une autre altération des Arts de l'élément dont souffre déjà l'ennemi.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.FREE_GIVEAWAY.event.name": {
+    "text": "Cadeaux offerts",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.SIGNATURE_GUN_KATA_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG naturels. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {attack_poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG naturels aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG naturels et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.SIGNATURE_GUN_KATA_BATK.event.name": {
+    "text": "Kata de pistolet signature",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.TINY_SURPRISE.event.description": {
+    "text": "Envoie un explosif improvisé qui s'accroche à la cible et la ralentit, puis explose après un court instant. L'explosion inflige des DÉG naturels ainsi qu'une altération naturelle aux ennemis qui se trouvent dans la zone d'effet. Vaincre la cible déclenche immédiatement l'explosif improvisé.\nSeul 1 explosif improvisé peut être présent sur le champ de bataille.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.TINY_SURPRISE.event.name": {
+    "text": "Petite surprise",
+    "dataStatus": "RECONCILED"
+  }
+}

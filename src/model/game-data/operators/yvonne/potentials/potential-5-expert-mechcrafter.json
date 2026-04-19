@@ -2,6 +2,20 @@
   "properties": {
     "id": "YVONNE_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "has_potential5": 1,
+      "atk_up": 0.1,
+      "crit_dmg_up": 0.3,
+      "1-has_potential5": 0,
+      "-has_potential5": -1,
+      "has_potential5-1": 0,
+      "1-atk_up": 0.9,
+      "-atk_up": -0.1,
+      "atk_up-1": -0.9,
+      "1-crit_dmg_up": 0.7,
+      "-crit_dmg_up": -0.3,
+      "crit_dmg_up-1": -0.7
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

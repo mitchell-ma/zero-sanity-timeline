@@ -1,6 +1,12 @@
 {
   "properties": {
     "id": "LAZINESS_PAYS_OFF_NOW_TALENT",
+    "descriptionParams": {
+      "dmg_down": -0.2,
+      "1-dmg_down": 1.2,
+      "-dmg_down": 0.2,
+      "dmg_down-1": -1.2
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

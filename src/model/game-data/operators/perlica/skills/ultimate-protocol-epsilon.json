@@ -3,7 +3,17 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
-    "id": "PROTOCOL_EPSILON"
+    "id": "PROTOCOL_EPSILON",
+    "descriptionParams": {
+      "atk_scale": 10,
+      "poise": 20,
+      "1-atk_scale": -9,
+      "-atk_scale": -10,
+      "atk_scale-1": 9,
+      "1-poise": -19,
+      "-poise": -20,
+      "poise-1": 19
+    }
   },
   "segments": [
     {

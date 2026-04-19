@@ -2,6 +2,12 @@
   "properties": {
     "id": "XAIHI_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "potential_3": 1,
+      "1-potential_3": 0,
+      "-potential_3": -1,
+      "potential_3-1": 0
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

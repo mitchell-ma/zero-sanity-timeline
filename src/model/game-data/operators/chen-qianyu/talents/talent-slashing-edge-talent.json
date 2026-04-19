@@ -106,6 +106,20 @@
   ],
   "properties": {
     "id": "SLASHING_EDGE",
+    "descriptionParams": {
+      "atk": 0.08,
+      "duration": 10,
+      "max_stack": 5,
+      "1-atk": 0.92,
+      "-atk": -0.08,
+      "atk-1": -0.92,
+      "1-duration": -9,
+      "-duration": -10,
+      "duration-1": 9,
+      "1-max_stack": -4,
+      "-max_stack": -5,
+      "max_stack-1": 4
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

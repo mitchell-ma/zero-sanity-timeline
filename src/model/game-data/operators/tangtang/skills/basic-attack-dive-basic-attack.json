@@ -7,7 +7,17 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",
     "element": "CRYO",
-    "id": "ILL_BLOW_YOUR_MIND_DIVE"
+    "id": "ILL_BLOW_YOUR_MIND_DIVE",
+    "descriptionParams": {
+      "atk_scale": 0.45,
+      "atb": 0,
+      "1-atk_scale": 0.55,
+      "-atk_scale": -0.45,
+      "atk_scale-1": -0.55,
+      "1-atb": 1,
+      "-atb": 0,
+      "atb-1": -1
+    }
   },
   "metadata": {
     "originId": "TANGTANG",

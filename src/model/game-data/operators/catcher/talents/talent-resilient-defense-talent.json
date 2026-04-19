@@ -54,6 +54,12 @@
   ],
   "properties": {
     "id": "RESILIENT_DEFENSE_TALENT",
+    "descriptionParams": {
+      "rate": 1.2,
+      "1-rate": -0.19999999999999996,
+      "-rate": -1.2,
+      "rate-1": 0.19999999999999996
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

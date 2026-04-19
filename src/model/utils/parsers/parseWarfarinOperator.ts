@@ -1,23 +1,72 @@
 /**
- * Fetches operator data from the Warfarin API and outputs a JSON blob
- * for src/model/game-data/operators/<slug>.json.
+ * Fetches operator data from the Warfarin API and outputs:
+ *   - game-data JSON at src/model/game-data/operators/<slug>/<slug>.json
+ *     (structure + multipliers + stats; no user-facing strings)
+ *   - locale bundle at src/locales/game-data/<locale>/operators/<slug>.json
+ *     (names + descriptions, keyed by LocaleKey)
+ *   - descriptionParams on each potential file, extracted from the Warfarin
+ *     potential effect blackboard so description tokens interpolate correctly
  *
  * Usage:
- *   npx tsx src/model/utils/parsers/parseWarfarinOperator.ts <slug>
+ *   npx tsx src/model/utils/parsers/parseWarfarinOperator.ts <slug> [--locale=en|fr]
  *
- * Example:
+ * Examples:
  *   npx tsx src/model/utils/parsers/parseWarfarinOperator.ts laevatain
+ *   npx tsx src/model/utils/parsers/parseWarfarinOperator.ts laevatain --locale=fr
  */
 
 import { NounType } from '../../../dsl/semantics';
 import * as fs from 'fs';
 import * as path from 'path';
 import { OperatorInformationType } from '../../enums/operators';
-import {  } from '../../../consts/enums';
+import { DataStatus } from '../../../consts/enums';
 import { WarfarinAttributeType, warfarinToStat } from './warfarin';
 
-const API_BASE = 'https://api.warfarin.wiki/v1/en/operators';
 const OPERATORS_DIR = path.resolve(__dirname, '../../game-data/operators');
+const LOCALES_ROOT = path.resolve(__dirname, '../../../locales/game-data');
+
+/** Supported Warfarin API locales. `en` maps to our `en-US` bundle, `fr` to `fr-FR`. */
+const SUPPORTED_LOCALES = ['en', 'fr'] as const;
+type WarfarinLocale = typeof SUPPORTED_LOCALES[number];
+
+/** Map a Warfarin locale code to the locale bundle directory name. */
+const LOCALE_TO_BUNDLE: Record<WarfarinLocale, string> = { en: 'en-US', fr: 'fr-FR' };
+
+function apiBase(locale: WarfarinLocale): string {
+  return `https://api.warfarin.wiki/v1/${locale}/operators`;
+}
+
+function localeOperatorsDir(locale: WarfarinLocale): string {
+  return path.join(LOCALES_ROOT, LOCALE_TO_BUNDLE[locale], 'operators');
+}
+
+// ── Locale bundle writer ────────────────────────────────────────────────────
+
+type LocaleEntryRecord = { text: string; dataStatus: DataStatus };
+type LocaleBundle = Record<string, LocaleEntryRecord>;
+
+/**
+ * Merge new string entries into an existing locale bundle.
+ *
+ * - Each new entry seeds as `RECONCILED` unless the bundle already has a
+ *   `VERIFIED` record for that key (in which case the incoming text is
+ *   ignored — the human-curated translation wins).
+ * - Keys not present in `additions` are preserved untouched.
+ * - Output is key-sorted for stable diffs.
+ */
+function mergeLocaleBundle(
+  existing: LocaleBundle,
+  additions: Record<string, string>,
+): LocaleBundle {
+  const out: LocaleBundle = { ...existing };
+  for (const [key, text] of Object.entries(additions)) {
+    if (!text) continue;
+    const prev = existing[key];
+    if (prev?.dataStatus === DataStatus.VERIFIED) continue;
+    out[key] = { text, dataStatus: DataStatus.RECONCILED };
+  }
+  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
+}
 
 // ── Warfarin → our enum mappings ────────────────────────────────────────────
 
@@ -376,6 +425,18 @@ function extractAttrs(attrs: WarfarinAttr[]): Record<string, number> {
   return result;
 }
 
+/**
+ * Build the ordered potential list from the Warfarin unlock bundle.
+ *
+ * `unlock.level` is the P-number (1..5) and is always present in the API
+ * response. Potential files on disk mirror this as `properties.level`
+ * (see `src/model/game-data/operators/*\/potentials/potential-<N>-*.json`);
+ * the file's filename carries the same level as a fallback for hand-written
+ * configs that predate API ingestion.
+ *
+ * Descriptions are run through `parseWarfarinDescription` so `{param:format}`
+ * placeholders survive (they match the `t()` interpolation syntax).
+ */
 function buildPotentials(
   unlocks: WarfarinPotentialUnlock[],
   effects: Record<string, WarfarinPotentialEntry>,
@@ -385,7 +446,7 @@ function buildPotentials(
     return {
       level: unlock.level,
       name: unlock.name,
-      ...(effect?.desc ? { description: effect.desc } : {}),
+      ...(effect?.desc ? { description: parseWarfarinDescription(effect.desc) } : {}),
     };
   });
 }
@@ -615,12 +676,26 @@ function buildSkillTimingOverrides(
   return overrides;
 }
 
-/** Strip Warfarin rich text tags and template variables from skill descriptions. */
-function stripRichText(text: string): string {
+/**
+ * Normalize a Warfarin description: strip rich-text tags (keeping inner text)
+ * but preserve `{param:format}` placeholders — they match our `t()`
+ * interpolation syntax (see src/locales/locale.ts `TOKEN_REGEX`) and will be
+ * filled in at render time from a blackboard or caller-supplied params.
+ *
+ * Tags stripped:
+ *   <#ba.burning>text</>  →  "text"
+ *   <@ba.fire>text</>     →  "text"
+ *
+ * Placeholders preserved verbatim:
+ *   {poise:0}, {count:0}, {Str:0}, {PhysicalDamageIncrease:0%}, ...
+ */
+function parseWarfarinDescription(text: string): string {
   return text
-    .replace(/<[#@][^>]*>/g, '')   // <#ba.burning>, <@ba.fire>, etc.
-    .replace(/<\/>/g, '')           // closing tags
-    .replace(/\{[^}]+\}/g, '');    // {poise:0}, {count:0}, etc.
+    .replace(/<[#@][^>]*>/g, '')
+    .replace(/<\/>/g, '')
+    // Collapse any whitespace introduced by tag removal.
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 function buildSkillDescriptions(
@@ -632,7 +707,7 @@ function buildSkillDescriptions(
     if (!categoryKey) continue;
     result[categoryKey] = {
       name: group.name,
-      description: stripRichText(group.desc),
+      description: parseWarfarinDescription(group.desc),
     };
   }
   return result;
@@ -680,12 +755,117 @@ function buildTalents(talentNodeMap: Record<string, WarfarinTalentNode>) {
 
 // ── Main ────────────────────────────────────────────────────────────────────
 
-export async function fetchOperator(slug: string): Promise<WarfarinApiResponse> {
-  const url = `${API_BASE}/${slug}`;
+export async function fetchOperator(slug: string, locale: WarfarinLocale = 'en'): Promise<WarfarinApiResponse> {
+  const url = `${apiBase(locale)}/${slug}`;
   console.log(`Fetching ${url}...`);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   return res.json() as Promise<WarfarinApiResponse>;
+}
+
+// ── descriptionParams extraction ────────────────────────────────────────────
+
+/**
+ * Reverse-index the Warfarin attribute type enum so we can go from the
+ * numeric `attrType` to the string key used in description tokens
+ * (e.g. `attrType=39` → `"Str"`, `attrType=50` → `"PhysicalDamageIncrease"`).
+ */
+const ATTR_TYPE_TO_KEY: Record<number, string> = (() => {
+  const out: Record<number, string> = {};
+  for (const [k, v] of Object.entries(WarfarinAttributeType)) {
+    if (typeof v === 'number') out[v] = k;
+  }
+  return out;
+})();
+
+/**
+ * Extract `descriptionParams` for each potential level from a Warfarin
+ * response. Values come from three sources:
+ *   - `attrModifier`          (stat deltas like Str, Agi, PhysicalDamageIncrease)
+ *   - `attachBuff.blackboard` (named scalar params like duration, stack, dmg_up)
+ *   - `skillBbModifier.bbKey` (per-skill scalars — the common `potential_N_`
+ *                              prefix is stripped so tokens match)
+ */
+function buildPotentialDescriptionParams(
+  raw: WarfarinApiResponse,
+): Record<number, Record<string, number>> {
+  const out: Record<number, Record<string, number>> = {};
+  const effects = raw.data.potentialTalentEffectTable;
+  for (const unlock of raw.data.characterPotentialTable.potentialUnlockBundle) {
+    const effect = effects[unlock.potentialEffectId];
+    if (!effect) continue;
+    const params: Record<string, number> = {};
+    for (const d of effect.dataList ?? []) {
+      const am = d.attrModifier;
+      if (am && am.attrType > 0) {
+        const key = ATTR_TYPE_TO_KEY[am.attrType];
+        if (key) params[key] = am.attrValue;
+      }
+      const bb = d.attachBuff?.blackboard;
+      if (Array.isArray(bb)) {
+        for (const entry of bb) {
+          if (entry.key) params[entry.key] = entry.value;
+        }
+      }
+      const sbb = d.skillBbModifier;
+      if (sbb?.bbKey) {
+        // Warfarin description tokens drop the `potential_<N>_` / `talent_<N>_`
+        // prefix that bbKey carries; strip it so the param name matches.
+        const shortKey = sbb.bbKey.replace(/^(?:potential|talent)_\d+_/, '');
+        params[shortKey] = sbb.floatValue;
+        // Also expose the full key to cover the rare template that keeps it.
+        params[sbb.bbKey] = sbb.floatValue;
+      }
+    }
+    if (Object.keys(params).length > 0) {
+      out[unlock.level] = params;
+    }
+  }
+  return out;
+}
+
+/**
+ * Merge `descriptionParams` into each potential file on disk. Leaves other
+ * fields untouched; writes nothing when no params were extracted for a level.
+ */
+function mergePotentialDescriptionParams(
+  operatorSlug: string,
+  paramsByLevel: Record<number, Record<string, number>>,
+): number {
+  const dir = path.join(OPERATORS_DIR, operatorSlug, 'potentials');
+  if (!fs.existsSync(dir)) return 0;
+  let written = 0;
+  for (const file of fs.readdirSync(dir).sort()) {
+    if (!file.endsWith('.json')) continue;
+    const m = file.match(/^potential-(\d+)-/);
+    if (!m) continue;
+    const level = parseInt(m[1], 10);
+    const params = paramsByLevel[level];
+    if (!params) continue;
+
+    const filePath = path.join(dir, file);
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as Record<string, unknown>;
+    const props = (json.properties ?? {}) as Record<string, unknown>;
+    // Preserve property key order (id, level, ...) — descriptionParams slots
+    // in AFTER level for readability.
+    const existing = (props.descriptionParams ?? {}) as Record<string, number>;
+    const merged = { ...existing, ...params };
+    const next: Record<string, unknown> = {};
+    let inserted = false;
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'descriptionParams') continue; // will re-insert in the right slot
+      next[k] = v;
+      if (k === 'level' && !inserted) {
+        next.descriptionParams = merged;
+        inserted = true;
+      }
+    }
+    if (!inserted) next.descriptionParams = merged;
+    json.properties = next;
+    fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + '\n');
+    written += 1;
+  }
+  return written;
 }
 
 export function buildOperatorEntry(raw: WarfarinApiResponse) {
@@ -736,34 +916,154 @@ export function buildOperatorEntry(raw: WarfarinApiResponse) {
   };
 }
 
-async function main() {
-  const slug = process.argv[2];
-  if (!slug) {
-    console.error('Usage: npx tsx src/model/utils/parsers/parseWarfarinOperator.ts <slug>');
-    process.exit(1);
+/**
+ * Build the per-operator locale bundle (en-US) from a Warfarin response.
+ *
+ * Writes every user-facing string into the dotted key format consumed by the
+ * game-data locale loader (see src/locales/gameDataLocale.ts `LocaleKey`):
+ *   op.<ID>.event.name
+ *   op.<ID>.potential.<level>.event.{name,description}
+ *   op.<ID>.skill.<SKILL_ID>.event.{name,description}
+ *   op.<ID>.talent.<SLOT>.event.name                (talent slot: one | two)
+ *
+ * Talent keys use `passiveSkills[0]` (slot "one") and `passiveSkills[1]`
+ * (slot "two") indices — the same shape the store uses.
+ */
+function buildLocaleAdditions(
+  entry: ReturnType<typeof buildOperatorEntry>,
+): Record<string, string> {
+  const I = OperatorInformationType;
+  const operatorId = entry[I.OPERATOR_TYPE];
+  const additions: Record<string, string> = {};
+
+  additions[`op.${operatorId}.event.name`] = entry[I.NAME];
+
+  for (const p of entry[I.POTENTIALS]) {
+    const prefix = `op.${operatorId}.potential.${p.level}`;
+    if (p.name) additions[`${prefix}.event.name`] = p.name;
+    if ('description' in p && p.description) additions[`${prefix}.event.description`] = p.description as string;
   }
 
-  const raw = await fetchOperator(slug);
+  const skillDescs = entry.skillDescriptions as Record<string, { name: string; description: string }>;
+  const skillIds = entry.skillIds as Record<string, string>;
+  for (const [category, { name, description }] of Object.entries(skillDescs)) {
+    const resolvedSkillId = skillIds?.[category];
+    if (!resolvedSkillId) continue;
+    const prefix = `op.${operatorId}.skill.${resolvedSkillId}`;
+    if (name) additions[`${prefix}.event.name`] = name;
+    if (description) additions[`${prefix}.event.description`] = description;
+  }
+
+  return additions;
+}
+
+/**
+ * Parse CLI args into `{ slug, locale }`. Supports `--locale=fr` (or `=en`).
+ * Accepts `--locale fr` and `-l fr` forms too.
+ */
+function parseArgs(argv: string[]): { slug: string; locale: WarfarinLocale } {
+  const positional: string[] = [];
+  let locale: WarfarinLocale = 'en';
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--locale' || a === '-l') {
+      const next = argv[++i];
+      if (!SUPPORTED_LOCALES.includes(next as WarfarinLocale)) {
+        throw new Error(`Unknown locale "${next}" — supported: ${SUPPORTED_LOCALES.join(', ')}`);
+      }
+      locale = next as WarfarinLocale;
+    } else if (a.startsWith('--locale=')) {
+      const v = a.slice('--locale='.length);
+      if (!SUPPORTED_LOCALES.includes(v as WarfarinLocale)) {
+        throw new Error(`Unknown locale "${v}" — supported: ${SUPPORTED_LOCALES.join(', ')}`);
+      }
+      locale = v as WarfarinLocale;
+    } else {
+      positional.push(a);
+    }
+  }
+  if (positional.length === 0) throw new Error('missing operator slug');
+  return { slug: positional[0], locale };
+}
+
+async function main() {
+  let args: { slug: string; locale: WarfarinLocale };
+  try {
+    args = parseArgs(process.argv.slice(2));
+  } catch (err) {
+    console.error(`Error: ${(err as Error).message}`);
+    console.error('Usage: npx tsx src/model/utils/parsers/parseWarfarinOperator.ts <slug> [--locale=en|fr]');
+    process.exit(1);
+    return;
+  }
+  const { slug, locale } = args;
+  const bundleName = LOCALE_TO_BUNDLE[locale];
+
+  const raw = await fetchOperator(slug, locale);
   const entry = buildOperatorEntry(raw);
 
   const I = OperatorInformationType;
   const operatorType = entry[I.OPERATOR_TYPE];
   const fileSlug = operatorType.toLowerCase().replace(/_/g, '-');
-  const filePath = path.join(OPERATORS_DIR, `${fileSlug}-operator.json`);
 
-  // Load existing or create new
-  let existing: Record<string, unknown> = {};
-  if (fs.existsSync(filePath)) {
-    existing = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  // Game-data JSON: only written during the `en` run. Other locales are
+  // string-only — re-running in `fr` should never mutate structural game data.
+  if (locale === 'en') {
+    const filePath = path.join(OPERATORS_DIR, fileSlug, `${fileSlug}.json`);
+    let existing: Record<string, unknown> = {};
+    if (fs.existsSync(filePath)) {
+      existing = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    }
+    // Only the keys consumed by `OperatorsStore.validateOperator` belong in
+    // the base JSON. Parser-intermediate fields (`skillMultipliers`,
+    // `skillIds`, `skillDescriptions`, `allLevels`, `weaponType`,
+    // `dataSources`, inline `potentials`) flow directly into `parseGameData.ts`
+    // via `buildOperatorEntry()` and must not pollute the disk file. Strings
+    // live in the locale bundle, not on `properties`.
+    const gameDataEntry: Record<string, unknown> = {
+      [I.OPERATOR_TYPE]: entry[I.OPERATOR_TYPE],
+      [I.OPERATOR_RARITY]: entry[I.OPERATOR_RARITY],
+      [I.OPERATOR_CLASS_TYPE]: entry[I.OPERATOR_CLASS_TYPE],
+      [I.ELEMENT_TYPE]: entry[I.ELEMENT_TYPE],
+      weaponTypes: [entry.weaponType],
+      [I.MAIN_ATTRIBUTE_TYPE]: entry[I.MAIN_ATTRIBUTE_TYPE],
+      [I.SECONDARY_ATTRIBUTE_TYPE]: entry[I.SECONDARY_ATTRIBUTE_TYPE],
+      statsByLevel: entry[I.ALL_LEVELS],
+      talents: entry.talents,
+    };
+    const merged = { ...existing, ...gameDataEntry };
+
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');
+    console.log(`Wrote ${operatorType} to ${filePath}`);
+
+    // Per-potential descriptionParams live in the potential file (not the
+    // locale bundle) so one extraction serves every locale's template.
+    const paramsByLevel = buildPotentialDescriptionParams(raw);
+    const potDir = fileSlug; // dir name matches fileSlug (kebab)
+    const patched = mergePotentialDescriptionParams(potDir, paramsByLevel);
+    if (patched > 0) {
+      console.log(`Patched ${patched} potential file(s) with descriptionParams`);
+    }
   }
 
-  const merged = { ...existing, ...entry };
-
-  if (!fs.existsSync(OPERATORS_DIR)) {
-    fs.mkdirSync(OPERATORS_DIR, { recursive: true });
+  // Locale bundle: always written, one per locale.
+  const localeDir = localeOperatorsDir(locale);
+  const localePath = path.join(localeDir, `${fileSlug}.json`);
+  const localeExisting: LocaleBundle = fs.existsSync(localePath)
+    ? JSON.parse(fs.readFileSync(localePath, 'utf-8'))
+    : {};
+  const additions = buildLocaleAdditions(entry);
+  const localeMerged = mergeLocaleBundle(localeExisting, additions);
+  if (!fs.existsSync(localeDir)) {
+    fs.mkdirSync(localeDir, { recursive: true });
   }
-  fs.writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');
-  console.log(`Wrote ${operatorType} to ${filePath}`);
+  fs.writeFileSync(localePath, JSON.stringify(localeMerged, null, 2) + '\n');
+  const verifiedKept = Object.values(localeExisting).filter(e => e.dataStatus === DataStatus.VERIFIED).length;
+  console.log(
+    `Locale ${bundleName}: ${Object.keys(additions).length} entries → ${localePath}`
+    + (verifiedKept > 0 ? ` (kept ${verifiedKept} VERIFIED entries)` : ''),
+  );
 
   // Print summary
   const allLevels = entry[I.ALL_LEVELS];

@@ -49,6 +49,16 @@
   "properties": {
     "id": "ANTAL_POTENTIAL_4",
     "level": 4,
+    "descriptionParams": {
+      "Wisd": 10,
+      "MaxHp": 0.1,
+      "1-Wisd": -9,
+      "-Wisd": -10,
+      "Wisd-1": 9,
+      "1-MaxHp": 0.9,
+      "-MaxHp": -0.1,
+      "MaxHp-1": -0.9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

@@ -1,0 +1,78 @@
+{
+  "op.GILBERTA.event.name": {
+    "text": "Gilberta",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Bâton arcanique : Mode gravité : zone d'effet +{radiusadd_display:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.1.event.name": {
+    "text": "Par-delà les nuages",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.2.event.description": {
+    "text": "Renforce l'ultime Bâton arcanique : Champ gravitationnel : quand un ennemi est affecté par le champ de gravité anormal de l'ultime, l'augmentation de la sensibilité aux Arts par cumul de Vulnérabilité est doublée. Au terme des effets, la cible est traitée comme ayant 1 cumul de Vulnérabilité supplémentaire (cumuls max. : 4).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.2.event.name": {
+    "text": "Marcheuse du vent",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.3.event.description": {
+    "text": "Renforce le talent Mélodie d'une messagère : vitesse de gain d'ultime +{add:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.3.event.name": {
+    "text": "À petits pas",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.4.event.description": {
+    "text": "Renforce l'ultime Bâton arcanique : Champ gravitationnel : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.4.event.name": {
+    "text": "Danse avec les nuages",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.5.event.description": {
+    "text": "Renforce la compétence de combo Bâton arcanique : Déplacement de matrice : le temps de recharge est désormais de {coolDown:0} s et le multiplicateur de DÉG passe à {atk_scale:0.0} fois sa valeur d'origine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.5.event.name": {
+    "text": "Lettre spéciale",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.BEAM_COHESION_ARTS_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG naturels. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG naturels aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG naturels et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.BEAM_COHESION_ARTS_BATK.event.name": {
+    "text": "Bâton arcanique : Arts de cohésion des faisceaux",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.GRAVITY_FIELD.event.description": {
+    "text": "Crée un champ gravitationnel anormal, qui inflige immédiatement une unique salve de DÉG naturels et une altération naturelle à tous les ennemis pris dans le champ. Les cibles prises dans le champ de gravité anormal sont également victimes de Lenteur et de sensibilité aux Arts. L'effet de la sensibilité aux Arts augmente en fonction du nombre de cumuls de Vulnérabilité dont est victime la cible. Si une cible est soulevée, le statut de Soulèvement persiste jusqu'à la disparition du champ.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.GRAVITY_FIELD.event.name": {
+    "text": "Bâton arcanique : Champ gravitationnel",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.GRAVITY_MODE.event.description": {
+    "text": "Lance une canalisation des Arts qui crée un puits gravitationnel. Le puits gravitationnel attire tous les ennemis à proximité et leur inflige des DÉG naturels. Lorsque la canalisation prend fin, le puits gravitationnel implose, ce qui inflige des DÉG naturels et applique une altération naturelle aux ennemis dans la zone d'effet.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.GRAVITY_MODE.event.name": {
+    "text": "Bâton arcanique : Mode gravité",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.MATRIX_DISPLACEMENT.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'une réaction aux Arts est appliquée à un ennemi. Un lancement rapide des Arts qui génère une force de gravité, qui inflige des DÉG naturels et soulève la cible et les ennemis à proximité.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.MATRIX_DISPLACEMENT.event.name": {
+    "text": "Bâton arcanique : Déplacement de matrice",
+    "dataStatus": "RECONCILED"
+  }
+}

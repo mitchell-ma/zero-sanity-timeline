@@ -2,6 +2,12 @@
   "properties": {
     "id": "SNOWSHINE_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "potential_1": 1,
+      "1-potential_1": 0,
+      "-potential_1": -1,
+      "potential_1-1": 0
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

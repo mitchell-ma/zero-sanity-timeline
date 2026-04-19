@@ -130,9 +130,15 @@ describe('BS segment labels use properties.name, not Roman numerals', () => {
       expect(ROMAN_NUMERALS.has(label)).toBe(false);
     }
 
-    // Verify segment names come from the JSON config properties.name
-    const seg0Name: string | undefined = BS_EMP_JSON.segments[0].properties.name;
-    const seg1Name: string | undefined = BS_EMP_JSON.segments[1].properties.name;
+    // Verify segment names come from the locale-resolved skill def — injected
+    // back into `properties.name` by `operatorSkillsStore.injectSegmentNames`.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const skill = require('../../../model/game-data/operatorSkillsStore').getOperatorSkill(
+      BS_EMP_JSON.metadata.originId,
+      BS_EMP_ID,
+    );
+    const seg0Name: string | undefined = (skill?.segments?.[0] as { properties?: { name?: string } } | undefined)?.properties?.name;
+    const seg1Name: string | undefined = (skill?.segments?.[1] as { properties?: { name?: string } } | undefined)?.properties?.name;
     expect(seg0Name).toBeDefined();
     expect(seg1Name).toBeDefined();
     expect(presentation.allSegmentLabels).toEqual([seg0Name, seg1Name]);

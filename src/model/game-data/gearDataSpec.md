@@ -1,6 +1,18 @@
 # Gear Data Specification
 
-This document defines the structure and semantics of per-set gear JSON files in `game-data/gears/<set-slug>.json`.
+This document defines the structure and semantics of per-set gear JSON files in `game-data/gears/<set-slug>/`.
+
+## Localization — strings are in locale bundles
+
+Gear set names, piece names, and status descriptions **are not on the JSON**. They live under `src/locales/game-data/<locale>/gears/<set-slug>.json` keyed as:
+
+```
+gear.<GEAR_SET_ID>.event.{name,description}
+gear.<GEAR_SET_ID>.piece.<PIECE_ID>.event.{name,description}
+gear.<GEAR_SET_ID>.status.<STATUS_ID>.event.{name,description}
+```
+
+The historical examples below may still show `"setName"` / `"description"` on the JSON — those references are obsolete. See `operatorDataSpec.md` "Localization" for the end-to-end schema.
 
 ## File Structure
 

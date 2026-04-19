@@ -2,6 +2,16 @@
   "properties": {
     "id": "ZHUANG_FANGYI_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "sword_duration": 10,
+      "atb_return": 10,
+      "1-sword_duration": -9,
+      "-sword_duration": -10,
+      "sword_duration-1": 9,
+      "1-atb_return": -9,
+      "-atb_return": -10,
+      "atb_return-1": 9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

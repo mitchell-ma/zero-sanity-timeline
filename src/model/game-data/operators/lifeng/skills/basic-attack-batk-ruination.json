@@ -482,7 +482,25 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "RUINATION_BATK"
+    "id": "RUINATION_BATK",
+    "descriptionParams": {
+      "atk_scale": 0.55,
+      "atk_scale2": 1.13,
+      "poise": 19,
+      "atb": 0,
+      "1-atk_scale": 0.44999999999999996,
+      "-atk_scale": -0.55,
+      "atk_scale-1": -0.44999999999999996,
+      "1-atk_scale2": -0.1299999999999999,
+      "-atk_scale2": -1.13,
+      "atk_scale2-1": 0.1299999999999999,
+      "1-poise": -18,
+      "-poise": -19,
+      "poise-1": 18,
+      "1-atb": 1,
+      "-atb": 0,
+      "atb-1": -1
+    }
   },
   "metadata": {
     "originId": "LIFENG",

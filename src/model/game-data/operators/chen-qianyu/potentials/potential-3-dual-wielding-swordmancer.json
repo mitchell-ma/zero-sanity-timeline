@@ -2,6 +2,20 @@
   "properties": {
     "id": "CHEN_QIANYU_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "atk_scale1": 1.1,
+      "atk_scale2": 1.1,
+      "atk_scale": 1.1,
+      "1-atk_scale1": -0.10000000000000009,
+      "-atk_scale1": -1.1,
+      "atk_scale1-1": 0.10000000000000009,
+      "1-atk_scale2": -0.10000000000000009,
+      "-atk_scale2": -1.1,
+      "atk_scale2-1": 0.10000000000000009,
+      "1-atk_scale": -0.10000000000000009,
+      "-atk_scale": -1.1,
+      "atk_scale-1": 0.10000000000000009
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

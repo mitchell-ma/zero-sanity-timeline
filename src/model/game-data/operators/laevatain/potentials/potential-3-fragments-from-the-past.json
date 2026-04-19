@@ -2,6 +2,16 @@
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "duration": 1.5,
+      "extra_scaling": 1.5,
+      "1-duration": -0.5,
+      "-duration": -1.5,
+      "duration-1": 0.5,
+      "1-extra_scaling": -0.5,
+      "-extra_scaling": -1.5,
+      "extra_scaling-1": 0.5
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

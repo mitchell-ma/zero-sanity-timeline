@@ -3,7 +3,29 @@
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "TURBID_AVATAR"
+    "id": "TURBID_AVATAR",
+    "descriptionParams": {
+      "atk_scale": 0.86,
+      "poise": 10,
+      "atk_scale2": 2.68,
+      "phy_resist_down": 0.12,
+      "duration": 12,
+      "1-atk_scale": 0.14,
+      "-atk_scale": -0.86,
+      "atk_scale-1": -0.14,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-atk_scale2": -1.6800000000000002,
+      "-atk_scale2": -2.68,
+      "atk_scale2-1": 1.6800000000000002,
+      "1-phy_resist_down": 0.88,
+      "-phy_resist_down": -0.12,
+      "phy_resist_down-1": -0.88,
+      "1-duration": -11,
+      "-duration": -12,
+      "duration-1": 11
+    }
   },
   "metadata": {
     "originId": "LIFENG",

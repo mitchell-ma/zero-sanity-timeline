@@ -1,6 +1,16 @@
 {
   "properties": {
     "id": "POLAR_SURVIVAL_TALENT",
+    "descriptionParams": {
+      "heal_up": 0.25,
+      "rate": 0.55,
+      "1-heal_up": 0.75,
+      "-heal_up": -0.25,
+      "heal_up-1": -0.75,
+      "1-rate": 0.44999999999999996,
+      "-rate": -0.55,
+      "rate-1": -0.44999999999999996
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

@@ -23,6 +23,14 @@
     "text": "\"Advance\" (P2)",
     "dataStatus": "RECONCILED"
   },
+  "op.POGRANICHNIK.potential.3.event.description": {
+    "text": "Talent The Living Banner improved: Amount of SP recovery needed to gain Fervent Morale is reduced to 60. Max Fervent Morale stacks on self +2.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.3.event.name": {
+    "text": "When the Banner Flutters (P3)",
+    "dataStatus": "RECONCILED"
+  },
   "op.POGRANICHNIK.potential.4.event.description": {
     "text": "Ultimate Shieldguard Banner, Forward improved: Ultimate Energy cost -15%.",
     "dataStatus": "RECONCILED"

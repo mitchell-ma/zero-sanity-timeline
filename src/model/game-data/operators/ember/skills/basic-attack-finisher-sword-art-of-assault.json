@@ -7,7 +7,13 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "PHYSICAL",
-    "id": "SWORD_ART_OF_ASSAULT_FINISHER"
+    "id": "SWORD_ART_OF_ASSAULT_FINISHER",
+    "descriptionParams": {
+      "atk_scale": 9,
+      "1-atk_scale": -8,
+      "-atk_scale": -9,
+      "atk_scale-1": 8
+    }
   },
   "metadata": {
     "originId": "EMBER",

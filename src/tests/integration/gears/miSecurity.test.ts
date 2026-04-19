@@ -18,7 +18,7 @@ import { CritMode, StatType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, breakdownFor, damageRowAtOrAfter, eventsOnColumn, findEntry,
-  gearLoadout, placeSkill, statContributionFromSource,
+  gearLoadout, placeSkill, statContributionFromSource, statusDisplayName
 } from './helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -73,14 +73,14 @@ describe('MI Security — gear set E2E', () => {
       const row = damageRowAtOrAfter(c, buff.startFrame + 1);
       expect(row).toBeDefined();
 
-      const contribution = statContributionFromSource(row, StatType.ATTACK_BONUS, BUFF.name);
+      const contribution = statContributionFromSource(row, StatType.ATTACK_BONUS, statusDisplayName(BUFF.id));
       expect(contribution).toBeGreaterThan(0);
 
       const entries = breakdownFor(row);
       const atkEntry = findEntry(entries, 'ATK%');
       expect(atkEntry).toBeDefined();
       const sources = atkEntry!.subEntries ?? [];
-      const buffSource = sources.find(s => s.label.toLowerCase().includes(BUFF.name.toLowerCase()));
+      const buffSource = sources.find(s => s.label.toLowerCase().includes(statusDisplayName(BUFF.id).toLowerCase()));
       expect(buffSource).toBeDefined();
     });
   });

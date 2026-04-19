@@ -1,6 +1,16 @@
 {
   "properties": {
     "id": "STAYING_IN_THE_ZONE_TALENT",
+    "descriptionParams": {
+      "combo": 1,
+      "imbue_scale": 0.2,
+      "1-combo": 0,
+      "-combo": -1,
+      "combo-1": 0,
+      "1-imbue_scale": 0.8,
+      "-imbue_scale": -0.2,
+      "imbue_scale-1": -0.8
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 1

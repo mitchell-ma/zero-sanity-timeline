@@ -2,6 +2,16 @@
   "properties": {
     "id": "AVYWENNA_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "rate": 1.15,
+      "potential_5_rate": 1.15,
+      "1-rate": -0.1499999999999999,
+      "-rate": -1.15,
+      "rate-1": 0.1499999999999999,
+      "1-potential_5_rate": -0.1499999999999999,
+      "-potential_5_rate": -1.15,
+      "potential_5_rate-1": 0.1499999999999999
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

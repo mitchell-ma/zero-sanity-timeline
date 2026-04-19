@@ -233,6 +233,16 @@
   ],
   "properties": {
     "id": "FREEZING_POINT_TALENT",
+    "descriptionParams": {
+      "inflict_up": 0.2,
+      "status_up": 0.4,
+      "1-inflict_up": 0.8,
+      "-inflict_up": -0.2,
+      "inflict_up-1": -0.8,
+      "1-status_up": 0.6,
+      "-status_up": -0.4,
+      "status_up-1": -0.6
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

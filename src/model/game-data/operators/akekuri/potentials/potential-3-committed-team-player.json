@@ -2,6 +2,16 @@
   "properties": {
     "id": "AKEKURI_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "potential_3": 1,
+      "atk": 0.1,
+      "1-potential_3": 0,
+      "-potential_3": -1,
+      "potential_3-1": 0,
+      "1-atk": 0.9,
+      "-atk": -0.1,
+      "atk-1": -0.9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

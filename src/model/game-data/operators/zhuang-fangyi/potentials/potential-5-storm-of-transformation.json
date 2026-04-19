@@ -2,6 +2,12 @@
   "properties": {
     "id": "ZHUANG_FANGYI_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "ignore_pulse_resist": 0.15,
+      "1-ignore_pulse_resist": 0.85,
+      "-ignore_pulse_resist": -0.15,
+      "ignore_pulse_resist-1": -0.85
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

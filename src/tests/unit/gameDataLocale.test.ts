@@ -12,7 +12,7 @@ import {
   getGameDataEntry,
 } from '../../locales/gameDataLocale';
 import { registerLocale, loadLocaleById } from '../../locales/locale';
-import { DataStatus } from '../../consts/enums';
+import { DataStatus, StatusType } from '../../consts/enums';
 
 describe('gameDataLocale', () => {
   beforeAll(() => {
@@ -25,7 +25,7 @@ describe('gameDataLocale', () => {
       'gear.ABURREY_LEGACY.event.name': "Aburrey's Legacy",
       'gear.ABURREY_LEGACY.status.ABURREY_LEGACY_BATTLE_SKILL.event.name': "Aburrey's Legacy (BS)",
       'consumable.GINSENG_MEAT_STEW.event.name': 'Ginseng Meat Stew',
-      'status.FOCUS.event.name': 'Focus',
+      [`${LocaleKey.genericStatus(StatusType.FOCUS)}.event.name`]: 'Focus',
       'gd.test.unknownop.event.name': 'placeholder',
     });
     registerLocale('fr-FR', {
@@ -36,6 +36,10 @@ describe('gameDataLocale', () => {
   });
 
   afterAll(() => loadLocaleById('en-US'));
+  // Reset to en-US between tests so earlier `loadLocaleById('fr-FR')` calls
+  // in one block don't bleed into a later block's expectations (fr-FR now
+  // carries full Da Pan data — real locale, not a stub).
+  beforeEach(() => loadLocaleById('en-US'));
 
   describe('LocaleKey builders', () => {
     it('produces the expected prefixes', () => {
@@ -92,8 +96,10 @@ describe('gameDataLocale', () => {
     });
 
     it('falls back to en-US when key missing in current locale', () => {
+      // Use a key only registered in the beforeAll en-US fixture (not in
+      // any on-disk bundle) so we're guaranteed it's absent from fr-FR.
       loadLocaleById('fr-FR');
-      expect(resolveEventName(LocaleKey.operatorSkill('DA_PAN', 'FLIP_DA_WOK'))).toBe('FLIP DA WOK!');
+      expect(resolveEventName(LocaleKey.genericStatus(StatusType.FOCUS))).toBe('Focus');
     });
   });
 
@@ -107,12 +113,12 @@ describe('gameDataLocale', () => {
     });
 
     it('returns undefined for keys only added via registerLocale (not on disk)', () => {
-      // `op.DA_PAN.skill.FLIP_DA_WOK` IS on disk (ingested from the pilot
-      // file), so we pick a key that's only been registered in beforeAll.
-      // None of the beforeAll registrations land in `gameDataRecords` because
-      // they go through `registerLocale` directly, bypassing `ingest`.
-      expect(getGameDataEntry('en-US', 'weapon.AGGELOSLAYER.event.name')).toBeUndefined();
-      expect(getGameDataEntry('en-US', 'consumable.GINSENG_MEAT_STEW.event.name')).toBeUndefined();
+      // `getGameDataEntry` reads only from `gameDataRecords` — populated by
+      // `ingest()` at module load from files on disk. In-memory `registerLocale`
+      // overrides (e.g. in `beforeAll`) bypass that map and must not leak into
+      // the reconciler API. Use a synthetic key not present in any bundle.
+      expect(getGameDataEntry('en-US', 'weapon.TEST_WEAPON.segment.0.frame.1.name')).toBeUndefined();
+      expect(getGameDataEntry('en-US', 'gd.test.unknownop.event.name')).toBeUndefined();
     });
 
     it('returns the full record including dataStatus for entries on disk', () => {

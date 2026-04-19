@@ -3,7 +3,33 @@
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "DISTORTION"
+    "id": "DISTORTION",
+    "descriptionParams": {
+      "atk_scale": 3.6,
+      "atk_scale2": 6.3,
+      "poise": 10,
+      "usp": 10,
+      "rate": 0.15,
+      "duration": 6,
+      "1-atk_scale": -2.6,
+      "-atk_scale": -3.6,
+      "atk_scale-1": 2.6,
+      "1-atk_scale2": -5.3,
+      "-atk_scale2": -6.3,
+      "atk_scale2-1": 5.3,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-rate": 0.85,
+      "-rate": -0.15,
+      "rate-1": -0.85,
+      "1-duration": -5,
+      "-duration": -6,
+      "duration-1": 5
+    }
   },
   "segments": [
     {

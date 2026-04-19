@@ -48,6 +48,16 @@
   "properties": {
     "id": "YVONNE_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "Wisd": 20,
+      "CriticalRate": 0.07,
+      "1-Wisd": -19,
+      "-Wisd": -20,
+      "Wisd-1": 19,
+      "1-CriticalRate": 0.9299999999999999,
+      "-CriticalRate": -0.07,
+      "CriticalRate-1": -0.9299999999999999
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

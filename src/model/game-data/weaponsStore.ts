@@ -9,9 +9,10 @@ import { VerbType } from '../../dsl/semantics';
 import { StatType } from '../enums/stats';
 import { resolveEffectStat } from '../enums/stats';
 import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
+import { LocaleKey, resolveEventName } from '../../locales/gameDataLocale';
 
 // ── Validation ──────────────────────────────────────────────────────────────
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'rarity']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'type', 'rarity']);
 const VALID_METADATA_KEYS = new Set(['originId', 'dataSources', 'icon', 'nameId', 'dataStatus']);
 const VALID_TOP_KEYS = new Set(['skills', 'properties', 'metadata', 'segments']);
 
@@ -99,7 +100,7 @@ export class Weapon {
     this.skills = (json.skills ?? []) as string[];
     this.segments = (json.segments ?? []) as { clause?: ClausePredicate[] }[];
     this.id = (props.id ?? '') as string;
-    this.name = (props.name ?? '') as string;
+    this.name = this.id ? resolveEventName(LocaleKey.weapon(this.id)) : '';
     this.type = (props.type ?? '') as string;
     this.rarity = (props.rarity ?? 0) as number;
     this.dataSources = (meta.dataSources ?? []) as string[];
@@ -146,7 +147,6 @@ export class Weapon {
       skills: this.skills,
       properties: {
         id: this.id,
-        name: this.name,
         type: this.type,
         rarity: this.rarity,
       },

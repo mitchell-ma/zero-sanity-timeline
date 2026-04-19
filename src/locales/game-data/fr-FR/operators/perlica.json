@@ -1,0 +1,78 @@
+{
+  "op.PERLICA.event.name": {
+    "text": "Perlica",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.1.event.description": {
+    "text": "Renforce la compétence de combo Protocole instantané : Chaîne : durée d'Électrification +{duration-1:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.1.event.name": {
+    "text": "Gestion de crise",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.2.event.description": {
+    "text": "Renforce l'ultime Protocole ε : 70,41 K : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.2.event.name": {
+    "text": "Tactique de négociation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.3.event.description": {
+    "text": "Lorsque Perlica applique Électrification à l'ennemi, elle obtient +{atk_up:0%} d'ATQ pendant {atk_duration:0} s. Effet cumulable {max_stack:0} fois.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.3.event.name": {
+    "text": "Devoir de supervision",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.4.event.description": {
+    "text": "Renforce la compétence de combo Protocole instantané : Chaîne : les effets du malus de DÉG des Arts subis appliqués à l'ennemi par l'Électrification de la compétence passent à {extra_scaling} fois sa valeur d'origine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.4.event.name": {
+    "text": "Accompagnement constant",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.5.event.description": {
+    "text": "Renforce l'ultime Protocole ε : 70,41 K : taux de coups critiques +{crit:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.5.event.name": {
+    "text": "Rentrée contrôlée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.INSTANT_PROTOCOL_CHAIN.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsque l'opérateur contrôlé exécute un Coup final sur un ennemi.\nRelâche l'énergie électromagnétique stockée pour bombarder la cible, lui infligeant des DÉG électriques et l'électrifiant temporairement.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.INSTANT_PROTOCOL_CHAIN.event.name": {
+    "text": "Protocole instantané : Chaîne",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_ALPHA_BREACH_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG électriques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG électriques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG électriques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_ALPHA_BREACH_BATK.event.name": {
+    "text": "Protocole α : Brèche",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_EPSILON.event.description": {
+    "text": "Téléporte via Protocole un énorme morceau de débris orbital à l'impact dévastateur sur le champ de bataille. Tous les ennemis dans la zone d'effet subissent de lourds DÉG électriques.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_EPSILON.event.name": {
+    "text": "Protocole ε : 70,41 K",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_OMEGA_STRIKE.event.description": {
+    "text": "Lâche une décharge d'énergie électromagnétique qui inflige des DÉG électriques ainsi qu'une altération électrique aux ennemis dans une petite zone.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_OMEGA_STRIKE.event.name": {
+    "text": "Protocole ω : Frappe",
+    "dataStatus": "RECONCILED"
+  }
+}

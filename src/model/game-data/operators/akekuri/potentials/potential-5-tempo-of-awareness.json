@@ -30,6 +30,16 @@
   "properties": {
     "id": "AKEKURI_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "duration": 5,
+      "potential_5_duration": 5,
+      "1-duration": -4,
+      "-duration": -5,
+      "duration-1": 4,
+      "1-potential_5_duration": -4,
+      "-potential_5_duration": -5,
+      "potential_5_duration-1": 4
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

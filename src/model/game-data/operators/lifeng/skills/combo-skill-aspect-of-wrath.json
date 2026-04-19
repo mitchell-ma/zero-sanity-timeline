@@ -3,7 +3,29 @@
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "ASPECT_OF_WRATH"
+    "id": "ASPECT_OF_WRATH",
+    "descriptionParams": {
+      "atk_scale": 1.05,
+      "poise": 10,
+      "usp": 10,
+      "atk_scale2": 3.75,
+      "duration": 20,
+      "1-atk_scale": -0.050000000000000044,
+      "-atk_scale": -1.05,
+      "atk_scale-1": 0.050000000000000044,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-atk_scale2": -2.75,
+      "-atk_scale2": -3.75,
+      "atk_scale2-1": 2.75,
+      "1-duration": -19,
+      "-duration": -20,
+      "duration-1": 19
+    }
   },
   "segments": [
     {

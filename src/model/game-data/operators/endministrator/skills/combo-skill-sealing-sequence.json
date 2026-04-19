@@ -3,7 +3,33 @@
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "SEALING_SEQUENCE"
+    "id": "SEALING_SEQUENCE",
+    "descriptionParams": {
+      "atk_scale": 1,
+      "atk_scale_trigger": 4,
+      "originum_ult_break_scale": 6,
+      "poise": 10,
+      "usp": 10,
+      "duration": 5,
+      "1-atk_scale": 0,
+      "-atk_scale": -1,
+      "atk_scale-1": 0,
+      "1-atk_scale_trigger": -3,
+      "-atk_scale_trigger": -4,
+      "atk_scale_trigger-1": 3,
+      "1-originum_ult_break_scale": -5,
+      "-originum_ult_break_scale": -6,
+      "originum_ult_break_scale-1": 5,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-duration": -4,
+      "-duration": -5,
+      "duration-1": 4
+    }
   },
   "segments": [
     {

@@ -1,0 +1,78 @@
+{
+  "op.AKEKURI.event.name": {
+    "text": "Akekuri",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.1.event.description": {
+    "text": "Après avoir récupéré des PC avec une compétence, Akekuri obtient +{atk_up:0%} d'ATQ pendant {duration:0} s. Effet cumulable {max_stack:0} fois.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.1.event.name": {
+    "text": "Retour positif",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.2.event.description": {
+    "text": "Agilité +{Agi:0}, Intelligence +{Wisd:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.2.event.name": {
+    "text": "Idéaliste passionnée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.3.event.description": {
+    "text": "Renforce l'ultime ESCOUADE ! AVEC MOI ! : tant que l'ultime est actif, toute l'équipe obtient +{atk:0%} d'ATQ.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.3.event.name": {
+    "text": "Coéquipière investie",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.4.event.description": {
+    "text": "Renforce l'ultime ESCOUADE ! AVEC MOI ! : coût en énergie d'ultime -{1-costValue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.4.event.name": {
+    "text": "Statut parfait",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.5.event.description": {
+    "text": "Renforce le talent Concentration totale : même une fois que l'ultime ESCOUADE ! AVEC MOI ! prend fin, le bonus de Lien persiste pendant {potential_5_duration:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.5.event.name": {
+    "text": "Tempo de vigilance",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.BURST_OF_PASSION.event.description": {
+    "text": "Une entaille frontale qui inflige des DÉG thermiques et applique une altération thermique.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.BURST_OF_PASSION.event.name": {
+    "text": "Explosion passionnelle",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.FLASH_AND_DASH.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi est déséquilibré ou touche un nœud de déséquilibre. Permet d'effectuer une ruée de contre avec 2 séquences de poussée. Chaque séquence inflige des DÉG physiques et restaure des PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.FLASH_AND_DASH.event.name": {
+    "text": "Ruée éclair",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SQUAD_ON_ME.event.description": {
+    "text": "Entre dans un état de canalisation et tire 3 fusées de ralliement. Chaque tir restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SQUAD_ON_ME.event.name": {
+    "text": "ESCOUADE ! AVEC MOI !",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SWORD_OF_ASPIRATION_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SWORD_OF_ASPIRATION_BATK.event.name": {
+    "text": "Épée d'aspiration",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -10,6 +10,7 @@ import { NounType, VerbType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues, validateSegmentShape } from './validationUtils';
+import { LocaleKey, GENERIC_WEAPON_ID, resolveEventName, resolveOptionalEventDescription } from '../../locales/gameDataLocale';
 
 // ── DSL value types ─────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ export interface StatusSegment {
 
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
 const VALID_TOP_KEYS = new Set(['segments', 'onTriggerClause', 'onExitClause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -181,8 +182,15 @@ export class WeaponStat {
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
     this.onExitClause = (json.onExitClause ?? []) as ClausePredicate[];
     this.id = (props.id ?? '') as string;
-    this.name = (props.name ?? '') as string;
-    if (props.description) this.description = props.description as string;
+    const weaponId = (meta.originId ?? '') as string;
+    const prefix = this.id
+      ? LocaleKey.weaponStatus(weaponId || GENERIC_WEAPON_ID, this.id)
+      : '';
+    this.name = prefix ? resolveEventName(prefix) : '';
+    if (prefix) {
+      const desc = resolveOptionalEventDescription(prefix);
+      if (desc !== undefined) this.description = desc;
+    }
     this.to = (props.to ?? 'OPERATOR') as string;
     this.toDeterminer = (props.toDeterminer ?? 'THIS') as string;
     this.duration = (props.duration ?? { value: { verb: VerbType.IS, value: 0 }, unit: UnitType.SECOND }) as DurationConfig;
@@ -211,7 +219,8 @@ export class WeaponStat {
       ...(this.onExitClause.length > 0 ? { onExitClause: this.onExitClause } : {}),
       properties: {
         id: this.id,
-        name: this.name,
+        // Reproject locale-resolved strings so configCache/getStatusDef surfaces them.
+        ...(this.name ? { name: this.name } : {}),
         ...(this.description ? { description: this.description } : {}),
         to: this.to,
         toDeterminer: this.toDeterminer,

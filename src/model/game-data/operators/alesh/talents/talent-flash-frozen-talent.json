@@ -158,6 +158,16 @@
   ],
   "properties": {
     "id": "FLASH_FROZEN_FOR_FRESHNESS",
+    "descriptionParams": {
+      "usp": 4,
+      "usp_self": 8,
+      "1-usp": -3,
+      "-usp": -4,
+      "usp-1": 3,
+      "1-usp_self": -7,
+      "-usp_self": -8,
+      "usp_self-1": 7
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

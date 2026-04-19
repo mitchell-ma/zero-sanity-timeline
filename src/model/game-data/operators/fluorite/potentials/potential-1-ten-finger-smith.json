@@ -2,6 +2,16 @@
   "properties": {
     "id": "FLUORITE_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "Agi": 10,
+      "Wisd": 10,
+      "1-Agi": -9,
+      "-Agi": -10,
+      "Agi-1": 9,
+      "1-Wisd": -9,
+      "-Wisd": -10,
+      "Wisd-1": 9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

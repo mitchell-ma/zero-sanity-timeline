@@ -418,7 +418,25 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "ROLLING_CUT_BATK"
+    "id": "ROLLING_CUT_BATK",
+    "descriptionParams": {
+      "atk_scale": 1.36,
+      "poise": 20,
+      "atb": 21,
+      "1-atk_scale": -0.3600000000000001,
+      "-atk_scale": -1.36,
+      "atk_scale-1": 0.3600000000000001,
+      "1-poise": -19,
+      "-poise": -20,
+      "poise-1": 19,
+      "1-atb": -20,
+      "-atb": -21,
+      "atb-1": 20,
+      "atk_scale_2": 0.75,
+      "1-atk_scale_2": 0.25,
+      "-atk_scale_2": -0.75,
+      "atk_scale_2-1": -0.25
+    }
   },
   "metadata": {
     "originId": "DA_PAN",

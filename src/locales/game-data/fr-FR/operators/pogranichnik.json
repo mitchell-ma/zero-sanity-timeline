@@ -1,0 +1,78 @@
+{
+  "op.POGRANICHNIK.event.name": {
+    "text": "Pogranichnik",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Front pulvérisant : toucher au moins 2 ennemis restaure {atb_return:0} PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.1.event.name": {
+    "text": "Balayage du front",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.2.event.description": {
+    "text": "Volonté +{Will:0}, DÉG physiques infligés +{PhysicalDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.2.event.name": {
+    "text": "« En avant »",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.3.event.description": {
+    "text": "Renforce le talent Bannière vivante : la quantité de PC récupérés nécessaires pour bénéficier de Moral brûlant est réduite de {atb_gain:0}. Cumuls max. de Moral brûlant sur soi +{max_stack_owner-3}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.3.event.name": {
+    "text": "Étendard au vent",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.4.event.description": {
+    "text": "Renforce l'ultime Bannière de l'égide, en avant : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.4.event.name": {
+    "text": "Bouclier de Talos-II",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.5.event.description": {
+    "text": "Renforce la compétence de combo Entaille lunaire : le temps de recharge est désormais de {coolDown:0} s ; la récupération de PC passe à {atb_ratio:0.0} fois sa valeur d'origine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.5.event.name": {
+    "text": "Nouvelle lame",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.ALL_OUT_OFFENSIVE_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 5 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.ALL_OUT_OFFENSIVE_BATK.event.name": {
+    "text": "Attaque totale",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.FULL_MOON_SLASH.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsque l'effet de Broyage ou de Brèche consomme les cumuls de Vulnérabilité de l'ennemi. Exécute plusieurs séquences d'entailles (jusqu'à un maximum de 3) en fonction de la quantité maximale de cumuls de Vulnérabilité consommée. Celles-ci infligent des DÉG physiques et restaurent quelques PC. Chaque entaille inflige davantage de DÉG et permet de récupérer plus de PC. Consommer 4 cumuls de Vulnérabilité augmente les effets de la 3e séquence d'entailles.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.FULL_MOON_SLASH.event.name": {
+    "text": "Entaille lunaire",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.SHIELDGUARD_BANNER.event.description": {
+    "text": "Invoque 4 égides qui permettent d'avancer et de repousser tous les ennemis qui se trouvent sur le chemin, leur infligeant des DÉG physiques tout en générant 5 points de Serment d'acier. Lorsqu'un ennemi est victime d'un statut physique ou se voit infliger des DÉG par la compétence de combo de Pogranichnik, ce dernier consomme 1 point de Serment d'acier et invoque 1 égide pour harceler l'ennemi en question, lui infligeant des DÉG physiques et restaurant quelques PC. Lorsque le dernier point de Serment d'acier est consommé, les 4 égides initient une attaque décisive qui inflige d'importants DÉG physiques à la cible tout en restaurant une grande quantité de PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.SHIELDGUARD_BANNER.event.name": {
+    "text": "Bannière de l'égide, en avant",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.THE_PULVERIZING_FRONT.event.description": {
+    "text": "Pogranichnik exécute une attaque tranchante à 2 séquences sur les ennemis devant lui, leur infligeant des DÉG physiques ainsi qu'un effet de Brèche. Il récupère également des PC en fonction du nombre de cumuls de Vulnérabilité consommés. L'effet de récupération de PC ne peut se déclencher qu'une seule fois, même si la compétence touche plusieurs cibles.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.THE_PULVERIZING_FRONT.event.name": {
+    "text": "Front pulvérisant",
+    "dataStatus": "RECONCILED"
+  }
+}

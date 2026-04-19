@@ -147,6 +147,12 @@
   ],
   "properties": {
     "id": "MESSENGER_S_SONG_TALENT",
+    "descriptionParams": {
+      "add": 0.07,
+      "1-add": 0.9299999999999999,
+      "-add": -0.07,
+      "add-1": -0.9299999999999999
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

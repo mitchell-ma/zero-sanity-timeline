@@ -15,6 +15,7 @@ import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames
 
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectThisOperatorInClauses, collectEnemyWithDeterminer } from './validationUtils';
+import { LocaleKey, resolveEventName, resolveOptionalEventDescription, resolveSegmentName, resolveFrameName } from '../../locales/gameDataLocale';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -40,7 +41,13 @@ interface TriggerClause {
 
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType', 'level']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType', 'eventCategoryType', 'maxLevel', 'crowdControls']);
+const VALID_PROPERTIES_KEYS = new Set([
+  'id', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer',
+  'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType',
+  'eventCategoryType', 'maxLevel', 'crowdControls',
+  // Allowed when a potential file is loaded-as-a-status:
+  'level', 'descriptionParams',
+]);
 const VALID_TOP_KEYS = new Set([
   'onTriggerClause', 'onEntryClause', 'onExitClause',
   // Evaluation mode for each clause bucket — FIRST_MATCH stops after the first
@@ -261,17 +268,33 @@ export class OperatorStatus {
     if (json.onExitClauseType) this.onExitClauseType = json.onExitClauseType as string;
     const rawSegments = (json.segments ?? []) as StatusSegment[];
     this._rawSegments = rawSegments;
-    this.segments = rawSegments.map(seg => {
+    // Compute the locale prefix up front so segment/frame names can be resolved
+    // while building the view-layer segments below.
+    this.id = (props.id ?? '') as string;
+    const operatorId = (meta.originId ?? '') as string;
+    // Operator-specific statuses key under op.<id>.status.<sid>; generic
+    // statuses (operators/generic/ and generic/statuses/) key under status.<sid>.
+    // The loader may override this default via the `__localePrefix` hint when a
+    // file is a potential/talent being loaded as a status (those live under
+    // different locale prefixes).
+    const prefixOverride = (json as { __localePrefix?: string }).__localePrefix;
+    const prefix = prefixOverride ?? (this.id
+      ? (operatorId
+          ? LocaleKey.operatorStatus(operatorId, this.id)
+          : LocaleKey.genericStatus(this.id))
+      : '');
+    this.segments = rawSegments.map((seg, si) => {
       const segProps = seg.properties as Record<string, unknown> | undefined;
       const durConfig = segProps?.duration as { value: unknown; unit: string } | undefined;
       const durationFrames = durConfig
         ? Math.round(resolveValueNode(durConfig.value as import('../../dsl/semantics').ValueNode, DEFAULT_VALUE_CONTEXT) * FPS)
         : 0;
       const segElement = segProps?.element as string | undefined;
+      const segName = prefix ? resolveSegmentName(prefix, si) : undefined;
       const segData: EventSegmentData = {
         properties: {
           duration: durationFrames,
-          name: segProps?.name as string | undefined,
+          ...(segName !== undefined ? { name: segName } : {}),
           element: segElement,
           // Preserve segment-type classifications (ANIMATION, COOLDOWN,
           // IMMEDIATE_COOLDOWN, etc.) from the raw config — the layout,
@@ -283,19 +306,27 @@ export class OperatorStatus {
         },
       };
       if (seg.frames && seg.frames.length > 0) {
-        segData.frames = seg.frames.map(f => {
+        segData.frames = seg.frames.map((f, fi) => {
           const marker = new DataDrivenSkillEventFrame(f as Record<string, unknown>).toMarker(FPS) as EventFrameMarker;
           // Inherit segment element for frame diamond coloring when the frame
           // doesn't specify its own.
           if (!marker.damageElement && segElement) marker.damageElement = segElement;
+          const frameName = prefix ? resolveFrameName(prefix, si, fi) : undefined;
+          if (frameName !== undefined) (marker as unknown as Record<string, unknown>).name = frameName;
           return marker;
         });
       }
       return segData;
     });
-    this.id = (props.id ?? '') as string;
-    this.name = (props.name ?? '') as string;
-    if (props.description) this.description = props.description as string;
+    this.name = prefix ? resolveEventName(prefix) : '';
+    if (prefix) {
+      // descriptionParams live on potential / talent files and carry the
+      // blackboard values that `{poise:0}` / `{Str:0}` / `{duration:0s}`
+      // templates reference.
+      const descriptionParams = props.descriptionParams as Record<string, number> | undefined;
+      const desc = resolveOptionalEventDescription(prefix, descriptionParams);
+      if (desc !== undefined) this.description = desc;
+    }
     if (props.type) this.type = props.type as string;
     if (props.element) this.element = props.element as string;
     this.target = (props.target ?? props.to ?? 'OPERATOR') as string;
@@ -388,7 +419,8 @@ export class OperatorStatus {
       ...(this._rawSegments.length > 0 ? { segments: this._rawSegments } : {}),
       properties: {
         id: this.id,
-        name: this.name,
+        // Reproject locale-resolved strings so configCache/getStatusDef surfaces them.
+        ...(this.name ? { name: this.name } : {}),
         ...(this.description ? { description: this.description } : {}),
         ...(this.type ? { type: this.type } : {}),
         ...(this.element ? { element: this.element } : {}),
@@ -409,8 +441,19 @@ export class OperatorStatus {
     };
   }
 
-  /** Deserialize from JSON with validation. */
-  static deserialize(json: Record<string, unknown>, source?: string): OperatorStatus {
+  /**
+   * Deserialize from JSON with validation.
+   *
+   * `localePrefix`, when provided, overrides the default
+   * `op.<opId>.status.<id>` lookup used by the constructor — required for
+   * potential/talent files that are also loaded as statuses (their strings
+   * live under `op.<opId>.potential.<level>` / `op.<opId>.talent.<id>`).
+   */
+  static deserialize(
+    json: Record<string, unknown>,
+    source?: string,
+    localePrefix?: string,
+  ): OperatorStatus {
     const meta = json.metadata as Record<string, unknown> | undefined;
     if (meta?.isEnabled !== false) {
       const errors = validateOperatorStatus(json);
@@ -418,6 +461,10 @@ export class OperatorStatus {
         const id = (json.properties as Record<string, unknown>)?.id ?? 'unknown';
         console.warn(`[OperatorStatus] Validation errors in ${source ?? id}:\n  ${errors.join('\n  ')}`);
       }
+    }
+    if (localePrefix) {
+      const tagged = { ...json, __localePrefix: localePrefix };
+      return new OperatorStatus(tagged);
     }
     return new OperatorStatus(json);
   }
@@ -457,11 +504,34 @@ for (const key of operatorStatusContext.keys()) {
   // self-triggering potential statuses like Estella P5 Survival is a Win).
   // Other potential files may still carry legacy clauses — skip them so
   // they don't fire without proper potential-level gating.
-  if (match[2] === 'potentials') {
+  const kind = match[2];
+  if (kind === 'potentials') {
     const props = json.properties as Record<string, unknown> | undefined;
     if (props?.eventType !== EventType.STATUS) continue;
   }
-  const status = OperatorStatus.deserialize(json, key);
+
+  // Pick the locale prefix that matches the source directory. Always derive
+  // the operator id from the file path (_dirToId) rather than the file's
+  // metadata.originId — some status JSONs set originId to their parent skill
+  // (e.g. OVERCLOCKED_MOMENT) rather than the operator.
+  const fileProps = (json.properties ?? {}) as Record<string, unknown>;
+  const statusId = (fileProps.id ?? '') as string;
+  let localePrefix: string | undefined;
+  if (kind === 'statuses' && statusId) {
+    localePrefix = LocaleKey.operatorStatus(operatorId, statusId);
+  } else if (kind === 'talents' && statusId) {
+    localePrefix = LocaleKey.operatorTalent(operatorId, statusId);
+  } else if (kind === 'potentials') {
+    const level = fileProps.level as number | undefined;
+    if (typeof level === 'number') localePrefix = LocaleKey.operatorPotential(operatorId, level);
+    else {
+      // Filename fallback: potential-<N>-*.json
+      const m = key.match(/potential-(\d+)-/);
+      if (m) localePrefix = LocaleKey.operatorPotential(operatorId, parseInt(m[1], 10));
+    }
+  }
+
+  const status = OperatorStatus.deserialize(json, key, localePrefix);
 
   if (!operatorStatusCache.has(operatorId)) {
     operatorStatusCache.set(operatorId, []);
@@ -469,11 +539,13 @@ for (const key of operatorStatusContext.keys()) {
   operatorStatusCache.get(operatorId)!.push(status);
 }
 
-// Load generic statuses from operators/generic/ (flat) and generic/statuses/
+// Load generic statuses from operators/generic/ (flat) and generic/statuses/.
+// Both are keyed in the locale bundle under `status.<id>` (no operator scope).
 const genericStatusContext = require.context('./operators/generic', false, /\.json$/);
 for (const key of genericStatusContext.keys()) {
   const json = genericStatusContext(key) as Record<string, unknown>;
-  const status = OperatorStatus.deserialize(json, key);
+  const sid = ((json.properties ?? {}) as Record<string, unknown>).id as string | undefined;
+  const status = OperatorStatus.deserialize(json, key, sid ? LocaleKey.genericStatus(sid) : undefined);
 
   if (!operatorStatusCache.has('generic')) {
     operatorStatusCache.set('generic', []);
@@ -489,7 +561,8 @@ for (const key of genericStatusDirContext.keys()) {
   if (props && !props.stacks) {
     props.stacks = { limit: { verb: 'IS', value: UNLIMITED_STACKS }, interactionType: 'NONE' };
   }
-  const status = OperatorStatus.deserialize(json, key);
+  const sid = props?.id as string | undefined;
+  const status = OperatorStatus.deserialize(json, key, sid ? LocaleKey.genericStatus(sid) : undefined);
 
   if (!operatorStatusCache.has('generic')) {
     operatorStatusCache.set('generic', []);

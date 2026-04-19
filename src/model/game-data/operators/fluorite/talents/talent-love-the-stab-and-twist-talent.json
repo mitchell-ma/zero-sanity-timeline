@@ -83,6 +83,12 @@
   ],
   "properties": {
     "id": "LOVE_THE_STAB_AND_TWIST_TALENT",
+    "descriptionParams": {
+      "dmg_up": 0.2,
+      "1-dmg_up": 0.8,
+      "-dmg_up": -0.2,
+      "dmg_up-1": -0.8
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

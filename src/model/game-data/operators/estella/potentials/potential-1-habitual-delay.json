@@ -2,6 +2,16 @@
   "properties": {
     "id": "ESTELLA_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "has_potential1": 1,
+      "rate_plus": 3,
+      "1-has_potential1": 0,
+      "-has_potential1": -1,
+      "has_potential1-1": 0,
+      "1-rate_plus": -2,
+      "-rate_plus": -3,
+      "rate_plus-1": 2
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

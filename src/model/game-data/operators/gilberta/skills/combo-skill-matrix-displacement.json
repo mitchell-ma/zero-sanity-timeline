@@ -4,6 +4,20 @@
     "eventCategoryType": "COMBO",
     "element": "NATURE",
     "id": "MATRIX_DISPLACEMENT",
+    "descriptionParams": {
+      "atk_scale": 3.15,
+      "usp": 10,
+      "poise": 5,
+      "1-atk_scale": -2.15,
+      "-atk_scale": -3.15,
+      "atk_scale-1": 2.15,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-poise": -4,
+      "-poise": -5,
+      "poise-1": 4
+    },
     "suppliedParameters": {
       "VARY_BY": [
         {

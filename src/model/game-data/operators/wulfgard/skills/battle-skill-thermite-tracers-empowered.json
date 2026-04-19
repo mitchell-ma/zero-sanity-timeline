@@ -30,7 +30,37 @@
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
-    "id": "THERMITE_TRACERS_EMPOWERED"
+    "id": "THERMITE_TRACERS_EMPOWERED",
+    "descriptionParams": {
+      "atk_scale": 0.77,
+      "atk_scale_plus": 8.5,
+      "poise_first_bullet": 1.67,
+      "poise_extra_bullet": 5,
+      "poise_first_bullet_display": 5,
+      "atk_scale_plus_fail": 0.81,
+      "poise_extra_bullet_fail": 0,
+      "1-atk_scale": 0.22999999999999998,
+      "-atk_scale": -0.77,
+      "atk_scale-1": -0.22999999999999998,
+      "1-atk_scale_plus": -7.5,
+      "-atk_scale_plus": -8.5,
+      "atk_scale_plus-1": 7.5,
+      "1-poise_first_bullet": -0.6699999999999999,
+      "-poise_first_bullet": -1.67,
+      "poise_first_bullet-1": 0.6699999999999999,
+      "1-poise_extra_bullet": -4,
+      "-poise_extra_bullet": -5,
+      "poise_extra_bullet-1": 4,
+      "1-poise_first_bullet_display": -4,
+      "-poise_first_bullet_display": -5,
+      "poise_first_bullet_display-1": 4,
+      "1-atk_scale_plus_fail": 0.18999999999999995,
+      "-atk_scale_plus_fail": -0.81,
+      "atk_scale_plus_fail-1": -0.18999999999999995,
+      "1-poise_extra_bullet_fail": 1,
+      "-poise_extra_bullet_fail": 0,
+      "poise_extra_bullet_fail-1": -1
+    }
   },
   "segments": [
     {

@@ -32,9 +32,17 @@ Naming convention:
 - asset: snake_case
 
 Commands:
-- `npm start` — start localhost dev server
-- `npm run deploy` — build and deploy to GitHub Pages
+- `npm start` — start localhost dev server (CRA only; no Worker/API routes)
+- `npm run preview` — build + run the Cloudflare Worker locally at http://localhost:8787 (reads `.dev.vars` for secrets)
+- `npm run deploy` — build and deploy to Cloudflare Workers (`wrangler deploy`)
+- `npx wrangler tail` — stream live logs from the deployed Worker
+- `npx wrangler secret list` / `npx wrangler secret put <NAME>` — manage Worker secrets
 - `npx eslint src/` — run linter
+
+Deployment:
+- Runtime is a Cloudflare Worker (`worker/index.ts`) that serves the built SPA from the `ASSETS` binding and handles `POST /api/feedback` (Resend) and `GET /api/turn-credentials` (Cloudflare Realtime TURN).
+- Required secrets (set via `npx wrangler secret put <NAME>`): `RESEND_API_KEY`, `FEEDBACK_TO_EMAIL`, `FEEDBACK_FROM_EMAIL`, `CF_TURN_KEY_ID`, `CF_TURN_API_TOKEN`. See README.md for the full table + per-secret source.
+- Local API testing uses a gitignored `.dev.vars` file at repo root with the same `KEY=value` pairs.
 
 Rules:
 - **NEVER run destructive git commands:** `git reset --hard`, `git checkout .`, `git checkout -- <file>`, `git restore .`, `git restore <file>`, `git clean -f`, `git stash` (without explicit user request). Multiple agents may be working on the repo concurrently — destructive git operations will silently destroy other agents' in-progress work. If you encounter merge conflicts, unexpected state, or failing tests due to other changes, stop and ask the user rather than resetting.
@@ -60,6 +68,19 @@ Rules:
 - **JSON config values MUST use proper ValueNodes.** Constant values use `{ "verb": "IS", "value": N }`. Only use `VARY_BY` when values actually differ across levels. NEVER write `VARY_BY` with an array of identical values like `[5, 5, 5, ...]`.
 - **Column IDs MUST use enum values or exported constants — NEVER string literals.** Use `PhysicalStatusType.BREACH`, `REACTION_COLUMNS.COMBUSTION`, `SKILL_COLUMNS.BASIC`, `StatusType.FOCUS`, etc. Never write `'breach'`, `'combustion'`, `'basic'`, `'lift'` as column IDs. This applies everywhere: channel mappings, column builders, condition evaluators, status derivation engine resolvers, event interpretor lookups, tests, and any code that references a column. String literals silently break when column IDs change to enum values.
 - **All identity comparisons MUST use UIDs, IDs, or enum constants — NEVER string literals.** Compare events, statuses, operators, and skills by their `uid`, `id`, or typed enum values. Never compare against hardcoded display names or raw strings like `'Cooldown'`, `'Animation'`, `'Finisher'`. If a comparison target doesn't have an enum or constant, create one.
+
+Localization (i18n):
+- **User-facing strings are NOT on game-data JSON.** Every operator, skill, talent, potential, status, gear, and weapon file has **no `name` or `description` field** — `checkIdAndName` in `validationUtils.ts` rejects them. Strings live in per-area locale bundles under `src/locales/game-data/<locale>/{operators,weapons,gears}/*.json`, plus `consumables.json` / `generic.json` / `weapons-generic.json`. The runtime store constructor resolves them via `LocaleKey.*` builders (see `src/locales/gameDataLocale.ts`) and `resolveEventName` / `resolveOptionalEventDescription`.
+- **Key structure** (three-tier hierarchy — never collapse across tiers):
+  - Event tier: `<prefix>.event.name` / `<prefix>.event.description`
+  - Segment tier: `<prefix>.segment.<idx>.name`
+  - Frame tier: `<prefix>.segment.<idx>.frame.<idx>.name`
+- **Prefix builders** in `gameDataLocale.ts::LocaleKey`: `operator(id)`, `operatorSkill(op,sk)`, `operatorTalent(op,t)`, `operatorStatus(op,s)`, `operatorPotential(op,level)`, `weapon(id)`, `weaponSkill(wid,sid)` (use `GENERIC_WEAPON_ID` for shared stat-boost skills), `weaponStatus(wid,sid)`, `gear(id)`, `gearPiece(gid,pid)`, `gearStatus(gid,sid)`, `consumable(id)`, `genericStatus(id)`.
+- **Template interpolation via `{param:format}` tokens.** `t(key, params?)` / `resolveOptionalEventDescription(prefix, params?)` supports `{name}`, `{name:0}` (integer), `{name:1}` (1 decimal), `{name:0%}` (`value * 100 + "%"`), `{name:0s}` (seconds suffix). No expression parsing — expressions like `1-costValue` must be pre-computed in `descriptionParams`.
+- **`descriptionParams` live on the game-data JSON**, not in the locale. One set of numeric values serves every locale's template. Present on every potential / skill / talent file that has tokens. Extracted from Warfarin blackboards by `scripts/patch_skill_talent_params.py` and the parser's `buildPotentialDescriptionParams` — keys include `attrModifier`-derived names (`Str`, `Agi`, `PhysicalDamageIncrease`, ...), `attachBuff.blackboard` / `attachSkill.blackboard` keys (`poise`, `duration`, `dmg_up`, ...), `skillBbModifier.bbKey` (prefix `potential_N_` / `talent_N_` stripped), `skillParamModifier` paramType→key (`1: costValue`, `2: coolDown`), plus pre-computed expression variants (`1-X`, `-X`, `X-1`).
+- **Locale fallback chain**: current locale → en-US → return the key itself. fr-FR bundles are Warfarin-ingested via `npx tsx src/model/utils/parsers/parseWarfarinOperator.ts <slug> --locale=fr` (string-only — never mutates structural game data).
+- **`dataStatus` guards hand-curated translations.** Each locale entry is `{ text, dataStatus: 'RECONCILED' | 'VERIFIED' }`. `VERIFIED` entries are skipped by the Warfarin reconciler (see `mergeLocaleBundle` in `parseWarfarinOperator.ts`). New ingests seed as `RECONCILED`; flip to `VERIFIED` only after explicit review.
+- **Asset paths are hard-wired to `id`, not `name`.** Icon / splash / banner resolution in `operatorsStore`, `weaponsStore`, `gearPiecesStore`, `consumablesStore`, `operatorRegistry` uses `id.toLowerCase()` as the asset filename base. No name-based or substring fallbacks — if an asset doesn't match, rename the file.
 
 Game data:
 - **Terminology: "DSL" vs "JSON config".** The DSL is the grammar defined in `src/dsl/semantics.ts` — NounTypes, VerbTypes, AdjectiveTypes, ValueNode types, NOUN_QUALIFIER_MAPPING, NOUN_UNITS, etc. The JSON config files (`operators/*/skills/*.json`, `statuses/*.json`, `talents/*.json`) are data that conforms to the DSL grammar. When asked to "show the DSL", describe the grammar/schema. When asked to "show the config", show the raw JSON data.

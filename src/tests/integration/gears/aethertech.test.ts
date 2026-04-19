@@ -18,7 +18,7 @@ import { ENEMY_ID, PHYSICAL_INFLICTION_COLUMNS } from '../../../model/channels';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, breakdownFor, damageRowAtOrAfter, eventsOnColumn, findEntry,
-  gearLoadout, placeSkill, statContributionFromSource,
+  gearLoadout, placeSkill, statContributionFromSource, statusDisplayName
 } from './helpers';
 import type { AppResult } from '../helpers';
 
@@ -89,14 +89,14 @@ describe('Æthertech — gear set E2E', () => {
       const row = damageRowAtOrAfter(c, buff.startFrame + 1);
       expect(row).toBeDefined();
 
-      const contribution = statContributionFromSource(row, StatType.PHYSICAL_DAMAGE_BONUS, BUFF.name);
+      const contribution = statContributionFromSource(row, StatType.PHYSICAL_DAMAGE_BONUS, statusDisplayName(BUFF.id));
       expect(contribution).toBeGreaterThan(0);
 
       const entries = breakdownFor(row);
       const dmgEntry = findEntry(entries, 'Physical DMG%');
       expect(dmgEntry).toBeDefined();
       const sources = dmgEntry!.subEntries ?? [];
-      const buffSource = sources.find(s => s.label.toLowerCase().includes(BUFF.name.toLowerCase()));
+      const buffSource = sources.find(s => s.label.toLowerCase().includes(statusDisplayName(BUFF.id).toLowerCase()));
       expect(buffSource).toBeDefined();
     });
   });

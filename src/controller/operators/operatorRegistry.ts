@@ -21,6 +21,7 @@ import {
 } from '../gameDataStore';
 import { ATTRIBUTE_INCREASE_LOOKUP, type OperatorStatConfig } from '../../model/operators/dataDrivenOperator';
 import { loadCustomOperators } from '../../utils/customContentStorage';
+import { LocaleKey, resolveEventName, resolveOptionalEventDescription } from '../../locales/gameDataLocale';
 
 // Auto-discover splash art assets
 const splashContext = require.context('../../assets/operators', false, /banner\.webp$/);
@@ -127,8 +128,9 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     const skillName = categoryToName[key] ?? key;
     const rawEntry: string | undefined = typeMap[key];
     const resolvedSkillId = rawEntry ?? key;
-    const catData = opSkills?.[resolvedSkillId];
-    const desc = (catData?.properties as Record<string, unknown> | undefined)?.description as string | undefined;
+    const desc = resolvedSkillId
+      ? resolveOptionalEventDescription(LocaleKey.operatorSkill(operatorId, resolvedSkillId))
+      : undefined;
     skills[key] = { name: skillName, element: elementType, ...timing, ...(desc ? { description: desc } : {}) };
   }
 
@@ -147,7 +149,7 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
 
   return {
     id: operatorId,
-    name: opJson.name as string,
+    name: resolveEventName(LocaleKey.operator(operatorId)),
     color,
     element: elementType,
     operatorClassType: opJson.operatorClassType as string,
@@ -171,7 +173,6 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
 // ── Config validation ────────────────────────────────────────────────────────
 
 const FIELD_HINTS: Record<string, string> = {
-  name: 'operator name',
   elementType: 'element (Heat, Cryo, etc.)',
   operatorClassType: 'class (Striker, Caster, etc.)',
   weaponTypes: 'weapon type (Sword, Arts Unit, etc.)',
@@ -223,7 +224,7 @@ for (const id of getAllOperatorIds()) {
   }
   const issues = validateOperatorJson(json, true);
   if (issues.length > 0) {
-    const name = (json.name as string) ?? id;
+    const name = resolveEventName(LocaleKey.operator(id));
     const msg = formatWarning(name, issues, true);
     console.warn(msg);
     operatorWarnings.push({ id, name, isBuiltIn: true, message: msg });
@@ -232,7 +233,7 @@ for (const id of getAllOperatorIds()) {
   try {
     ALL_OPERATORS.push(buildViewOperatorFromJson(id, json));
   } catch (e) {
-    const name = (json.name as string) ?? id;
+    const name = resolveEventName(LocaleKey.operator(id));
     console.warn(`[game-data] ${name}: failed to build operator —`, e);
     operatorWarnings.push({ id, name, isBuiltIn: true, message: `[game-data] ${name}: unexpected build error. See console for details.` });
   }
@@ -248,7 +249,7 @@ export function registerCustomOperatorFromConfig(
   customId: string,
   opJson: Record<string, unknown>,
 ): ViewOperator | null {
-  const name = (opJson.name as string) ?? customId;
+  const name = resolveEventName(LocaleKey.operator(customId));
   clearOperatorWarning(customId);
   const issues = validateOperatorJson(opJson, false);
   if (issues.length > 0) {

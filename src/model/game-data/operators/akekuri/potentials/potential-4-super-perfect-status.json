@@ -2,6 +2,12 @@
   "properties": {
     "id": "AKEKURI_POTENTIAL_4",
     "level": 4,
+    "descriptionParams": {
+      "costValue": 0.9,
+      "1-costValue": 0.09999999999999998,
+      "-costValue": -0.9,
+      "costValue-1": -0.09999999999999998
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

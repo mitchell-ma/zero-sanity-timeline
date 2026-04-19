@@ -15,7 +15,10 @@
           "verb": "HAVE",
           "object": "POTENTIAL",
           "cardinalityConstraint": "GREATER_THAN_EQUAL",
-          "value": { "verb": "IS", "value": 1 }
+          "value": {
+            "verb": "IS",
+            "value": 1
+          }
         },
         {
           "subjectDeterminer": "THIS",
@@ -23,7 +26,12 @@
           "verb": "IS",
           "object": "OCCURRENCE",
           "cardinalityConstraint": "EXACTLY",
-          "with": { "value": { "verb": "IS", "value": 1 } }
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 1
+            }
+          }
         }
       ],
       "effects": [
@@ -39,15 +47,29 @@
   ],
   "segments": [
     {
-      "metadata": { "eventComponentType": "SEGMENT" },
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
       "properties": {
-        "name": "Four Symbols of Harmony (P1)",
-        "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" }
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 2
+          },
+          "unit": "SECOND"
+        }
       },
       "frames": [
         {
-          "metadata": { "eventComponentType": "FRAME" },
-          "properties": { "offset": { "value": 0, "unit": "SECOND" } },
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
           "clause": [
             {
               "conditions": [],
@@ -58,7 +80,12 @@
                   "objectId": "SUNDERBLADE",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
-                  "with": { "stacks": { "verb": "IS", "value": 1 } }
+                  "with": {
+                    "stacks": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
                 }
               ]
             }
@@ -70,17 +97,35 @@
   ],
   "properties": {
     "id": "FOUR_SYMBOLS_OF_HARMONY_P1",
-    "name": "Four Symbols of Harmony (P1)",
+    "level": 1,
+    "descriptionParams": {
+      "atk_scale": 1.15,
+      "atk_up_per_conduct": 1.15,
+      "1-atk_scale": -0.1499999999999999,
+      "-atk_scale": -1.15,
+      "atk_scale-1": 0.1499999999999999,
+      "1-atk_up_per_conduct": -0.1499999999999999,
+      "-atk_up_per_conduct": -1.15,
+      "atk_up_per_conduct-1": 0.1499999999999999
+    },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "POTENTIAL",
-    "duration": { "value": { "verb": "IS", "value": 2 }, "unit": "SECOND" },
-    "stacks": {
-      "limit": { "verb": "IS", "value": 1 },
-      "interactionType": "RESET"
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 2
+      },
+      "unit": "SECOND"
     },
-    "description": "Battle skill Mantra of Sundering improved: DMG multiplier is increased to 1.15 times the original. After entering battle, Zhuang Fangyi's first battle skill casting also creates 1 more Sunderblade (can exceed the per-casting creation limit)."
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    }
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",

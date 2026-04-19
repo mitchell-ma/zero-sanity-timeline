@@ -3,7 +3,33 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "NATURE",
-    "id": "APEX_PRANKSTER"
+    "id": "APEX_PRANKSTER",
+    "descriptionParams": {
+      "atk_scale1": 2.5,
+      "atk_scale2": 2.5,
+      "atk_scale3": 2.5,
+      "atk_scale4": 2.5,
+      "boom_up": 0.3,
+      "poise": 5,
+      "1-atk_scale1": -1.5,
+      "-atk_scale1": -2.5,
+      "atk_scale1-1": 1.5,
+      "1-atk_scale2": -1.5,
+      "-atk_scale2": -2.5,
+      "atk_scale2-1": 1.5,
+      "1-atk_scale3": -1.5,
+      "-atk_scale3": -2.5,
+      "atk_scale3-1": 1.5,
+      "1-atk_scale4": -1.5,
+      "-atk_scale4": -2.5,
+      "atk_scale4-1": 1.5,
+      "1-boom_up": 0.7,
+      "-boom_up": -0.3,
+      "boom_up-1": -0.7,
+      "1-poise": -4,
+      "-poise": -5,
+      "poise-1": 4
+    }
   },
   "segments": [
     {

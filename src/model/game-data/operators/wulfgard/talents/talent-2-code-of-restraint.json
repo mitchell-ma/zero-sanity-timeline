@@ -1,6 +1,16 @@
 {
   "properties": {
     "id": "WULFGARD_TALENT2_CODE_OF_RESTRAINT",
+    "descriptionParams": {
+      "returnskillpower": 10,
+      "talent2": 1,
+      "1-returnskillpower": -9,
+      "-returnskillpower": -10,
+      "returnskillpower-1": 9,
+      "1-talent2": 0,
+      "-talent2": -1,
+      "talent2-1": 0
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

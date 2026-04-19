@@ -50,6 +50,16 @@
   "properties": {
     "id": "ZHUANG_FANGYI_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "Will": 20,
+      "NormalSkillDamageIncrease": 0.15,
+      "1-Will": -19,
+      "-Will": -20,
+      "Will-1": 19,
+      "1-NormalSkillDamageIncrease": 0.85,
+      "-NormalSkillDamageIncrease": -0.15,
+      "NormalSkillDamageIncrease-1": -0.85
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

@@ -31,6 +31,7 @@ import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, EN
 import { t } from '../locales/locale';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { TimelineSourceType, InteractionModeType, ColumnType, DamageType, EventCategoryType } from '../consts/enums';
+import { localizeColumnLabel } from '../consts/timelineColumnLabels';
 import {
   Operator,
   Enemy,
@@ -1795,7 +1796,7 @@ export default React.memo(function CombatPlanner({
     const clickedEventUid = eventEl?.getAttribute('data-event-uid') ?? null;
     const removeItems: import('../consts/viewTypes').ContextMenuItem[] = [];
     if (clickedEventUid) {
-      removeItems.push({ separator: true }, { label: 'Remove Event', action: () => onRemoveEvent(clickedEventUid), danger: true });
+      removeItems.push({ separator: true }, { label: t('ctx.removeEvent'), action: () => onRemoveEvent(clickedEventUid), danger: true });
     }
 
     onContextMenu({
@@ -1914,7 +1915,7 @@ export default React.memo(function CombatPlanner({
       const col = columns.find((c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE && c.ownerEntityId === ev.ownerEntityId && c.columnId === ev.columnId);
       const items: import('../consts/viewTypes').ContextMenuItem[] = [];
       if (onRemoveEvent) {
-        items.push({ label: 'Remove Event', action: () => { onRemoveEvent(eventUid); onContextMenu(null); }, danger: true });
+        items.push({ label: t('ctx.removeEvent'), action: () => { onRemoveEvent(eventUid); onContextMenu(null); }, danger: true });
       }
       if (col) {
         const clickFrame = hoverFrameRef.current ?? ev.startFrame;
@@ -1985,11 +1986,11 @@ export default React.memo(function CombatPlanner({
     const segLabel = ev.segments[hoveredSegIndex]?.properties.name ?? formatSegmentShortName(undefined, hoveredSegIndex);
 
     const items: import('../consts/viewTypes').ContextMenuItem[] = [];
-    if (onResetEvent) items.push({ label: 'Reset Event to Default', action: () => { onResetEvent(eventUid); onContextMenu(null); } });
+    if (onResetEvent) items.push({ label: t('ctx.resetEvent'), action: () => { onResetEvent(eventUid); onContextMenu(null); } });
     if (multiSegment && !isCombo && onResetSegments) {
-      items.push({ label: `Reset Segment ${segLabel}`, action: () => { onResetSegments(eventUid); onContextMenu(null); } });
+      items.push({ label: t('ctx.resetSegment', { label: segLabel }), action: () => { onResetSegments(eventUid); onContextMenu(null); } });
     }
-    items.push({ label: 'Remove Event', action: () => { onRemoveEvent(eventUid); onContextMenu(null); }, danger: true });
+    items.push({ label: t('ctx.removeEvent'), action: () => { onRemoveEvent(eventUid); onContextMenu(null); }, danger: true });
     onContextMenu({ x: e.clientX, y: e.clientY, items });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onRemoveEvent, onRemoveEvents, onResetEvent, onResetEvents, onResetSegments, onContextMenu, events, selectedIds, onSelectedFramesChange, interactionMode, axis]);
@@ -2033,8 +2034,8 @@ export default React.memo(function CombatPlanner({
     if (onSetCritPins && crittableFrames.length > 0) {
       items.push({
         label: isBatch
-          ? (allCrit ? `Set ${crittableFrames.length} Frames No-Crit` : `Set ${crittableFrames.length} Frames Crit`)
-          : (allCrit ? 'Set No-Crit' : 'Set Crit'),
+          ? (allCrit ? t('ctx.setFramesNoCrit', { count: crittableFrames.length }) : t('ctx.setFramesCrit', { count: crittableFrames.length }))
+          : (allCrit ? t('ctx.setNoCrit') : t('ctx.setCrit')),
         action: () => {
           // Imperative DOM update for instant visual feedback
           for (const sf of crittableFrames) {
@@ -2065,8 +2066,8 @@ export default React.memo(function CombatPlanner({
       const chanceTarget = !allHit;
       items.push({
         label: isBatch
-          ? (allHit ? `Set ${chanceFrames.length} Frames No Chance` : `Set ${chanceFrames.length} Frames Chance`)
-          : (allHit ? 'Set No Chance' : 'Set Chance'),
+          ? (allHit ? t('ctx.setFramesNoChance', { count: chanceFrames.length }) : t('ctx.setFramesChance', { count: chanceFrames.length }))
+          : (allHit ? t('ctx.setNoChance') : t('ctx.setChance')),
         action: () => {
           for (const sf of chanceFrames) {
             const el = document.querySelector(`[data-frame-id="${sf.eventUid}-${sf.segmentIndex}-${sf.frameIndex}"]`);
@@ -2080,7 +2081,7 @@ export default React.memo(function CombatPlanner({
 
     if (isBatch) {
       items.push({
-        label: `Remove ${targetFrames.length} Frames`,
+        label: t('ctx.removeFrames', { count: targetFrames.length }),
         action: () => {
           onRemoveFrames?.(targetFrames);
           onSelectedFramesChange?.([]);
@@ -2090,7 +2091,7 @@ export default React.memo(function CombatPlanner({
       });
     } else {
       items.push({
-        label: 'Remove Frame',
+        label: t('ctx.removeFrame'),
         action: () => { onRemoveFrame?.(eventUid, segmentIndex, frameIndex); onContextMenu(null); },
         danger: true,
       });
@@ -2116,11 +2117,11 @@ export default React.memo(function CombatPlanner({
     const multiSegment = ev.segments.length > 1;
     const isCombo = ev.columnId === NounType.COMBO;
     const items: import('../consts/viewTypes').ContextMenuItem[] = [];
-    if (onResetEvent) items.push({ label: 'Reset Event to Default', action: () => { onResetEvent(eventUid); } });
+    if (onResetEvent) items.push({ label: t('ctx.resetEvent'), action: () => { onResetEvent(eventUid); } });
     if (multiSegment && !isCombo && onResetSegments) {
-      items.push({ label: `Reset Segment ${segLabel}`, action: () => { onResetSegments(eventUid); } });
+      items.push({ label: t('ctx.resetSegment', { label: segLabel }), action: () => { onResetSegments(eventUid); } });
     }
-    items.push({ label: 'Remove Event', action: () => onRemoveEvent(eventUid), danger: true });
+    items.push({ label: t('ctx.removeEvent'), action: () => onRemoveEvent(eventUid), danger: true });
     onContextMenu({ x: e.clientX, y: e.clientY, items });
   }, [readOnly, onContextMenu, onRemoveEvent, onResetEvent, onResetSegments, onSelectedFramesChange, events]);
 
@@ -2335,14 +2336,14 @@ export default React.memo(function CombatPlanner({
             >
               {col.type === 'mini-timeline' && col.headerVariant === 'skill' ? (
                 <span className={`skill-badge skill-badge--vertical skill-badge--${col.columnId}`}>
-                  {col.label}
+                  {localizeColumnLabel(col.label)}
                 </span>
               ) : col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? (
                 <span
                   className="skill-badge skill-badge--vertical"
                   style={{ color: col.color }}
                 >
-                  {col.label}
+                  {localizeColumnLabel(col.label)}
                 </span>
               ) : null}
             </div>

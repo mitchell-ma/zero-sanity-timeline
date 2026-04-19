@@ -1,6 +1,16 @@
 {
   "properties": {
     "id": "INFLAMED_FOR_THE_ASSAULT_TALENT",
+    "descriptionParams": {
+      "talent1": 1,
+      "shelterrate": 0.5,
+      "1-talent1": 0,
+      "-talent1": -1,
+      "talent1-1": 0,
+      "1-shelterrate": 0.5,
+      "-shelterrate": -0.5,
+      "shelterrate-1": -0.5
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

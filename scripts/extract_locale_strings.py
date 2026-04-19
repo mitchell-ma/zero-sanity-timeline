@@ -137,19 +137,30 @@ def migrate_operator(op_dir: Path) -> int:
     if not op_id:
         return 0
 
+    import re as _re
+
+    def potential_key(path: Path, data: dict) -> int | None:
+        """Potentials key on `properties.level`; fall back to the number in the
+        filename (`potential-3-*.json`) when the file omits the level."""
+        lvl = (data.get('properties') or {}).get('level')
+        if isinstance(lvl, int):
+            return lvl
+        m = _re.match(r'potential-(\d+)-', path.name)
+        return int(m.group(1)) if m else None
+
     # Sub-entities
     for kind, prefix_tail, id_source in [
-        ('skills', 'skill', lambda d: (d.get('properties') or {}).get('id')),
-        ('talents', 'talent', lambda d: (d.get('properties') or {}).get('id')),
-        ('statuses', 'status', lambda d: (d.get('properties') or {}).get('id')),
-        ('potentials', 'potential', lambda d: (d.get('properties') or {}).get('level')),
+        ('skills', 'skill', lambda p, d: (d.get('properties') or {}).get('id')),
+        ('talents', 'talent', lambda p, d: (d.get('properties') or {}).get('id')),
+        ('statuses', 'status', lambda p, d: (d.get('properties') or {}).get('id')),
+        ('potentials', 'potential', potential_key),
     ]:
         sub_dir = op_dir / kind
         if not sub_dir.exists():
             continue
         for p in sorted(sub_dir.glob('*.json')):
             d = load(p)
-            sub_id = id_source(d)
+            sub_id = id_source(p, d)
             if sub_id is None or sub_id == '':
                 continue
             prefix = f'op.{op_id}.{prefix_tail}.{sub_id}'

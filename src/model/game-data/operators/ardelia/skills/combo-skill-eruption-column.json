@@ -3,7 +3,29 @@
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "NATURE",
-    "id": "ERUPTION_COLUMN"
+    "id": "ERUPTION_COLUMN",
+    "descriptionParams": {
+      "atk_scale": 1,
+      "usp": 10,
+      "atk_scale_boom": 2.5,
+      "duration_corrupt": 7,
+      "poise": 10,
+      "1-atk_scale": 0,
+      "-atk_scale": -1,
+      "atk_scale-1": 0,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-atk_scale_boom": -1.5,
+      "-atk_scale_boom": -2.5,
+      "atk_scale_boom-1": 1.5,
+      "1-duration_corrupt": -6,
+      "-duration_corrupt": -7,
+      "duration_corrupt-1": 6,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9
+    }
   },
   "segments": [
     {

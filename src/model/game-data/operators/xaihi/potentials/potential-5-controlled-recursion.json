@@ -2,6 +2,20 @@
   "properties": {
     "id": "XAIHI_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "atk_up": 1.1,
+      "wisd_up": 1.1,
+      "wisd_max": 1.1,
+      "1-atk_up": -0.10000000000000009,
+      "-atk_up": -1.1,
+      "atk_up-1": 0.10000000000000009,
+      "1-wisd_up": -0.10000000000000009,
+      "-wisd_up": -1.1,
+      "wisd_up-1": 0.10000000000000009,
+      "1-wisd_max": -0.10000000000000009,
+      "-wisd_max": -1.1,
+      "wisd_max-1": 0.10000000000000009
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

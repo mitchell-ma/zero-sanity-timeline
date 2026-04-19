@@ -1,0 +1,78 @@
+{
+  "op.LIFENG.event.name": {
+    "text": "Lifeng",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Avatar trouble : sensibilité physique +{phy_resist_down:0%} ; déclenche aussi cet effet supplémentaire chez les ennemis ayant moins de {num:0} cumuls de Vulnérabilité.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.1.event.name": {
+    "text": "Fin d'une obsession",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.2.event.description": {
+    "text": "+{Str:0} à tous les traits.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.2.event.name": {
+    "text": "Perfectionnement personnel",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.3.event.description": {
+    "text": "Renforce le talent Illumination : chaque point d'Intelligence et de Volonté augmente l'ATQ de Lifeng de {atk_up:0.00%} supplémentaires.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.3.event.name": {
+    "text": "Développement spirituel",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.4.event.description": {
+    "text": "Renforce l'ultime Cœur inébranlable : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.4.event.name": {
+    "text": "Instant fugace",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.5.event.description": {
+    "text": "Renforce le talent Conquérant du mal : toutes les {interval:0} s, le prochain effet déclenché inflige à nouveau {atk_scale_potential5:0%} de l'ATQ sous forme de DÉG physiques et Déséquilibre {poise_potential5:0} fois.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.5.event.name": {
+    "text": "Implacable",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.ASPECT_OF_WRATH.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsque l'opérateur contrôlé exécute un Coup final sur un ennemi victime de sensibilité physique ou de l'effet de Brèche. Invoque une forme qui projette une lance infligeant des DÉG physiques et octroie un Lien.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.ASPECT_OF_WRATH.event.name": {
+    "text": "Forme de fureur",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.HEART_OF_THE_UNMOVING.event.description": {
+    "text": "Invoque une forme qui lance une frappe Vajra immuable. Cette frappe inflige des DÉG physiques et applique Renversement à tous les ennemis dans une large zone d'effet, puis attire les ennemis vers le centre de cette zone. Au bout d'un moment, la frappe s'abat une nouvelle fois pour infliger de lourds DÉG physiques et appliquer un nouveau Renversement aux ennemis présents dans cette zone.\nSi la compétence consomme un Lien, la frappe s'abat encore une fois pour infliger de lourds DÉG physiques.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.HEART_OF_THE_UNMOVING.event.name": {
+    "text": "Cœur inébranlable",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.RUINATION_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.RUINATION_BATK.event.name": {
+    "text": "Dévastation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.TURBID_AVATAR.event.description": {
+    "text": "Frappe plusieurs fois avec l'arme d'hast pour infliger 2 fois des DÉG physiques, puis frappe le sol pour infliger des DÉG physiques et appliquer Renversement à tous les ennemis dans la zone d'effet. Si l'ennemi touché par la dernière frappe de sa compétence n'a pas de cumul de Vulnérabilité, applique à la place une sensibilité physique à cet ennemi.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.TURBID_AVATAR.event.name": {
+    "text": "Avatar trouble",
+    "dataStatus": "RECONCILED"
+  }
+}

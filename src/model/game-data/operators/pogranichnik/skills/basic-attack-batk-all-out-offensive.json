@@ -878,7 +878,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "ALL_OUT_OFFENSIVE_BATK"
+    "id": "ALL_OUT_OFFENSIVE_BATK",
+    "descriptionParams": {
+      "atk_scale": 0.97,
+      "atb": 20,
+      "1-atk_scale": 0.030000000000000027,
+      "-atk_scale": -0.97,
+      "atk_scale-1": -0.030000000000000027,
+      "1-atb": -19,
+      "-atb": -20,
+      "atb-1": 19,
+      "poise": 18,
+      "1-poise": -17,
+      "-poise": -18,
+      "poise-1": 17
+    }
   },
   "metadata": {
     "originId": "POGRANICHNIK",

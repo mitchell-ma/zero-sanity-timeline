@@ -1,6 +1,24 @@
 {
   "properties": {
     "id": "FRIENDLY_PRESENCE_TALENT",
+    "descriptionParams": {
+      "heal_scale": 0.75,
+      "heal_value": 90,
+      "sheep_num": 3,
+      "effect_prob": 0.1,
+      "1-heal_scale": 0.25,
+      "-heal_scale": -0.75,
+      "heal_scale-1": -0.25,
+      "1-heal_value": -89,
+      "-heal_value": -90,
+      "heal_value-1": 89,
+      "1-sheep_num": -2,
+      "-sheep_num": -3,
+      "sheep_num-1": 2,
+      "1-effect_prob": 0.9,
+      "-effect_prob": -0.1,
+      "effect_prob-1": -0.9
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 3

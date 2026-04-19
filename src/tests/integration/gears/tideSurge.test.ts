@@ -20,7 +20,7 @@ import { ENEMY_ID, INFLICTION_COLUMNS } from '../../../model/channels';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, breakdownFor, damageRowAtOrAfter, eventsOnColumn, findEntry,
-  gearLoadout, placeSkill, statContributionFromSource,
+  gearLoadout, placeSkill, statContributionFromSource, statusDisplayName
 } from './helpers';
 import type { AppResult } from '../helpers';
 
@@ -92,7 +92,7 @@ describe('Tide Surge — gear set E2E', () => {
       const row = damageRowAtOrAfter(c, buff.startFrame + 1);
       expect(row).toBeDefined();
 
-      const contribution = statContributionFromSource(row, StatType.ARTS_DAMAGE_BONUS, BUFF.name);
+      const contribution = statContributionFromSource(row, StatType.ARTS_DAMAGE_BONUS, statusDisplayName(BUFF.id));
       expect(contribution).toBeCloseTo(0.35, 4);
 
       const entries = breakdownFor(row);

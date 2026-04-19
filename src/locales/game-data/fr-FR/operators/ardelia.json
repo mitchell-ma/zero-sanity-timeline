@@ -1,0 +1,78 @@
+{
+  "op.ARDELIA.event.name": {
+    "text": "Ardelia",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Charge de Dolly : consommer Corrosion applique désormais une sensibilité physique et une sensibilité aux Arts dont les d'effets sont augmentés de {rate_vul_base:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.1.event.name": {
+    "text": "Paradis de Dolly",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.2.event.description": {
+    "text": "Renforce le talent Présence amicale : quand l'opérateur contrôlé touche une ombre de M. Dolly, Ardelia soigne l'opérateur allié dont le pourcentage de PV est le plus bas à hauteur de la moitié des effets de soin.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.2.event.name": {
+    "text": "Récompenses de jeu",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.3.event.description": {
+    "text": "Renforce l'ultime Assemblée laineuse : durée +{potential3_duration:0} s ; les chances de créer une ombre de M. Dolly passent à {effect_prob:0.0} fois sa valeur d'origine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.3.event.name": {
+    "text": "Éruption explosive",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.4.event.description": {
+    "text": "Renforce l'ultime Assemblée laineuse : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.4.event.name": {
+    "text": "Floraison rocheuse",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.5.event.description": {
+    "text": "Renforce la compétence de combo Colonne éruptive : temps de recharge -{-coolDown:0} s ; le multiplicateur de DÉG passe à {potential5_dmg_rate:0.0} fois sa valeur d'origine et la durée de Corrosion appliquée augmente de {potential5_duration:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.potential.5.event.name": {
+    "text": "Vapeur volcanique",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.skill.DOLLY_RUSH.event.description": {
+    "text": "Saute sur M. Dolly et percute la cible pour lui infliger des DÉG naturels. Si la cible est victime de Corrosion, consomme la Corrosion et applique une sensibilité physique et une sensibilité aux Arts à la cible.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.skill.DOLLY_RUSH.event.name": {
+    "text": "Charge de Dolly",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.skill.ERUPTION_COLUMN.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsque l'opérateur contrôlé exécute un Coup final sur un ennemi sans aucun cumul de Vulnérabilité ou d'altération des Arts. Projette un nuage volcanique autoguidé sur un ennemi ciblé, qui inflige des DÉG naturels lorsqu'il est assez proche de la cible. Le nuage volcanique explose après un court instant, infligeant la moitié des DÉG naturels et corrode temporairement les ennemis à proximité.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.skill.ERUPTION_COLUMN.event.name": {
+    "text": "Colonne éruptive",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.skill.ROCKY_WHISPERS_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG naturels. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG naturels aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG naturels et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.skill.ROCKY_WHISPERS_BATK.event.name": {
+    "text": "Murmures rocheux",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.skill.WOOLY_PARTY.event.description": {
+    "text": "Ardelia entre dans un état de canalisation mobile et invoque l'aide de M. Dolly. Plusieurs doubles de M. Dolly sont jetés dans des directions aléatoires. Chaque double inflige des DÉG naturels en frappant l'ennemi. Chaque ennemi ne peut subir qu'un coup toutes les {interval:0.0} seconde(s).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARDELIA.skill.WOOLY_PARTY.event.name": {
+    "text": "Assemblée laineuse",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -34,7 +34,7 @@ import { FPS } from '../../../utils/timeline';
 import { runCalculation } from '../../../controller/calculation/calculationController';
 import { findColumn, getMenuPayload } from '../helpers';
 import type { AppResult } from '../helpers';
-import { gearLoadout } from '../gears/helpers';
+import { gearLoadout, statusDisplayName } from '../gears/helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const WULFGARD_ID: string = require('../../../model/game-data/operators/wulfgard/wulfgard.json').id;
@@ -207,7 +207,7 @@ describe('Cross-operator rotation — multi-system E2E', () => {
     // exact stat key (engine may move it between ARTS_DAMAGE_BONUS and
     // ELEMENT_DAMAGE_BONUS variants) — just that it lands by display name.
     const mordvoltLabelSeen = Object.values(wulfgardStatSources ?? {}).some(sources =>
-      (sources ?? []).some(s => s.source.toLowerCase().includes(MORDVOLT_BUFF.name.toLowerCase())),
+      (sources ?? []).some(s => s.source.toLowerCase().includes(statusDisplayName(MORDVOLT_BUFF.id).toLowerCase())),
     );
     expect(mordvoltLabelSeen).toBe(true);
 

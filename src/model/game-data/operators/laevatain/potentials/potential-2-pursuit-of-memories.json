@@ -50,6 +50,16 @@
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "Wisd": 20,
+      "NormalAttackDamageIncrease": 0.15,
+      "1-Wisd": -19,
+      "-Wisd": -20,
+      "Wisd-1": 19,
+      "1-NormalAttackDamageIncrease": 0.85,
+      "-NormalAttackDamageIncrease": -0.15,
+      "NormalAttackDamageIncrease-1": -0.85
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

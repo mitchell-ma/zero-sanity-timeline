@@ -2,7 +2,25 @@
   "properties": {
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
-    "id": "STACK_OVERFLOW"
+    "id": "STACK_OVERFLOW",
+    "descriptionParams": {
+      "atk_up": 0.24,
+      "duration": 12,
+      "wisd_up": 0.0003,
+      "wisd_max": 0.36,
+      "1-atk_up": 0.76,
+      "-atk_up": -0.24,
+      "atk_up-1": -0.76,
+      "1-duration": -11,
+      "-duration": -12,
+      "duration-1": 11,
+      "1-wisd_up": 0.9997,
+      "-wisd_up": -0.0003,
+      "wisd_up-1": -0.9997,
+      "1-wisd_max": 0.64,
+      "-wisd_max": -0.36,
+      "wisd_max-1": -0.64
+    }
   },
   "segments": [
     {

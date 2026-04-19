@@ -2,6 +2,16 @@
   "properties": {
     "id": "ESTELLA_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "distance": 12,
+      "dmg_up": 0.4,
+      "1-distance": -11,
+      "-distance": -12,
+      "distance-1": 11,
+      "1-dmg_up": 0.6,
+      "-dmg_up": -0.4,
+      "dmg_up-1": -0.6
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

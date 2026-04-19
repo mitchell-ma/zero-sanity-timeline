@@ -1,0 +1,78 @@
+{
+  "op.LAEVATAIN.event.name": {
+    "text": "Laevatain",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Feu couvant : le multiplicateur d'attaque supplémentaire passe à {ratio:0.0} fois sa valeur d'origine et infliger un coup restaure {atb:0} PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.1.event.name": {
+    "text": "Cœur de flamme de fusion",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.2.event.description": {
+    "text": "Intelligence +{Wisd:0}, DÉG d'attaque de base infligés +{NormalAttackDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.2.event.name": {
+    "text": "Poursuite mémorielle",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.3.event.description": {
+    "text": "Renforce la compétence de combat Feu couvant : la durée de la Combustion appliquée par la compétence augmente de {duration-1:0%}. Les DÉG de la Combustion appliquée par la compétence passent à {extra_scaling:0.0} fois leur valeur d'origine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.3.event.name": {
+    "text": "Fragments du passé",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.4.event.description": {
+    "text": "Renforce l'ultime Crépuscule : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.4.event.name": {
+    "text": "Fournaise de crème glacée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.5.event.description": {
+    "text": "Renforce l'ultime Crépuscule : le multiplicateur de DÉG d'attaque de base passe à {ratio:0.0} fois sa valeur d'origine. Pendant l'ultime, chaque ennemi vaincu par Laevatain augmente la durée de l'ultime de {extend_duration:0} s (max. : +{max_duration:0} s).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.5.event.name": {
+    "text": "Preuve de vie",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.FLAMING_CINDERS_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 5 séquences qui inflige des DÉG thermiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG thermiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG thermiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.FLAMING_CINDERS_BATK.event.name": {
+    "text": "Cendres incandescentes",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SEETHE.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi est en combustion ou corrodé.\nDes flammes surgissent sous les pieds de l'ennemi en combustion ou corrodé et lui infligent des DÉG thermiques.\nSi la compétence touche l'ennemi, Laevatain gagne 1 cumul de Flamme de fusion et gagne davantage d'énergie d'ultime pour chaque ennemi touché.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SEETHE.event.name": {
+    "text": "Ébullition",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SMOULDERING_FIRE.event.description": {
+    "text": "Invoque un fragment de magma qui attaque en continu les ennemis et inflige des DÉG thermiques. Toucher l'ennemi octroie 1 cumul de Flamme de fusion. Si Laevatain dispose déjà de {count:0} cumul(s) de Flamme de fusion lorsqu'elle utilise la compétence, tous les cumuls sont consommés et elle effectue 1 attaque supplémentaire qui inflige des DÉG thermiques et applique temporairement l'effet de Combustion à tous les ennemis dans une large zone.\nLorsque l'attaque supplémentaire touche l'ennemi, elle restaure de l'énergie d'ultime supplémentaire.\nLes effets de la compétence de combat sont améliorés lorsque l'ultime de Laevatain est actif.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SMOULDERING_FIRE.event.name": {
+    "text": "Feu couvant",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.TWILIGHT.event.description": {
+    "text": "Laevatain invoque son Sviga Lævi et devient l'opératrice contrôlée. Pendant un certain temps, ses attaques de base (ATQ-B) sont améliorées et le Sviga Lævi frappe de concert avec Laevatain. Chaque attaque inflige alors des DÉG thermiques. La séquence 3 d'ATQ-B applique également une altération thermique.\nUtiliser sa compétence de combat, Feu couvant, ou sa compétence de combo, Ébullition, ne raccourcit pas la durée de l'ultime, Crépuscule.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.TWILIGHT.event.name": {
+    "text": "Crépuscule",
+    "dataStatus": "RECONCILED"
+  }
+}

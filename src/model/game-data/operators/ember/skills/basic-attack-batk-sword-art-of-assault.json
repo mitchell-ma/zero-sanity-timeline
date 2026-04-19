@@ -357,7 +357,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "SWORD_ART_OF_ASSAULT_BATK"
+    "id": "SWORD_ART_OF_ASSAULT_BATK",
+    "descriptionParams": {
+      "atk_scale": 1.84,
+      "atb": 28,
+      "1-atk_scale": -0.8400000000000001,
+      "-atk_scale": -1.84,
+      "atk_scale-1": 0.8400000000000001,
+      "1-atb": -27,
+      "-atb": -28,
+      "atb-1": 27,
+      "poise": 25,
+      "1-poise": -24,
+      "-poise": -25,
+      "poise-1": 24
+    }
   },
   "metadata": {
     "originId": "EMBER",

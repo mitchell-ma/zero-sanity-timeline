@@ -3,7 +3,25 @@
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "PEAL_OF_THUNDER"
+    "id": "PEAL_OF_THUNDER",
+    "descriptionParams": {
+      "atk_scale": 1.17,
+      "poise": 5,
+      "atb": 10,
+      "usp": 5,
+      "1-atk_scale": -0.16999999999999993,
+      "-atk_scale": -1.17,
+      "atk_scale-1": 0.16999999999999993,
+      "1-poise": -4,
+      "-poise": -5,
+      "poise-1": 4,
+      "1-atb": -9,
+      "-atb": -10,
+      "atb-1": 9,
+      "1-usp": -4,
+      "-usp": -5,
+      "usp-1": 4
+    }
   },
   "segments": [
     {

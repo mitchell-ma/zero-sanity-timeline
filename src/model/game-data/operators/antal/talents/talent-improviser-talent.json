@@ -30,6 +30,20 @@
   ],
   "properties": {
     "id": "IMPROVISER_TALENT",
+    "descriptionParams": {
+      "healvalue": 108,
+      "cd": 30,
+      "multiplier": 0.9,
+      "1-healvalue": -107,
+      "-healvalue": -108,
+      "healvalue-1": 107,
+      "1-cd": -29,
+      "-cd": -30,
+      "cd-1": 29,
+      "1-multiplier": 0.09999999999999998,
+      "-multiplier": -0.9,
+      "multiplier-1": -0.09999999999999998
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

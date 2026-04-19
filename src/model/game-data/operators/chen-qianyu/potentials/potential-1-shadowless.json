@@ -47,8 +47,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Shadowless (P1)"
+        }
       },
       "clause": [
         {
@@ -75,7 +74,17 @@
   ],
   "properties": {
     "id": "SHADOWLESS_P1",
-    "name": "Shadowless (P1)",
+    "level": 1,
+    "descriptionParams": {
+      "extra_dmg": 0.2,
+      "hp_remain": 0.5,
+      "1-extra_dmg": 0.8,
+      "-extra_dmg": -0.2,
+      "extra_dmg-1": -0.8,
+      "1-hp_remain": 0.5,
+      "-hp_remain": -0.5,
+      "hp_remain-1": -0.5
+    },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -93,8 +102,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL",
-    "description": "DMG Dealt +20% to enemies below 50% HP."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

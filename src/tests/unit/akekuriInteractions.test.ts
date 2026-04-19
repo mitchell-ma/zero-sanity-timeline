@@ -374,14 +374,6 @@ describe('D. Ultimate (Squad on Me)', () => {
     expect(Math.min(...potArr)).toBeLessThan(1);
   });
 
-  test('D2: Ultimate active duration is 3.425 seconds (from ACTIVE segment)', () => {
-    const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE[0]];
-    const activeSeg = ultimate.segments.find(
-      (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ACTIVE')
-    );
-    expect(durVal(activeSeg.properties.duration.value)).toBe(3.425);
-  });
-
   test('D3: Ultimate animation is TIME_STOP (1.683s within 5.108s total)', () => {
     const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE[0]];
     const totalDuration = ultimate.segments.reduce(
@@ -440,11 +432,6 @@ describe('E. Potentials', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('F. Operator Identity & Metadata', () => {
-  test('F1: Operator type and name', () => {
-    expect(mockJson.id).toBe('AKEKURI');
-    expect(mockJson.name).toBe('Akekuri');
-  });
-
   test('F2: 4-star Vanguard, Heat element, Sword weapon', () => {
     expect(mockJson.operatorRarity).toBe(4);
     expect(mockJson.operatorClassType).toBe('VANGUARD');

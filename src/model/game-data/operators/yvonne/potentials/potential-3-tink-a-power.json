@@ -2,6 +2,16 @@
   "properties": {
     "id": "YVONNE_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "inflict_up": 0.1,
+      "status_up": 0.2,
+      "1-inflict_up": 0.9,
+      "-inflict_up": -0.1,
+      "inflict_up-1": -0.9,
+      "1-status_up": 0.8,
+      "-status_up": -0.2,
+      "status_up-1": -0.8
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

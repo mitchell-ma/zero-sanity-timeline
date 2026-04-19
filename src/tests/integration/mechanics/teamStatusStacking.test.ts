@@ -32,11 +32,15 @@ import { resolveEventLabel, computeStatusViewOverrides } from '../../../controll
 import { findColumn, buildContextMenu, getMenuPayload } from '../helpers';
 import type { AppResult, AddEventPayload } from '../helpers';
 
-// Load Overclocked Moment AMP status ID from JSON — no string literals
+// Load Overclocked Moment AMP status ID from JSON — no string literals.
+// Display name comes from the locale bundle (surfaced via configCache/getStatusDef);
+// it's not on the raw JSON anymore.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const OVERCLOCKED_MOMENT_AMP_STATUS: { properties: { id: string; name: string } } = require('../../../model/game-data/operators/antal/statuses/status-overclocked-moment-amp.json');
+const OVERCLOCKED_MOMENT_AMP_STATUS: { properties: { id: string } } = require('../../../model/game-data/operators/antal/statuses/status-overclocked-moment-amp.json');
 const AMP_ID: string = OVERCLOCKED_MOMENT_AMP_STATUS.properties.id;
-const AMP_DISPLAY_NAME: string = OVERCLOCKED_MOMENT_AMP_STATUS.properties.name;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { getStatusDef: _getStatusDef } = require('../../../controller/timeline/configCache');
+const AMP_DISPLAY_NAME: string = (_getStatusDef(AMP_ID)?.properties as { name?: string } | undefined)?.name ?? AMP_ID;
 
 const SLOT_ANTAL = 'slot-2';
 

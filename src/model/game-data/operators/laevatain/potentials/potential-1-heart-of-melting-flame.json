@@ -2,6 +2,16 @@
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "atb": 20,
+      "ratio": 1.2,
+      "1-atb": -19,
+      "-atb": -20,
+      "atb-1": 19,
+      "1-ratio": -0.19999999999999996,
+      "-ratio": -1.2,
+      "ratio-1": 0.19999999999999996
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

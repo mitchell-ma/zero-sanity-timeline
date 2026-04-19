@@ -3,7 +3,29 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
-    "id": "THUNDERLANCE_FINAL_SHOCK"
+    "id": "THUNDERLANCE_FINAL_SHOCK",
+    "descriptionParams": {
+      "atk_scale": 9.5,
+      "poise": 20,
+      "pulse_resist_down_rate": 0.4,
+      "pulse_resist_down_duration": 8,
+      "lance_duration_ult": 30,
+      "1-atk_scale": -8.5,
+      "-atk_scale": -9.5,
+      "atk_scale-1": 8.5,
+      "1-poise": -19,
+      "-poise": -20,
+      "poise-1": 19,
+      "1-pulse_resist_down_rate": 0.6,
+      "-pulse_resist_down_rate": -0.4,
+      "pulse_resist_down_rate-1": -0.6,
+      "1-pulse_resist_down_duration": -7,
+      "-pulse_resist_down_duration": -8,
+      "pulse_resist_down_duration-1": 7,
+      "1-lance_duration_ult": -29,
+      "-lance_duration_ult": -30,
+      "lance_duration_ult-1": 29
+    }
   },
   "segments": [
     {

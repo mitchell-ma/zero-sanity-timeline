@@ -44,6 +44,12 @@
   ],
   "properties": {
     "id": "OBLITERATION_PROTOCOL_TALENT",
+    "descriptionParams": {
+      "dmg": 0.3,
+      "1-dmg": 0.7,
+      "-dmg": -0.3,
+      "dmg-1": -0.7
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

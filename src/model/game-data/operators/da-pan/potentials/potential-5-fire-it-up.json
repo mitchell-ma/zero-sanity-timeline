@@ -2,6 +2,16 @@
   "properties": {
     "id": "DA_PAN_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "interval": 45,
+      "potential_5_interval": 45,
+      "1-interval": -44,
+      "-interval": -45,
+      "interval-1": 44,
+      "1-potential_5_interval": -44,
+      "-potential_5_interval": -45,
+      "potential_5_interval-1": 44
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

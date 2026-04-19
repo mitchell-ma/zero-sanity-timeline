@@ -32,7 +32,11 @@ import type { AppResult, AddEventPayload } from '../../helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const TWILIGHT_ID: string = require('../../../../model/game-data/operators/laevatain/skills/ultimate-twilight.json').properties.id;
-const TWILIGHT_NAME: string = require('../../../../model/game-data/operators/laevatain/skills/ultimate-twilight.json').properties.name;
+// Display name comes from the locale bundle (surfaced via the skill store's
+// resolved `.name`), not from the raw JSON which no longer carries `name`.
+const _laevatainSkillsStore = require('../../../../model/game-data/operatorSkillsStore');
+const _twilightSkill = _laevatainSkillsStore.getOperatorSkill('LAEVATAIN', TWILIGHT_ID);
+const TWILIGHT_NAME: string = _twilightSkill?.name ?? TWILIGHT_ID;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_0 = 'slot-0'; // Laevatain

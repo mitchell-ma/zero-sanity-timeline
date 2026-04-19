@@ -1,6 +1,16 @@
 {
   "properties": {
     "id": "RIOT_BRINGER_TALENT",
+    "descriptionParams": {
+      "talent2": 1,
+      "dmg_up_water_ult": 0.6,
+      "1-talent2": 0,
+      "-talent2": -1,
+      "talent2-1": 0,
+      "1-dmg_up_water_ult": 0.4,
+      "-dmg_up_water_ult": -0.6,
+      "dmg_up_water_ult-1": -0.4
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

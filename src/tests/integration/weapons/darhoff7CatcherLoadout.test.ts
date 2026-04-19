@@ -43,7 +43,8 @@ const CATCHER_SECONDARY_ATTR: StatType = CATCHER_JSON.secondaryAttributeType;
 
 const DARHOFF_JSON = require('../../../model/game-data/weapons/darhoff-7/darhoff-7.json');
 const DARHOFF_ID: string = DARHOFF_JSON.properties.id;
-const DARHOFF_NAME: string = DARHOFF_JSON.properties.name;
+// Display name lives in the locale bundle, surfaced via the weapon store.
+const DARHOFF_NAME: string = require('../../../model/game-data/weaponsStore').getWeapon(DARHOFF_ID)?.name ?? DARHOFF_ID;
 
 const MAIN_ATTR_BOOST_S_JSON = require(
   '../../../model/game-data/weapons/generic/skill-main-attribute-boost-s.json',

@@ -1,6 +1,28 @@
 {
   "properties": {
     "id": "NICKS_AND_SCRATCHES_TALENT",
+    "descriptionParams": {
+      "2": 1,
+      "talent_1_2": 1,
+      "atk_scale_bleed": 0.3,
+      "duration_bleed": 25,
+      "damage_up": 0.12,
+      "1-2": 0,
+      "-2": -1,
+      "2-1": 0,
+      "1-talent_1_2": 0,
+      "-talent_1_2": -1,
+      "talent_1_2-1": 0,
+      "1-atk_scale_bleed": 0.7,
+      "-atk_scale_bleed": -0.3,
+      "atk_scale_bleed-1": -0.7,
+      "1-duration_bleed": -24,
+      "-duration_bleed": -25,
+      "duration_bleed-1": 24,
+      "1-damage_up": 0.88,
+      "-damage_up": -0.12,
+      "damage_up-1": -0.88
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

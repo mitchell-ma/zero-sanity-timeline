@@ -3,7 +3,25 @@
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "RIGID_INTERDICTION"
+    "id": "RIGID_INTERDICTION",
+    "descriptionParams": {
+      "atk_scale": 4,
+      "poise": 20,
+      "taken_dmg": 0.1,
+      "atb_return_base": 30,
+      "1-atk_scale": -3,
+      "-atk_scale": -4,
+      "atk_scale-1": 3,
+      "1-poise": -19,
+      "-poise": -20,
+      "poise-1": 19,
+      "1-taken_dmg": 0.9,
+      "-taken_dmg": -0.1,
+      "taken_dmg-1": -0.9,
+      "1-atb_return_base": -29,
+      "-atb_return_base": -30,
+      "atb_return_base-1": 29
+    }
   },
   "metadata": {
     "originId": "CATCHER",

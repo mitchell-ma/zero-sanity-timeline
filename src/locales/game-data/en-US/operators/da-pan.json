@@ -4,19 +4,19 @@
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.1.event.description": {
-    "text": "Ultimate CHOP 'N DUNK! improved: If the ultimate defeats at least one enemy, Da Pan deals +30% Physical DMG for 15s. This effect cannot stack.",
+    "text": "Ultimate CHOP 'N DUNK! improved: If the ultimate defeats at least one enemy, Da Pan deals +{potential_1_dmg_up:0%} Physical DMG for {potential_1_duration:0}s. This effect cannot stack.",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.1.event.name": {
-    "text": "Fine Cooking (P1)",
+    "text": "Fine Cooking",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.2.event.description": {
-    "text": "Talent Salty or Mild improved: Prep Ingredients buff duration +10s, max stacks +1.",
+    "text": "Talent Salty or Mild improved: Prep Ingredients buff duration +{talent_1_duration:0}s, max stacks +{talent_1_stack:0}.",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.2.event.name": {
-    "text": "Harmonized Flavors (P2)",
+    "text": "Harmonized Flavors",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.3.event.description": {
@@ -24,7 +24,7 @@
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.3.event.name": {
-    "text": "Model Employee (P3)",
+    "text": "Model Employee",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.4.event.description": {
@@ -32,15 +32,15 @@
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.4.event.name": {
-    "text": "Special Blend (P4)",
+    "text": "Special Blend",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.5.event.description": {
-    "text": "Battle skill FLIP DA WOK! improved: If the skill hits only one enemy, apply 1 more stack of Vulnerability on the target. Effect only triggers once every 45s.",
+    "text": "Battle skill FLIP DA WOK! improved: If the skill hits only one enemy, apply 1 more stack of Vulnerability on the target. Effect only triggers once every {potential_5_interval:0}s.",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.potential.5.event.name": {
-    "text": "Fire it Up (P5)",
+    "text": "Fire it Up",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.skill.CHOP_N_DUNK.event.description": {
@@ -64,7 +64,7 @@
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.skill.MORE_SPICE.event.description": {
-    "text": "When an enemy reaches 4 stacks of Vulnerability. Swings the wok at the enemy to deal massive Physical DMG and Crush. This Crush also deals more DMG.",
+    "text": "COMBO TRIGGER: When an enemy reaches 4 stacks of Vulnerability. Swings the wok at the enemy to deal massive Physical DMG and Crush. This Crush also deals more DMG.",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.skill.MORE_SPICE.event.name": {
@@ -84,7 +84,7 @@
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.skill.ROLLING_CUT_BATK.event.description": {
-    "text": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "text": "BASIC ATTACK: An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger. DIVE ATTACK: Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. FINISHER: Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
     "dataStatus": "RECONCILED"
   },
   "op.DA_PAN.skill.ROLLING_CUT_BATK.event.name": {

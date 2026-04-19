@@ -1,6 +1,20 @@
 # Weapon Data Specification
 
-This document defines the structure and semantics of per-weapon JSON files in `game-data/weapons/<slug>.json`.
+This document defines the structure and semantics of per-weapon JSON files in `game-data/weapons/<slug>/<slug>.json`.
+
+## Localization — strings are in locale bundles
+
+Weapon display names and skill descriptions **are not on the JSON**. They live under `src/locales/game-data/<locale>/weapons/<slug>.json` keyed as:
+
+```
+weapon.<WEAPON_ID>.event.name
+weapon.<WEAPON_ID>.segment.<i>.name
+weapon.<WEAPON_ID>.skill.<SKILL_ID>.event.{name,description}   (weapon-specific named skills)
+weapon.<WEAPON_ID>.status.<STATUS_ID>.event.{name,description}
+weapon.GENERIC.skill.<SKILL_ID>.event.{name,description}        (stat-boost skills shared across weapons)
+```
+
+The historical examples below may show `"name"` / `"description"` on the JSON — those references are obsolete. See `operatorDataSpec.md` "Localization" for the end-to-end schema.
 
 ## File Structure
 

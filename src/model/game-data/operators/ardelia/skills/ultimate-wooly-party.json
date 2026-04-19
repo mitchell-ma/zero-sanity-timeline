@@ -3,7 +3,29 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "NATURE",
-    "id": "WOOLY_PARTY"
+    "id": "WOOLY_PARTY",
+    "descriptionParams": {
+      "atk_scale": 1.65,
+      "duration": 3,
+      "effect_prob": 0.1,
+      "poise": 3,
+      "interval": 0.3,
+      "1-atk_scale": -0.6499999999999999,
+      "-atk_scale": -1.65,
+      "atk_scale-1": 0.6499999999999999,
+      "1-duration": -2,
+      "-duration": -3,
+      "duration-1": 2,
+      "1-effect_prob": 0.9,
+      "-effect_prob": -0.1,
+      "effect_prob-1": -0.9,
+      "1-poise": -2,
+      "-poise": -3,
+      "poise-1": 2,
+      "1-interval": 0.7,
+      "-interval": -0.3,
+      "interval-1": -0.7
+    }
   },
   "segments": [
     {

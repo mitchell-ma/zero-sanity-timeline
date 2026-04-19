@@ -87,6 +87,12 @@
   ],
   "properties": {
     "id": "ILLUMINATION_TALENT",
+    "descriptionParams": {
+      "atk_up": 0.0015,
+      "1-atk_up": 0.9985,
+      "-atk_up": -0.0015,
+      "atk_up-1": -0.9985
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

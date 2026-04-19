@@ -1,6 +1,12 @@
 {
   "properties": {
     "id": "BARRAGE_OF_TECHNOLOGY_TALENT",
+    "descriptionParams": {
+      "dmg_up": 0.5,
+      "1-dmg_up": 0.5,
+      "-dmg_up": -0.5,
+      "dmg_up-1": -0.5
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

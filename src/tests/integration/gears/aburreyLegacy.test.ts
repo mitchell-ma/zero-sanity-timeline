@@ -16,7 +16,7 @@ import { CritMode, InteractionModeType, StatType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, SLOT_INDEX, calc, breakdownFor, damageRowAtOrAfter, eventsOnColumn, findEntry,
-  gearLoadout, placeSkill, statContributionFromSource,
+  gearLoadout, placeSkill, statContributionFromSource, statusDisplayName
 } from './helpers';
 import { setUltimateEnergyToMax } from '../helpers';
 
@@ -73,14 +73,14 @@ describe("Aburrey's Legacy — gear set E2E", () => {
       const row = damageRowAtOrAfter(c, buff.startFrame + 1);
       expect(row).toBeDefined();
 
-      const contribution = statContributionFromSource(row, StatType.ATTACK_BONUS, BATTLE_BUFF.name);
+      const contribution = statContributionFromSource(row, StatType.ATTACK_BONUS, statusDisplayName(BATTLE_BUFF.id));
       expect(contribution).toBeCloseTo(0.05, 4);
 
       const entries = breakdownFor(row);
       const atkEntry = findEntry(entries, 'ATK%');
       expect(atkEntry).toBeDefined();
       const sources = atkEntry!.subEntries ?? [];
-      const buffSource = sources.find(s => s.label.toLowerCase().includes(BATTLE_BUFF.name.toLowerCase()));
+      const buffSource = sources.find(s => s.label.toLowerCase().includes(statusDisplayName(BATTLE_BUFF.id).toLowerCase()));
       expect(buffSource).toBeDefined();
       expect(buffSource!.value).toBeCloseTo(0.05, 4);
     });

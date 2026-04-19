@@ -2,6 +2,12 @@
   "properties": {
     "id": "ENDMINISTRATOR_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "atb_return": 50,
+      "1-atb_return": -49,
+      "-atb_return": -50,
+      "atb_return-1": 49
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

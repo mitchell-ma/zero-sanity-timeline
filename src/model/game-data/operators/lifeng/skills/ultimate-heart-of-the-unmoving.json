@@ -3,7 +3,33 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
-    "id": "HEART_OF_THE_UNMOVING"
+    "id": "HEART_OF_THE_UNMOVING",
+    "descriptionParams": {
+      "atk_scale1": 4,
+      "atk_scale2": 4,
+      "poise": 5,
+      "poise2": 5,
+      "atk_scale3": 6,
+      "poise3": 5,
+      "1-atk_scale1": -3,
+      "-atk_scale1": -4,
+      "atk_scale1-1": 3,
+      "1-atk_scale2": -3,
+      "-atk_scale2": -4,
+      "atk_scale2-1": 3,
+      "1-poise": -4,
+      "-poise": -5,
+      "poise-1": 4,
+      "1-poise2": -4,
+      "-poise2": -5,
+      "poise2-1": 4,
+      "1-atk_scale3": -5,
+      "-atk_scale3": -6,
+      "atk_scale3-1": 5,
+      "1-poise3": -4,
+      "-poise3": -5,
+      "poise3-1": 4
+    }
   },
   "segments": [
     {

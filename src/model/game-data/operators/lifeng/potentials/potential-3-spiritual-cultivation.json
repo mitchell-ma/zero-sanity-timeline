@@ -2,6 +2,12 @@
   "properties": {
     "id": "LIFENG_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "atk_up": 0.0005,
+      "1-atk_up": 0.9995,
+      "-atk_up": -0.0005,
+      "atk_up-1": -0.9995
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

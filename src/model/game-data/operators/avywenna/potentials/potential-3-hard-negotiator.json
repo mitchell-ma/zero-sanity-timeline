@@ -2,6 +2,16 @@
   "properties": {
     "id": "AVYWENNA_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "Will": 15,
+      "PulseDamageIncrease": 0.08,
+      "1-Will": -14,
+      "-Will": -15,
+      "Will-1": 14,
+      "1-PulseDamageIncrease": 0.92,
+      "-PulseDamageIncrease": -0.08,
+      "PulseDamageIncrease-1": -0.92
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

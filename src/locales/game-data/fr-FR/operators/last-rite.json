@@ -1,0 +1,78 @@
+{
+  "op.LAST_RITE.event.name": {
+    "text": "Last Rite",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.1.event.description": {
+    "text": "Quand l'opérateur contrôlé qui bénéficie de Perfusion hypothermique lance un Coup final et touche l'ennemi, inflige {atk_up:0%} de DÉG supplémentaires et Déséquilibre {poise:0} fois.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.1.event.name": {
+    "text": "Cadeau funéraire",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.2.event.description": {
+    "text": "Force +{Str:0}, DÉG cryogéniques infligés +{CrystDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.2.event.name": {
+    "text": "Armement zéro absolu",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.3.event.description": {
+    "text": "Renforce la compétence de combo Dévoration de l'hiver et de l'ultime Veillée : le multiplicateur de DÉG passe à {atk_scale2:0.00} fois sa valeur d'origine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.3.event.name": {
+    "text": "Suzeraine de l'hiver",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.4.event.description": {
+    "text": "Renforce l'ultime Veillée : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.4.event.name": {
+    "text": "Réveil sincère",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.5.event.description": {
+    "text": "Renforce la compétence de combat Héritage ésotérique de Seš'qa : la quantité de PC récupérée augmente de {atb:0} ; le multiplicateur d'ATQ supplémentaire du mirage passe à {atk_scale:0.0} fois sa valeur d'origine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.5.event.name": {
+    "text": "L'hiver revient",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.DANCE_OF_RIME_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG cryogéniques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG cryogéniques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG cryogéniques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.DANCE_OF_RIME_BATK.event.name": {
+    "text": "Danse du givre",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.ESOTERIC_LEGACY.event.description": {
+    "text": "Effectue une Perfusion hypothermique sur l'arme de l'opérateur contrôlé et lui permet de récupérer quelques PC. S'il survient dans un certain délai, le Coup final suivant de l'opérateur actuellement contrôlé génère les mirages de Last Rite, qui lancent une attaque supplémentaire sur la cible. Cette attaque inflige des DÉG cryogéniques et applique une altération cryogénique. Lorsque l'opérateur contrôlé est Last Rite, l'utilisation de cette compétence de combat ne réinitialise pas sa séquence d'attaque de base.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.ESOTERIC_LEGACY.event.name": {
+    "text": "Héritage ésotérique de Seš'qa",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.VIGIL_SERVICES.event.description": {
+    "text": "Last Rite s'enferme dans une armure de givre et génère une faux de glace pour exécuter 3 entailles. Tant que cet état est actif, elle est immunisée contre tous les dégâts. Chaque entaille inflige de lourds DÉG cryogéniques. Last Rite ne peut gagner de l'énergie d'ultime qu'à l'aide de ses propres compétences de combat et de combo.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.VIGIL_SERVICES.event.name": {
+    "text": "Veillée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.WINTERS_DEVOURER.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi a {count:0} cumuls ou plus d'altération cryogénique. Enferme l'ennemi ciblé dans des stalactites et les brise, consommant tous ses cumuls d'altération cryogénique. La quantité de cumuls d'altération cryogénique consommés détermine la quantité de DÉG cryogéniques infligée à cet ennemi ainsi que l'énergie d'ultime obtenue par Last Rite.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.WINTERS_DEVOURER.event.name": {
+    "text": "Dévoration de l'hiver",
+    "dataStatus": "RECONCILED"
+  }
+}

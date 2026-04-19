@@ -9,10 +9,17 @@
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "talents": {
-    "one": "REDUCE_AND_THICKEN_TALENT",
-    "two": "SALTY_OR_MILD_TALENT",
+    "one": {
+      "name": "Reduce and Thicken",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Salty or Mild",
+      "maxLevel": 2
+    },
     "attributeIncrease": {
-      "id": "FORGED"
+      "name": "Forged",
+      "attribute": "STRENGTH"
     }
   },
   "statsByLevel": [

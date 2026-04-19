@@ -2,6 +2,12 @@
   "properties": {
     "id": "ALESH_POTENTIAL_4",
     "level": 4,
+    "descriptionParams": {
+      "costValue": 0.85,
+      "1-costValue": 0.15000000000000002,
+      "-costValue": -0.85,
+      "costValue-1": -0.15000000000000002
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

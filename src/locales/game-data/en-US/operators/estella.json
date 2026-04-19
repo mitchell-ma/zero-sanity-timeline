@@ -39,6 +39,22 @@
     "text": "Life Over Mission (P4)",
     "dataStatus": "RECONCILED"
   },
+  "op.ESTELLA.potential.5.event.description": {
+    "text": "After applying Solidification to an enemy, Estella gains 5 Ultimate Energy. Effect can only trigger once every 1s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.5.event.name": {
+    "text": "Survival is a Win (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.5.segment.0.name": {
+    "text": "Survival is a Win",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.5.segment.1.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
   "op.ESTELLA.skill.AUDIO_NOISE_BATK.event.description": {
     "text": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "dataStatus": "RECONCILED"

@@ -1,6 +1,12 @@
 {
   "properties": {
     "id": "CYCLE_PROTOCOL_TALENT",
+    "descriptionParams": {
+      "talent2": 1,
+      "1-talent2": 0,
+      "-talent2": -1,
+      "talent2-1": 0
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 1

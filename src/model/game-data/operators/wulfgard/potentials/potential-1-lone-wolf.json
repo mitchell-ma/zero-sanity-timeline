@@ -49,6 +49,16 @@
   "properties": {
     "id": "WULFGARD_P1_LONE_WOLF",
     "level": 1,
+    "descriptionParams": {
+      "Str": 15,
+      "Agi": 15,
+      "1-Str": -14,
+      "-Str": -15,
+      "Str-1": 14,
+      "1-Agi": -14,
+      "-Agi": -15,
+      "Agi-1": 14
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

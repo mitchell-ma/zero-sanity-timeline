@@ -2,7 +2,29 @@
   "properties": {
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
-    "id": "DISTRIBUTED_DOS"
+    "id": "DISTRIBUTED_DOS",
+    "descriptionParams": {
+      "heal_value": 324,
+      "will_up": 0.76,
+      "duration": 20,
+      "buff_duration": 25,
+      "atk_up": 0.15,
+      "1-heal_value": -323,
+      "-heal_value": -324,
+      "heal_value-1": 323,
+      "1-will_up": 0.24,
+      "-will_up": -0.76,
+      "will_up-1": -0.24,
+      "1-duration": -19,
+      "-duration": -20,
+      "duration-1": 19,
+      "1-buff_duration": -24,
+      "-buff_duration": -25,
+      "buff_duration-1": 24,
+      "1-atk_up": 0.85,
+      "-atk_up": -0.15,
+      "atk_up-1": -0.85
+    }
   },
   "metadata": {
     "originId": "XAIHI",

@@ -181,6 +181,12 @@
   ],
   "properties": {
     "id": "ORIGINIUM_CRYSTAL",
+    "descriptionParams": {
+      "dmg": 0.2,
+      "1-dmg": 0.8,
+      "-dmg": -0.2,
+      "dmg-1": -0.8
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

@@ -24,7 +24,7 @@ import { ENEMY_ID, REACTION_COLUMNS } from '../../../model/channels';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, breakdownFor, damageRowAtOrAfter, findEntry, findSourceEntry,
-  gearLoadout, placeSkill,
+  gearLoadout, placeSkill, statusDisplayName
 } from '../gears/helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -84,7 +84,7 @@ describe('InformationPane breakdown tree — gear buff source visibility', () =>
     expect(heatEntry!.subEntries).toBeDefined();
 
     // Leaf must carry the buff's DISPLAY NAME, not its raw id.
-    const buffLeaf = heatEntry!.subEntries!.find(e => e.label === HEAT_BUFF.name);
+    const buffLeaf = heatEntry!.subEntries!.find(e => e.label === statusDisplayName(HEAT_BUFF.id));
     expect(buffLeaf).toBeDefined();
     // Raw-id leak regression: no leaf should label with the internal id.
     const rawIdLeak = heatEntry!.subEntries!.find(e => e.label === HEAT_BUFF.id);
@@ -113,7 +113,7 @@ describe('InformationPane breakdown tree — gear buff source visibility', () =>
     const entries = breakdownFor(row);
     const heatEntry = findEntry(entries, HEAT_DMG_LABEL);
     const heatSubs = heatEntry?.subEntries ?? [];
-    const buffLeaf = heatSubs.find(e => e.label === HEAT_BUFF.name);
+    const buffLeaf = heatSubs.find(e => e.label === statusDisplayName(HEAT_BUFF.id));
     expect(buffLeaf).toBeUndefined();
     // Raw id leak also absent (regression guard in the negative path too).
     const rawIdLeaf = heatSubs.find(e => e.label === HEAT_BUFF.id);
@@ -121,7 +121,7 @@ describe('InformationPane breakdown tree — gear buff source visibility', () =>
 
     // Global scan: the triggered BUFF should not appear anywhere in the tree
     // (distinct from the 3pc gear-piece stat contributions which remain).
-    const buffAnywhere = findSourceEntry(entries, HEAT_BUFF.name);
+    const buffAnywhere = findSourceEntry(entries, statusDisplayName(HEAT_BUFF.id));
     expect(buffAnywhere).toBeUndefined();
   });
 });

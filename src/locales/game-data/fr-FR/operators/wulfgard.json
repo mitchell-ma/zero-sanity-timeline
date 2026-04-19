@@ -1,0 +1,78 @@
+{
+  "op.WULFGARD.event.name": {
+    "text": "Wulfgard",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.1.event.description": {
+    "text": "Force +{Str:0}, Agilité +{Agi:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.1.event.name": {
+    "text": "Loup solitaire",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.2.event.description": {
+    "text": "Renforce le talent Code de retenue : restaure {potential_skillpower:0} PC supplémentaires.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.2.event.name": {
+    "text": "Mods d'arme à feu",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.3.event.description": {
+    "text": "Tant que Crocs ardents est actif, déclencher les effets supplémentaires de la compétence de combat réinitialise directement la durée de Crocs ardents et accorde aux autres membres de l'équipe {teammate_percent:0%} des effets de base de Crocs ardents.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.3.event.name": {
+    "text": "Heure de chasse",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.4.event.description": {
+    "text": "Renforce l'ultime Fureur lupine : coût en énergie d'ultime -{1-costvalue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.4.event.name": {
+    "text": "Volonté de la Meute",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.5.event.description": {
+    "text": "Lancer l'ultime Fureur lupine réinitialise immédiatement le temps de recharge de la compétence de combo Grenade à fragmentation β.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.5.event.name": {
+    "text": "Prédateur naturel",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.FRAG_GRENADE_BETA.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi souffre d'une altération des Arts.\nLance une grenade à fragmentation à l'emplacement de la cible. La grenade explose en touchant le sol, infligeant des DÉG thermiques et appliquant une altération thermique aux ennemis à proximité.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.FRAG_GRENADE_BETA.event.name": {
+    "text": "Grenade à fragmentation β",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.RAPID_FIRE_AKIMBO_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG thermiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG thermiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG thermiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.RAPID_FIRE_AKIMBO_BATK.event.name": {
+    "text": "Tir rapide stable",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.THERMITE_TRACERS.event.description": {
+    "text": "Tire plusieurs fois sur la cible, lui infligeant des DÉG thermiques. Le Coup final inflige aussi une altération thermique. Si la cible est en combustion ou électrifiée, n'applique pas d'altération thermique, mais consomme la réaction aux Arts et effectue un tir supplémentaire qui lui inflige de lourds DÉG thermiques.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.THERMITE_TRACERS.event.name": {
+    "text": "Traque-thermite",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.WOLVEN_FURY.event.description": {
+    "text": "Lâche une volée de tirs de barrage et libère une Fureur lupine qui attaque les cibles à proximité, infligeant 5 salves de DÉG thermiques et appliquant l'effet de Combustion.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.WOLVEN_FURY.event.name": {
+    "text": "Fureur lupine",
+    "dataStatus": "RECONCILED"
+  }
+}

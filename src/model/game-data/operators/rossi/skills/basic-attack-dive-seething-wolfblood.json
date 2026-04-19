@@ -7,7 +7,17 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",
     "element": "PHYSICAL",
-    "id": "SEETHING_WOLFBLOOD_DIVE"
+    "id": "SEETHING_WOLFBLOOD_DIVE",
+    "descriptionParams": {
+      "atk_scale": 1.8,
+      "atb": 0,
+      "1-atk_scale": -0.8,
+      "-atk_scale": -1.8,
+      "atk_scale-1": 0.8,
+      "1-atb": 1,
+      "-atb": 0,
+      "atb-1": -1
+    }
   },
   "metadata": {
     "originId": "ROSSI",

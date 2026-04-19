@@ -7,11 +7,26 @@ description: Fetch and parse game data from external sources (Warfarin API, End-
 
 This skill covers all external data fetching and parsing for the Arknights: Endfield timeline calculator.
 
+## Localization: strings live in locale bundles
+
+**Game-data JSON carries NO `name` or `description` fields** — the runtime validator (`validationUtils.ts::checkIdAndName`) rejects them. User-facing strings live under `src/locales/game-data/<locale>/{operators,weapons,gears}/*.json`, keyed by `LocaleKey.*` (see `src/locales/gameDataLocale.ts`). Each entry is `{ "text": "…", "dataStatus": "RECONCILED" | "VERIFIED" }`.
+
+When adding or re-ingesting an operator:
+- `npx tsx src/model/utils/parsers/parseWarfarinOperator.ts <slug>` writes the base JSON + `en-US` locale bundle + patches `descriptionParams` on potential files.
+- Re-run with `--locale=fr` (supported: `en`, `fr`) to populate that locale's bundle. Locale mode is string-only — it never mutates structural game data.
+- `python3 scripts/patch_skill_talent_params.py [<slug>]` patches `descriptionParams` on skill and talent files (max-level Warfarin blackboards, merges across attackN variants so `poise` from the final strike survives alongside `atk_scale` from earlier frames).
+
+`descriptionParams` is a numeric object that feeds `{param:format}` tokens (`{poise:0}`, `{Str:0}`, `{PhysicalDamageIncrease:0%}`, plus pre-computed expression variants `{1-costValue:0%}` / `{-coolDown:0}` / `{X-1}`). Tokens it doesn't cover render as literals. See `CLAUDE.md` "Localization (i18n)" and `operatorDataSpec.md` "Localization" for the full schema.
+
+Asset lookup is hard-wired to `id.toLowerCase()` (no name-based fallback). When the Warfarin slug diverges from the filename convention (e.g. `FINCHASER_3_0` needs `finchaser_3_0_icon.png`, not `finchaser_3.0_icon.png`), rename the asset file — don't patch the resolver.
+
 ## Data status protection
 
 Every JSON file under `src/model/game-data/` has a `metadata.dataStatus` field (enum: `RECONCILED`, `PARTIALLY_VERIFIED`, `VERIFIED`). See `DataStatus` in `src/consts/enums.ts`.
 
 **VERIFIED files MUST NOT be overwritten by automated data updates.** Before writing any game-data JSON file, check its `metadata.dataStatus`. If `VERIFIED`, skip the file and log it. New files default to `RECONCILED`.
+
+Locale bundles use **per-entry** `dataStatus` — `mergeLocaleBundle` in `parseWarfarinOperator.ts` skips `VERIFIED` entries and overwrites `RECONCILED` ones on re-ingest. Flip an entry to `VERIFIED` only after explicit human review.
 
 ---
 

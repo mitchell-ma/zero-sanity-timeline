@@ -2,7 +2,25 @@
   "properties": {
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
-    "id": "SQUAD_ON_ME"
+    "id": "SQUAD_ON_ME",
+    "descriptionParams": {
+      "atb_1": 26,
+      "atb_2": 27,
+      "atb_3": 27,
+      "atb_display": 80,
+      "1-atb_1": -25,
+      "-atb_1": -26,
+      "atb_1-1": 25,
+      "1-atb_2": -26,
+      "-atb_2": -27,
+      "atb_2-1": 26,
+      "1-atb_3": -26,
+      "-atb_3": -27,
+      "atb_3-1": 26,
+      "1-atb_display": -79,
+      "-atb_display": -80,
+      "atb_display-1": 79
+    }
   },
   "segments": [
     {

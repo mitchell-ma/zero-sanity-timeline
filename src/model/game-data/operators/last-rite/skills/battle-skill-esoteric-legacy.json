@@ -3,7 +3,25 @@
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "CRYO",
-    "id": "ESOTERIC_LEGACY"
+    "id": "ESOTERIC_LEGACY",
+    "descriptionParams": {
+      "atk_scale": 3.2,
+      "atb": 30,
+      "duration": 15,
+      "usp": 16,
+      "1-atk_scale": -2.2,
+      "-atk_scale": -3.2,
+      "atk_scale-1": 2.2,
+      "1-atb": -29,
+      "-atb": -30,
+      "atb-1": 29,
+      "1-duration": -14,
+      "-duration": -15,
+      "duration-1": 14,
+      "1-usp": -15,
+      "-usp": -16,
+      "usp-1": 15
+    }
   },
   "metadata": {
     "originId": "LAST_RITE",

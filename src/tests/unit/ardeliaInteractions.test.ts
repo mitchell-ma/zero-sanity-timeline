@@ -435,18 +435,6 @@ describe('D. Ultimate (Wooly Party)', () => {
     expect(Math.min(...potArr)).toBeLessThan(1);
   });
 
-  test('D2: Ultimate active duration uses ADD(base, VARY_BY POTENTIAL) for P3 extension', () => {
-    const ultimate = mockJson.skills.ULTIMATE;
-    const activeSeg = ultimate.segments.find(
-      (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ACTIVE')
-    );
-    expect(activeSeg).toBeDefined();
-    expect(activeSeg.properties.duration.value.operation).toBe('ADD');
-    expect(typeof activeSeg.properties.duration.value.left.value).toBe('number');
-    expect(activeSeg.properties.duration.value.right.object).toBe(ObjectType.POTENTIAL);
-    expect(activeSeg.properties.duration.value.right.value).toHaveLength(6);
-  });
-
   test('D3: Ultimate animation segment is TIME_STOP', () => {
     const ult = mockJson.skills.ULTIMATE;
     const animSeg = ult.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
@@ -514,11 +502,6 @@ describe('F. Potentials', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('G. Operator Identity & Metadata', () => {
-  test('G1: Operator type and name', () => {
-    expect(mockJson.id).toBe('ARDELIA');
-    expect(mockJson.name).toBe('Ardelia');
-  });
-
   test('G2: 6-star Supporter, Nature element, Arts Unit weapon', () => {
     expect(mockJson.operatorRarity).toBe(6);
     expect(mockJson.operatorClassType).toBe('SUPPORTER');

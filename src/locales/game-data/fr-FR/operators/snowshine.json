@@ -1,0 +1,78 @@
+{
+  "op.SNOWSHINE.event.name": {
+    "text": "Snowshine",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.1.event.description": {
+    "text": "Renforce la compétence de combat Défense saturée : pendant l'effet de blocage, impossible d'appliquer des altérations des Arts aux opérateurs alliés qui bénéficient de Protection.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.1.event.name": {
+    "text": "Refuge glacial",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.2.event.description": {
+    "text": "Renforce l'ultime Terrain glacial : zone d'effet +{potential_2_range:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.2.event.name": {
+    "text": "Région orageuse",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.3.event.description": {
+    "text": "Renforce l'ultime Terrain glacial : la durée de la Solidification appliquée par la compétence augmente de {extra_duration:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.3.event.name": {
+    "text": "Guide de survie polaire",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.4.event.description": {
+    "text": "DÉF +{Def:0}, Volonté +{Will:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.4.event.name": {
+    "text": "Égide de la toundra",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.5.event.description": {
+    "text": "Renforce la compétence de combat Défense saturée : réussir une contre-attaque restaure {potential_5_atb:0} PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.5.event.name": {
+    "text": "Spécialiste des ravages du froid",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.FRIGID_SNOWFIELD.event.description": {
+    "text": "Saute à mi-hauteur avec un jetpack avant d'abattre son bouclier pour infliger de lourds DÉG cryogéniques aux ennemis dans la zone d'effet. Génère aussi une zone de neige (qui dure plusieurs secondes) et inflige des DÉG cryogéniques continus aux ennemis. La zone de neige solidifie de force les ennemis qui y sont pris au piège pendant un certain temps.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.FRIGID_SNOWFIELD.event.name": {
+    "text": "Terrain glacial",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.HYPOTHERMIC_ASSAULT_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 3 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.HYPOTHERMIC_ASSAULT_BATK.event.name": {
+    "text": "Assaut hypothermique",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.POLAR_RESCUE.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un opérateur que vous contrôlez est attaqué et que ses PV sont inférieurs à {trigger_hp_ratio:0%}. Snowshine lance un assistant R&S de champ de neige sur l'opérateur contrôlé. À son contact, l'assistant octroie immédiatement d'énormes soins aux opérateurs à proximité ainsi que des soins en continu aux opérateurs dans la zone d'effet. Le trait Volonté augmente la quantité de PV soignés.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.POLAR_RESCUE.event.name": {
+    "text": "Sauvetage polaire",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.SATURATED_DEFENSE.event.description": {
+    "text": "Lève un bouclier qui peut bloquer des attaques, offrir une protection à soi-même et aux opérateurs à proximité et restaurer immédiatement quelques PC.\nEn cas d'attaque lorsque le bouclier est levé, permet d'effectuer une contre-attaque qui inflige des DÉG cryogéniques et applique une altération cryogénique à l'assaillant.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.SATURATED_DEFENSE.event.name": {
+    "text": "Défense saturée",
+    "dataStatus": "RECONCILED"
+  }
+}

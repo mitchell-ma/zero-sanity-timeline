@@ -4,6 +4,32 @@
     "eventCategoryType": "BATTLE",
     "element": "CRYO",
     "id": "BRR_BRR_BOMB",
+    "descriptionParams": {
+      "atk_scale": 2.5,
+      "poise": 10,
+      "atk_scale_layer": 2,
+      "usp_base": 10,
+      "usp_layer": 30,
+      "atk_scale2": 1.5,
+      "1-atk_scale": -1.5,
+      "-atk_scale": -2.5,
+      "atk_scale-1": 1.5,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-atk_scale_layer": -1,
+      "-atk_scale_layer": -2,
+      "atk_scale_layer-1": 1,
+      "1-usp_base": -9,
+      "-usp_base": -10,
+      "usp_base-1": 9,
+      "1-usp_layer": -29,
+      "-usp_layer": -30,
+      "usp_layer-1": 29,
+      "1-atk_scale2": -0.5,
+      "-atk_scale2": -1.5,
+      "atk_scale2-1": 0.5
+    },
     "suppliedParameters": {
       "VARY_BY": [
         {

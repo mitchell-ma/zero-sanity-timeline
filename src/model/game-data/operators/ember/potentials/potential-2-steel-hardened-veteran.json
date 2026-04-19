@@ -2,6 +2,16 @@
   "properties": {
     "id": "EMBER_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "Str": 20,
+      "Will": 20,
+      "1-Str": -19,
+      "-Str": -20,
+      "Str-1": 19,
+      "1-Will": -19,
+      "-Will": -20,
+      "Will-1": 19
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

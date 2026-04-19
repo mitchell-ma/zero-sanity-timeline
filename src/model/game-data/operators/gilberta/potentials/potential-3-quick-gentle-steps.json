@@ -2,6 +2,12 @@
   "properties": {
     "id": "GILBERTA_POTENTIAL_3",
     "level": 3,
+    "descriptionParams": {
+      "add": 0.05,
+      "1-add": 0.95,
+      "-add": -0.05,
+      "add-1": -0.95
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

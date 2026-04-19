@@ -2,6 +2,16 @@
   "properties": {
     "id": "WULFGARD_P2_FIREARM_MODS",
     "level": 2,
+    "descriptionParams": {
+      "potential_skillpower": 10,
+      "potential_2": 1,
+      "1-potential_skillpower": -9,
+      "-potential_skillpower": -10,
+      "potential_skillpower-1": 9,
+      "1-potential_2": 0,
+      "-potential_2": -1,
+      "potential_2-1": 0
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

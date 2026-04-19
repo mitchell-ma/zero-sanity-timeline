@@ -1,0 +1,78 @@
+{
+  "op.YVONNE.event.name": {
+    "text": "Yvonne",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.1.event.description": {
+    "text": "Renforce la compétence de combo Surgélateur express υ37 : zone d'effet +20 % ; libère de l'énergie 2 fois de plus et octroie 15 points d'énergie d'ultime supplémentaires après avoir infligé des DÉG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.1.event.name": {
+    "text": "Surgélation express",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.2.event.description": {
+    "text": "Intelligence +{Wisd:0}, taux de coups critiques +{CriticalRate:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.2.event.name": {
+    "text": "Création parfaite",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.3.event.description": {
+    "text": "Renforce le talent Point de congélation : contre les ennemis victimes d'une altération cryogénique, DÉG critiques infligés +{inflict_up:0%} ; cet effet est doublé contre les ennemis victimes de Solidification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.3.event.name": {
+    "text": "Pouvoir de Clochette",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.4.event.description": {
+    "text": "Renforce la compétence de combat Bombe brr-brr β : si l'explosion ne touche qu'un seul ennemi, restaure {atb_return:0} PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.4.event.name": {
+    "text": "Humeur rebelle",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.5.event.description": {
+    "text": "Renforce l'ultime Pistolet à cryodécharge : pendant l'ultime, ATQ +{atk_up:0%} et DÉG critiques infligés +{crit_dmg_up:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.5.event.name": {
+    "text": "Experte en mécanique",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.BRR_BRR_BOMB.event.description": {
+    "text": "Lance une bombe givrante. La bombe explose en touchant l'ennemi, lui infligeant des DÉG cryogéniques. Si elle touche un ennemi victime d'une altération cryogénique ou d'une altération naturelle, consomme tous les cumuls d'altération des Arts, applique une Solidification et inflige des DÉG cryogéniques à la cible en fonction du nombre de cumuls consommés.\nLorsque la compétence de combat applique une Solidification, Yvonne gagne de l'énergie d'ultime supplémentaire en fonction du nombre de cumuls consommés. Cet effet de gain d'énergie d'ultime ne peut se déclencher qu'une seule fois, même si la compétence touche plusieurs ennemis.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.BRR_BRR_BOMB.event.name": {
+    "text": "Bombe brr-brr β",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.CRYOBLASTING_PISTOLIER.event.description": {
+    "text": "Déploie immédiatement le robot de soutien Clochette et fait d'Yvonne l'opératrice contrôlée.\nAméliore temporairement l'attaque de base (ATQ-B) d'Yvonne. Chaque séquence d'ATQ-B améliorée exécutée confère un cumul de bonus de taux de coups critiques. Une fois la quantité maximale de cumuls atteinte, Yvonne gagne également un bonus de DÉG critiques. Lorsque la compétence est sur le point de s'achever, la dernière ATQ-B améliorée d'Yvonne devient un Coup final amélioré qui inflige de lourds DÉG cryogéniques.\nSi l'ennemi est solidifié, Yvonne exécute une attaque supplémentaire qui inflige des DÉG cryogéniques, puis consomme la Solidification de l'ennemi.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.CRYOBLASTING_PISTOLIER.event.name": {
+    "text": "Pistolet à cryodécharge",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.EXUBERANT_TRIGGER_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 5 séquences qui inflige des DÉG cryogéniques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG cryogéniques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG cryogéniques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.EXUBERANT_TRIGGER_BATK.event.name": {
+    "text": "Gâchette exubérante",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.FLASHFREEZER.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsque l'opérateur contrôlé exécute un Coup final sur un ennemi solidifié.\nDéploie immédiatement Givr-O-max près de l'ennemi. Tant qu'il est actif, Givr-O-max projette en continu de l'énergie qui attaque les ennemis à proximité, leur inflige des DÉG cryogéniques et les attire dans sa direction. Lorsque Givr-O-max expire, il explose pour appliquer une Solidification et infliger des DÉG cryogéniques aux ennemis à proximité.\nLorsque la compétence de combo touche l'ennemi, Yvonne gagne de l'énergie d'ultime supplémentaire. Cet effet de gain d'énergie d'ultime ne peut se déclencher qu'une seule fois, même si la compétence touche plusieurs ennemis.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.FLASHFREEZER.event.name": {
+    "text": "Surgélateur express υ37",
+    "dataStatus": "RECONCILED"
+  }
+}

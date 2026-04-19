@@ -32,12 +32,15 @@ export const PEERJS_SERIALIZATION = 'raw' as const;
  * ICE servers used for WebRTC NAT traversal. STUN handles the common case
  * of peers behind cone NATs. When peers are behind symmetric NATs OR when
  * a browser blocks host-candidate exposure (Firefox does this by default
- * via mDNS obfuscation), a TURN relay is required.
+ * via mDNS obfuscation), a TURN relay is required — notably for the
+ * same-LAN Firefox↔Firefox case where both sides' mDNS candidates are
+ * mutually unresolvable.
  *
- * We don't ship a default TURN server — the free public TURN ecosystem is
- * unreliable (OpenRelay was discontinued in 2024, others are rate-limited
- * or require signup). Users who need TURN can plug in their own via
- * `zst-turn-config` in localStorage, shape `{urls, username, credential}`.
+ * TURN creds are issued on demand by our Worker (`/api/turn-credentials`),
+ * which proxies Cloudflare's Realtime TURN API. Creds are short-lived;
+ * we cache in memory until near expiry. Users who prefer to bring their
+ * own TURN can set `zst-turn-config` in localStorage, shape
+ * `{urls, username, credential}` (or an array of such).
  */
 const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
@@ -46,23 +49,72 @@ const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
 ];
 
 const TURN_CONFIG_LS_KEY = 'zst-turn-config';
+const TURN_CREDENTIALS_ENDPOINT = '/api/turn-credentials';
+/** Refresh cached CF creds once they're within this window of expiring. */
+const TURN_REFRESH_LEAD_MS = 5 * 60 * 1000;
 
-export function loadIceServers(): RTCIceServer[] {
-  const out = [...DEFAULT_ICE_SERVERS];
+interface TurnCredentialsResponse {
+  iceServers: RTCIceServer | RTCIceServer[];
+  ttl: number;
+}
+
+interface CachedTurn {
+  servers: RTCIceServer[];
+  expiresAt: number;
+}
+
+let turnCache: CachedTurn | null = null;
+let turnInFlight: Promise<RTCIceServer[]> | null = null;
+
+function readLocalStorageOverrides(): RTCIceServer[] {
+  const out: RTCIceServer[] = [];
   try {
     const raw = localStorage.getItem(TURN_CONFIG_LS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        for (const s of parsed) {
-          if (s && typeof s === 'object' && s.urls) out.push(s as RTCIceServer);
-        }
-      } else if (parsed && typeof parsed === 'object' && parsed.urls) {
-        out.push(parsed as RTCIceServer);
+    if (!raw) return out;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      for (const s of parsed) {
+        if (s && typeof s === 'object' && s.urls) out.push(s as RTCIceServer);
       }
+    } else if (parsed && typeof parsed === 'object' && parsed.urls) {
+      out.push(parsed as RTCIceServer);
     }
   } catch { /* ignore */ }
   return out;
+}
+
+async function fetchTurnServers(): Promise<RTCIceServer[]> {
+  if (turnCache && Date.now() < turnCache.expiresAt - TURN_REFRESH_LEAD_MS) {
+    return turnCache.servers;
+  }
+  if (turnInFlight) return turnInFlight;
+  turnInFlight = (async () => {
+    try {
+      const resp = await fetch(TURN_CREDENTIALS_ENDPOINT, { method: 'GET' });
+      if (!resp.ok) {
+        console.warn('[collab] TURN credential fetch failed:', resp.status);
+        return [];
+      }
+      const data = await resp.json() as TurnCredentialsResponse;
+      const servers = Array.isArray(data.iceServers) ? data.iceServers : [data.iceServers];
+      turnCache = {
+        servers,
+        expiresAt: Date.now() + data.ttl * 1000,
+      };
+      return servers;
+    } catch (err) {
+      console.warn('[collab] TURN credential fetch threw:', err);
+      return [];
+    } finally {
+      turnInFlight = null;
+    }
+  })();
+  return turnInFlight;
+}
+
+export async function loadIceServers(): Promise<RTCIceServer[]> {
+  const [turnServers] = await Promise.all([fetchTurnServers()]);
+  return [...DEFAULT_ICE_SERVERS, ...turnServers, ...readLocalStorageOverrides()];
 }
 
 export interface PeerInfo {

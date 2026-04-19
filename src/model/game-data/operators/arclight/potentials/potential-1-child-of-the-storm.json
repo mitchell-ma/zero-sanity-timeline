@@ -2,6 +2,12 @@
   "properties": {
     "id": "ARCLIGHT_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "atb": 10,
+      "1-atb": -9,
+      "-atb": -10,
+      "atb-1": 9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

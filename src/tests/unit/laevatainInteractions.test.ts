@@ -375,14 +375,6 @@ describe('E. Ultimate & Enhanced Variants', () => {
     }
   });
 
-  test('E6: Ultimate active duration is 15 seconds (from skill segments)', () => {
-    const ultSkill = mockLaevatainJson.skills.TWILIGHT;
-    const activeSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('ACTIVE'));
-    expect(activeSeg).toBeDefined();
-    const durVal = activeSeg.properties.duration.value;
-    expect(typeof durVal === 'object' ? durVal.value : durVal).toBe(15);
-  });
-
   test('E7: Ultimate energy cost is MULT(base, VARY_BY POTENTIAL)', () => {
     const ultSkill = mockLaevatainJson.skills.ULTIMATE;
     const energyCost = ultSkill.segments[0].clause

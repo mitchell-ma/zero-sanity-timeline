@@ -2,6 +2,12 @@
   "properties": {
     "id": "ENDMINISTRATOR_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "ratio": 0.5,
+      "1-ratio": 0.5,
+      "-ratio": -0.5,
+      "ratio-1": -0.5
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

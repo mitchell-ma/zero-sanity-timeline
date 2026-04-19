@@ -443,7 +443,29 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "ILL_BLOW_YOUR_MIND_BATK"
+    "id": "ILL_BLOW_YOUR_MIND_BATK",
+    "descriptionParams": {
+      "atk_scale_1": 0.18,
+      "atk_scale_2": 0.46,
+      "atb": 18,
+      "1-atk_scale_1": 0.8200000000000001,
+      "-atk_scale_1": -0.18,
+      "atk_scale_1-1": -0.8200000000000001,
+      "1-atk_scale_2": 0.54,
+      "-atk_scale_2": -0.46,
+      "atk_scale_2-1": -0.54,
+      "1-atb": -17,
+      "-atb": -18,
+      "atb-1": 17,
+      "atk_scale": 1.13,
+      "1-atk_scale": -0.1299999999999999,
+      "-atk_scale": -1.13,
+      "atk_scale-1": 0.1299999999999999,
+      "poise": 18,
+      "1-poise": -17,
+      "-poise": -18,
+      "poise-1": 17
+    }
   },
   "metadata": {
     "originId": "TANGTANG",

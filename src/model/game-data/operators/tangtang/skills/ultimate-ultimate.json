@@ -3,7 +3,33 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "CRYO",
-    "id": "ULTIMATE"
+    "id": "ULTIMATE",
+    "descriptionParams": {
+      "atk_scale_1": 0.4,
+      "atk_scale_2": 4,
+      "atk_scale_3": 7,
+      "poise2": 15,
+      "poise3": 20,
+      "display_duration": 4,
+      "1-atk_scale_1": 0.6,
+      "-atk_scale_1": -0.4,
+      "atk_scale_1-1": -0.6,
+      "1-atk_scale_2": -3,
+      "-atk_scale_2": -4,
+      "atk_scale_2-1": 3,
+      "1-atk_scale_3": -6,
+      "-atk_scale_3": -7,
+      "atk_scale_3-1": 6,
+      "1-poise2": -14,
+      "-poise2": -15,
+      "poise2-1": 14,
+      "1-poise3": -19,
+      "-poise3": -20,
+      "poise3-1": 19,
+      "1-display_duration": -3,
+      "-display_duration": -4,
+      "display_duration-1": 3
+    }
   },
   "segments": [
     {

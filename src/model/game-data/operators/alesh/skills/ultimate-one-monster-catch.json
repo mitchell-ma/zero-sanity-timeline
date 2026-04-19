@@ -4,6 +4,28 @@
     "eventCategoryType": "ULTIMATE",
     "element": "CRYO",
     "id": "ONE_MONSTER_CATCH",
+    "descriptionParams": {
+      "atk_scale": 9.8,
+      "atb_up": 15,
+      "poise": 20,
+      "atb_max": 100,
+      "atb": 25,
+      "1-atk_scale": -8.8,
+      "-atk_scale": -9.8,
+      "atk_scale-1": 8.8,
+      "1-atb_up": -14,
+      "-atb_up": -15,
+      "atb_up-1": 14,
+      "1-poise": -19,
+      "-poise": -20,
+      "poise-1": 19,
+      "1-atb_max": -99,
+      "-atb_max": -100,
+      "atb_max-1": 99,
+      "1-atb": -24,
+      "-atb": -25,
+      "atb-1": 24
+    },
     "suppliedParameters": {
       "VARY_BY": [
         {

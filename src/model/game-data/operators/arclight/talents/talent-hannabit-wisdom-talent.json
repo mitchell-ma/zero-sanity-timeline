@@ -1,6 +1,12 @@
 {
   "properties": {
     "id": "HANNABIT_WISDOM_TALENT",
+    "descriptionParams": {
+      "prob": 0.5,
+      "1-prob": 0.5,
+      "-prob": -0.5,
+      "prob-1": -0.5
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

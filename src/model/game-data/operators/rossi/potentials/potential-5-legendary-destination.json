@@ -2,6 +2,28 @@
   "properties": {
     "id": "ROSSI_P5_LEGENDARY_DESTINATION",
     "level": 5,
+    "descriptionParams": {
+      "damage_scale": 1.1,
+      "potential_5_damage_scale": 1.1,
+      "potential_5": 1,
+      "critical_damage": 0.3,
+      "potential_5_critical_damage": 0.3,
+      "1-damage_scale": -0.10000000000000009,
+      "-damage_scale": -1.1,
+      "damage_scale-1": 0.10000000000000009,
+      "1-potential_5_damage_scale": -0.10000000000000009,
+      "-potential_5_damage_scale": -1.1,
+      "potential_5_damage_scale-1": 0.10000000000000009,
+      "1-potential_5": 0,
+      "-potential_5": -1,
+      "potential_5-1": 0,
+      "1-critical_damage": 0.7,
+      "-critical_damage": -0.3,
+      "critical_damage-1": -0.7,
+      "1-potential_5_critical_damage": 0.7,
+      "-potential_5_critical_damage": -0.3,
+      "potential_5_critical_damage-1": -0.7
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

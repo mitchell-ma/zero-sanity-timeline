@@ -50,6 +50,16 @@
   "properties": {
     "id": "TANGTANG_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "Agi": 20,
+      "CrystDamageIncrease": 0.1,
+      "1-Agi": -19,
+      "-Agi": -20,
+      "Agi-1": 19,
+      "1-CrystDamageIncrease": 0.9,
+      "-CrystDamageIncrease": -0.1,
+      "CrystDamageIncrease-1": -0.9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

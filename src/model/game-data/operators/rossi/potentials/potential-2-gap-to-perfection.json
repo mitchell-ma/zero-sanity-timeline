@@ -2,6 +2,16 @@
   "properties": {
     "id": "ROSSI_P2_GAP_TO_PERFECTION",
     "level": 2,
+    "descriptionParams": {
+      "Agi": 20,
+      "CriticalRate": 0.07,
+      "1-Agi": -19,
+      "-Agi": -20,
+      "Agi-1": 19,
+      "1-CriticalRate": 0.9299999999999999,
+      "-CriticalRate": -0.07,
+      "CriticalRate-1": -0.9299999999999999
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

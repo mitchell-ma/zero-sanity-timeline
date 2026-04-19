@@ -35,6 +35,12 @@
   ],
   "properties": {
     "id": "COMMISERATION_TALENT",
+    "descriptionParams": {
+      "atb": 15,
+      "1-atb": -14,
+      "-atb": -15,
+      "atb-1": 14
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

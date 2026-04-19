@@ -3,6 +3,18 @@
     "text": "Zhuang Fangyi",
     "dataStatus": "RECONCILED"
   },
+  "op.ZHUANG_FANGYI.potential.1.event.description": {
+    "text": "Battle skill Mantra of Sundering improved: DMG multiplier is increased to 1.15 times the original. After entering battle, Zhuang Fangyi's first battle skill casting also creates 1 more Sunderblade (can exceed the per-casting creation limit).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.1.event.name": {
+    "text": "Four Symbols of Harmony (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.1.segment.0.name": {
+    "text": "Four Symbols of Harmony (P1)",
+    "dataStatus": "RECONCILED"
+  },
   "op.ZHUANG_FANGYI.potential.2.event.description": {
     "text": "Will +20, Battle Skill DMG Dealt +15%.",
     "dataStatus": "RECONCILED"

@@ -621,7 +621,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "SEEK_AND_HUNT_BATK"
+    "id": "SEEK_AND_HUNT_BATK",
+    "descriptionParams": {
+      "atk_scale": 0.23,
+      "atb": 0,
+      "1-atk_scale": 0.77,
+      "-atk_scale": -0.23,
+      "atk_scale-1": -0.77,
+      "1-atb": 1,
+      "-atb": 0,
+      "atb-1": -1,
+      "poise": 16,
+      "1-poise": -15,
+      "-poise": -16,
+      "poise-1": 15
+    }
   },
   "metadata": {
     "originId": "ARCLIGHT",

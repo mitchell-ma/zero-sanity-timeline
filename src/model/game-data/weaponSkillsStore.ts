@@ -12,9 +12,10 @@ import { EventType } from '../../consts/enums';
 import type { ClauseEffect, ClausePredicate } from './weaponStatusesStore';
 import { resolveEffectStat } from '../enums/stats';
 import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
+import { LocaleKey, GENERIC_WEAPON_ID, resolveEventName, resolveOptionalEventDescription } from '../../locales/gameDataLocale';
 
 // ── Validation ──────────────────────────────────────────────────────────────
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'eventCategoryType']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'eventCategoryType']);
 const VALID_TOP_KEYS = new Set(['segments', 'onTriggerClause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -122,8 +123,14 @@ export class WeaponSkill {
     this.id = (props.id ?? '') as string;
     this.segments = (json.segments ?? []) as { clause?: ClausePredicate[] }[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
-    this.name = (props.name ?? '') as string;
-    this.description = (props.description ?? '') as string;
+    const weaponId = (meta.originId ?? '') as string;
+    // Weapon-specific (named) skills key under weapon.<weaponId>.skill.<skillId>;
+    // generic weapon skills (shared stat boosts) under the GENERIC namespace.
+    const prefix = this.id
+      ? LocaleKey.weaponSkill(weaponId || GENERIC_WEAPON_ID, this.id)
+      : '';
+    this.name = prefix ? resolveEventName(prefix) : '';
+    this.description = prefix ? (resolveOptionalEventDescription(prefix) ?? '') : '';
     this.eventCategoryType = props.eventCategoryType as string;
     if (meta.originId) this.originId = meta.originId as string;
   }
@@ -159,7 +166,8 @@ export class WeaponSkill {
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
         id: this.id,
-        name: this.name,
+        // Reproject locale-resolved strings so configCache/getStatusDef surfaces them.
+        ...(this.name ? { name: this.name } : {}),
         ...(this.description ? { description: this.description } : {}),
         eventCategoryType: this.eventCategoryType,
       },
@@ -174,7 +182,7 @@ export class WeaponSkill {
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
         id: this.id,
-        name: this.name,
+        ...(this.name ? { name: this.name } : {}),
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
         eventType: EventType.STATUS,
@@ -190,8 +198,8 @@ export class WeaponSkill {
   static deserialize(json: Record<string, unknown>, source?: string): WeaponSkill {
     const errors = validateWeaponSkill(json);
     if (errors.length > 0) {
-      const name = (json.properties as Record<string, unknown>)?.name ?? 'unknown';
-      console.warn(`[WeaponSkill] Validation errors in ${source ?? name}:\n  ${errors.join('\n  ')}`);
+      const id = (json.properties as Record<string, unknown>)?.id ?? 'unknown';
+      console.warn(`[WeaponSkill] Validation errors in ${source ?? id}:\n  ${errors.join('\n  ')}`);
     }
     return new WeaponSkill(json);
   }

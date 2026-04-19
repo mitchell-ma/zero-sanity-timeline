@@ -671,7 +671,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "NATURE",
-    "id": "BEAM_COHESION_ARTS_BATK"
+    "id": "BEAM_COHESION_ARTS_BATK",
+    "descriptionParams": {
+      "atk_scale": 0.37,
+      "atb": 16,
+      "1-atk_scale": 0.63,
+      "-atk_scale": -0.37,
+      "atk_scale-1": -0.63,
+      "1-atb": -15,
+      "-atb": -16,
+      "atb-1": 15,
+      "poise": 16,
+      "1-poise": -15,
+      "-poise": -16,
+      "poise-1": 15
+    }
   },
   "metadata": {
     "originId": "GILBERTA",

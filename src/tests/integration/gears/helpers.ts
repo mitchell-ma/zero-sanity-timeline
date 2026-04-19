@@ -20,6 +20,19 @@ import { CritMode, StatType } from '../../../consts/enums';
 import { findColumn, getMenuPayload } from '../helpers';
 import type { AppResult, AddEventPayload } from '../helpers';
 import type { OperatorLoadoutState } from '../../../view/OperatorLoadoutHeader';
+import { getStatusDef } from '../../../controller/timeline/configCache';
+
+/**
+ * Resolve the display name of a gear status (or any status) by id.
+ * Game-data JSON no longer carries `properties.name` — the serialized def
+ * from `configCache` reprojects the locale-backed display name back into
+ * `properties.name` so the UI can surface it.
+ */
+export function statusDisplayName(statusId: string): string {
+  const def = getStatusDef(statusId);
+  const name = (def?.properties as { name?: string } | undefined)?.name;
+  return name ?? statusId;
+}
 
 export const SLOT = 'slot-0';
 export const SLOT_INDEX = 0;

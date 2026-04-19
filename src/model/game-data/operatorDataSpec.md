@@ -1,37 +1,59 @@
 # Operator Data Specification
 
-This document defines the structure and semantics of per-operator JSON files in `game-data/operators/<slug>.json`.
+This document defines the structure and semantics of per-operator JSON files in `game-data/operators/<slug>/`.
+
+## Localization — strings live in locale bundles, NOT on game-data JSON
+
+As of the locale migration, **no game-data JSON (operator base, skill, talent, status, potential) carries `name` or `description` fields**. The validator (`validationUtils.ts::checkIdAndName`) rejects them. User-facing strings live in per-operator bundles under `src/locales/game-data/<locale>/operators/<slug>.json` keyed by the dotted `LocaleKey` format:
+
+```
+op.<OPERATOR_ID>.event.name
+op.<OPERATOR_ID>.skill.<SKILL_ID>.event.{name,description}
+op.<OPERATOR_ID>.skill.<SKILL_ID>.segment.<i>.name
+op.<OPERATOR_ID>.talent.<TALENT_ID>.event.{name,description}
+op.<OPERATOR_ID>.status.<STATUS_ID>.event.{name,description}
+op.<OPERATOR_ID>.potential.<level>.event.{name,description}
+```
+
+Each locale entry is `{ "text": "…", "dataStatus": "RECONCILED" | "VERIFIED" }`. The Warfarin reconciler preserves `VERIFIED` entries on re-ingest; new extractions default to `RECONCILED`.
+
+**`descriptionParams`** is a numeric-keyed object on the potential / skill / talent's `properties` that feeds the `{param:format}` tokens in the locale template (one set of values serves every locale). See the Potentials / Skills / Talents sections below for details; schema and extraction rules in `CLAUDE.md` under "Localization (i18n)".
+
+Historical examples in this document may still show `"name": "…"` / `"description": "…"` on JSON — those references are obsolete; the current shape has them stripped.
 
 ## File Structure
 
-Each operator file (e.g., `operators/laevatain.json`) contains a single operator object:
+Each operator directory (e.g. `operators/laevatain/`) holds:
+- `<slug>.json` — operator base (stats, potentials summary, talents, metadata)
+- `potentials/potential-<N>-*.json` — per-level potential files
+- `skills/*.json` — per-skill files (basic attacks, battle, combo, ultimate)
+- `talents/talent-*.json`
+- `statuses/*.json`
+
+Operator base file:
 
 ```json
 {
-  "operatorType": "LAEVATAIN",
-  "name": "Laevatain",
+  "id": "LAEVATAIN",
   "operatorRarity": 6,
   "operatorClassType": "STRIKER",
   "elementType": "HEAT",
   "weaponTypes": ["SWORD"],
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "STRENGTH",
-  "potentials": [...],
   "talents": {...},
-  "talentEffects": [...],
   "statsByLevel": [...],
   "metadata": { "originId": "game", "dataSources": ["WARFARIN"] }
 }
 ```
 
-All string keys and values use their corresponding enum type strings where applicable.
+No `name`, no inline `potentials` (runtime hydrates from per-file), no parser-intermediate fields (`skillMultipliers`, `skillIds`, `allLevels`, `weaponType` singular, `dataSources`). All string keys and values use their corresponding enum type strings where applicable.
 
 ### Operator Information Keys
 
 | Key                      | Type     | Description                                    |
 |--------------------------|----------|------------------------------------------------|
-| `operatorType`           | string   | Unique operator identifier (UPPER_CASE)        |
-| `name`                   | string   | Display name                                   |
+| `id`                     | string   | Unique operator identifier (UPPER_CASE)        |
 | `operatorRarity`         | number   | Star rating (4–6)                              |
 | `operatorClassType`      | string   | GUARD, CASTER, STRIKER, SUPPORTER, VANGUARD    |
 | `elementType`            | string   | HEAT, CRYO, NATURE, ELECTRIC, PHYSICAL         |
@@ -40,21 +62,49 @@ All string keys and values use their corresponding enum type strings where appli
 | `secondaryAttributeType` | string   | Secondary scaling stat (StatType)              |
 | `metadata`               | object   | `{ originId: "game", dataSources?: string[] }` |
 
+**Display name** (`"Laevatain"`, `"Da Pan"`) lives in the locale bundle at `op.<id>.event.name` — never on this file.
+
 ---
 
 ## Potentials
 
+One file per potential under `operators/<slug>/potentials/potential-<N>-<kebab-name>.json`:
+
 ```json
-"potentials": [
-  {
-    "level": 1,
-    "name": "Potential Name",
-    "effects": [...]
-  }
-]
+{
+  "properties": {
+    "id": "DA_PAN_POTENTIAL_3",
+    "level": 3,
+    "descriptionParams": { "Str": 15, "PhysicalDamageIncrease": 0.08 },
+    "eventType": "POTENTIAL_EVENT",
+    "eventCategoryType": "POTENTIAL"
+  },
+  "metadata": { "originId": "DA_PAN", "dataStatus": "RECONCILED" }
+}
 ```
 
-Each potential has a level (1–5), a display name, and an array of effects.
+| Key                  | Description                                                                                  |
+|----------------------|----------------------------------------------------------------------------------------------|
+| `id`                 | Canonical potential ID (e.g. `DA_PAN_POTENTIAL_3`).                                          |
+| `level`              | P-number (1–5). Must match the filename's `potential-<N>-*.json` — validated on every load.  |
+| `descriptionParams`  | Numeric blackboard values referenced by `{param:format}` tokens in the locale template. Optional — only present when the locale description has tokens.   |
+
+Name + description live in the locale bundle: `op.<OPERATOR_ID>.potential.<level>.event.{name,description}`.
+
+### descriptionParams extraction
+
+`descriptionParams` are harvested from the Warfarin API's `potentialTalentEffectTable[effectId].dataList[]` (via the parser's `buildPotentialDescriptionParams`):
+
+| Source field in Warfarin         | Key written to `descriptionParams` |
+|----------------------------------|-------------------------------------|
+| `attrModifier.attrType` (int)    | `WarfarinAttributeType` enum name (e.g. `Str`, `PhysicalDamageIncrease`). |
+| `attachBuff.blackboard[].key`    | Verbatim key.                       |
+| `attachSkill.blackboard[].key`   | Verbatim key.                       |
+| `skillBbModifier.bbKey`          | Both full key and `potential_N_` / `talent_N_`-stripped short form. |
+| `skillParamModifier.paramType=1` | `costValue` (UE cost fraction).     |
+| `skillParamModifier.paramType=2` | `coolDown` (seconds delta).         |
+
+Each key also gets three pre-computed expression variants — `1-X`, `-X`, `X-1` — so Warfarin-style tokens like `{1-costValue:0%}`, `{-coolDown:0}`, `{duration-1:0%}` interpolate without `t()` needing an expression parser.
 
 ### Potential Effects
 
@@ -259,23 +309,30 @@ Event (skill activation — e.g., one use of Battle Skill)
 
 Warfarin multiplier data is scoped to the **segment level** — each Warfarin skill ID (e.g., `attack1`, `attack2`, `normal_skill`) corresponds to one segment. Within a segment, `atk_scale` is the per-frame multiplier, and `display_atk_scale` is the approximate total across all frames in that segment.
 
-### Skill Name and Description
+### Skill Name, Description, and descriptionParams
 
-The four main skill categories (BASIC_ATTACK, BATTLE_SKILL, COMBO_SKILL, ULTIMATE) include `name` and `description` fields inside `properties`, sourced from the Warfarin API.
+**Skill strings are NOT on the JSON.** Each skill file's `properties` carries an `id` and optionally a `descriptionParams` object; the display name and description live in the operator's locale bundle at `op.<OPERATOR_ID>.skill.<SKILL_ID>.event.{name,description}`.
+
+`descriptionParams` holds the Warfarin skill-patch blackboard at max level (the values displayed in tooltips), merged across the skill's Warfarin variants (`attack1..attackN` collapse into a single basic-attack file so `poise` from the final strike co-exists with `atk_scale` from earlier frames):
 
 ```json
 {
   "properties": {
-    "name": "Smouldering Fire",
-    "description": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG..."
-  }
+    "id": "SMOULDERING_FIRE",
+    "descriptionParams": { "atk_scale": 0.42, "poise": 17, "duration": 15 },
+    "eventType": "SKILL",
+    "eventCategoryType": "BATTLE",
+    "element": "HEAT"
+  },
+  "metadata": { "originId": "LAEVATAIN", "dataStatus": "RECONCILED" }
 }
 ```
 
-- `properties.name`: Display name of the skill
-- `properties.description`: Full skill description with rich text tags stripped
+Tokens in the locale template (`{poise:0}`, `{atk_scale:0.0}`, `{duration:0s}`, …) interpolate against this map at load time via `operatorSkillsStore`'s constructor. Keys that the template doesn't reference are harmless; keys it references but that aren't in `descriptionParams` render as literal tokens.
 
-Variant skill categories (ENHANCED_*, EMPOWERED_*) share descriptions with their base skills and do not have separate name/description fields.
+Variant skill categories (ENHANCED_*, EMPOWERED_*) share the base skill's locale key; they do not carry their own name/description.
+
+Segment names (e.g. "Animation", "Stasis", "Twilight", "Cooldown") and named frame labels live at `op.<OPERATOR_ID>.skill.<SKILL_ID>.segment.<i>.name` and `.segment.<i>.frame.<j>.name`. `operatorSkillsStore::injectSegmentNames` writes them back onto the raw segment objects at load time so downstream consumers (`allSegmentLabels`, `EventBlock`) read them via `segment.properties.name` unchanged.
 
 ### Skill Origin
 

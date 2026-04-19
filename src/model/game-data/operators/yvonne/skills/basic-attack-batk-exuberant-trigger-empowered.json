@@ -6232,7 +6232,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "EXUBERANT_TRIGGER_BATK_EMPOWERED"
+    "id": "EXUBERANT_TRIGGER_BATK_EMPOWERED",
+    "descriptionParams": {
+      "atk_scale": 0.53,
+      "atb": 0,
+      "1-atk_scale": 0.47,
+      "-atk_scale": -0.53,
+      "atk_scale-1": -0.47,
+      "1-atb": 1,
+      "-atb": 0,
+      "atb-1": -1,
+      "poise": 17,
+      "1-poise": -16,
+      "-poise": -17,
+      "poise-1": 16
+    }
   },
   "metadata": {
     "originId": "YVONNE",

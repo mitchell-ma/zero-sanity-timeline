@@ -19,7 +19,7 @@ import { ENEMY_ID, REACTION_COLUMNS } from '../../../model/channels';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, damageRowAtOrAfter, eventsOnColumn,
-  gearLoadout, placeSkill, statContributionFromSource,
+  gearLoadout, placeSkill, statContributionFromSource, statusDisplayName
 } from './helpers';
 import type { AppResult } from '../helpers';
 
@@ -93,7 +93,7 @@ describe('Pulser Labs — gear set E2E', () => {
       const row = damageRowAtOrAfter(c, buff.startFrame + 1);
       expect(row).toBeDefined();
 
-      const contribution = statContributionFromSource(row, StatType.ELECTRIC_DAMAGE_BONUS, ELECTRIC_BUFF.name);
+      const contribution = statContributionFromSource(row, StatType.ELECTRIC_DAMAGE_BONUS, statusDisplayName(ELECTRIC_BUFF.id));
       expect(contribution).toBeCloseTo(0.5, 4);
     });
   });

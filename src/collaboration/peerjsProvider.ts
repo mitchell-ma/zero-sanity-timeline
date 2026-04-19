@@ -96,10 +96,13 @@ export class PeerJSProvider {
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
-  private start(): void {
+  private async start(): Promise<void> {
     this.destroyed = false;
     this.setStatus(ConnectionStatus.CONNECTING);
-    const iceServers = loadIceServers();
+    const iceServers = await loadIceServers();
+    // `destroy()` may have been called while we were awaiting creds. Bail
+    // before creating a PeerJS connection that would leak.
+    if (this.destroyed) return;
     console.info('[collab] using ICE servers:', iceServers.map((s) => s.urls));
     const peerOptions = { config: { iceServers } };
     if (this.role === CollaborationRole.HOST) {

@@ -2,6 +2,12 @@
   "properties": {
     "id": "PERLICA_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "duration": 1.75,
+      "1-duration": -0.75,
+      "-duration": -1.75,
+      "duration-1": 0.75
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

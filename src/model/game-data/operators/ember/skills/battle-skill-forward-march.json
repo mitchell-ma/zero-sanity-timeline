@@ -4,6 +4,32 @@
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
     "id": "FORWARD_MARCH",
+    "descriptionParams": {
+      "atk_scale": 0.73,
+      "poise": 10,
+      "atk_scale2": 3.17,
+      "extrapoise": 10,
+      "displaypoise": 10,
+      "displayextrapoise": 10,
+      "1-atk_scale": 0.27,
+      "-atk_scale": -0.73,
+      "atk_scale-1": -0.27,
+      "1-poise": -9,
+      "-poise": -10,
+      "poise-1": 9,
+      "1-atk_scale2": -2.17,
+      "-atk_scale2": -3.17,
+      "atk_scale2-1": 2.17,
+      "1-extrapoise": -9,
+      "-extrapoise": -10,
+      "extrapoise-1": 9,
+      "1-displaypoise": -9,
+      "-displaypoise": -10,
+      "displaypoise-1": 9,
+      "1-displayextrapoise": -9,
+      "-displayextrapoise": -10,
+      "displayextrapoise-1": 9
+    },
     "suppliedParameters": {
       "VARY_BY": [
         {

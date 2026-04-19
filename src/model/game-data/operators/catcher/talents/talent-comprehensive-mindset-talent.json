@@ -1,6 +1,16 @@
 {
   "properties": {
     "id": "COMPREHENSIVE_MINDSET_TALENT",
+    "descriptionParams": {
+      "talent_1": 2,
+      "atk_scale_shockwave": 0.45,
+      "1-talent_1": -1,
+      "-talent_1": -2,
+      "talent_1-1": 1,
+      "1-atk_scale_shockwave": 0.55,
+      "-atk_scale_shockwave": -0.45,
+      "atk_scale_shockwave-1": -0.55
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

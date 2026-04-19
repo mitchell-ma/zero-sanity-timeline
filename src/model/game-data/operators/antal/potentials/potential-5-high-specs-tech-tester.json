@@ -2,6 +2,24 @@
   "properties": {
     "id": "ANTAL_POTENTIAL_5",
     "level": 5,
+    "descriptionParams": {
+      "potential_5": 1,
+      "delay_time": 20,
+      "rate": 0.04,
+      "potential_5_rate": 0.04,
+      "1-potential_5": 0,
+      "-potential_5": -1,
+      "potential_5-1": 0,
+      "1-delay_time": -19,
+      "-delay_time": -20,
+      "delay_time-1": 19,
+      "1-rate": 0.96,
+      "-rate": -0.04,
+      "rate-1": -0.96,
+      "1-potential_5_rate": 0.96,
+      "-potential_5_rate": -0.04,
+      "potential_5_rate-1": -0.96
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

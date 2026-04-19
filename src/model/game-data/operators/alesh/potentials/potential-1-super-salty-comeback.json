@@ -2,6 +2,20 @@
   "properties": {
     "id": "ALESH_POTENTIAL_1",
     "level": 1,
+    "descriptionParams": {
+      "potential_1": 1,
+      "atb": 10,
+      "potential_1_atb": 10,
+      "1-potential_1": 0,
+      "-potential_1": -1,
+      "potential_1-1": 0,
+      "1-atb": -9,
+      "-atb": -10,
+      "atb-1": 9,
+      "1-potential_1_atb": -9,
+      "-potential_1_atb": -10,
+      "potential_1_atb-1": 9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

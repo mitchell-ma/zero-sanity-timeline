@@ -113,6 +113,16 @@
   ],
   "properties": {
     "id": "ESSENCE_DISINTEGRATION_TALENT",
+    "descriptionParams": {
+      "atk_up": 0.3,
+      "duration": 15,
+      "1-atk_up": 0.7,
+      "-atk_up": -0.3,
+      "atk_up-1": -0.7,
+      "1-duration": -14,
+      "-duration": -15,
+      "duration-1": 14
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

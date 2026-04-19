@@ -9,6 +9,7 @@ import { StatType, UnitType, EventType } from '../../consts/enums';
 import { VerbType, NounType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { checkKeys, checkIdAndName, VALID_CLAUSE_KEYS, validateNonNegativeValues } from './validationUtils';
+import { LocaleKey, resolveEventName } from '../../locales/gameDataLocale';
 
 // ── Shared duration type (matches weapon/operator status stores) ────────────
 
@@ -38,8 +39,8 @@ interface FrameData {
 
 const VALID_CONSUMABLE_TOP_KEYS = new Set(['properties', 'clause', 'metadata']);
 const VALID_TACTICAL_TOP_KEYS = new Set(['properties', 'onTriggerClause', 'segments', 'metadata']);
-const VALID_CONSUMABLE_PROPERTIES_KEYS = new Set(['id', 'name', 'rarity', 'duration']);
-const VALID_TACTICAL_PROPERTIES_KEYS = new Set(['id', 'name', 'rarity', 'usageLimit']);
+const VALID_CONSUMABLE_PROPERTIES_KEYS = new Set(['id', 'rarity', 'duration']);
+const VALID_TACTICAL_PROPERTIES_KEYS = new Set(['id', 'rarity', 'usageLimit']);
 const VALID_METADATA_KEYS = new Set(['dataSources', 'icon', 'originId', 'dataStatus']);
 
 function validateProperties(props: Record<string, unknown>, validKeys: Set<string>): string[] {
@@ -153,7 +154,7 @@ export class ConsumableData {
   constructor(json: Record<string, unknown>) {
     const props = (json.properties ?? {}) as Record<string, unknown>;
     this.id = (props.id ?? '') as string;
-    this.name = (props.name ?? '') as string;
+    this.name = this.id ? resolveEventName(LocaleKey.consumable(this.id)) : '';
     this.rarity = (props.rarity ?? 0) as number;
     this.clause = (json.clause ?? []) as ClausePredicate[];
     this.duration = props.duration as DurationConfig;
@@ -211,7 +212,7 @@ export class TacticalData {
   constructor(json: Record<string, unknown>) {
     const props = (json.properties ?? {}) as Record<string, unknown>;
     this.id = (props.id ?? '') as string;
-    this.name = (props.name ?? '') as string;
+    this.name = this.id ? resolveEventName(LocaleKey.consumable(this.id)) : '';
     this.rarity = (props.rarity ?? 0) as number;
     this.usageLimit = props.usageLimit as ValueNode;
     this.onTriggerClause = (json.onTriggerClause ?? []) as ClausePredicate[];

@@ -37,7 +37,8 @@ const ROSSI_ID: string = require('../../../model/game-data/operators/rossi/rossi
 const MI_SECURITY_WRAPPER_ID: string = require('../../../model/game-data/gears/mi-security/mi-security.json').properties.id;
 // In-game visible buff: eventCategoryType=GEAR, what shows on the status bar.
 const MI_SECURITY_BUFF_ID: string = require('../../../model/game-data/gears/mi-security/statuses/status-mi-security.json').properties.id;
-const MI_SECURITY_BUFF_LABEL: string = require('../../../model/game-data/gears/mi-security/statuses/status-mi-security.json').properties.name;
+// Display name lives in the locale bundle, surfaced via configCache/getStatusDef.
+const MI_SECURITY_BUFF_LABEL: string = (require('../../../controller/timeline/configCache').getStatusDef(MI_SECURITY_BUFF_ID)?.properties as { name?: string } | undefined)?.name ?? MI_SECURITY_BUFF_ID;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT = 'slot-0';

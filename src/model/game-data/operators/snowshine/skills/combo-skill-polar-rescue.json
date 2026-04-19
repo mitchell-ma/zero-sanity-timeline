@@ -2,7 +2,41 @@
   "properties": {
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
-    "id": "POLAR_RESCUE"
+    "id": "POLAR_RESCUE",
+    "descriptionParams": {
+      "heal_static_value": 216,
+      "heal_scale": 0.5,
+      "heal_static_value_loop": 54,
+      "heal_scale_loop": 0.13,
+      "duration": 3,
+      "interval": 0.5,
+      "usp": 10,
+      "trigger_hp_ratio": 0.6,
+      "1-heal_static_value": -215,
+      "-heal_static_value": -216,
+      "heal_static_value-1": 215,
+      "1-heal_scale": 0.5,
+      "-heal_scale": -0.5,
+      "heal_scale-1": -0.5,
+      "1-heal_static_value_loop": -53,
+      "-heal_static_value_loop": -54,
+      "heal_static_value_loop-1": 53,
+      "1-heal_scale_loop": 0.87,
+      "-heal_scale_loop": -0.13,
+      "heal_scale_loop-1": -0.87,
+      "1-duration": -2,
+      "-duration": -3,
+      "duration-1": 2,
+      "1-interval": 0.5,
+      "-interval": -0.5,
+      "interval-1": -0.5,
+      "1-usp": -9,
+      "-usp": -10,
+      "usp-1": 9,
+      "1-trigger_hp_ratio": 0.4,
+      "-trigger_hp_ratio": -0.6,
+      "trigger_hp_ratio-1": -0.4
+    }
   },
   "segments": [
     {

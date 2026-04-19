@@ -49,6 +49,16 @@
   "properties": {
     "id": "ESTELLA_POTENTIAL_4",
     "level": 4,
+    "descriptionParams": {
+      "Will": 10,
+      "Str": 10,
+      "1-Will": -9,
+      "-Will": -10,
+      "Will-1": 9,
+      "1-Str": -9,
+      "-Str": -10,
+      "Str-1": 9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

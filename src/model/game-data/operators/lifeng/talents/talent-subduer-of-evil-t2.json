@@ -93,6 +93,12 @@
   ],
   "properties": {
     "id": "SUBDUER_OF_EVIL_T2",
+    "descriptionParams": {
+      "atk_scale_talent2": 1,
+      "1-atk_scale_talent2": 0,
+      "-atk_scale_talent2": -1,
+      "atk_scale_talent2-1": 0
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

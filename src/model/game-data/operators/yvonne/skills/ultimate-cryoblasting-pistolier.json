@@ -2,7 +2,29 @@
   "properties": {
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
-    "id": "CRYOBLASTING_PISTOLIER"
+    "id": "CRYOBLASTING_PISTOLIER",
+    "descriptionParams": {
+      "atk_scale1": 0.2,
+      "atk_scale2": 3,
+      "duration": 7,
+      "poise": 20,
+      "atk_scale_extra": 6,
+      "1-atk_scale1": 0.8,
+      "-atk_scale1": -0.2,
+      "atk_scale1-1": -0.8,
+      "1-atk_scale2": -2,
+      "-atk_scale2": -3,
+      "atk_scale2-1": 2,
+      "1-duration": -6,
+      "-duration": -7,
+      "duration-1": 6,
+      "1-poise": -19,
+      "-poise": -20,
+      "poise-1": 19,
+      "1-atk_scale_extra": -5,
+      "-atk_scale_extra": -6,
+      "atk_scale_extra-1": 5
+    }
   },
   "segments": [
     {

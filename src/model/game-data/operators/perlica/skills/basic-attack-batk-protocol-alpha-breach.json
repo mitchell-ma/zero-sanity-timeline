@@ -547,7 +547,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "ELECTRIC",
-    "id": "PROTOCOL_ALPHA_BREACH_BATK"
+    "id": "PROTOCOL_ALPHA_BREACH_BATK",
+    "descriptionParams": {
+      "atk_scale": 1.27,
+      "atb": 15,
+      "1-atk_scale": -0.27,
+      "-atk_scale": -1.27,
+      "atk_scale-1": 0.27,
+      "1-atb": -14,
+      "-atb": -15,
+      "atb-1": 14,
+      "poise": 15,
+      "1-poise": -14,
+      "-poise": -15,
+      "poise-1": 14
+    }
   },
   "metadata": {
     "originId": "PERLICA",

@@ -7,7 +7,13 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "NATURE",
-    "id": "ROCKY_WHISPERS_FINISHER"
+    "id": "ROCKY_WHISPERS_FINISHER",
+    "descriptionParams": {
+      "atk_scale": 9,
+      "1-atk_scale": -8,
+      "-atk_scale": -9,
+      "atk_scale-1": 8
+    }
   },
   "metadata": {
     "originId": "ARDELIA",

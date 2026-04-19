@@ -1,0 +1,78 @@
+{
+  "op.ESTELLA.event.name": {
+    "text": "Estella",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.1.event.description": {
+    "text": "Renforce la compétence de combo Distorsion : durée de la sensibilité physique +{rate_plus:0} s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.1.event.name": {
+    "text": "Retards habituels",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.2.event.description": {
+    "text": "Renforce l'ultime Trémolo : coût en énergie d'ultime -{1-costValue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.2.event.name": {
+    "text": "Attentes modérées",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.3.event.description": {
+    "text": "Renforce la compétence de combat Onomatopée : portée de l'onde sonore cryogénique +50 % et DÉG infligés +{dmg_up:0%} pour le premier ennemi touché.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.3.event.name": {
+    "text": "Procrastination",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.4.event.description": {
+    "text": "Volonté +{Will:0}, Force +{Str:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.4.event.name": {
+    "text": "La vie avant la mission",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.5.event.description": {
+    "text": "Lorsqu'elle applique Solidification à un ennemi, Estella gagne {usp:0} points d'énergie d'ultime. L'effet se déclenche toutes les secondes.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.potential.5.event.name": {
+    "text": "Survivre est une victoire",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.skill.AUDIO_NOISE_BATK.event.description": {
+    "text": "ATTAQUE DE BASE : Une attaque comprenant jusqu'à 4 séquences qui inflige des DÉG physiques. Si vous contrôlez l'opérateur, le Coup final inflige également Déséquilibre {poise:0} fois. ATTAQUE PLONGEANTE : Une attaque de base lancée depuis les airs devient une attaque plongeante, qui inflige des DÉG physiques aux ennemis à proximité. COUP FATAL : Une attaque de base lancée près d'un ennemi déséquilibré devient un coup fatal, qui inflige de lourds DÉG physiques et restaure quelques PC.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.skill.AUDIO_NOISE_BATK.event.name": {
+    "text": "Son audio",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.skill.DISTORTION.event.description": {
+    "text": "DÉCLENCHEMENT DE COMBO : lorsqu'un ennemi est solidifié.\nPermet de se placer rapidement aux côtés de l'ennemi pour infliger des DÉG physiques et soulever de force les ennemis dans une petite zone. Si la compétence touche une cible solidifiée, elle inflige des DÉG supplémentaires et applique une sensibilité physique.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.skill.DISTORTION.event.name": {
+    "text": "Distorsion",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.skill.ONOMATOPOEIA.event.description": {
+    "text": "Un coup de lance qui tire des ondes sonores cryogéniques. Celles-ci infligent des DÉG cryogéniques et appliquent une altération cryogénique à tous les ennemis qui se trouvent droit devant.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.skill.ONOMATOPOEIA.event.name": {
+    "text": "Onomatopée",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.skill.TREMOLO.event.description": {
+    "text": "Estella déchaîne toute sa puissance pour effectuer une puissante attaque écrasante à l'aide du manche de sa lance, infligeant des DÉG physiques à tous les ennemis dans une zone circulaire autour d'elle. La compétence soulève de force tous les ennemis victimes de sensibilité physique.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ESTELLA.skill.TREMOLO.event.name": {
+    "text": "Trémolo",
+    "dataStatus": "RECONCILED"
+  }
+}

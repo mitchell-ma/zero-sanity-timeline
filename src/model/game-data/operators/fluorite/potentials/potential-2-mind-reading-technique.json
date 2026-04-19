@@ -2,6 +2,12 @@
   "properties": {
     "id": "FLUORITE_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "probability": 0.1,
+      "1-probability": 0.9,
+      "-probability": -0.1,
+      "probability-1": -0.9
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

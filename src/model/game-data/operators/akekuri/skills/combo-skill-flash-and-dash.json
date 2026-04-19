@@ -3,7 +3,25 @@
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "FLASH_AND_DASH"
+    "id": "FLASH_AND_DASH",
+    "descriptionParams": {
+      "atk_scale": 1.8,
+      "poise": 5,
+      "usp": 5,
+      "atb": 7.5,
+      "1-atk_scale": -0.8,
+      "-atk_scale": -1.8,
+      "atk_scale-1": 0.8,
+      "1-poise": -4,
+      "-poise": -5,
+      "poise-1": 4,
+      "1-usp": -4,
+      "-usp": -5,
+      "usp-1": 4,
+      "1-atb": -6.5,
+      "-atb": -7.5,
+      "atb-1": 6.5
+    }
   },
   "segments": [
     {

@@ -1,6 +1,22 @@
 {
   "properties": {
     "id": "CHEER_OF_VICTORY_TALENT",
+    "descriptionParams": {
+      "sub_ratio": 0.015,
+      "max_ratio": 0.75,
+      "rate": 10,
+      "1-sub_ratio": 0.985,
+      "-sub_ratio": -0.015,
+      "sub_ratio-1": -0.985,
+      "1-max_ratio": 0.25,
+      "-max_ratio": -0.75,
+      "max_ratio-1": -0.25,
+      "1-rate": -9,
+      "-rate": -10,
+      "rate-1": 9,
+      "sp_rate": 0.015,
+      "sp_cap": 0.75
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

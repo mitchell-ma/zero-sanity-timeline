@@ -49,6 +49,16 @@
   "properties": {
     "id": "SNOWSHINE_POTENTIAL_4",
     "level": 4,
+    "descriptionParams": {
+      "Def": 20,
+      "Will": 20,
+      "1-Def": -19,
+      "-Def": -20,
+      "Def-1": 19,
+      "1-Will": -19,
+      "-Will": -20,
+      "Will-1": 19
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

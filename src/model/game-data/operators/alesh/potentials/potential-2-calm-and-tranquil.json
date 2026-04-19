@@ -49,6 +49,16 @@
   "properties": {
     "id": "ALESH_POTENTIAL_2",
     "level": 2,
+    "descriptionParams": {
+      "Str": 15,
+      "Wisd": 15,
+      "1-Str": -14,
+      "-Str": -15,
+      "Str-1": 14,
+      "1-Wisd": -14,
+      "-Wisd": -15,
+      "Wisd-1": 14
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

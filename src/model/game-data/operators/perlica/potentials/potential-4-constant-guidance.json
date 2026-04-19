@@ -2,6 +2,12 @@
   "properties": {
     "id": "PERLICA_POTENTIAL_4",
     "level": 4,
+    "descriptionParams": {
+      "extra_scaling": 1.33,
+      "1-extra_scaling": -0.33000000000000007,
+      "-extra_scaling": -1.33,
+      "extra_scaling-1": 0.33000000000000007
+    },
     "eventType": "POTENTIAL_EVENT",
     "eventCategoryType": "POTENTIAL"
   },

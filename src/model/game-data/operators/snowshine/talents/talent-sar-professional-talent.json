@@ -1,6 +1,16 @@
 {
   "properties": {
     "id": "SAR_PROFESSIONAL_TALENT",
+    "descriptionParams": {
+      "sup": 10,
+      "talent_2_sup": 10,
+      "1-sup": -9,
+      "-sup": -10,
+      "sup-1": 9,
+      "1-talent_2_sup": -9,
+      "-talent_2_sup": -10,
+      "talent_2_sup-1": 9
+    },
     "maxLevel": {
       "verb": "IS",
       "value": 2

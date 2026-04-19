@@ -27,7 +27,7 @@ import { CritMode, StatType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import {
   SLOT, calc, damageRowAtOrAfter, eventsOnColumn,
-  gearLoadout, placeSkill, statContributionFromSource,
+  gearLoadout, placeSkill, statContributionFromSource, statusDisplayName
 } from '../gears/helpers';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -86,7 +86,7 @@ describe('HP-threshold re-fire at EVENT_START — Mordvolt Insulation', () => {
     const c = calc(result.current, CritMode.EXPECTED);
     const row = damageRowAtOrAfter(c, bs2.atFrame);
     expect(row).toBeDefined();
-    const contribution = statContributionFromSource(row, StatType.ARTS_DAMAGE_BONUS, BUFF.name);
+    const contribution = statContributionFromSource(row, StatType.ARTS_DAMAGE_BONUS, statusDisplayName(BUFF.id));
     expect(contribution).toBeGreaterThan(0);
   });
 

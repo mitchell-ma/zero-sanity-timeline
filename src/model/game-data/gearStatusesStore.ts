@@ -16,6 +16,7 @@ import type { StacksConfig, DurationConfig, StatusSegment } from './weaponStatus
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
 import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues, validateSegmentShape } from './validationUtils';
+import { LocaleKey, resolveEventName, resolveOptionalEventDescription } from '../../locales/gameDataLocale';
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -42,7 +43,7 @@ function validateLocalEffect(ef: Record<string, unknown>, path: string): string[
 // ── Gear validation ─────────────────────────────────────────────────────────
 
 const VALID_GEAR_TOP_KEYS = new Set(['segments', 'onTriggerClause', 'properties', 'metadata']);
-const VALID_GEAR_PROPS_KEYS = new Set(['id', 'name', 'rarity', 'piecesRequired', 'description', 'eventType', 'eventCategoryType']);
+const VALID_GEAR_PROPS_KEYS = new Set(['id', 'rarity', 'piecesRequired', 'eventType', 'eventCategoryType']);
 
 /** Validate a raw GearSet (set-level effect) JSON entry. */
 export function validateGearSet(json: Record<string, unknown>): string[] {
@@ -89,7 +90,7 @@ export function validateGearSet(json: Record<string, unknown>): string[] {
 // ── GearStat validation ─────────────────────────────────────────────────────
 
 const VALID_GEAR_STAT_TOP_KEYS = new Set(['segments', 'properties', 'metadata']);
-const VALID_GEAR_STAT_PROPS_KEYS = new Set(['id', 'name', 'description', 'duration', 'stacks', 'cooldownSeconds', 'usageLimit', 'enhancementType', 'eventType', 'eventCategoryType']);
+const VALID_GEAR_STAT_PROPS_KEYS = new Set(['id', 'duration', 'stacks', 'cooldownSeconds', 'usageLimit', 'enhancementType', 'eventType', 'eventCategoryType']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 
@@ -166,10 +167,14 @@ export class GearSet {
     this.segments = (json.segments ?? []) as StatusSegment[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClauseEntry[];
     this.id = (props.id ?? '') as string;
-    this.name = (props.name ?? '') as string;
+    const gearPrefix = this.id ? LocaleKey.gear(this.id) : '';
+    this.name = gearPrefix ? resolveEventName(gearPrefix) : '';
     this.rarity = (props.rarity ?? 0) as number;
     if (props.piecesRequired) this.piecesRequired = props.piecesRequired as number;
-    if (props.description) this.description = props.description as string;
+    if (gearPrefix) {
+      const desc = resolveOptionalEventDescription(gearPrefix);
+      if (desc !== undefined) this.description = desc;
+    }
     this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
     this.eventCategoryType = props.eventCategoryType as string;
     this.originId = (meta.originId ?? '') as string;
@@ -190,7 +195,7 @@ export class GearSet {
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
         id: this.id,
-        name: this.name,
+        ...(this.name ? { name: this.name } : {}),
         rarity: this.rarity,
         ...(this.piecesRequired ? { piecesRequired: this.piecesRequired } : {}),
         ...(this.description ? { description: this.description } : {}),
@@ -211,7 +216,7 @@ export class GearSet {
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
         id: this.id,
-        name: this.name,
+        ...(this.name ? { name: this.name } : {}),
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
         eventType: EventType.STATUS,
@@ -257,8 +262,13 @@ export class GearStat {
 
     this.segments = (json.segments ?? []) as StatusSegment[];
     this.id = (props.id ?? '') as string;
-    this.name = (props.name ?? '') as string;
-    if (props.description) this.description = props.description as string;
+    const gearSetId = (meta.originId ?? '') as string;
+    const prefix = (this.id && gearSetId) ? LocaleKey.gearStatus(gearSetId, this.id) : '';
+    this.name = prefix ? resolveEventName(prefix) : '';
+    if (prefix) {
+      const desc = resolveOptionalEventDescription(prefix);
+      if (desc !== undefined) this.description = desc;
+    }
     this.duration = (props.duration ?? { value: { verb: VerbType.IS, value: 0 }, unit: UnitType.SECOND }) as DurationConfig;
     this.stacks = (props.stacks ?? {
       limit: { verb: VerbType.IS, value: 1 },
@@ -284,7 +294,9 @@ export class GearStat {
       ...(this.segments.length > 0 ? { segments: this.segments } : {}),
       properties: {
         id: this.id,
-        name: this.name,
+        // Reproject the locale-resolved display name so downstream consumers
+        // (configCache → getStatusDef) can surface it without a second lookup.
+        ...(this.name ? { name: this.name } : {}),
         ...(this.description ? { description: this.description } : {}),
         duration: this.duration,
         stacks: this.stacks,

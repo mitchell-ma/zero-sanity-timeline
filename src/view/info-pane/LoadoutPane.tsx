@@ -25,7 +25,8 @@ import {
 } from '../../controller/info-pane/loadoutPaneController';
 import type { StatSourceEntry } from '../../controller/calculation/loadoutAggregator';
 import { TopEntry } from './BreakdownTree';
-import { t } from '../../locales/locale';
+import { t, tOptional } from '../../locales/locale';
+import { LocaleKey } from '../../locales/gameDataLocale';
 import {
   getNamedWeaponSkill,
   getWeaponStats, getWeaponIdByName,
@@ -590,7 +591,14 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 />
                 {verbose >= InfoLevel.DETAILED && skill?.description && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px 4px' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{skill.name.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{
+                      // skill.name holds the skill ID (e.g. DOLLY_RUSH); resolve to
+                      // the locale-backed display name. Fall back to a prettified
+                      // ID only when the locale has no entry (shouldn't happen for
+                      // shipped operators).
+                      tOptional(`${LocaleKey.operatorSkill(operator.id, skill.name)}.event.name`)
+                        ?? skill.name.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')
+                    }</div>
                     {skill.description}
                   </div>
                 )}

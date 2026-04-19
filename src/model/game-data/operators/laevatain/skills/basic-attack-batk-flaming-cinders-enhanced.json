@@ -615,7 +615,21 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "HEAT",
-    "id": "FLAMING_CINDERS_BATK_ENHANCED"
+    "id": "FLAMING_CINDERS_BATK_ENHANCED",
+    "descriptionParams": {
+      "atk_scale": 0.6,
+      "1-atk_scale": 0.4,
+      "-atk_scale": -0.6,
+      "atk_scale-1": -0.4,
+      "poise": 18,
+      "atb": 20,
+      "1-poise": -17,
+      "-poise": -18,
+      "poise-1": 17,
+      "1-atb": -19,
+      "-atb": -20,
+      "atb-1": 19
+    }
   },
   "metadata": {
     "originId": "LAEVATAIN",

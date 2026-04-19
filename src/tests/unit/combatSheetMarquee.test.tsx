@@ -69,6 +69,11 @@ jest.mock('../../utils/loadoutRegistry', () => ({
 
 jest.mock('../../locales/locale', () => ({
   t: (key: string) => key,
+  tOptional: () => undefined,
+  registerLocale: () => undefined,
+  loadLocaleData: () => undefined,
+  loadLocaleById: () => ({ locale: 'en-US', data: {} }),
+  getCurrentLocale: () => 'en-US',
 }));
 
 jest.mock('../../controller/gameDataStore', () => ({

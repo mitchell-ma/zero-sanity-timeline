@@ -3,7 +3,21 @@
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "HEAT",
-    "id": "WOLVEN_FURY"
+    "id": "WOLVEN_FURY",
+    "descriptionParams": {
+      "atk_scale": 0.72,
+      "poise": 3,
+      "poise_display": 15,
+      "1-atk_scale": 0.28,
+      "-atk_scale": -0.72,
+      "atk_scale-1": -0.28,
+      "1-poise": -2,
+      "-poise": -3,
+      "poise-1": 2,
+      "1-poise_display": -14,
+      "-poise_display": -15,
+      "poise_display-1": 14
+    }
   },
   "segments": [
     {

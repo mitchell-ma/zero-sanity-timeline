@@ -29,7 +29,8 @@ import { getOperatorSkill } from '../../../../controller/gameDataStore';
 /* eslint-disable @typescript-eslint/no-require-imports */
 const ARDELIA_ID: string = require('../../../../model/game-data/operators/ardelia/ardelia.json').id;
 const DOLLY_SHADOW_ID: string = require('../../../../model/game-data/operators/ardelia/skills/action-mr-dolly-shadow.json').properties.id;
-const DOLLY_SHADOW_NAME: string = require('../../../../model/game-data/operators/ardelia/skills/action-mr-dolly-shadow.json').properties.name;
+// Display name lives in the locale bundle, not on the raw JSON.
+const DOLLY_SHADOW_NAME: string = require('../../../../model/game-data/operatorSkillsStore').getOperatorSkill(ARDELIA_ID, DOLLY_SHADOW_ID)?.name ?? DOLLY_SHADOW_ID;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 // Ardelia is slot-3 in default layout
