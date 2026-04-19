@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Vigil Services (Ultimate Energy Lockout)"
+        }
       },
       "clause": [
         {
@@ -28,12 +27,10 @@
   ],
   "properties": {
     "id": "VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT",
-    "name": "Vigil Services (Ultimate Energy Lockout)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
     "eventCategoryType": "TALENT",
-    "description": "Last Rite can only gain Ultimate Energy from her own battle skills and combo skills.",
     "duration": {
       "value": {
         "verb": "IS",

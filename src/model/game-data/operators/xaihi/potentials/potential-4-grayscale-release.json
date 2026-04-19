@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Grayscale Release (P4)"
+        }
       },
       "clause": [
         {
@@ -49,11 +48,9 @@
   ],
   "properties": {
     "id": "XAIHI_POTENTIAL_4",
-    "name": "Grayscale Release (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Intellect +15, Treatment Efficiency +{HealOutputIncrease:0%}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "XAIHI",

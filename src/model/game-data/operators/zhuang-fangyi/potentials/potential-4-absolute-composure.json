@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ZHUANG_FANGYI_POTENTIAL_4",
-    "name": "Absolute Composure (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Smiting Tempest improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",

@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "IMPROVISED_EXPLOSIVE_ULT",
-    "name": "Improvised Explosive (Detonated)",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -19,8 +18,7 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "element": "NATURE",
-    "description": "An Improvised Explosive detonated by Fluorite's ultimate. Deals increased Nature DMG and applies Nature Infliction immediately."
+    "element": "NATURE"
   },
   "segments": [
     {
@@ -35,8 +33,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "NATURE",
-        "name": "Improvised Explosive (Detonated)"
+        "element": "NATURE"
       },
       "frames": [
         {
@@ -71,7 +68,8 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "NATURE",
-                  "object": "STATUS", "objectId": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {

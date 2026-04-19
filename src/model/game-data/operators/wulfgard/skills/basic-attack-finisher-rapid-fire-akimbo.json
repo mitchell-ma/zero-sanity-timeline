@@ -3,8 +3,6 @@
     "enhancementTypes": [
       "FINISHER"
     ],
-    "name": "Rapid Fire Akimbo (Finisher)",
-    "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
     "eventType": "SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",

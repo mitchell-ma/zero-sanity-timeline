@@ -12,8 +12,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Tarr 11"
+        }
       },
       "clause": [
         {
@@ -134,7 +133,6 @@
     }
   ],
   "properties": {
-    "name": "Tarr 11",
     "id": "TARR_11",
     "type": "SWORD",
     "rarity": 3

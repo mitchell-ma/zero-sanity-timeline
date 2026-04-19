@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ANTAL_POTENTIAL_5",
-    "name": "High Specs Tech Tester (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Applying Focus on the same target for 20s increases Electric Susceptibility and Heat Susceptibility effects by 4%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ANTAL",

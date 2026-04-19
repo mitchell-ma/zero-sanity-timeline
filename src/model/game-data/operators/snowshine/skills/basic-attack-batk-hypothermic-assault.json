@@ -333,8 +333,6 @@
     }
   ],
   "properties": {
-    "name": "Hypothermic Assault",
-    "description": "An attack with up to 3 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",

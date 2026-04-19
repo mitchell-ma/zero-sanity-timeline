@@ -8,8 +8,7 @@
             "value": 20
           },
           "unit": "SECOND"
-        },
-        "name": "Rapid Strike"
+        }
       },
       "clause": [
         {
@@ -51,8 +50,6 @@
   ],
   "properties": {
     "id": "OBJ_VELOCITOUS_RAPID_STRIKE",
-    "name": "Rapid Strike",
-    "description": "Nature DMG Dealt bonus per stack consumed from Arts Infliction",
     "duration": {
       "value": {
         "verb": "IS",

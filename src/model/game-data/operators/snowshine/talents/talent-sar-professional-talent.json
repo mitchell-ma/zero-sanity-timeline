@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "SAR Professional (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "After each successful retaliation while Saturated Defense's shield is active, Snowshine gains 6 (T1) / 10 (T2) Ultimate Energy. Effect is baked into the Saturated Defense Retaliation status."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "SNOWSHINE",

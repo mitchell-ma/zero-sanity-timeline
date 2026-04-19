@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "FLUORITE_POTENTIAL_2",
-    "name": "Mind Reading Technique (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Unpredictable improved: Chance to ignore Arts DMG +10%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "FLUORITE",

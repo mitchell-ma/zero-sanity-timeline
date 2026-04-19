@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "ROVING_MSGR_GYRO",
-    "name": "Roving MSGR Gyro",
     "gearType": "KIT",
     "gearSet": "ROVING_MSGR_STAT"
   },

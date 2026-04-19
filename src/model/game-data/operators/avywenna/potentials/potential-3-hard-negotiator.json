@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "AVYWENNA_POTENTIAL_3",
-    "name": "Hard Negotiator (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Will +{Will:0}, Electric DMG Dealt +{PulseDamageIncrease:0%}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "AVYWENNA",

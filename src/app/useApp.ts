@@ -274,6 +274,7 @@ export function useApp() {
   const preDragSplitRef = useRef(65);
   const [devlogOpen,       setDevlogOpen]       = useState(false);
   const [settingsOpen,     setSettingsOpen]     = useState(false);
+  const [feedbackOpen,     setFeedbackOpen]     = useState(false);
   const [keysOpen,         setKeysOpen]         = useState(false);
   // ─── Global settings ─────────────────────────────────────────────────
   const [settings, setSettings] = useState<GlobalSettings>(initialSettings);
@@ -948,7 +949,15 @@ export function useApp() {
   activeLoadoutIdRef.current = activeLoadoutId;
 
   const collaboration = useCollaboration({
-    buildSheetData,
+    loadSheetDataForUuid: (uuid) => {
+      const node = findNodeByUuid(loadoutTreeRef.current, uuid);
+      if (!node) return null;
+      // For the active loadout, buildSheetData() is authoritative (it includes
+      // unsaved edits from the live combat state). For background loadouts,
+      // read the last-saved copy from localStorage.
+      if (node.id === activeLoadoutIdRef.current) return buildSheetData();
+      return loadLoadoutData(node.id);
+    },
     applyRemoteSheetData: (uuid, sheetData, _isInitial) => {
       const node = findNodeByUuid(loadoutTreeRef.current, uuid);
       if (!node) return;
@@ -972,17 +981,24 @@ export function useApp() {
     createLocalLoadoutForUuid: (uuid, name) => {
       const dedupedName = uniqueName(loadoutTreeRef.current, name, null);
       const { tree: newTree, node } = addLoadoutNode(loadoutTreeRef.current, dedupedName, null);
-      // Patch the new node's uuid to match the shared UUID.
       const patched: LoadoutTree = {
         nodes: newTree.nodes.map((n) => (n.id === node.id ? { ...n, uuid } : n)),
       };
+      // Update the ref synchronously so that *subsequent* calls within the
+      // same tick (joiner receiving N shared loadouts in one sweep) see the
+      // new tree. Otherwise setLoadoutTree is batched, loadoutTreeRef only
+      // syncs on re-render, and successive calls read the same stale tree
+      // and end up overwriting each other with the last setLoadoutTree wins.
+      loadoutTreeRef.current = patched;
       setLoadoutTree(patched);
       saveLoadoutTree(patched);
       return node.id;
     },
     getLocalIdForUuid: (uuid) => findNodeByUuid(loadoutTreeRef.current, uuid)?.id ?? null,
+    getLocalNameForUuid: (uuid) => findNodeByUuid(loadoutTreeRef.current, uuid)?.name ?? null,
     renameLocalLoadout: (localId, name) => {
       const next = renameNode(loadoutTreeRef.current, localId, name);
+      loadoutTreeRef.current = next;
       setLoadoutTree(next);
       saveLoadoutTree(next);
     },
@@ -1007,17 +1023,32 @@ export function useApp() {
     lastSentSheetRef.current = null;
   }, [activeLoadoutId]);
 
-  // Auto-restore a recent collab session on mount (survives accidental refreshes).
-  const collabRestoredRef = useRef(false);
+  // Reconcile the collab doc's shared-loadout set with the current tree.
+  // Fires on every tree change — so deleting a shared loadout auto-unshares
+  // it, and undoing the delete re-shares it. Remembered share intent is kept
+  // inside useCollaboration so the round-trip survives delete → undo.
   useEffect(() => {
-    if (collabRestoredRef.current) return;
-    collabRestoredRef.current = true;
-    try {
-      const restored = collaboration.tryRestoreSession();
-      console.info('[collab] tryRestoreSession returned:', restored);
-    } catch (e) {
-      console.warn('[collab] failed to restore session:', e);
-    }
+    const presentUuids = new Set(loadoutTree.nodes.map((n) => n.uuid));
+    collaboration.reconcileWithTree(presentUuids);
+  }, [loadoutTree, collaboration]);
+
+  // Auto-restore a recent collab session on mount (survives accidental refreshes).
+  // Delayed by 300ms so that (a) StrictMode's synthetic unmount/remount cycle
+  // completes before we actually create a PeerJS peer — the timeout cleanup
+  // cancels the first-mount scheduling; only the stable second mount fires,
+  // avoiding a rapid create/destroy pair that leaves the browser's websocket
+  // state confused — and (b) the previous tab's websocket to PeerJS Cloud
+  // has time to fully close before we open a new one to the same URL.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const restored = collaboration.tryRestoreSession();
+        console.info('[collab] tryRestoreSession returned:', restored);
+      } catch (e) {
+        console.warn('[collab] failed to restore session:', e);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -1248,22 +1279,25 @@ export function useApp() {
     columnId: string,
     atFrame: number,
     defaultSkill: { id?: string; name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceEntityId?: string; sourceSkillId?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown>; segmentOrigin?: number[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>; parameterValues?: Record<string, number>; statusLevel?: number } | null,
+    strictOverride?: boolean,
   ) => {
     if (isViewActiveRef.current) return; // view loadouts are read-only
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerEntityId}:${columnId}`)) return;
+    const isStrict = strictOverride ?? (interactionModeRef.current === InteractionModeType.STRICT);
     // Resolve sourceEntityId from slot → operator id before allocation so the
     // 'user' placeholder never enters the event graph.
     const resolvedSource = defaultSkill?.sourceEntityId
       ?? slotOperatorMapRef.current[ownerEntityId]
       ?? ownerEntityId;
     const skillWithSource = { ...(defaultSkill ?? {}), sourceEntityId: resolvedSource };
-    const ev = createEvent(ownerEntityId, columnId, atFrame, skillWithSource, interactionModeRef.current);
+    const effectiveMode = isStrict ? InteractionModeType.STRICT : InteractionModeType.FREEFORM;
+    const ev = createEvent(ownerEntityId, columnId, atFrame, skillWithSource, effectiveMode);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
     setEvents((prev) => {
       // No total-event limit for statuses — the engine handles concurrent stack
       // limits and interaction behaviour (RESET, REFRESH, etc.) at processing time.
-      if (interactionModeRef.current === InteractionModeType.STRICT) {
+      if (isStrict) {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
         if (columnId === NounType.BATTLE && !hasSufficientSP(ownerEntityId, atFrame)) return prev;
@@ -2148,7 +2182,7 @@ export function useApp() {
     scrollSynced, showRealTime, splitPct, interactionMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
     loadoutRowHeight, headerRowHeight, selectEventIds,
     settings, settingsOpen,
-    devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash, urlCopiedFlash,
+    devlogOpen, keysOpen, feedbackOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash, urlCopiedFlash,
 
     // Loadout tree
     loadoutTree, activeLoadoutId, sidebarCollapsed,
@@ -2192,7 +2226,7 @@ export function useApp() {
     // Setters for simple inline handlers
     setContextMenu, setSelectedFrames, handleSelectFrame, setLoadoutRowHeight, setHeaderRowHeight,
     setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
-    setDevlogOpen, setSettingsOpen, setKeysOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
+    setDevlogOpen, setSettingsOpen, setFeedbackOpen, setKeysOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
     handleUpdateSetting,
     setSplitPct, setSelectEventIds, handleSelectEventIdsConsumed, setExportModalOpen,
     handleToggleRealTime,

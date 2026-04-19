@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "AVYWENNA_POTENTIAL_1",
-    "name": "Doubling Down (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Expedited Delivery improved: Ultimate Energy gain +2."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "AVYWENNA",

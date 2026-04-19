@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Shieldguard Banner, Forward",
-    "description": "Summons 4 Shieldguards to advance and push all enemies along the way towards the target, dealing Physical DMG while generating 5 points of Steel Oath. After an enemy suffers a Physical Status or takes DMG from Pogranichnik's combo skill, Pogranichnik consumes 1 point of Steel Oath and summons 1 Shieldguard to harass the said enemy, dealing Physical DMG and recovering some SP. When the last Steel Oath point is consumed, all 4 Shieldguards will initiate a Decisive Assault that deals massive Physical DMG to the target while recovering plenty of SP.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "id": "SHIELDGUARD_BANNER"
@@ -15,7 +13,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -70,7 +67,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Shieldguard Banner, Forward",
         "duration": {
           "value": {
             "verb": "IS",

@@ -8,8 +8,7 @@
             "value": 25
           },
           "unit": "SECOND"
-        },
-        "name": "Xiranflow"
+        }
       },
       "clause": [
         {
@@ -50,7 +49,6 @@
   ],
   "properties": {
     "id": "XIRANFLOW",
-    "name": "Xiranflow",
     "duration": {
       "value": {
         "verb": "IS",
@@ -65,7 +63,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Electric and Nature DMG +15% per stack for 25s after consuming Electrification or Corrosion. Max 3 stacks.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

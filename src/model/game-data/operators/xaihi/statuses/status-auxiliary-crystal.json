@@ -151,7 +151,6 @@
   ],
   "properties": {
     "id": "AUXILIARY_CRYSTAL",
-    "name": "Auxiliary Crystal",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "stacks": {
@@ -169,8 +168,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "Summons an Auxiliary Crystal that orbits the controlled operator for a while. After the controlled operator performs a Final Strike on the enemy, the Auxiliary Crystal will restore the said operator's HP. This effect can trigger 2 times. The attribute of Will increases the amount of HP treatment. When the controlled operator is already at Max HP when triggering the HP restoration, grant the said operator a temporary Arts Amp as well. This effect cannot stack."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "DISTRIBUTED_DOS",

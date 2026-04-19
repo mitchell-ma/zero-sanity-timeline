@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "White Night Nova"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "White Night Nova",
     "id": "WHITE_NIGHT_NOVA",
     "type": "SWORD",
     "rarity": 6

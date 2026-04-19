@@ -6,7 +6,6 @@ import LoadoutSidebar from './view/LoadoutSidebar';
 import StatisticsSidebar from './view/StatisticsSidebar';
 import type { SidebarMode } from './view/LoadoutSidebar';
 import { ContentCategory } from './consts/contentBrowserTypes';
-import { operatorWarnings } from './controller/operators/operatorRegistry';
 import { getAllSkillLabels } from './controller/gameDataStore';
 import { createCustomWeapon, updateCustomWeapon } from './controller/custom/customWeaponController';
 import { createCustomGearSet, updateCustomGearSet } from './controller/custom/customGearController';
@@ -18,6 +17,7 @@ import { createCustomOperatorStatus, updateCustomOperatorStatus } from './contro
 import { createCustomOperatorTalent, updateCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
 import { t } from './locales/locale';
+import { useLocale } from './locales/localeContext';
 import { InteractionModeType, InfoLevel, InfoPaneMode, SidebarMode as SidebarModeEnum } from './consts/enums';
 import { getAnimationDuration, eventDuration } from './consts/viewTypes';
 import type { SkillType } from './consts/viewTypes';
@@ -35,6 +35,7 @@ import ConfirmModal from './view/ConfirmModal';
 import CreateViewsModal from './view/CreateViewsModal';
 import CollaborationHostDialog from './view/CollaborationHostDialog';
 import CollaborationJoinDialog from './view/CollaborationJoinDialog';
+import CollaborationManageLoadoutsDialog from './view/CollaborationManageLoadoutsDialog';
 import { LoadoutNodeType } from './consts/enums';
 import './App.css';
 
@@ -46,6 +47,7 @@ const CombatSheet = lazy(() => import('./view/CombatSheet'));
 const InformationPane = lazy(() => import('./view/InformationPane'));
 const DevlogModal = lazy(() => import('./view/DevlogModal'));
 const SettingsModal = lazy(() => import('./view/SettingsModal'));
+const FeedbackModal = lazy(() => import('./view/FeedbackModal'));
 const ExportModal = lazy(() => import('./view/ExportModal'));
 const KeyboardShortcutsModal = lazy(() => import('./view/KeyboardShortcutsModal'));
 const UnifiedCustomizer = lazy(() => import('./view/custom/UnifiedCustomizer'));
@@ -86,6 +88,8 @@ function saveUiState(state: UiState): void {
 export default function App() {
   const app = useApp();
   const stats = useStatisticsApp(app.loadoutTree, app.activeLoadoutId, app.buildSheetData);
+  const { setLocaleById } = useLocale();
+  useEffect(() => { setLocaleById(app.settings.locale); }, [app.settings.locale, setLocaleById]);
   const [expandAnim, setExpandAnim] = useState(false);
   const [activeView, setActiveView] = useState<SidebarModeEnum>(() => loadUiState().activeView);
   const [sidebarOpen, setSidebarOpen] = useState(() => loadUiState().sidebarOpen);
@@ -98,19 +102,7 @@ export default function App() {
   const draggedRef = useRef(false);
   const [hostDialogOpen, setHostDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
-
-  // Show warnings for operators that failed to load
-  useEffect(() => {
-    if (operatorWarnings.length === 0) return;
-    const userWarnings = operatorWarnings.filter((w) => !w.isBuiltIn);
-    const devWarnings = operatorWarnings.filter((w) => w.isBuiltIn);
-    // Dev warnings go to console only
-    for (const w of devWarnings) console.warn(w.message);
-    // User warnings show in the UI
-    if (userWarnings.length > 0) {
-      app.setWarningMessage(userWarnings.map((w) => w.message).join('\n\n'));
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [manageLoadoutsDialogOpen, setManageLoadoutsDialogOpen] = useState(false);
 
   // Suppress browser context menu globally
   useEffect(() => {
@@ -203,24 +195,12 @@ export default function App() {
       <AppBar
         onDevlog={() => app.setDevlogOpen(true)}
         onKeys={() => app.setKeysOpen((p) => !p)}
+        onFeedback={() => app.setFeedbackOpen(true)}
         interactionMode={app.interactionMode}
         onToggleInteractionMode={() => app.setInteractionMode(m => m === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT)}
         lightMode={app.lightMode}
         onToggleTheme={app.handleToggleTheme}
         onSettings={() => app.setSettingsOpen(true)}
-        collaborationStatus={app.collaboration.session?.connectionStatus ?? null}
-        collaborationPeerCount={app.collaboration.session?.peers.length ?? 0}
-        collaborationRoomId={app.collaboration.session?.roomId ?? null}
-        collaborationPeers={app.collaboration.session?.peers.map((p) => ({
-          peerId: p.peerId,
-          displayName: p.displayName,
-          role: p.role,
-          isLocal: p.peerId === app.collaboration.session?.localPeerId,
-        })) ?? []}
-        collaborationReconnect={app.collaboration.session?.reconnect}
-        onHostCollaboration={() => setHostDialogOpen(true)}
-        onJoinCollaboration={() => setJoinDialogOpen(true)}
-        onLeaveCollaboration={() => app.collaboration.leaveRoom()}
       />
 
       <div ref={app.appBodyRef} className="app-body" style={{ '--tl-flex': `${app.splitPct} 0 0`, '--sheet-flex': `${100 - app.splitPct} 0 0` } as React.CSSProperties}>
@@ -243,6 +223,20 @@ export default function App() {
           onClearViews={app.handleClearLoadoutViews}
           viewWarningMap={app.viewWarningMap}
           syncingLoadoutUuids={app.collaboration.syncingLoadoutUuids}
+          collaborationStatus={app.collaboration.session?.connectionStatus ?? null}
+          collaborationPeerCount={app.collaboration.session?.peers.length ?? 0}
+          collaborationRoomId={app.collaboration.session?.roomId ?? null}
+          collaborationPeers={app.collaboration.session?.peers.map((p) => ({
+            peerId: p.peerId,
+            displayName: p.displayName,
+            role: p.role,
+            isLocal: p.peerId === app.collaboration.session?.localPeerId,
+          })) ?? []}
+          collaborationReconnect={app.collaboration.session?.reconnect}
+          onHostCollaboration={() => setHostDialogOpen(true)}
+          onJoinCollaboration={() => setJoinDialogOpen(true)}
+          onLeaveCollaboration={() => app.collaboration.leaveRoom()}
+          onManageSharedLoadouts={() => setManageLoadoutsDialogOpen(true)}
           sidebarMode={sidebarMode}
           onSidebarModeChange={(mode) => {
             if (mode === null) {
@@ -613,6 +607,7 @@ export default function App() {
         ) : null}
 
         <DevlogModal open={app.devlogOpen} onClose={() => app.setDevlogOpen(false)} />
+        <FeedbackModal open={app.feedbackOpen} onClose={() => app.setFeedbackOpen(false)} />
         <SettingsModal
           open={app.settingsOpen}
           onClose={() => app.setSettingsOpen(false)}
@@ -696,7 +691,7 @@ export default function App() {
       <CollaborationHostDialog
         open={hostDialogOpen}
         tree={app.loadoutTree}
-        defaultDisplayName={app.collaboration.session?.localDisplayName ?? 'Player'}
+        defaultDisplayName={app.collaboration.session?.localDisplayName ?? 'Host'}
         onHost={(displayName, uuids, maxPeers) => {
           app.collaboration.hostRoom(displayName, uuids, maxPeers);
           for (const uuid of uuids) app.collaboration.shareLoadout(uuid);
@@ -712,6 +707,15 @@ export default function App() {
           setJoinDialogOpen(false);
         }}
         onClose={() => setJoinDialogOpen(false)}
+      />
+
+      <CollaborationManageLoadoutsDialog
+        open={manageLoadoutsDialogOpen}
+        tree={app.loadoutTree}
+        sharedUuids={app.collaboration.syncingLoadoutUuids}
+        onShareLoadout={(uuid) => app.collaboration.shareLoadout(uuid)}
+        onUnshareLoadout={(uuid) => app.collaboration.unshareLoadout(uuid)}
+        onClose={() => setManageLoadoutsDialogOpen(false)}
       />
 
     </div>

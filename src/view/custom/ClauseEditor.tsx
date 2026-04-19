@@ -7,6 +7,7 @@
 import type { Clause, Predicate, Interaction, Effect } from '../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import EffectBuilder, { defaultEffect } from './EffectBuilder';
+import { t } from '../../locales/locale';
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -107,7 +108,7 @@ function PredicateSection({ index, predicate, onChange, onRemove, isLast, condit
       <div className="cv2-section">
         <div className="cv2-section-header">
           <span className="cv2-section-label">IF</span>
-          {!readOnly && <button className="cv2-remove-btn" onClick={onRemove} title="Remove predicate">&times;</button>}
+          {!readOnly && <button className="cv2-remove-btn" onClick={onRemove} title={t('customizer.btn.removePredicate')}>&times;</button>}
         </div>
         <div className="cv2-rows">
           {predicate.conditions.map((cond, ci) => (
@@ -124,7 +125,7 @@ function PredicateSection({ index, predicate, onChange, onRemove, isLast, condit
             </div>
           ))}
           {predicate.conditions.length === 0 && (
-            <div className="cv2-empty">No conditions — always triggers</div>
+            <div className="cv2-empty">{t('customizer.empty.noConditionsTriggers')}</div>
           )}
           {!readOnly && (
             <button className="cv2-add-btn" onClick={addCondition}>+ Add Condition</button>

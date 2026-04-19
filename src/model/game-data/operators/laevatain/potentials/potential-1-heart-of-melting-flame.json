@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_1",
-    "name": "Heart of Melting Flame (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Smouldering Fire improved: Additional attack multiplier is increased to 1.2 times the original, and scoring a hit returns 20 SP."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "LAEVATAIN",

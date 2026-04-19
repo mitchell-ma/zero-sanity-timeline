@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Moment of Blazing Shadow",
-    "description": "When an enemy has both Vulnerability and Arts Infliction stacks. Fire erupts beneath the enemy's feet, dealing Physical DMG.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
@@ -25,7 +23,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -55,8 +52,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL",
-        "name": "Moment of Blazing Shadow"
+        "element": "PHYSICAL"
       },
       "frames": [
         {
@@ -322,7 +318,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

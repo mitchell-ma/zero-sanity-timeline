@@ -8,8 +8,7 @@
             "value": 10
           },
           "unit": "SECOND"
-        },
-        "name": "LYNX"
+        }
       },
       "clause": [
         {
@@ -35,7 +34,6 @@
   ],
   "properties": {
     "id": "LYNX",
-    "name": "LYNX",
     "duration": {
       "value": {
         "verb": "IS",
@@ -50,7 +48,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "30% if treatment exceeds max HP",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

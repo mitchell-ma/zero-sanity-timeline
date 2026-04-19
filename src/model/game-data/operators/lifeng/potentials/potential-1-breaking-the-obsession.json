@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "LIFENG_POTENTIAL_1",
-    "name": "Breaking the Obsession (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Turbid Avatar improved: Physical Susceptibility +5%; also triggers this additional effect to enemies with no more than 2 Vulnerability stacks."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "LIFENG",

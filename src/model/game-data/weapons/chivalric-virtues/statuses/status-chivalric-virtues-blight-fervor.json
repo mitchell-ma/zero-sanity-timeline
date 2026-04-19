@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Blight Fervor"
+        }
       },
       "clause": [
         {
@@ -50,7 +49,6 @@
   ],
   "properties": {
     "id": "CHIVALRIC_VIRTUES_BLIGHT_FERVOR",
-    "name": "Blight Fervor",
     "duration": {
       "value": {
         "verb": "IS",
@@ -68,8 +66,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "Treatment Efficiency +{heal_up:0.0%}. After the wielder's skill provides HP treatment, the entire team gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "CHIVALRIC_VIRTUES",

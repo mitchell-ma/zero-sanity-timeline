@@ -8,8 +8,7 @@
             "value": 30
           },
           "unit": "SECOND"
-        },
-        "name": "Lingering Glow"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
   ],
   "properties": {
     "id": "GLORIOUS_MEMORY_LINGERING_GLOW",
-    "name": "Lingering Glow",
-    "description": "DMG Dealt bonus during next ultimate cast",
     "duration": {
       "value": {
         "verb": "IS",

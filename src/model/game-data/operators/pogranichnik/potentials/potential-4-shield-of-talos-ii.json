@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "POGRANICHNIK_POTENTIAL_4",
-    "name": "Shield of Talos-II (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Shieldguard Banner, Forward improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "POGRANICHNIK",

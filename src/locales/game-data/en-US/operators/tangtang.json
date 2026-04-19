@@ -1,0 +1,190 @@
+{
+  "op.TANGTANG.event.name": {
+    "text": "Tangtang",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.1.event.description": {
+    "text": "Combo skill RIVER, TO ME! improved: DMG Multiplier is increased to 1.2 times of the original, and cooldown is now {coolDown:0}s. Battle skill IMA WAVERIDAAH! improved: For every Whirlpool consumed and converted into a Waterspout, return 5 additional SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.1.event.name": {
+    "text": "Reserve Hoard (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.2.event.description": {
+    "text": "Agility +{Agi:0}, Cryo DMG Dealt +{CrystDamageIncrease:0%}",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.2.event.name": {
+    "text": "River's Daughter (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.2.segment.0.name": {
+    "text": "River's Daughter (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.3.event.description": {
+    "text": "Battle skill IMA WAVERIDAAH! improved: DMG Multiplier is increased to 1.1 times the original. When forming multiple Waterspouts, the resulting Arts Susceptibility effect is increased by +5%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.3.event.name": {
+    "text": "Chiefly Vibe (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.4.event.description": {
+    "text": "Ultimate DA CHIEF SEES YOU! improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.4.event.name": {
+    "text": "Qingbo Meditation (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.5.event.description": {
+    "text": "Ultimate DA CHIEF SEES YOU! improved: DMG Multiplier is increased to 1.15 times the original. Talent Riot Bringer improved: DMG effects of any Waterspout created by the ultimate DA CHIEF SEES YOU! are increased by +80%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.potential.5.event.name": {
+    "text": "Chief's All-Eldritch Gaze (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.BATTLE.event.description": {
+    "text": "Tangtang jumps out from the water and fires a point-blank shot that deals Cryo DMG to the enemy and creates a Waterspout.\nCasting the battle skill also consumes all nearby Whirlpools to create additional Waterspouts and return some SP based on the number of Waterspouts created.\nWaterspout: Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. If the battle skill creates multiple Waterspouts, they also apply Arts Susceptibility to enemies (but not another stack of Cryo Infliction).\nDMG dealt by the Waterspout is treated as Battle Skill DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.BATTLE.event.name": {
+    "text": "IMA WAVERIDAAH!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.COMBO.event.description": {
+    "text": "When applying Cryo Infliction or dealing Arts Burst DMG to an enemy.\nTangtang unleashes a powerful jet stream that penetrates all enemies in its path, deals Cryo DMG to them, and creates a Whirlpool.\nUp to 2 Whirlpools can exist in the battlefield at any time.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.COMBO.event.name": {
+    "text": "RIVER, TO ME!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.COMBO.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.COMBO.segment.1.name": {
+    "text": "RIVER, TO ME!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.COMBO.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ILL_BLOW_YOUR_MIND_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ILL_BLOW_YOUR_MIND_BATK.event.name": {
+    "text": "I'LL BLOW YOUR MIND!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ILL_BLOW_YOUR_MIND_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ILL_BLOW_YOUR_MIND_DIVE.event.name": {
+    "text": "I'LL BLOW YOUR MIND! (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ILL_BLOW_YOUR_MIND_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ILL_BLOW_YOUR_MIND_FINISHER.event.name": {
+    "text": "I'LL BLOW YOUR MIND! (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ULTIMATE.event.description": {
+    "text": "Tangtang opens her eyepatch and unleashes an OLDEN STARE from her eye that temporarily locks down, immobilizes, and deals Cryo DMG over time to enemies within its area of effect.\nWhen the OLDEN STARE stops evolving, a rogue wave comes crashing down to deal massive Cryo DMG to enemies in its area of effect.\nIf the controlled operator performs a dive attack in the OLDEN STARE pattern, its evolution ends and the rogue wave is summoned immediately to deal even more Cryo DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ULTIMATE.event.name": {
+    "text": "DA CHIEF SEES YOU!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.skill.ULTIMATE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.EARLY_ROGUE_WAVE.event.description": {
+    "text": "A rogue wave summoned early by performing a dive attack during OLDEN STARE. Deals massive Cryo DMG to enemies in its area of effect.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.EARLY_ROGUE_WAVE.event.name": {
+    "text": "Early Rogue Wave",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.EARLY_ROGUE_WAVE.segment.0.name": {
+    "text": "Early Rogue Wave",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.OLDEN_STARE.event.description": {
+    "text": "OLDEN STARE from DA CHIEF SEES YOU! Deals Cryo DMG over time to enemies within its area of effect. When the OLDEN STARE stops evolving, a rogue wave comes crashing down to deal massive Cryo DMG. If the controlled operator performs a dive attack, its evolution ends early and the rogue wave is summoned immediately to deal even more Cryo DMG. Also consumes all nearby Whirlpools to create additional Waterspouts with Riot Bringer DMG bonus.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.OLDEN_STARE.event.name": {
+    "text": "OLDEN STARE",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.OLDEN_STARE.segment.0.name": {
+    "text": "OLDEN STARE",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.WATERSPOUT.event.description": {
+    "text": "A Waterspout created by IMA WAVERIDAAH! Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. DMG dealt by the Waterspout is treated as Battle Skill DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.WATERSPOUT.event.name": {
+    "text": "Waterspout",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.WATERSPOUT.segment.0.name": {
+    "text": "Waterspout",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.WATERSPOUT_ULT.event.description": {
+    "text": "A Waterspout created by DA CHIEF SEES YOU! via Riot Bringer talent. Has the same effects as those created by the battle skill and gains additional DMG Dealt bonus from Talent 2 (+40%/+60%) and Potential 5 (+80%).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.WATERSPOUT_ULT.event.name": {
+    "text": "Waterspout (Ult)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.WATERSPOUT_ULT.segment.0.name": {
+    "text": "Waterspout (Ult)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.WHIRLPOOL.event.description": {
+    "text": "A Whirlpool created by RIVER, TO ME! Up to 2 Whirlpools can exist at any time. Consumed by IMA WAVERIDAAH! and DA CHIEF SEES YOU! to create additional Waterspouts.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.status.WHIRLPOOL.event.name": {
+    "text": "Whirlpool",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.talent.FAM_OF_HONOR_TALENT.event.description": {
+    "text": "When within a 5-meter radius of a Whirlpool, allied operators gain 10% Haste while enemies suffer 20% Slow. These effects persist for 3s after leaving the area of effect.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.talent.FAM_OF_HONOR_TALENT.event.name": {
+    "text": "Fam of Honor (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.talent.FAM_OF_HONOR_TALENT.segment.0.name": {
+    "text": "Fam of Honor (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.talent.RIOT_BRINGER_TALENT.event.description": {
+    "text": "During OLDEN STARE, performing a dive attack with the controlled operator ends its evolution early and creates a Waterspout. All nearby Whirlpools are also consumed and converted into additional Waterspouts. Waterspouts created this way have the same effects as those created by the battle skill IMA WAVERIDAAH! and gain DMG Dealt +40%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.TANGTANG.talent.RIOT_BRINGER_TALENT.event.name": {
+    "text": "Riot Bringer (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

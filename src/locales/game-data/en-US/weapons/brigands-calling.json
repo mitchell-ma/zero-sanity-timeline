@@ -1,0 +1,46 @@
+{
+  "weapon.BRIGANDS_CALLING.event.name": {
+    "text": "Brigand's Calling",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.segment.0.name": {
+    "text": "Brigand's Calling",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.skill.DETONATE_BRIGANDS_BANE.event.description": {
+    "text": "Cryo DMG Dealt +{cryst_dmg_up:0.0%}. When the wielder applies Cryo Infliction via battle skills or ultimates, the wielder gains Cryo DMG Dealt +{cryst_dmg_up2:0.0%} for {duration:0}s. When the wielder's battle skill or ultimate applies Arts Susceptibility, the target enemy suffers Arts DMG Taken +{spell_damage_taken_up:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.skill.DETONATE_BRIGANDS_BANE.event.name": {
+    "text": "Detonate: Brigand's Bane",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.skill.DETONATE_BRIGANDS_BANE.segment.0.name": {
+    "text": "Detonate: Brigand's Bane",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.status.BRIGANDS_CALLING_BRIGANDS_BANE.event.description": {
+    "text": "Cryo DMG Dealt bonus from Cryo Infliction application",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.status.BRIGANDS_CALLING_BRIGANDS_BANE.event.name": {
+    "text": "Brigand's Bane",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.status.BRIGANDS_CALLING_BRIGANDS_BANE.segment.0.name": {
+    "text": "Brigand's Bane",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.status.BRIGANDS_CALLING_BRIGANDS_BANE_ENEMY.event.description": {
+    "text": "Arts DMG Taken increase on enemy from Arts Susceptibility application",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.status.BRIGANDS_CALLING_BRIGANDS_BANE_ENEMY.event.name": {
+    "text": "Brigand's Bane (Enemy)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.BRIGANDS_CALLING.status.BRIGANDS_CALLING_BRIGANDS_BANE_ENEMY.segment.0.name": {
+    "text": "Brigand's Bane (Enemy)",
+    "dataStatus": "RECONCILED"
+  }
+}

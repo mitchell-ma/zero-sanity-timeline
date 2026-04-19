@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "ATK Boost [M]"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
     }
   ],
   "properties": {
-    "name": "ATK Boost [M]",
-    "description": "Attack +",
     "id": "ATTACK_BOOST_M"
   },
   "metadata": {

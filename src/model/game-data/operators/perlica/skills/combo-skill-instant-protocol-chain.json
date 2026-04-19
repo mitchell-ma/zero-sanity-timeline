@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Instant Protocol: Chain",
-    "description": "When controlled operator performs a Final Strike on any enemy. Unleashes stored electro-magnetic energy to bombard the target, dealing Electric DMG and forcibly inflicting temporary Electrification.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -61,8 +58,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "ELECTRIC",
-        "name": "Instant Protocol: Chain"
+        "element": "ELECTRIC"
       },
       "frames": [
         {
@@ -238,7 +234,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

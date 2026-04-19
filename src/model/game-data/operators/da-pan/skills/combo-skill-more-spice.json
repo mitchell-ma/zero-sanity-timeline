@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "MORE SPICE!",
-    "description": "When an enemy reaches 4 stacks of Vulnerability. Swings the wok at the enemy to deal massive Physical DMG and Crush. This Crush also deals more DMG.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -61,8 +58,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL",
-        "name": "MORE SPICE!"
+        "element": "PHYSICAL"
       },
       "frames": [
         {
@@ -155,7 +151,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

@@ -1,0 +1,46 @@
+{
+  "weapon.MOUNTAIN_BEARER.event.name": {
+    "text": "Mountain Bearer",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.segment.0.name": {
+    "text": "Mountain Bearer",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.skill.EFFICACY_WEIGHT_OF_MOUNTAIN.event.description": {
+    "text": "Against Vulnerable enemies, the wielder gains DMG Dealt +{dmg_up:0.0%}. When the wielder's battle skill applies Vulnerability, the wielder gains All Attributes +{all_attr_up:0.0%} for {duration:0}s. When the wielder's battle skill applies Physical Susceptibility, the wielder gains All Attributes +{all_attr_up2:0.0%} for {duration:0}s. The two effects apply separately and do not stack with themselves.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.skill.EFFICACY_WEIGHT_OF_MOUNTAIN.event.name": {
+    "text": "Efficacy: Weight of Mountain",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.skill.EFFICACY_WEIGHT_OF_MOUNTAIN.segment.0.name": {
+    "text": "Efficacy: Weight of Mountain",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.status.MOUNTAIN_BEARER_WEIGHT_SUSC.event.description": {
+    "text": "All Attributes bonus from Physical Susceptibility application",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.status.MOUNTAIN_BEARER_WEIGHT_SUSC.event.name": {
+    "text": "Weight of Mountain (Susceptibility)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.status.MOUNTAIN_BEARER_WEIGHT_SUSC.segment.0.name": {
+    "text": "Weight of Mountain (Susceptibility)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.status.MOUNTAIN_BEARER_WEIGHT_VULN.event.description": {
+    "text": "All Attributes bonus from Vulnerability application",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.status.MOUNTAIN_BEARER_WEIGHT_VULN.event.name": {
+    "text": "Weight of Mountain (Vulnerability)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MOUNTAIN_BEARER.status.MOUNTAIN_BEARER_WEIGHT_VULN.segment.0.name": {
+    "text": "Weight of Mountain (Vulnerability)",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "FLUORITE_POTENTIAL_4",
-    "name": "Prank Master (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Apex Prankster improved: Ultimate Energy cost -10%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "FLUORITE",

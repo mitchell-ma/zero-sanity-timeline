@@ -8,8 +8,7 @@
             "value": 30
           },
           "unit": "SECOND"
-        },
-        "name": "Reincarnation"
+        }
       },
       "clause": [
         {
@@ -49,7 +48,6 @@
   ],
   "properties": {
     "id": "NEVER_REST_REINCARNATION",
-    "name": "Reincarnation",
     "duration": {
       "value": {
         "verb": "IS",
@@ -67,8 +65,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "Physical DMG Dealt +{phy_dmg_up:0.0%}. After the wielder's skill recovers SP, the wielder gains Physical DMG Dealt +{phy_dmg_up2:0.0%} while other operators in the team gain Physical DMG Dealt +{phy_dmg_up3:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "NEVER_REST",

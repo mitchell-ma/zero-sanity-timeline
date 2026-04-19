@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Lone and Distant Sail"
+        }
       },
       "clause": [
         {
@@ -108,8 +107,6 @@
   ],
   "properties": {
     "id": "NAVIGATOR_LONE_SAIL",
-    "name": "Lone and Distant Sail",
-    "description": "Cryo+Nature DMG Dealt and Critical Rate from Solidification/Corrosion. Doubled if triggered by wielder.",
     "duration": {
       "value": {
         "verb": "IS",

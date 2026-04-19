@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Ascending Strike",
-    "description": "Performs an uppercut slash at the target enemy, dealing Physical DMG and Lift.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",

@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "PERPLEXING_MEDICATION",
-    "name": "Perplexing Medication",
     "rarity": 4,
     "duration": {
       "value": {

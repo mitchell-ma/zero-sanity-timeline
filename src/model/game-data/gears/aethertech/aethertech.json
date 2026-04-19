@@ -66,8 +66,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "\u00c6thertech"
+        }
       },
       "clause": [
         {
@@ -93,10 +92,8 @@
   ],
   "properties": {
     "id": "AETHERTECH_STAT",
-    "name": "\u00c6thertech",
     "rarity": 5,
     "piecesRequired": 3,
-    "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. After the wearer applies Vulnerability, the wearer gains Physical DMG +{phy_dmg_up:0%} for {duration}s. This effect can reach {max_stack:0} stacks. If the target already has 4 stack(s) of Vulnerability, the wearer gains an additional Physical DMG +{phy_dmg_up2:0%} for {duration2}s. This effect cannot stack.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_STAT"
   },

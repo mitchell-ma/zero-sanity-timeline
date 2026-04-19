@@ -1,0 +1,34 @@
+{
+  "weapon.RATIONAL_FAREWELL.event.name": {
+    "text": "Rational Farewell",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RATIONAL_FAREWELL.segment.0.name": {
+    "text": "Rational Farewell",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RATIONAL_FAREWELL.skill.PURSUIT_AID_FROM_THE_PAST.event.description": {
+    "text": "Battle Skill DMG +{dmg_up:0.0%}. When the wielder's combo skill applies Arts Burst or Combusted, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RATIONAL_FAREWELL.skill.PURSUIT_AID_FROM_THE_PAST.event.name": {
+    "text": "Pursuit: Aid from the Past",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RATIONAL_FAREWELL.skill.PURSUIT_AID_FROM_THE_PAST.segment.0.name": {
+    "text": "Pursuit: Aid from the Past",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RATIONAL_FAREWELL.status.RATIONAL_FAREWELL_AID_FROM_THE_PAST.event.description": {
+    "text": "When combo applies Arts Burst/Combustion",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RATIONAL_FAREWELL.status.RATIONAL_FAREWELL_AID_FROM_THE_PAST.event.name": {
+    "text": "Aid from the Past",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RATIONAL_FAREWELL.status.RATIONAL_FAREWELL_AID_FROM_THE_PAST.segment.0.name": {
+    "text": "Aid from the Past",
+    "dataStatus": "RECONCILED"
+  }
+}

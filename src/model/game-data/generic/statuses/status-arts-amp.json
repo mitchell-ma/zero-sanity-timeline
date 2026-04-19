@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ARTS_AMP",
-    "name": "Arts Amp",
     "to": "TEAM",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Arts Amp applied to the team.",
     "duration": {
       "value": {
         "verb": "IS",

@@ -1,0 +1,158 @@
+{
+  "op.WULFGARD.event.name": {
+    "text": "Wulfgard",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.1.event.description": {
+    "text": "Strength +{Str:0}, Agility +{Agi:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.1.event.name": {
+    "text": "Lone Wolf (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.1.segment.0.name": {
+    "text": "Lone Wolf (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.2.event.description": {
+    "text": "Talent Code of Restraint improved: Returns 10 additional SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.2.event.name": {
+    "text": "Firearm Mods (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.3.event.description": {
+    "text": "While Scorching Fangs is active, triggering the battle skill's additional effects immediately resets the Scorching Fangs duration and grants other teammates Scorching Fangs with 50% of the base effects.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.3.event.name": {
+    "text": "Hunting Hour (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.4.event.description": {
+    "text": "Ultimate Wolven Fury improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.4.event.name": {
+    "text": "Will of the Pack (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.5.event.description": {
+    "text": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade·β.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.potential.5.event.name": {
+    "text": "Natural Predator (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.FRAG_GRENADE_BETA.event.description": {
+    "text": "When an Arts Infliction is applied to an enemy. Throws a frag grenade at the target's location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.FRAG_GRENADE_BETA.event.name": {
+    "text": "Frag Grenade·β",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.FRAG_GRENADE_BETA.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.FRAG_GRENADE_BETA.segment.1.name": {
+    "text": "Frag Grenade·β",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.FRAG_GRENADE_BETA.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.RAPID_FIRE_AKIMBO_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.RAPID_FIRE_AKIMBO_BATK.event.name": {
+    "text": "Rapid Fire Akimbo",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.RAPID_FIRE_AKIMBO_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.RAPID_FIRE_AKIMBO_DIVE.event.name": {
+    "text": "Rapid Fire Akimbo (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.RAPID_FIRE_AKIMBO_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.RAPID_FIRE_AKIMBO_FINISHER.event.name": {
+    "text": "Rapid Fire Akimbo (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.THERMITE_TRACERS.event.description": {
+    "text": "Fires multiple shots at the target that deal some Heat DMG. The final shot also applies Heat Infliction. If the target has active Combustion or Electrification, do not apply Heat Infliction but instead consume the Arts Reaction to fire an additional shot that deals massive Heat DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.THERMITE_TRACERS.event.name": {
+    "text": "Thermite Tracers",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.THERMITE_TRACERS_EMPOWERED.event.name": {
+    "text": "Thermite Tracers (Empowered)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.WOLVEN_FURY.event.description": {
+    "text": "Fire a rapid barrage of shots and unleashes the Wolven Fury to attack nearby enemies, dealing 5 hits of Heat DMG and forcibly applying Combustion.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.WOLVEN_FURY.event.name": {
+    "text": "Wolven Fury",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.skill.WOLVEN_FURY.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.status.WULFGARD_P5_NATURAL_PREDATOR.event.description": {
+    "text": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade·β.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.status.WULFGARD_P5_NATURAL_PREDATOR.event.name": {
+    "text": "Natural Predator",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS.event.description": {
+    "text": "Whenever Wulfgard applies Combustion, he gains Scorching Fangs for 10s. This effect cannot stack. Scorching Fangs: While active, Wulfgard gains Heat DMG Dealt +20%/+30%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS.event.name": {
+    "text": "Scorching Fangs (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS.segment.0.name": {
+    "text": "Scorching Fangs (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS_MINOR.event.description": {
+    "text": "P3: Grants other teammates Scorching Fangs with 50% of the base effects. Heat DMG Dealt +10%/+15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS_MINOR.event.name": {
+    "text": "Scorching Fangs (Minor) (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS_MINOR.segment.0.name": {
+    "text": "Scorching Fangs (Minor) (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.talent.WULFGARD_TALENT2_CODE_OF_RESTRAINT.event.description": {
+    "text": "Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 5/10 SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.WULFGARD.talent.WULFGARD_TALENT2_CODE_OF_RESTRAINT.event.name": {
+    "text": "Code of Restraint (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

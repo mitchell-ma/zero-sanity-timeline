@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Life Over Mission (P4)"
+        }
       },
       "clause": [
         {
@@ -49,11 +48,9 @@
   ],
   "properties": {
     "id": "ESTELLA_POTENTIAL_4",
-    "name": "Life Over Mission (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Will +{Will:0}, Strength +{Str:0}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ESTELLA",

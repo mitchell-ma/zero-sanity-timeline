@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "GILBERTA_POTENTIAL_4",
-    "name": "Dances with Clouds (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Arcane Staff: Gravity Field improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "GILBERTA",

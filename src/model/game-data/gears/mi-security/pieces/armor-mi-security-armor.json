@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "MI_SECURITY_ARMOR",
-    "name": "MI Security Armor",
     "gearType": "ARMOR",
     "gearSet": "MI_SECURITY_STAT"
   },

@@ -1,0 +1,166 @@
+{
+  "op.POGRANICHNIK.event.name": {
+    "text": "Pogranichnik",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.1.event.description": {
+    "text": "Battle skill The Pulverizing Front improved: When hitting at least 2 enemies, 15 SP is returned.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.1.event.name": {
+    "text": "Frontline Sweep (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.2.event.description": {
+    "text": "Will +{Will:0}, Physical DMG Dealt +{PhysicalDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.2.event.name": {
+    "text": "\"Advance\" (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.2.segment.0.name": {
+    "text": "\"Advance\" (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.4.event.description": {
+    "text": "Ultimate Shieldguard Banner, Forward improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.4.event.name": {
+    "text": "Shield of Talos-II (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.5.event.description": {
+    "text": "Combo skill Full Moon Slash improved: Length of cooldown {coolDown:0}s; SP recovery is increased to 1.2 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.5.event.name": {
+    "text": "Newly Forged Blade (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.potential.5.segment.0.name": {
+    "text": "Newly Forged Blade (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.ALL_OUT_OFFENSIVE_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.ALL_OUT_OFFENSIVE_BATK.event.name": {
+    "text": "All-Out Offensive",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.ALL_OUT_OFFENSIVE_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.ALL_OUT_OFFENSIVE_DIVE.event.name": {
+    "text": "All-Out Offensive (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.ALL_OUT_OFFENSIVE_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.ALL_OUT_OFFENSIVE_FINISHER.event.name": {
+    "text": "All-Out Offensive (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.FULL_MOON_SLASH.event.description": {
+    "text": "When Crush or Breach consumes the enemy's Vulnerability stack(s). Performs a number of slash sequences (up to 3) based on the max number of Vulnerability stacks consumed, dealing Physical DMG and recovering some SP. Each slash deals more DMG and gives better SP recovery. Consuming 4 stacks of Vulnerability enhances the 3rd slash sequence.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.FULL_MOON_SLASH.event.name": {
+    "text": "Full Moon Slash",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.FULL_MOON_SLASH.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.FULL_MOON_SLASH.segment.1.name": {
+    "text": "Full Moon Slash",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.FULL_MOON_SLASH.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.SHIELDGUARD_BANNER.event.description": {
+    "text": "Summons 4 Shieldguards to advance and push all enemies along the way towards the target, dealing Physical DMG while generating 5 points of Steel Oath. After an enemy suffers a Physical Status or takes DMG from Pogranichnik's combo skill, Pogranichnik consumes 1 point of Steel Oath and summons 1 Shieldguard to harass the said enemy, dealing Physical DMG and recovering some SP. When the last Steel Oath point is consumed, all 4 Shieldguards will initiate a Decisive Assault that deals massive Physical DMG to the target while recovering plenty of SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.SHIELDGUARD_BANNER.event.name": {
+    "text": "Shieldguard Banner, Forward",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.SHIELDGUARD_BANNER.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.SHIELDGUARD_BANNER.segment.1.name": {
+    "text": "Shieldguard Banner, Forward",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.THE_PULVERIZING_FRONT.event.description": {
+    "text": "Pogranichnik performs a 2-sequence slash attack at enemies in front of him, dealing Physical DMG, applying Breach, and recovering SP based on the number of Vulnerability stacks consumed. The SP recovery effect can only trigger 1 time, even if the skill hits multiple targets.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.skill.THE_PULVERIZING_FRONT.event.name": {
+    "text": "The Pulverizing Front",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.status.FERVENT_MORALE.event.description": {
+    "text": "During battle, recovering {atb_gain:0} SP with his own skills grants Fervent Morale for {duration:0}s. Fervent Morale effects: ATK +{atk_up:0%} and Arts Intensity +{physpell_up:0}. This effect can reach 3 stacks. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.status.FERVENT_MORALE.event.name": {
+    "text": "Fervent Morale (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.status.FERVENT_MORALE.segment.0.name": {
+    "text": "Fervent Morale (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.status.STEEL_OATH.event.description": {
+    "text": "Steel Oath generated by Shieldguard Banner. When an enemy suffers a Physical Status, consumes 1 stack and summons a Shieldguard. Last stack triggers Decisive Assault instead. Combo skill handles its own Steel Oath consumption on first damage frame.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.status.STEEL_OATH.event.name": {
+    "text": "Steel Oath",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.status.STEEL_OATH_DECISIVE_ASSAULT.event.description": {
+    "text": "All 4 Shieldguards initiate a Decisive Assault, dealing massive Physical DMG and recovering plenty of SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.status.STEEL_OATH_DECISIVE_ASSAULT.event.name": {
+    "text": "Steel Oath (Decisive Assault)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.status.STEEL_OATH_HARASS.event.description": {
+    "text": "A Shieldguard harasses the enemy, dealing Physical DMG and recovering SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.status.STEEL_OATH_HARASS.event.name": {
+    "text": "Steel Oath (Harass)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.talent.TACTICAL_INSTRUCTION_TALENT.event.description": {
+    "text": "Ultimate Shieldguard Banner, Forward improved: Any operator triggering the ultimate's subsequent effects also gains Fervent Morale for 10s. Requires activation of talent: The Living Banner.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.talent.TACTICAL_INSTRUCTION_TALENT.event.name": {
+    "text": "Tactical Instruction (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.talent.THE_LIVING_BANNER_TALENT.event.description": {
+    "text": "During battle, recovering {atb_gain:0} SP with his own skills grants Fervent Morale for {duration:0}s. Fervent Morale effects: ATK +{atk_up:0%} and Arts Intensity +{physpell_up:0}. This effect can reach 3 stacks. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.POGRANICHNIK.talent.THE_LIVING_BANNER_TALENT.event.name": {
+    "text": "The Living Banner (T1)",
+    "dataStatus": "RECONCILED"
+  }
+}

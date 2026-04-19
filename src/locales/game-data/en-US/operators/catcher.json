@@ -1,0 +1,166 @@
+{
+  "op.CATCHER.event.name": {
+    "text": "Catcher",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.1.event.description": {
+    "text": "Battle skill Rigid Interdiction and ultimate Textbook Assault improved: After hitting the enemy, deals another strike that deals [300 + DEF×5.0] of Physical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.1.event.name": {
+    "text": "Multi-layered Readiness (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.2.event.description": {
+    "text": "DEF +{Def:0}, Will +{Will:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.2.event.name": {
+    "text": "Bonus Spec Training (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.2.segment.0.name": {
+    "text": "Bonus Spec Training (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.3.event.description": {
+    "text": "Combo skill Timely Suppression improved: Shield duration +5s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.3.event.name": {
+    "text": "Unwavering Post (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.4.event.description": {
+    "text": "Ultimate Textbook Assault improved: Ultimate Energy cost -{1-costValue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.4.event.name": {
+    "text": "Compensated Suffering (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.5.event.description": {
+    "text": "Battle skill Rigid Interdiction improved: Hitting an enemy while the shield is active returns 10 SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.potential.5.event.name": {
+    "text": "Choice Without Regrets (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION.event.description": {
+    "text": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Physical DMG and applies 1 stack of Vulnerability to the attacking enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION.event.name": {
+    "text": "Rigid Interdiction",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION_BASIC_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION_BASIC_BATK.event.name": {
+    "text": "Basic Tactics",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION_BASIC_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION_BASIC_DIVE.event.name": {
+    "text": "Basic Tactics (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION_BASIC_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.RIGID_INTERDICTION_BASIC_FINISHER.event.name": {
+    "text": "Basic Tactics (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TEXTBOOK_ASSAULT.event.description": {
+    "text": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weakness, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TEXTBOOK_ASSAULT.event.name": {
+    "text": "Textbook Assault",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TEXTBOOK_ASSAULT.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TEXTBOOK_ASSAULT.segment.1.name": {
+    "text": "Slash I",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TEXTBOOK_ASSAULT.segment.2.name": {
+    "text": "Slash II",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TEXTBOOK_ASSAULT.segment.3.name": {
+    "text": "Final Slam",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TIMELY_SUPPRESSION.event.description": {
+    "text": "When an enemy starts charging up a skill, or when the controlled operator is attacked and falls below {trigger_hp_ratio:0%} HP. A powerful downward punch that deals Physical DMG to the enemy, while granting shields to self and another teammate (controlled operator prioritized). DEF can further increase Shield points.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TIMELY_SUPPRESSION.event.name": {
+    "text": "Timely Suppression",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TIMELY_SUPPRESSION.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TIMELY_SUPPRESSION.segment.1.name": {
+    "text": "Timely Suppression",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.skill.TIMELY_SUPPRESSION.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.status.RIGID_INTERDICTION_RETALIATION.event.description": {
+    "text": "While the Rigid Interdiction shield is up, retaliates against attackers with Physical DMG, Vulnerable infliction, and stagger via Rigid Interdiction Retaliation Burst. P5+ also returns Skill Points on each retaliation.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.status.RIGID_INTERDICTION_RETALIATION.event.name": {
+    "text": "Rigid Interdiction Retaliation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.status.RIGID_INTERDICTION_RETALIATION_BURST.event.description": {
+    "text": "Single retaliation hit fired by Rigid Interdiction Retaliation. Deals Physical DMG, applies Vulnerable infliction and stagger. P1+ adds a DEF-scaling bonus strike at +0.1s. P5+ returns Skill Points.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.status.RIGID_INTERDICTION_RETALIATION_BURST.event.name": {
+    "text": "Rigid Interdiction Retaliation Burst",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.status.RIGID_INTERDICTION_RETALIATION_BURST.segment.0.name": {
+    "text": "Retaliation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.talent.COMPREHENSIVE_MINDSET_TALENT.event.description": {
+    "text": "Ultimate Textbook Assault improved: Final hit creates 2/3 shockwave(s) at talent level 1/2, each dealing 30%/45% ATK of Physical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.talent.COMPREHENSIVE_MINDSET_TALENT.event.name": {
+    "text": "Comprehensive Mindset (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.talent.RESILIENT_DEFENSE_TALENT.event.description": {
+    "text": "For every 10 Will, DEF +1.2.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.talent.RESILIENT_DEFENSE_TALENT.event.name": {
+    "text": "Resilient Defense (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CATCHER.talent.RESILIENT_DEFENSE_TALENT.segment.0.name": {
+    "text": "Resilient Defense (T1)",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Twelve Questions"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Twelve Questions",
     "id": "TWELVE_QUESTIONS",
     "type": "SWORD",
     "rarity": 5

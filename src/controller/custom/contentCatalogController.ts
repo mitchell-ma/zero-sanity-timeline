@@ -2,7 +2,7 @@
  * Aggregates all game content into a flat list for the Content Browser sidebar.
  */
 import { ContentCategory, ContentBrowserItem } from '../../consts/contentBrowserTypes';
-import { ALL_OPERATORS } from '../operators/operatorRegistry';
+import { ALL_OPERATORS, getCustomOperatorWarning } from '../operators/operatorRegistry';
 import { getAllWeapons, getAllGearPieces, getGearSet, getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectIds, getAllGearEffectTypes, getGearEffectLabel } from '../gameDataStore';
 import { getAllConsumables, getAllTacticals } from '../../model/game-data/consumablesStore';
 import { getGearSetData } from '../gameDataStore';
@@ -41,12 +41,15 @@ export function getAllContentItems(): ContentBrowserItem[] {
     });
   }
   for (const op of getCustomOperators()) {
+    const warningKey = op.id.toLowerCase().startsWith('custom_') ? op.id : `custom_${op.id}`;
+    const warning = getCustomOperatorWarning(warningKey);
     items.push({
       id: op.id,
       name: op.name,
       category: ContentCategory.OPERATORS,
       source: 'custom',
       meta: `${starStr(op.operatorRarity)} ${op.operatorClassType} \u00B7 ${op.elementType}`,
+      ...(warning ? { warning } : {}),
     });
   }
 

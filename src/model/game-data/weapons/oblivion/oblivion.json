@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Oblivion"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Oblivion",
     "id": "OBLIVION",
     "type": "ARTS_UNIT",
     "rarity": 6

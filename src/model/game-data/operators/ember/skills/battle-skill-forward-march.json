@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Forward March",
-    "description": "A leap followed by a heavy slam that deals Heat DMG, Knock Down, and Stagger to all enemies in a fan-shaped area.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
@@ -113,8 +111,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "HEAT",
-        "name": "Forward March"
+        "element": "HEAT"
       },
       "frames": [
         {

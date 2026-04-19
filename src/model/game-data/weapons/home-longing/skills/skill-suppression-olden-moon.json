@@ -30,8 +30,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Suppression: Olden Moon"
+        }
       },
       "clause": [
         {
@@ -71,8 +70,6 @@
     }
   ],
   "properties": {
-    "name": "Suppression: Olden Moon",
-    "description": "ATK +{atk_up:0.0%}. For {duration:0}s after the wielder casts a combo skill, the wielder's next battle skill gains Cryo and Nature DMG Dealt +{dmg_up:0.0%}. Max stacks: {max_stack:0}. Duration of each stack is counted separately.",
     "id": "SUPPRESSION_OLDEN_MOON",
     "eventCategoryType": "WEAPON_STAT"
   },

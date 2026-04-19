@@ -1,0 +1,34 @@
+{
+  "weapon.FINCHASER_3_0.event.name": {
+    "text": "Finchaser 3.0",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINCHASER_3_0.segment.0.name": {
+    "text": "Finchaser 3.0",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINCHASER_3_0.skill.SUPPRESSION_FIN_CHASER_S_INTENT.event.description": {
+    "text": "ATK +{atk_up:0.0%}. When the wielder's battle skill applies Solidification, target enemy suffers Cryo DMG Taken +{cryst_dmg_up:0.0%} for {duration:0}s. Effects cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINCHASER_3_0.skill.SUPPRESSION_FIN_CHASER_S_INTENT.event.name": {
+    "text": "Suppression: Fin Chaser's Intent",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINCHASER_3_0.skill.SUPPRESSION_FIN_CHASER_S_INTENT.segment.0.name": {
+    "text": "Suppression: Fin Chaser's Intent",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINCHASER_3_0.status.FINCHASER_3_0_FIN_CHASERS_INTENT.event.description": {
+    "text": "Cryo DMG Taken increase from Solidification",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINCHASER_3_0.status.FINCHASER_3_0_FIN_CHASERS_INTENT.event.name": {
+    "text": "Fin Chaser's Intent",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINCHASER_3_0.status.FINCHASER_3_0_FIN_CHASERS_INTENT.segment.0.name": {
+    "text": "Fin Chaser's Intent",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -150,7 +150,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "OLDEN STARE",
         "duration": {
           "value": {
             "verb": "IS",
@@ -995,7 +994,6 @@
   ],
   "properties": {
     "id": "OLDEN_STARE",
-    "name": "OLDEN STARE",
     "to": "ENEMY",
     "stacks": {
       "limit": {
@@ -1012,8 +1010,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "OLDEN STARE from DA CHIEF SEES YOU! Deals Cryo DMG over time to enemies within its area of effect. When the OLDEN STARE stops evolving, a rogue wave comes crashing down to deal massive Cryo DMG. If the controlled operator performs a dive attack, its evolution ends early and the rogue wave is summoned immediately to deal even more Cryo DMG. Also consumes all nearby Whirlpools to create additional Waterspouts with Riot Bringer DMG bonus."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "TANGTANG",

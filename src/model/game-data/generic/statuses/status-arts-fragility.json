@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ARTS_FRAGILITY",
-    "name": "Arts Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Arts Fragility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

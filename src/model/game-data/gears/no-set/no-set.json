@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "NONE_STAT",
-    "name": "No Set",
     "rarity": 5,
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_STAT"

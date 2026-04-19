@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Thermite Tracers",
-    "description": "Fires multiple shots at the target that deal some Heat DMG. The final shot also applies Heat Infliction. If the target has active Combustion or Electrification, do not apply Heat Infliction but instead consume the Arts Reaction to fire an additional shot that deals massive Heat DMG.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",

@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "PROTOTYPE_HEAVY_ARMOR",
-    "name": "Prototype Heavy Armor",
     "gearType": "ARMOR",
     "gearSet": "NONE"
   },

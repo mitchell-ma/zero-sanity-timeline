@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "SNOWSHINE_POTENTIAL_3",
-    "name": "Polar Survival Guide (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Frigid Snowfield improved: Duration of the Solidification applied by the skill is increased by 2s."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "SNOWSHINE",

@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Suppression: Tillite Etchings"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
     }
   ],
   "properties": {
-    "name": "Suppression: Tillite Etchings",
-    "description": "ATK +{atk_up:0.0%}. When the wielder's battle skill applies Nature Infliction, other operators in the team gain Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. For every enemy suffering from Nature Infliction applied by the said battle skill, other operators in the team gain bonus Arts DMG Dealt +{spell_dmg_up2:0.0%}, up to a max of +{spell_dmg_up2*max_stack:0.0%}. Effects of the same name cannot stack.",
     "id": "SUPPRESSION_TILLITE_ETCHINGS",
     "eventCategoryType": "WEAPON_STAT"
   },

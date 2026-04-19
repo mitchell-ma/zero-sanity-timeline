@@ -1,0 +1,46 @@
+{
+  "weapon.LONE_BARGE.event.name": {
+    "text": "Lone Barge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.segment.0.name": {
+    "text": "Lone Barge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.skill.LONE_BARGE_SUPPRESSION_STREAMING_BLITZ_STAT.event.description": {
+    "text": "Electric DMG Dealt +{pulse_dmg_up:0.0%}. When the wielder's battle skill consumes Arts Reactions, the wielder gains Battle Skill Electric DMG Dealt +{pulse_dmg_up2:0.0%} for {duration:0}s (max {max_stack:0} stacks, per-stack duration, triggers once every 0.1s). After the wielder casts an ultimate, the wielder gains Battle Skill Electric DMG Dealt +{pulse_dmg_up3:0.0%} for {duration2:0}s (cannot stack).",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.skill.LONE_BARGE_SUPPRESSION_STREAMING_BLITZ_STAT.event.name": {
+    "text": "Suppression: Streaming Blitz",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.skill.LONE_BARGE_SUPPRESSION_STREAMING_BLITZ_STAT.segment.0.name": {
+    "text": "Suppression: Streaming Blitz",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.status.LONE_BARGE_SUPPRESSION_STREAMING_BLITZ.event.description": {
+    "text": "Battle Skill Electric DMG Dealt +{pulse_dmg_up2:0.0%} per stack for 20s after battle skill consumes Arts Reaction. Max {max_stack:0} stacks, per-stack duration.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.status.LONE_BARGE_SUPPRESSION_STREAMING_BLITZ.event.name": {
+    "text": "Streaming Blitz",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.status.LONE_BARGE_SUPPRESSION_STREAMING_BLITZ.segment.0.name": {
+    "text": "Streaming Blitz",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.status.LONE_BARGE_SUPPRESSION_STREAMING_BLITZ_ULT.event.description": {
+    "text": "Battle Skill Electric DMG Dealt +{pulse_dmg_up3:0.0%} for 25s after ultimate cast. Cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.status.LONE_BARGE_SUPPRESSION_STREAMING_BLITZ_ULT.event.name": {
+    "text": "Streaming Blitz (Ultimate)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONE_BARGE.status.LONE_BARGE_SUPPRESSION_STREAMING_BLITZ_ULT.segment.0.name": {
+    "text": "Streaming Blitz (Ultimate)",
+    "dataStatus": "RECONCILED"
+  }
+}

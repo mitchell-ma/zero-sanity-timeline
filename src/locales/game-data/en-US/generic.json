@@ -1,0 +1,370 @@
+{
+  "status.ARTS_AMP.event.description": {
+    "text": "Arts Amp applied to the team.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ARTS_AMP.event.name": {
+    "text": "Arts Amp",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ARTS_FRAGILITY.event.description": {
+    "text": "Arts Fragility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ARTS_FRAGILITY.event.name": {
+    "text": "Arts Fragility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ARTS_SUSCEPTIBILITY.event.description": {
+    "text": "Arts Susceptibility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ARTS_SUSCEPTIBILITY.event.name": {
+    "text": "Arts Susceptibility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.BREACH.event.description": {
+    "text": "Physical status. Increases Physical DMG taken by the enemy. Duration and effect scale with status level from consumed Vulnerable stacks (11%/14%/17%/20% increased Physical DMG taken, 12/18/24/30s).",
+    "dataStatus": "RECONCILED"
+  },
+  "status.BREACH.event.name": {
+    "text": "Breach",
+    "dataStatus": "RECONCILED"
+  },
+  "status.COMBUSTION.event.description": {
+    "text": "Heat arts reaction. Deals initial Heat DMG on activation, then Heat DMG over time for 10 seconds. Damage scales with status level from consumed infliction stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.COMBUSTION.event.name": {
+    "text": "Combustion",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CORROSION.event.description": {
+    "text": "Nature arts reaction. Deals initial Nature DMG on activation. Reduces enemy DEF over 10 seconds, scaling with status level.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CORROSION.event.name": {
+    "text": "Corrosion",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRUSH.event.description": {
+    "text": "Physical status. Slams the enemy for 1 second. Damage scales with status level from consumed Vulnerable stacks (120%/180%/240%/300% ATK).",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRUSH.event.name": {
+    "text": "Crush",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRYO_AMP.event.description": {
+    "text": "Cryo Amp applied to the team.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRYO_AMP.event.name": {
+    "text": "Cryo Amp",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRYO_FRAGILITY.event.description": {
+    "text": "Cryo Fragility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRYO_FRAGILITY.event.name": {
+    "text": "Cryo Fragility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRYO_INFLICTION.event.description": {
+    "text": "Cryo element infliction. Stacks up to 4 times. At 4 stacks, triggers Solidification arts reaction.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRYO_INFLICTION.event.name": {
+    "text": "Cryo Infliction",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRYO_SUSCEPTIBILITY.event.description": {
+    "text": "Cryo Susceptibility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.CRYO_SUSCEPTIBILITY.event.name": {
+    "text": "Cryo Susceptibility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIC_AMP.event.description": {
+    "text": "Electric Amp applied to the team.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIC_AMP.event.name": {
+    "text": "Electric Amp",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIC_FRAGILITY.event.description": {
+    "text": "Electric Fragility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIC_FRAGILITY.event.name": {
+    "text": "Electric Fragility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIC_INFLICTION.event.description": {
+    "text": "Electric element infliction. Stacks up to 4 times. At 4 stacks, triggers Electrification arts reaction.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIC_INFLICTION.event.name": {
+    "text": "Electric Infliction",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIC_SUSCEPTIBILITY.event.description": {
+    "text": "Electric Susceptibility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIC_SUSCEPTIBILITY.event.name": {
+    "text": "Electric Susceptibility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIFICATION.event.description": {
+    "text": "Electric arts reaction. Deals initial Electric DMG on activation. Increases Arts DMG taken by the enemy, scaling with status level. Duration scales with level (12/18/24/30s).",
+    "dataStatus": "RECONCILED"
+  },
+  "status.ELECTRIFICATION.event.name": {
+    "text": "Electrification",
+    "dataStatus": "RECONCILED"
+  },
+  "status.FORGED.event.name": {
+    "text": "Forged",
+    "dataStatus": "RECONCILED"
+  },
+  "status.FORGED.segment.0.name": {
+    "text": "Forged",
+    "dataStatus": "RECONCILED"
+  },
+  "status.HEAT_AMP.event.description": {
+    "text": "Heat Amp applied to the team.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.HEAT_AMP.event.name": {
+    "text": "Heat Amp",
+    "dataStatus": "RECONCILED"
+  },
+  "status.HEAT_FRAGILITY.event.description": {
+    "text": "Heat Fragility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.HEAT_FRAGILITY.event.name": {
+    "text": "Heat Fragility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.HEAT_INFLICTION.event.description": {
+    "text": "Heat element infliction. Stacks up to 4 times. At 4 stacks, triggers Combustion arts reaction.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.HEAT_INFLICTION.event.name": {
+    "text": "Heat Infliction",
+    "dataStatus": "RECONCILED"
+  },
+  "status.HEAT_SUSCEPTIBILITY.event.description": {
+    "text": "Heat Susceptibility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.HEAT_SUSCEPTIBILITY.event.name": {
+    "text": "Heat Susceptibility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.KEEN_MIND.event.name": {
+    "text": "Keen Mind",
+    "dataStatus": "RECONCILED"
+  },
+  "status.KEEN_MIND.segment.0.name": {
+    "text": "Keen Mind",
+    "dataStatus": "RECONCILED"
+  },
+  "status.KNOCK_DOWN.event.description": {
+    "text": "Physical status. Knocks the enemy down for 1 second. Deals 120% ATK Physical DMG. Requires Vulnerable on the enemy (or forced application).",
+    "dataStatus": "RECONCILED"
+  },
+  "status.KNOCK_DOWN.event.name": {
+    "text": "Knock Down",
+    "dataStatus": "RECONCILED"
+  },
+  "status.LIFT.event.description": {
+    "text": "Physical status. Launches the enemy into the air for 1 second. Deals 120% ATK Physical DMG. Requires Vulnerable on the enemy (or forced application).",
+    "dataStatus": "RECONCILED"
+  },
+  "status.LIFT.event.name": {
+    "text": "Lift",
+    "dataStatus": "RECONCILED"
+  },
+  "status.LINK.event.description": {
+    "text": "Next battle skill or ultimate cast by the team consumes the Link buff and deals more DMG, with battle skills getting a higher increase. Effects of the same type can stack, but with diminishing returns.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.LINK.event.name": {
+    "text": "Link",
+    "dataStatus": "RECONCILED"
+  },
+  "status.NATURE_AMP.event.description": {
+    "text": "Nature Amp applied to the team.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.NATURE_AMP.event.name": {
+    "text": "Nature Amp",
+    "dataStatus": "RECONCILED"
+  },
+  "status.NATURE_FRAGILITY.event.description": {
+    "text": "Nature Fragility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.NATURE_FRAGILITY.event.name": {
+    "text": "Nature Fragility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.NATURE_INFLICTION.event.description": {
+    "text": "Nature element infliction. Stacks up to 4 times. At 4 stacks, triggers Corrosion arts reaction.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.NATURE_INFLICTION.event.name": {
+    "text": "Nature Infliction",
+    "dataStatus": "RECONCILED"
+  },
+  "status.NATURE_SUSCEPTIBILITY.event.description": {
+    "text": "Nature Susceptibility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.NATURE_SUSCEPTIBILITY.event.name": {
+    "text": "Nature Susceptibility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.PHYSICAL_AMP.event.description": {
+    "text": "Physical Amp applied to the team.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.PHYSICAL_AMP.event.name": {
+    "text": "Physical Amp",
+    "dataStatus": "RECONCILED"
+  },
+  "status.PHYSICAL_FRAGILITY.event.description": {
+    "text": "Physical Fragility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.PHYSICAL_FRAGILITY.event.name": {
+    "text": "Physical Fragility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.PHYSICAL_SUSCEPTIBILITY.event.description": {
+    "text": "Physical Susceptibility applied to enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.PHYSICAL_SUSCEPTIBILITY.event.name": {
+    "text": "Physical Susceptibility",
+    "dataStatus": "RECONCILED"
+  },
+  "status.PROTECTION.event.description": {
+    "text": "Reduces incoming damage by a percentage.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.PROTECTION.event.name": {
+    "text": "Protection",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SANCTUARY.event.description": {
+    "text": "Damage reduction buff on operator.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SANCTUARY.event.name": {
+    "text": "Sanctuary",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SHATTER.event.description": {
+    "text": "Triggered by consuming Solidification. Deals Cryo DMG based on the consumed Solidification's status level.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SHATTER.event.name": {
+    "text": "Shatter",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SHIELD.event.description": {
+    "text": "Absorbs incoming damage before HP is reduced.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SHIELD.event.name": {
+    "text": "Shield",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SKIRMISHER.event.name": {
+    "text": "Skirmisher",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SKIRMISHER.segment.0.name": {
+    "text": "Skirmisher",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SLOW.event.description": {
+    "text": "Reduces movement speed.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SLOW.event.name": {
+    "text": "Slow",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SLOW.segment.0.name": {
+    "text": "Slow",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SOLIDIFICATION.event.description": {
+    "text": "Cryo arts reaction. Deals initial Cryo DMG on activation. Duration scales with status level (6/7/8/9s). Can be shattered for additional Cryo DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.SOLIDIFICATION.event.name": {
+    "text": "Solidification",
+    "dataStatus": "RECONCILED"
+  },
+  "status.STALWART.event.name": {
+    "text": "Stalwart",
+    "dataStatus": "RECONCILED"
+  },
+  "status.STALWART.segment.0.name": {
+    "text": "Stalwart",
+    "dataStatus": "RECONCILED"
+  },
+  "status.VULNERABLE.event.description": {
+    "text": "Physical infliction. Stacks up to 4 times. Consumed by physical status applications (Lift, Knock Down, Crush, Breach) to determine their status level.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.VULNERABLE.event.name": {
+    "text": "Vulnerable",
+    "dataStatus": "RECONCILED"
+  },
+  "status.WEAKNESS.event.description": {
+    "text": "Reduces the affected target's DMG dealt.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.WEAKNESS.event.name": {
+    "text": "Weakness",
+    "dataStatus": "RECONCILED"
+  },
+  "status.WEAKNESS.segment.0.name": {
+    "text": "Weakness",
+    "dataStatus": "RECONCILED"
+  },
+  "status.full-stagger.event.description": {
+    "text": "Full stagger break. Enemy is fully staggered and takes increased damage.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.full-stagger.event.name": {
+    "text": "Stagger (Full)",
+    "dataStatus": "RECONCILED"
+  },
+  "status.full-stagger.segment.0.name": {
+    "text": "Stagger (Full)",
+    "dataStatus": "RECONCILED"
+  },
+  "status.node-stagger.event.description": {
+    "text": "Partial stagger break. Enemy is staggered at a node threshold.",
+    "dataStatus": "RECONCILED"
+  },
+  "status.node-stagger.event.name": {
+    "text": "Stagger (Partial)",
+    "dataStatus": "RECONCILED"
+  },
+  "status.node-stagger.segment.0.name": {
+    "text": "Stagger (Partial)",
+    "dataStatus": "RECONCILED"
+  }
+}

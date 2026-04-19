@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "AVYWENNA_POTENTIAL_4",
-    "name": "Very Experienced (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Thunderlance: Final Shock improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "AVYWENNA",

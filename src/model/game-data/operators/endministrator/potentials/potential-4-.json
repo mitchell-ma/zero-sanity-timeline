@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ENDMINISTRATOR_POTENTIAL_4",
-    "name": "??? (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "???"
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

@@ -8,8 +8,7 @@
             "value": 10
           },
           "unit": "SECOND"
-        },
-        "name": "Hot Work (Nature)"
+        }
       },
       "clause": [
         {
@@ -36,7 +35,6 @@
   ],
   "properties": {
     "id": "HOT_WORK_NATURE",
-    "name": "Hot Work (Nature)",
     "duration": {
       "value": {
         "verb": "IS",
@@ -51,7 +49,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Nature DMG +50% for 10s after applying Corrosion. Cannot stack.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

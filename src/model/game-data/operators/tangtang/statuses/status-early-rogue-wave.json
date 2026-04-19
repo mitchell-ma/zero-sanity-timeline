@@ -5,7 +5,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Early Rogue Wave",
         "duration": {
           "value": {
             "verb": "IS",
@@ -114,7 +113,6 @@
   ],
   "properties": {
     "id": "EARLY_ROGUE_WAVE",
-    "name": "Early Rogue Wave",
     "to": "ENEMY",
     "stacks": {
       "limit": {
@@ -131,8 +129,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "A rogue wave summoned early by performing a dive attack during OLDEN STARE. Deals massive Cryo DMG to enemies in its area of effect."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "TANGTANG",

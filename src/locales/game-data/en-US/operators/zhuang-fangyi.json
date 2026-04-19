@@ -1,0 +1,174 @@
+{
+  "op.ZHUANG_FANGYI.event.name": {
+    "text": "Zhuang Fangyi",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.2.event.description": {
+    "text": "Will +20, Battle Skill DMG Dealt +15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.2.event.name": {
+    "text": "Acuity of Fine Details (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.2.segment.0.name": {
+    "text": "Acuity of Fine Details (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.3.event.description": {
+    "text": "Battle skill Mantra of Sundering improved: After consuming Electrification, the battle skill returns 10 SP. Sunderblade duration +10s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.3.event.name": {
+    "text": "Sense and Response (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.4.event.description": {
+    "text": "Ultimate Smiting Tempest improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.4.event.name": {
+    "text": "Absolute Composure (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.5.event.description": {
+    "text": "Ultimate Smiting Tempest improved: During the Empyrean of Truth transformation, DMG Dealt by Zhuang Fangyi ignores 15 of the enemy's Electric Resistance.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.potential.5.event.name": {
+    "text": "Storm of Transformation (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION.event.description": {
+    "text": "When the controlled operator's Final Strike or Finisher hits an enemy with Electric Infliction, Zhuang Fangyi creates a Xiranblitz Array that attacks the enemy and deals Electric DMG. If the Array hits an enemy that has Electric Infliction stacks, consume the said Electric Infliction stacks, forcibly apply Electrification, and give Ultimate Energy based on the number of stacks consumed. If Electrification is forcibly applied to an enemy that already has Electrification, apply Status Level +1 to the enemy's Electrification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION.event.name": {
+    "text": "Breath of Transformation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION.segment.1.name": {
+    "text": "Breath of Transformation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION_ENHANCED.event.description": {
+    "text": "During Smiting Tempest, Breath of Transformation gains a higher DMG multiplier, cooldown becomes 4 times faster, and effects are applied to enemies within a small area.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION_ENHANCED.event.name": {
+    "text": "Breath of Transformation (Enhanced)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION_ENHANCED.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION_ENHANCED.segment.1.name": {
+    "text": "Breath of Transformation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.BREATH_OF_TRANSFORMATION_ENHANCED.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.JOLTING_ARTS_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Electric DMG. As the controlled operator, Final Strike also deals 18 Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.JOLTING_ARTS_BATK.event.name": {
+    "text": "Jolting Arts",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.JOLTING_ARTS_BATK_ENHANCED.event.description": {
+    "text": "During Smiting Tempest, basic attack sequences are enhanced with higher Electric DMG multipliers.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.JOLTING_ARTS_BATK_ENHANCED.event.name": {
+    "text": "Jolting Arts (Enhanced)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.JOLTING_ARTS_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Electric DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.JOLTING_ARTS_DIVE.event.name": {
+    "text": "Jolting Arts (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.JOLTING_ARTS_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Electric DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.JOLTING_ARTS_FINISHER.event.name": {
+    "text": "Jolting Arts (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.MANTRA_OF_SUNDERING.event.description": {
+    "text": "Consumes the target's Electrification to increase the DMG multiplier of this battle skill and create [Status Level of Electrification consumed +1] Sunderblades (max 3 per cast). If the battlefield has fewer than 3 Sunderblades, Mantra of Sundering can still create 1 Sunderblade, even if it does not consume any target's Electrification. Zhuang Fangyi then channels all Sunderblades nearby to successively unleash Thunder Strikes on the target, dealing Electric DMG and giving bonus Ultimate Energy, with the final Thunder Strike dealing 6 times the DMG. A single battle skill casting can only create a max of 3 Sunderblades. Each Thunder Strike hit also raises the Force of Nature Electric Amp by +1%/+2% (at talent level 1/2); the final strike's amp bump scales with the total Sunderblade count that actually landed. P1 (Four Symbols of Harmony): DMG multiplier ×1.15.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.MANTRA_OF_SUNDERING.event.name": {
+    "text": "Mantra of Sundering",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.MANTRA_OF_SUNDERING_ENHANCED.event.description": {
+    "text": "During Smiting Tempest, Mantra of Sundering gains a higher DMG multiplier and increased effect range. The final Thunder Strike also applies Electric Infliction to the target hit.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.MANTRA_OF_SUNDERING_ENHANCED.event.name": {
+    "text": "Mantra of Sundering (Enhanced)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.SMITING_TEMPEST.event.description": {
+    "text": "Transforms into the Empyrean of Truth that grants these enhancements: Zhuang Fangyi's basic attacks are enhanced and her actions are harder to interrupt; Battle skill Mantra of Sundering gains a higher DMG multiplier and an increased effect range, and the final Thunder Strike also applies Electric Infliction to the target hit. Combo skill Breath of Transformation gains a higher DMG multiplier, cooldown becomes 4 times faster, and effects are applied to enemies within a small area. The first casting of the battle skill Mantra of Sundering on an available target does not consume SP nor Electrification, and is guaranteed to create 3 Sunderblades even if the target has no Electrification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.SMITING_TEMPEST.event.name": {
+    "text": "Smiting Tempest",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.SMITING_TEMPEST.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.skill.SMITING_TEMPEST.segment.1.name": {
+    "text": "Empyrean of Truth",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.status.SUNDERBLADE.event.description": {
+    "text": "Created by battle skill Mantra of Sundering. Each Sunderblade is channeled into a Thunder Strike during the battle skill. Max stacks: 9. Duration: 36s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.status.SUNDERBLADE.event.name": {
+    "text": "Sunderblade",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.talent.FORCE_OF_NATURE_TALENT.event.description": {
+    "text": "Battle skill Mantra of Sundering improved: Casting the battle skill grants Zhuang Fangyi 9%/18% (L1/L2) Electric Amp for 5s. Scoring hits with the battle skill's Thunder Strike increases this effect by +1%/+2% per hit. Every casting of the battle skill resets this Electric Amp effect.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.talent.FORCE_OF_NATURE_TALENT.event.name": {
+    "text": "Force of Nature (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.talent.FORCE_OF_NATURE_TALENT.segment.0.name": {
+    "text": "Force of Nature (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.talent.ORDAINED_BY_HEAVEN_TALENT.event.description": {
+    "text": "Gains a 9% chance of immunity against DMG taken, with each Sunderblade nearby increasing this chance by +1%. After DMG Immunity is triggered, Zhuang Fangyi is also restored for 9%/18% (L1/L2) Max HP. The HP restoration effect only triggers once every 99s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ZHUANG_FANGYI.talent.ORDAINED_BY_HEAVEN_TALENT.event.name": {
+    "text": "Ordained by Heaven (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

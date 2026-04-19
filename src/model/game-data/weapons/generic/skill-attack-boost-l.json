@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Attack Boost [L]"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
     }
   ],
   "properties": {
-    "name": "Attack Boost [L]",
-    "description": "Attack +",
     "id": "ATTACK_BOOST_L"
   },
   "metadata": {

@@ -8,8 +8,7 @@
             "value": 10
           },
           "unit": "SECOND"
-        },
-        "name": "Honed into Legion"
+        }
       },
       "clause": [
         {
@@ -48,7 +47,6 @@
   ],
   "properties": {
     "id": "QUENCHER_HONED_INTO_LEGION",
-    "name": "Honed into Legion",
     "duration": {
       "value": {
         "verb": "IS",
@@ -66,8 +64,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "When the wielder performs a Final Strike on the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "QUENCHER",

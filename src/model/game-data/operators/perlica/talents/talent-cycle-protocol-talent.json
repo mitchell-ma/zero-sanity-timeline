@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 1
     },
-    "name": "Cycle Protocol (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Combo skill Instant Protocol: Chain improved: When hitting a Vulnerable enemy, the hit chains 1 more time."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "PERLICA",

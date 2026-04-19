@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Hannabit Wisdom (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "50% chance to ignore an Arts Infliction applied on her."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "ARCLIGHT",

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "CRYO_SUSCEPTIBILITY",
-    "name": "Cryo Susceptibility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Cryo Susceptibility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

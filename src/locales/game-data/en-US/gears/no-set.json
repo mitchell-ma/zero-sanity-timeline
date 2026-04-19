@@ -1,0 +1,158 @@
+{
+  "gear.NONE_STAT.event.name": {
+    "text": "No Set",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.BASIC_ARMOR.event.name": {
+    "text": "Basic Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.BASIC_GAUNTLETS.event.name": {
+    "text": "Basic Gauntlets",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.BASIC_GLOVES.event.name": {
+    "text": "Basic Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.BASIC_PPE.event.name": {
+    "text": "Basic PPE",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.EMERGENCY_COMM.event.name": {
+    "text": "Emergency Comm",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.EMERGENCY_COMPRESSION_CORE.event.name": {
+    "text": "Emergency Compression Core",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_ARMOR.event.name": {
+    "text": "Miner Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_ARMOR_T1.event.name": {
+    "text": "Miner Armor T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_CLEANSUIT.event.name": {
+    "text": "Miner Cleansuit",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_COMM.event.name": {
+    "text": "Miner Comm",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_COMM_T1.event.name": {
+    "text": "Miner Comm T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_COMPRESSION_CORE.event.name": {
+    "text": "Miner Compression Core",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_COMPRESSION_CORE_T1.event.name": {
+    "text": "Miner Compression Core T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_DRIVE_WHEEL.event.name": {
+    "text": "Miner Drive Wheel",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_DRIVE_WHEEL_T1.event.name": {
+    "text": "Miner Drive Wheel T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_FISTS.event.name": {
+    "text": "Miner Fists",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_FISTS_T1.event.name": {
+    "text": "Miner Fists T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_GAUNTLETS.event.name": {
+    "text": "Miner Gauntlets",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_GAUNTLETS_T1.event.name": {
+    "text": "Miner Gauntlets T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_GLOVES.event.name": {
+    "text": "Miner Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_GLOVES_T1.event.name": {
+    "text": "Miner Gloves T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_GLOVES_T2.event.name": {
+    "text": "Miner Gloves T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_OVERALLS.event.name": {
+    "text": "Miner Overalls",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_OVERALLS_T1.event.name": {
+    "text": "Miner Overalls T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_TURBINE.event.name": {
+    "text": "Miner Turbine",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_TURBINE_T1.event.name": {
+    "text": "Miner Turbine T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_VEST.event.name": {
+    "text": "Miner Vest",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.MINER_WRISTS.event.name": {
+    "text": "Miner Wrists",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.PROTOTYPE_HEAVY_ARMOR.event.name": {
+    "text": "Prototype Heavy Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.PROTOTYPE_HEAVY_ARMOR_T1.event.name": {
+    "text": "Prototype Heavy Armor T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.REDEEMER_ARMOR.event.name": {
+    "text": "Redeemer Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.REDEEMER_GLOVES.event.name": {
+    "text": "Redeemer Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.REDEEMER_HANDS.event.name": {
+    "text": "Redeemer Hands",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.REDEEMER_PLATES.event.name": {
+    "text": "Redeemer Plates",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.REDEEMER_SEAL.event.name": {
+    "text": "Redeemer Seal",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.REDEEMER_SEAL_T1.event.name": {
+    "text": "Redeemer Seal T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.REDEEMER_TAG.event.name": {
+    "text": "Redeemer Tag",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.NONE_STAT.piece.REDEEMER_TAG_T1.event.name": {
+    "text": "Redeemer Tag T1",
+    "dataStatus": "RECONCILED"
+  }
+}

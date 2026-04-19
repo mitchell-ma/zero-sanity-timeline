@@ -1,0 +1,22 @@
+{
+  "weapon.MONAIHE.event.name": {
+    "text": "Monaihe",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MONAIHE.segment.0.name": {
+    "text": "Monaihe",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MONAIHE.skill.INSPIRING_MORTISE_AND_TENON_ANALYSIS.event.description": {
+    "text": "Main Attribute +{primary_attr_up:0.0%}. Arts Intensity +{phy_spell_up:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MONAIHE.skill.INSPIRING_MORTISE_AND_TENON_ANALYSIS.event.name": {
+    "text": "Inspiring: Mortise-and-Tenon Analysis",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.MONAIHE.skill.INSPIRING_MORTISE_AND_TENON_ANALYSIS.segment.0.name": {
+    "text": "Inspiring: Mortise-and-Tenon Analysis",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -8,7 +8,6 @@
         ]
       },
       "properties": {
-        "name": "Razor Clawmark",
         "duration": {
           "value": {
             "verb": "VARY_BY",
@@ -1433,7 +1432,6 @@
   ],
   "properties": {
     "id": "RAZOR_CLAWMARK",
-    "name": "Razor Clawmark",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -1459,8 +1457,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
-    "description": "Target takes Physical DMG per second and increased Physical + Heat DMG. Applied by Wolven Ambrage (Nicks and Scratches talent). Non-stacking. Tick interval: 1s."
+    "eventCategoryType": "STATUS"
   },
   "metadata": {
     "originId": "ROSSI",

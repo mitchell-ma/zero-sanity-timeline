@@ -56,6 +56,8 @@ export class PeerJSProvider {
   private destroyed = false;
   private readonly reconnectListeners = new Set<(info: ReconnectInfo) => void>();
 
+  private readonly onPageHide: () => void;
+
   constructor(
     doc: Y.Doc,
     roomId: string,
@@ -76,6 +78,19 @@ export class PeerJSProvider {
     };
     this.doc.on('update', this.onDocUpdate);
 
+    // On refresh / tab close: tell PeerJS Cloud we're leaving so the signaling
+    // server releases our peer ID immediately. Without this, a host refresh
+    // hits `unavailable-id` for ~30s while the stale registration times out.
+    this.onPageHide = () => {
+      if (this.peer && !this.peer.destroyed) {
+        try { this.peer.destroy(); } catch { /* ignore */ }
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pagehide', this.onPageHide);
+      window.addEventListener('beforeunload', this.onPageHide);
+    }
+
     this.start();
   }
 
@@ -91,6 +106,7 @@ export class PeerJSProvider {
       this.peer = new Peer(this.roomId, peerOptions);
       this.peer.on('open', (id) => {
         console.info('[collab] host peer open:', id);
+        this.hostIdRetryAttempt = 0;
         this.setStatus(ConnectionStatus.CONNECTED);
       });
       this.peer.on('connection', (conn) => {
@@ -127,6 +143,10 @@ export class PeerJSProvider {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
+    }
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('pagehide', this.onPageHide);
+      window.removeEventListener('beforeunload', this.onPageHide);
     }
     this.doc.off('update', this.onDocUpdate);
     this.connections.forEach((conn) => {
@@ -238,6 +258,7 @@ export class PeerJSProvider {
       // Reset reconnect accounting on successful connection.
       this.reconnectAttempt = 0;
       this.reconnectStartedAt = 0;
+      this.hostIdRetryAttempt = 0;
       this.nextRetryAt = null;
       this.notifyReconnect();
       // BOTH host and joiner send their full Y.Doc state on open. The CRDT
@@ -373,16 +394,26 @@ export class PeerJSProvider {
     }, delay);
   }
 
+  private hostIdRetryAttempt = 0;
+
   private handlePeerError(err: Error & { type?: string }): void {
     // Unknown peer on joiner side means the host isn't up yet — retry.
     if (this.role === CollaborationRole.JOINER && err.type === 'peer-unavailable') {
       this.scheduleReconnect();
       return;
     }
-    // Host refreshed but PeerJS Cloud still holds the old peer id (usually
-    // released within a few seconds of the previous tab closing). Retry at
-    // 1s intervals so recovery is quick.
+    // Host refreshed but PeerJS Cloud still holds the old peer id. Usually
+    // released within a few seconds; retry with progressive backoff and give
+    // up after ~60s to avoid spinning forever.
     if (this.role === CollaborationRole.HOST && err.type === 'unavailable-id') {
+      this.hostIdRetryAttempt++;
+      const HOST_ID_MAX_ATTEMPTS = 15;
+      if (this.hostIdRetryAttempt > HOST_ID_MAX_ATTEMPTS) {
+        console.warn('[collab] host id still unavailable after retries — giving up');
+        this.setStatus(ConnectionStatus.ERROR, err);
+        return;
+      }
+      const delay = Math.min(1000 * this.hostIdRetryAttempt, 8000);
       this.setStatus(ConnectionStatus.CONNECTING);
       if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
       this.reconnectTimer = setTimeout(() => {
@@ -393,9 +424,11 @@ export class PeerJSProvider {
           this.peer = null;
         }
         this.start();
-      }, 1000);
+      }, delay);
       return;
     }
+    // Reset the host-id retry counter on any other error path.
+    if (this.role === CollaborationRole.HOST) this.hostIdRetryAttempt = 0;
     this.setStatus(ConnectionStatus.ERROR, err);
   }
 }

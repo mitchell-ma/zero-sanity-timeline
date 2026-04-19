@@ -20,7 +20,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -156,7 +155,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Empyrean of Truth",
         "duration": {
           "value": {
             "verb": "IS",
@@ -253,8 +251,6 @@
     }
   ],
   "properties": {
-    "name": "Smiting Tempest",
-    "description": "Transforms into the Empyrean of Truth that grants these enhancements: Zhuang Fangyi's basic attacks are enhanced and her actions are harder to interrupt; Battle skill Mantra of Sundering gains a higher DMG multiplier and an increased effect range, and the final Thunder Strike also applies Electric Infliction to the target hit. Combo skill Breath of Transformation gains a higher DMG multiplier, cooldown becomes 4 times faster, and effects are applied to enemies within a small area. The first casting of the battle skill Mantra of Sundering on an available target does not consume SP nor Electrification, and is guaranteed to create 3 Sunderblades even if the target has no Electrification.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "id": "SMITING_TEMPEST"

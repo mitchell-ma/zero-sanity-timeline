@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Arts Intensity Boost [M]"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
     }
   ],
   "properties": {
-    "name": "Arts Intensity Boost [M]",
-    "description": "Arts Intensity +",
     "id": "ARTS_INTENSITY_BOOST_M"
   },
   "metadata": {

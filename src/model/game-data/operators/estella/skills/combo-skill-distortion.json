@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Distortion",
-    "description": "When an enemy suffers Solidification. Quickly moves to the enemy's side to deal Physical DMG and forcibly Lift enemies in a small area. If the skill hits a target with Solidification, the skill deals additional DMG and applies Physical Susceptibility.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -61,8 +58,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL",
-        "name": "Distortion"
+        "element": "PHYSICAL"
       },
       "frames": [
         {
@@ -284,7 +280,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Transcendent Arts"
+        }
       },
       "clause": [
         {
@@ -80,8 +79,6 @@
   ],
   "properties": {
     "id": "OBJ_ARTS_IDENTIFIER_TRANSCENDENT_ARTS",
-    "name": "Transcendent Arts",
-    "description": "When combo applies Arts Burst or Physical Status",
     "duration": {
       "value": {
         "verb": "IS",

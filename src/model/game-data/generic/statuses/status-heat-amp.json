@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "HEAT_AMP",
-    "name": "Heat Amp",
     "to": "TEAM",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Heat Amp applied to the team.",
     "duration": {
       "value": {
         "verb": "IS",

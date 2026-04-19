@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "MINER_ARMOR",
-    "name": "Miner Armor",
     "gearType": "ARMOR",
     "gearSet": "NONE"
   },

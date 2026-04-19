@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ZHUANG_FANGYI_POTENTIAL_3",
-    "name": "Sense and Response (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Mantra of Sundering improved: After consuming Electrification, the battle skill returns 10 SP. Sunderblade duration +10s."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",

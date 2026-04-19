@@ -178,7 +178,6 @@
   ],
   "properties": {
     "id": "THUNDERLANCE_PIERCE",
-    "name": "Thunderlances Pierce",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -195,8 +194,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "Returning Thunderlances pierce enemies in their path, dealing Electric DMG per lance."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "AVYWENNA",

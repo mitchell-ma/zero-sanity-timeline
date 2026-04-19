@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Dreams of the Starry Beach"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Dreams of the Starry Beach",
     "id": "DREAMS_OF_THE_STARRY_BEACH",
     "type": "ARTS_UNIT",
     "rarity": 6

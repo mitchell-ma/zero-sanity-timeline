@@ -34,8 +34,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Brutality: Disciplinarian"
+        }
       },
       "clause": [
         {
@@ -75,8 +74,6 @@
     }
   ],
   "properties": {
-    "name": "Brutality: Disciplinarian",
-    "description": "ATK +{atk_up:0.0%}. After the wielder consumes Vulnerability stack(s), the wielder gains ATK +[{atk_up_add:0.0%} + {atk_up_mult:0.0%}\u00d7Stacks Consumed] while other operators in the team gain half of this buff for {duration:0}s. Effects of the same name cannot stack.",
     "id": "BRUTALITY_DISCIPLINARIAN",
     "eventCategoryType": "WEAPON_STAT"
   },

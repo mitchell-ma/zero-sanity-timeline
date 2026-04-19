@@ -8,8 +8,7 @@
             "value": 30
           },
           "unit": "SECOND"
-        },
-        "name": "Overlapping Flickers"
+        }
       },
       "clause": [
         {
@@ -51,7 +50,6 @@
   ],
   "properties": {
     "id": "FLICKERS_IN_THE_MIST_EFFICACY_OVERLAPPING_FLICKERS",
-    "name": "Overlapping Flickers",
     "duration": {
       "value": {
         "verb": "IS",
@@ -69,8 +67,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "Electric DMG Dealt +{pulse_dmg_up2:0.0%} per stack for {duration:0}s. Gained when the wielder receives Electric Amp. Max {max_stack:0} stacks, per-stack duration."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "FLICKERS_IN_THE_MIST",

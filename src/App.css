@@ -254,6 +254,106 @@
   cursor: not-allowed;
 }
 
+/* ─── Feedback Modal ────────────────────────────────────── */
+.feedback-modal {
+  width: 480px;
+}
+
+.feedback-body {
+  gap: 0.75rem;
+}
+
+.feedback-intro {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.feedback-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.feedback-label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.feedback-textarea,
+.feedback-input {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  padding: 0.5rem 0.625rem;
+  resize: vertical;
+}
+
+.feedback-textarea:focus,
+.feedback-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.feedback-textarea:disabled,
+.feedback-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.feedback-error {
+  color: #ff6b6b;
+  font-size: 0.75rem;
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 3px;
+  padding: 0.5rem 0.625rem;
+}
+
+.feedback-success {
+  color: #4caf50;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 1.5rem 0.5rem;
+  line-height: 1.5;
+}
+
+.feedback-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.feedback-submit {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--bg-root);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.5rem 1rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.feedback-submit:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.feedback-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ─── Devlog Modal ──────────────────────────────────────── */
 .devlog-overlay {
   position: fixed;
@@ -1351,6 +1451,20 @@
   display: flex;
   align-items: center;
   gap: 2px;
+}
+
+/* Secondary row below the Loadouts title holding +, folder, import, export,
+ * filter toggle, and the collab icon menu. */
+.loadout-sidebar-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 0.5rem 0.375rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+.loadout-action-btn--active {
+  background: var(--overlay-04);
+  color: var(--text-bright);
 }
 
 /* ─── Sidebar container (icon strip + optional panel) ──── */
@@ -9637,6 +9751,29 @@
   color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
+}
+.uc-list-item-warning {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f0a040;
+  color: #1a1a1a;
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.uc-list-item-warning:hover {
+  filter: brightness(1.15);
+}
+.uc-list-item--warning .uc-list-item-name {
+  color: #f0a040;
 }
 .uc-list-empty {
   padding: 2rem 0.75rem;

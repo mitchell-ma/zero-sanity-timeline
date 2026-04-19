@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "HEAT_INFLICTION",
-    "name": "Heat Infliction",
     "to": "ENEMY",
     "element": "HEAT",
     "duration": {
@@ -19,8 +18,7 @@
       "interactionType": "REFRESH"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "INFLICTION",
-    "description": "Heat element infliction. Stacks up to 4 times. At 4 stacks, triggers Combustion arts reaction."
+    "eventCategoryType": "INFLICTION"
   },
   "metadata": {
     "originId": "game",

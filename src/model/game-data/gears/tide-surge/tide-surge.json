@@ -6,7 +6,8 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "APPLY",
-          "object": "STATUS", "objectId": "INFLICTION",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
           "stacks": 2,
           "to": "ENEMY"
         }
@@ -31,8 +32,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Tide Surge"
+        }
       },
       "clause": [
         {
@@ -58,10 +58,8 @@
   ],
   "properties": {
     "id": "TIDE_SURGE_STAT",
-    "name": "Tide Surge",
     "rarity": 5,
     "piecesRequired": 3,
-    "description": "3-piece set effect: Wearer's Skill DMG Dealt +{skill_dmg_up:0%}. After the wearer applies {stack_cond} or more stacks of Arts Infliction on the enemy, the wearer gains Arts DMG Dealt +{spell_dmg_up:0%} for {duration}s. This effect cannot stack.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_STAT"
   },

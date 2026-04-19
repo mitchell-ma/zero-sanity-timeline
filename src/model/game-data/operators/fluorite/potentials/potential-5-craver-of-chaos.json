@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "FLUORITE_POTENTIAL_5",
-    "name": "Craver of Chaos (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Combo skill Free Giveaway improved: Whenever Cryo Infliction or Nature Infliction is applied to the enemy, cooldown is shortened by 1s. Effect can only trigger once every 1s."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "FLUORITE",

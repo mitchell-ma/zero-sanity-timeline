@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Wave Tide"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Wave Tide",
     "id": "WAVE_TIDE",
     "type": "SWORD",
     "rarity": 4

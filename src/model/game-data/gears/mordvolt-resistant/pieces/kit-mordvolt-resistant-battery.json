@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "MORDVOLT_RESISTANT_BATTERY",
-    "name": "Mordvolt Resistant Battery",
     "gearType": "KIT",
     "gearSet": "MORDVOLT_RESISTANT_STAT"
   },

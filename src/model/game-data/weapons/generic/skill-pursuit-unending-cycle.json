@@ -22,8 +22,6 @@
     }
   ],
   "properties": {
-    "name": "Pursuit: Unending Cycle",
-    "description": "When the wielder casts a combo skill, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
     "id": "PURSUIT_UNENDING_CYCLE"
   },
   "metadata": {

@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Pursuit of Memories (P2)"
+        }
       },
       "clause": [
         {
@@ -50,11 +49,9 @@
   ],
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_2",
-    "name": "Pursuit of Memories (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Intellect +20, Basic Attack DMG Dealt +15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "LAEVATAIN",

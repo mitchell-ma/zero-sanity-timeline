@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "PHYSICAL_AMP",
-    "name": "Physical Amp",
     "to": "TEAM",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Physical Amp applied to the team.",
     "duration": {
       "value": {
         "verb": "IS",

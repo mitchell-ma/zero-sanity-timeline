@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "BASIC_PPE",
-    "name": "Basic PPE",
     "gearType": "ARMOR",
     "gearSet": "NONE"
   },

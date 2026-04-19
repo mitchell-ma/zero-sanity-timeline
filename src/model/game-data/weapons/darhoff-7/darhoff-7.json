@@ -12,8 +12,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Darhoff 7"
+        }
       },
       "clause": [
         {
@@ -134,7 +133,6 @@
     }
   ],
   "properties": {
-    "name": "Darhoff 7",
     "id": "DARHOFF_7",
     "type": "GREAT_SWORD",
     "rarity": 3

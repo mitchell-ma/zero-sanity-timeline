@@ -5,6 +5,7 @@ import {
   getConsumable,
   getTactical,
 } from '../controller/gameDataStore';
+import { t } from '../locales/locale';
 
 export interface OperatorLoadoutState {
   weaponId:     string | null;
@@ -60,7 +61,7 @@ function DropdownFilterBar({
         ref={inputRef}
         className="lo-filter-input"
         type="text"
-        placeholder="Filter..."
+        placeholder={t('common.filterPlaceholder')}
         value={search}
         onChange={(e) => onSearch(e.target.value)}
         onKeyDown={(e) => e.stopPropagation()}
@@ -104,7 +105,7 @@ function DropdownTierBar({
         ref={inputRef}
         className="lo-filter-input"
         type="text"
-        placeholder="Filter..."
+        placeholder={t('common.filterPlaceholder')}
         value={search}
         onChange={(e) => onSearch(e.target.value)}
         onKeyDown={(e) => e.stopPropagation()}

@@ -1,0 +1,38 @@
+{
+  "gear.XIRANFLOW_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's ATK +10%. Whenever the wearer consumes Electrification or Corrosion, the wearer gains a number of buff stacks equal to the Status Level of the Arts Reaction consumed, with each buff stack giving Electric DMG Dealt and Nature DMG Dealt +15% for 25s. Max 3 stacks. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.XIRANFLOW_STAT.event.name": {
+    "text": "Xiranflow",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.XIRANFLOW_STAT.piece.XIRANFLOW_BATON.event.name": {
+    "text": "Xiranflow Baton",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.XIRANFLOW_STAT.piece.XIRANFLOW_GLOVES.event.name": {
+    "text": "Xiranflow Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.XIRANFLOW_STAT.piece.XIRANFLOW_LIGHT_ARMOR.event.name": {
+    "text": "Xiranflow Light Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.XIRANFLOW_STAT.segment.0.name": {
+    "text": "Xiranflow",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.XIRANFLOW_STAT.status.XIRANFLOW.event.description": {
+    "text": "Electric and Nature DMG +15% per stack for 25s after consuming Electrification or Corrosion. Max 3 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.XIRANFLOW_STAT.status.XIRANFLOW.event.name": {
+    "text": "Xiranflow",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.XIRANFLOW_STAT.status.XIRANFLOW.segment.0.name": {
+    "text": "Xiranflow",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -1,8 +1,6 @@
 {
   "properties": {
     "id": "FREEDOM_TO_PROSELYTIZE_REDEMPTION_OF_FAITH",
-    "name": "Redemption of Faith",
-    "description": "Heal controlled operator; 15s CD",
     "duration": {
       "value": {
         "verb": "IS",

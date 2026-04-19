@@ -1,0 +1,150 @@
+{
+  "op.ALESH.event.name": {
+    "text": "Alesh",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.1.event.description": {
+    "text": "Battle skill Unconventional Lure improved: SP Recovery grants an additional 10 SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.1.event.name": {
+    "text": "Super Salty Comeback (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.2.event.description": {
+    "text": "Strength +15, Intellect +15.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.2.event.name": {
+    "text": "Calm and Tranquil (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.2.segment.0.name": {
+    "text": "Calm and Tranquil (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.3.event.description": {
+    "text": "Combo skill Auger Angling improved: After catching a Rare Fin, the entire team gains ATK +15% for 10s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.3.event.name": {
+    "text": "May the Willing Bite (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.4.event.description": {
+    "text": "Ultimate One Monster Catch! improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.4.event.name": {
+    "text": "Insane Angling Set (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.5.event.description": {
+    "text": "Ultimate One Monster Catch! improved: Hitting a target below 50% HP increases the DMG Multiplier to 1.5 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.potential.5.event.name": {
+    "text": "Mega Lunker Rumors (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.AUGER_ANGLING.event.description": {
+    "text": "When a nearby target's Arts Reaction or Originium Crystals are consumed, opens an angling hole beneath the enemy that deals Physical DMG and recovers SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers extra SP. T2 Veteran Angler improves the Rare Fin catching chance by +0.2%/+0.5% per 10 Intellect (cap +30%). P3 May the Willing Bite applies a 10s +15% ATK team buff on Rare Fin catches.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.AUGER_ANGLING.event.name": {
+    "text": "Auger Angling",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.AUGER_ANGLING.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.AUGER_ANGLING.segment.1.name": {
+    "text": "Auger Angling",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.AUGER_ANGLING.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.ONE_MONSTER_CATCH.event.description": {
+    "text": "Alesh hooks a fin of unbelievable size and slams it to deal Cryo DMG and apply Cryo Infliction to enemies in a large area of effect in front of him. He recovers some SP on hit, with additional SP gained for each target defeated.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.ONE_MONSTER_CATCH.event.name": {
+    "text": "One Monster Catch!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.ONE_MONSTER_CATCH.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.ROD_CASTING_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.ROD_CASTING_BATK.event.name": {
+    "text": "Basic Rod Casting",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.ROD_CASTING_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.ROD_CASTING_DIVE.event.name": {
+    "text": "Basic Rod Casting (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.ROD_CASTING_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.ROD_CASTING_FINISHER.event.name": {
+    "text": "Basic Rod Casting (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.UNCONVENTIONAL_LURE.event.description": {
+    "text": "Hooks a block of ice and slams it to deal Physical DMG to the enemy target. When hitting a target with Cryo Infliction, Alesh consumes all of the target's Cryo Infliction stacks, forcibly applies Solidification to the target, and recovers some SP based on the number of stacks consumed. This SP recovery effect can only trigger 1 time, even if the skill hits multiple enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.skill.UNCONVENTIONAL_LURE.event.name": {
+    "text": "Unconventional Lure",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.status.MAY_THE_WILLING_BITE.event.description": {
+    "text": "After Alesh catches a Rare Fin via Auger Angling, the entire team gains ATK +15% for 10s. Does not stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.status.MAY_THE_WILLING_BITE.event.name": {
+    "text": "May the Willing Bite",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.status.MAY_THE_WILLING_BITE.segment.0.name": {
+    "text": "May the Willing Bite",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS.event.description": {
+    "text": "After a nearby enemy is Solidified or hit with Originium Crystals, Alesh gains 3/4 Ultimate Energy (L1/L2). If Alesh himself triggered the Solidification, he gains an additional 6/8 Ultimate Energy. Per-wiki: this effect can only trigger once every 3s — not yet enforced by the engine.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS.event.name": {
+    "text": "Flash-frozen for Freshness (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS.segment.0.name": {
+    "text": "Flash-frozen for Freshness",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS.segment.1.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.talent.VETERAN_ANGLER_TALENT.event.description": {
+    "text": "Combo skill Auger Angling improved: Every 10 Intellect grants Rare Fin catching chance +0.2% (max: +30%).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ALESH.talent.VETERAN_ANGLER_TALENT.event.name": {
+    "text": "Veteran Angler (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

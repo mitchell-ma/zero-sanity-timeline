@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Frag Grenade\u00b7\u03b2",
-    "description": "When an Arts Infliction is applied to an enemy. Throws a frag grenade at the target's location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "HEAT",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -61,8 +58,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "HEAT",
-        "name": "Frag Grenade\u00b7\u03b2"
+        "element": "HEAT"
       },
       "frames": [
         {
@@ -162,7 +158,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

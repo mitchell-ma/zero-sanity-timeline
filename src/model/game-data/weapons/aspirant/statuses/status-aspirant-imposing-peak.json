@@ -8,8 +8,7 @@
             "value": 30
           },
           "unit": "SECOND"
-        },
-        "name": "Imposing Peak"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
   ],
   "properties": {
     "id": "ASPIRANT_IMPOSING_PEAK",
-    "name": "Imposing Peak",
-    "description": "Phys DMG bonus on next ult skill",
     "duration": {
       "value": {
         "verb": "IS",

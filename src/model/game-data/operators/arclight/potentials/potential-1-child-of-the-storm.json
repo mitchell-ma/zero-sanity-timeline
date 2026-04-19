@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ARCLIGHT_POTENTIAL_1",
-    "name": "Child of the Storm (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Tempestuous Arc improved: After triggering additional effects, the skill recovers another 10 SP."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ARCLIGHT",

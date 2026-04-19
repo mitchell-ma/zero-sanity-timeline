@@ -115,7 +115,6 @@
   ],
   "properties": {
     "id": "TIDE_SURGE_GAUNTLETS",
-    "name": "Tide Surge Gauntlets",
     "gearType": "GLOVES",
     "gearSet": "TIDE_SURGE_STAT"
   },

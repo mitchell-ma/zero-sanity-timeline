@@ -10,6 +10,7 @@ import type { Interaction, Effect, WithPreposition } from '../../dsl/semantics';
 import { getAllStatusIds, getAllInflictionIds, getAllReactionIds } from '../../controller/gameDataStore';
 import SentenceSlot from './SentenceSlot';
 import CustomSelect from './CustomSelect';
+import { t } from '../../locales/locale';
 
 /** Union type for building both conditions (Interaction) and effects (Effect). */
 type InteractionOrEffect = Interaction & Partial<Effect>;
@@ -121,7 +122,7 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
         </SentenceSlot>
 
         {onRemove && (
-          <button className="ib-remove" onClick={onRemove} title="Remove">&times;</button>
+          <button className="ib-remove" onClick={onRemove} title={t('common.remove')}>&times;</button>
         )}
       </div>
 
@@ -152,7 +153,7 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
       {vis.showTo && (
         <ul className="ce-ul">
           <li className="ce-li ce-li--last ce-li--leaf">
-            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ to: undefined, toDeterminer: undefined })} title="Clear">&times;</button>
+            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ to: undefined, toDeterminer: undefined })} title={t('common.clear')}>&times;</button>
             <div className="interaction-row">
               <span className="ce-badge ce-badge--keyword">TO</span>
               <SentenceSlot active={value.to === SubjectType.OPERATOR}>
@@ -179,7 +180,7 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
       {vis.showFrom && (
         <ul className="ce-ul">
           <li className="ce-li ce-li--last ce-li--leaf">
-            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ from: undefined, fromDeterminer: undefined })} title="Clear">&times;</button>
+            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ from: undefined, fromDeterminer: undefined })} title={t('common.clear')}>&times;</button>
             <div className="interaction-row">
               <span className="ce-badge ce-badge--keyword">FROM</span>
               <SentenceSlot active={value.from === SubjectType.OPERATOR}>

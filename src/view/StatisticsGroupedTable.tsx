@@ -26,6 +26,7 @@ import {
   loadStatisticsColumnOrder,
   saveStatisticsColumnOrder,
 } from './statisticsColumnDefs';
+import { t } from '../locales/locale';
 
 const FPS = 120;
 
@@ -648,7 +649,7 @@ export default React.memo(function StatisticsGroupedTable({
                 <span
                   className="slc-grab-handle"
                   onMouseDown={(e) => handleRowMouseDown(i, e)}
-                  aria-label="Drag to reorder"
+                  aria-label={t('common.dragReorder')}
                 >
                   <span /><span /><span />
                 </span>

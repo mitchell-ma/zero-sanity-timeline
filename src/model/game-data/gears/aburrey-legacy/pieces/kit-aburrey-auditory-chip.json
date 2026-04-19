@@ -91,7 +91,6 @@
   ],
   "properties": {
     "id": "ABURREY_AUDITORY_CHIP",
-    "name": "Aburrey Auditory Chip",
     "gearType": "KIT",
     "gearSet": "ABURREY_LEGACY_STAT"
   },

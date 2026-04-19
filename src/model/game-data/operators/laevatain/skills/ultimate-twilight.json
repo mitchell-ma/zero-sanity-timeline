@@ -20,7 +20,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -156,7 +155,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Twilight",
         "duration": {
           "value": {
             "verb": "IS",
@@ -253,8 +251,6 @@
     }
   ],
   "properties": {
-    "name": "Twilight",
-    "description": "Laevatain summons her Sviga L\u00e6vi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga L\u00e6vi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "id": "TWILIGHT"

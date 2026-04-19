@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Textbook Assault",
-    "description": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weakness, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -71,7 +68,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Slash I",
         "duration": {
           "value": {
             "verb": "IS",
@@ -278,7 +274,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Slash II",
         "duration": {
           "value": {
             "verb": "IS",
@@ -441,7 +436,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Final Slam",
         "duration": {
           "value": {
             "verb": "IS",

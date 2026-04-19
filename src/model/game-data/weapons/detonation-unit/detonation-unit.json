@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Detonation Unit"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Detonation Unit",
     "id": "DETONATION_UNIT",
     "type": "ARTS_UNIT",
     "rarity": 6

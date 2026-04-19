@@ -254,7 +254,7 @@ Event (skill activation — e.g., one use of Battle Skill)
 ```
 
 - **Event**: The top-level skill activation. Each skill category is one event type.
-- **Segment**: A phase within an event. All skills use explicit `segments` arrays. Basic attacks have one segment per sequence in the attack chain. Ultimates and combo skills have segments for each phase (Animation, Stasis, Active, Cooldown). Battle skills have a single segment wrapping their frames. Segments can have `clause` arrays with effects that are active for the segment's duration (e.g. `IGNORE ULTIMATE_ENERGY` during ultimate animation). The ANIMATION segment type (`segmentType: "ANIMATION"`) denotes the time-stop phase.
+- **Segment**: A phase within an event. All skills use explicit `segments` arrays. Basic attacks have one segment per sequence in the attack chain. Ultimates and combo skills have segments for each phase (Animation, Stasis, Active window, Cooldown). Battle skills have a single segment wrapping their frames. Segments can have `clause` arrays with effects active for the segment's duration (e.g. `IGNORE ULTIMATE_ENERGY` during an ultimate's animation or active window — that clause is now the *only* way to author a no-UE-gain segment). The ANIMATION / STASIS / COOLDOWN / IMMEDIATE_COOLDOWN segment types are the only typed values; the post-animation active window is left untyped. (ACTIVE / NORMAL / INPUT_DELAY were retired.)
 - **Frame**: A single hit or tick within a segment. Frames carry timing (`offset`), resource interactions (SP, stagger), status interactions (inflictions), and per-level multipliers.
 
 Warfarin multiplier data is scoped to the **segment level** — each Warfarin skill ID (e.g., `attack1`, `attack2`, `normal_skill`) corresponds to one segment. Within a segment, `atk_scale` is the per-frame multiplier, and `display_atk_scale` is the approximate total across all frames in that segment.
@@ -653,7 +653,11 @@ Combo skills use `segments[]` with an ANIMATION segment followed by a main segme
 
 #### ULTIMATE
 
-Ultimates use typed `segments[]` with ANIMATION, STASIS, ACTIVE, and COOLDOWN phases:
+Ultimates use typed `segments[]` with ANIMATION / STASIS / COOLDOWN phases. The
+post-animation **active window** is left *untyped*: its duration comes from the
+segment's `properties.duration`, and its no-UE-gain behavior is authored via an
+explicit `IGNORE ULTIMATE_ENERGY` clause effect (there is no `ACTIVE` segment
+type — it was retired in favor of the DSL effect).
 
 ```json
 {
@@ -669,6 +673,10 @@ Ultimates use typed `segments[]` with ANIMATION, STASIS, ACTIVE, and COOLDOWN ph
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
+      "clause": [{
+        "conditions": [],
+        "effects": [{ "verb": "IGNORE", "object": "ULTIMATE_ENERGY", "toDeterminer": "THIS", "to": "OPERATOR" }]
+      }],
       "frames": []
     },
     {
@@ -677,8 +685,12 @@ Ultimates use typed `segments[]` with ANIMATION, STASIS, ACTIVE, and COOLDOWN ph
       "frames": []
     },
     {
-      "metadata": { "eventComponentType": "SEGMENT", "segmentType": "ACTIVE" },
-      "properties": { "name": "Active", "duration": { "value": 15, "unit": "SECOND" } },
+      "metadata": { "eventComponentType": "SEGMENT" },
+      "properties": { "name": "Twilight", "duration": { "value": 15, "unit": "SECOND" } },
+      "clause": [{
+        "conditions": [],
+        "effects": [{ "verb": "IGNORE", "object": "ULTIMATE_ENERGY", "toDeterminer": "THIS", "to": "OPERATOR" }]
+      }],
       "frames": []
     },
     {
@@ -950,6 +962,70 @@ All enums used in this file are defined in the codebase:
 | `CombatSkillType`        | `src/consts/enums.ts`         |
 | `EnhancementType`        | `src/consts/enums.ts`         |
 | `DataSourceType`         | `src/consts/enums.ts`         |
+
+## DSL Grammar & Semantics
+
+All grammar and semantic mappings live in `src/dsl/semantics.ts`. Authored JSON
+conforms to three layered narrowing rules that the builder UI consumes in
+order — each layer rules out combinations the prior layer permitted.
+
+### Subject / Verb / Object layering (conditions)
+
+Conditions have shape `{subject, verb, object[, objectId, objectQualifier]}`.
+The valid slots narrow top-down:
+
+1. **`SUBJECT_VERB_MAPPING`** (A-B) — which verbs each subject can take.
+   - `OPERATOR` → `APPLY, BECOME, CONSUME, DEAL, DEFEAT, EXPERIENCE, HAVE, IS, PERFORM, RECEIVE, RECOVER`
+   - `ENEMY` → `BECOME, DEAL, HAVE, HIT, IS, PERFORM, RECEIVE`
+   - `EVENT` → `BECOME, HAVE, IS`
+   - `STATUS` → `BECOME, HAVE, IS`
+   - `TEAM` → `HAVE`
+2. **`SUBJECT_VERB_OBJECT_MAPPING`** (A-B-C) — narrow the object per subject+verb.
+   Examples:
+   - `ENEMY IS` → state adjectives (STAGGERED, COMBUSTED, LIFTED, CRYO_INFLICTED, …)
+   - `ENEMY HAVE` → resource nouns (HP, STATUS, CHARGE, STACKS)
+   - `OPERATOR RECOVER` → `{HP, SKILL_POINT, ULTIMATE_ENERGY}`
+   - `OPERATOR APPLY` → `{STATUS, STAT, EVENT, ARTS_BURST, PROTECTED}`
+   Fallback: when a subject+verb pair isn't listed, use `VERB_OBJECTS[verb]`.
+3. **`OBJECT_ID_QUALIFIERS`** — when `object` is a multi-kind container
+   (currently `STATUS`), the `objectId` chooses the sub-family and narrows
+   the qualifier:
+   - `STATUS` + `objectId: INFLICTION` → `{HEAT, CRYO, NATURE, ELECTRIC, ARTS, VULNERABLE}`
+   - `STATUS` + `objectId: REACTION` → `{COMBUSTION, SOLIDIFICATION, CORROSION, ELECTRIFICATION, SHATTER}`
+   - `STATUS` + `objectId: PHYSICAL` → `{LIFT, KNOCK_DOWN, BREACH, CRUSH}`
+   - `STATUS` + `objectId: SUSCEPTIBILITY` → `{HEAT, CRYO, NATURE, ELECTRIC, ARTS, PHYSICAL}`
+   - `STATUS` + `objectId: <custom>` → no qualifier narrowing (free-form
+     status id like `MELTING_FLAME`, `FORCE_OF_NATURE_TALENT`).
+
+### Effect-side slots
+
+- **`VERB_OBJECTS`** — verb-agnostic list of allowed objects per verb (fallback when no A-B-C narrowing applies).
+- **`VERB_TARGET_MAPPING`** — which `to` nouns each effect verb can target. `APPLY` → `{ENEMY, OPERATOR, TEAM}`, `DEAL` → `{ENEMY, OPERATOR}`, `RECOVER/RETURN → {OPERATOR}`.
+- **`VERB_PREPOSITION_MAPPING`** — which prepositions (`FROM`, `OF`, `BY`, …) each verb accepts.
+
+### Canonical authoring shape for STATUS effects
+
+```json
+{ "verb": "APPLY",
+  "object": "STATUS",
+  "objectId": "INFLICTION",
+  "objectQualifier": "VULNERABLE",
+  "to": "ENEMY" }
+```
+
+Reads as "apply the VULNERABLE INFLICTION STATUS to the enemy". The three-part
+shape (`STATUS` → `INFLICTION` → `VULNERABLE`) is mandatory for typed infliction /
+reaction / susceptibility / physical-status effects. Free-form named statuses
+only need `object: STATUS, objectId: <custom>` (no qualifier).
+
+### Helpers in `semantics.ts`
+
+- `verbsForSubject(subject)` — SUBJECT_VERB narrow
+- `objectsForSubjectVerb(subject, verb)` — A-B-C narrow, falls back to `VERB_OBJECTS`
+- `qualifiersForObjectId(object, objectId)` — three-level narrow
+- `targetsForVerb(verb)` — allowed `to` targets
+
+---
 
 ## Data Sources
 

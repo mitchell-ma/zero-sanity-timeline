@@ -1,0 +1,30 @@
+{
+  "weapon.OBJ_RAZORHORN.event.name": {
+    "text": "OBJ Razorhorn",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_RAZORHORN.segment.0.name": {
+    "text": "OBJ Razorhorn",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_RAZORHORN.skill.INFLICTION_CONQUEST_OF_ICY_PEAKS.event.description": {
+    "text": "To enemies with Cryo Infliction or Solidification, the wielder gains DMG Dealt +{dmg_up :0.0%}. After consuming Solidification, ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_RAZORHORN.skill.INFLICTION_CONQUEST_OF_ICY_PEAKS.event.name": {
+    "text": "Infliction: Conquest of Icy Peaks",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_RAZORHORN.status.OBJ_RAZORHORN_CONQUEST_OF_ICY_PEAKS.event.description": {
+    "text": "vs Cryo/Solid DMG +8-16%; consume Solidification → ATK buff",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_RAZORHORN.status.OBJ_RAZORHORN_CONQUEST_OF_ICY_PEAKS.event.name": {
+    "text": "Conquest of Icy Peaks",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_RAZORHORN.status.OBJ_RAZORHORN_CONQUEST_OF_ICY_PEAKS.segment.0.name": {
+    "text": "Conquest of Icy Peaks",
+    "dataStatus": "RECONCILED"
+  }
+}

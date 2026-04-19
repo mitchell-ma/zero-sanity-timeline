@@ -8,8 +8,7 @@
             "value": 0
           },
           "unit": "SECOND"
-        },
-        "name": "Bonekrusha"
+        }
       },
       "clause": [
         {
@@ -39,7 +38,6 @@
   ],
   "properties": {
     "id": "BONEKRUSHA",
-    "name": "Bonekrusha",
     "duration": {
       "value": {
         "verb": "IS",
@@ -54,7 +52,6 @@
       },
       "interactionType": "NONE"
     },
-    "description": "Consumed on next battle skill cast",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "EMP Test Site",
-    "description": "When an enemy with active Focus suffers a Physical Status or Arts Infliction. Triggers 1 energy explosion on the enemy that deals Electric DMG and applies another stack of the same Physical Status or Arts Infliction.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -61,8 +58,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "ELECTRIC",
-        "name": "EMP Test Site"
+        "element": "ELECTRIC"
       },
       "frames": [
         {
@@ -97,7 +93,8 @@
                 {
                   "verb": "APPLY",
                   "objectDeterminer": "TRIGGER",
-                  "object": "STATUS", "objectId": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "to": "ENEMY"
                 },
                 {
@@ -162,7 +159,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "IS",
@@ -208,7 +204,8 @@
             "subjectDeterminer": "ANY",
             "subject": "OPERATOR",
             "verb": "APPLY",
-            "object": "STATUS", "objectId": "INFLICTION"
+            "object": "STATUS",
+            "objectId": "INFLICTION"
           },
           {
             "subject": "ENEMY",

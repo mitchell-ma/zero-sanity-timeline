@@ -615,8 +615,7 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "HEAT",
-    "id": "FLAMING_CINDERS_BATK_ENHANCED",
-    "name": "Flaming Cinders (Enhanced)"
+    "id": "FLAMING_CINDERS_BATK_ENHANCED"
   },
   "metadata": {
     "originId": "LAEVATAIN",

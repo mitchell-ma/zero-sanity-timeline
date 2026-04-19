@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Esoteric Legacy of Se\u0161'qa",
-    "description": "Performs a Hypothermic Perfusion on the controlled operator's weapon and returns some SP. \nThe next Final Strike performed by the currently controlled operator within a certain duration creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction. \nWhen the controlled operator is Last Rite herself, casting this battle skill does not reset her basic attack sequence.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "CRYO",

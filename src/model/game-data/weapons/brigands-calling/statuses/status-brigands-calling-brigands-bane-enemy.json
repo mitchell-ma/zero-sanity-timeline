@@ -8,8 +8,7 @@
             "value": 20
           },
           "unit": "SECOND"
-        },
-        "name": "Brigand's Bane (Enemy)"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
   ],
   "properties": {
     "id": "BRIGANDS_CALLING_BRIGANDS_BANE_ENEMY",
-    "name": "Brigand's Bane (Enemy)",
-    "description": "Arts DMG Taken increase on enemy from Arts Susceptibility application",
     "duration": {
       "value": {
         "verb": "IS",

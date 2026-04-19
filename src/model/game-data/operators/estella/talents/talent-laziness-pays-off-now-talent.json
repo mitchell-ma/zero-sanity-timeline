@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Laziness Pays Off Now (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Ignores Cryo Infliction and takes -10% (T1) / -20% (T2) Cryo DMG."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "ESTELLA",

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "HEAT_SUSCEPTIBILITY",
-    "name": "Heat Susceptibility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Heat Susceptibility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

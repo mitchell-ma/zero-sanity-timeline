@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "SATURATED_DEFENSE_RETALIATION_BURST",
-    "name": "Saturated Defense Retaliation Burst",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -20,8 +19,7 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "element": "CRYO",
-    "description": "Single retaliation hit fired by Saturated Defense Retaliation. Deals Cryo DMG, applies Cryo Infliction and stagger, recovers Ultimate Energy via SAR Professional, and at P5+ returns Skill Points."
+    "element": "CRYO"
   },
   "metadata": {
     "originId": "SNOWSHINE",
@@ -33,7 +31,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Retaliation",
         "duration": {
           "value": {
             "verb": "IS",

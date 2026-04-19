@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Crimson Shadow",
-    "description": "Charges to the target to deal Physical DMG and apply Lift.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",

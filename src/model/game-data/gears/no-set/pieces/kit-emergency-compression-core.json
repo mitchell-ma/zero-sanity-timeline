@@ -44,7 +44,6 @@
   ],
   "properties": {
     "id": "EMERGENCY_COMPRESSION_CORE",
-    "name": "Emergency Compression Core",
     "gearType": "KIT",
     "gearSet": "NONE"
   },

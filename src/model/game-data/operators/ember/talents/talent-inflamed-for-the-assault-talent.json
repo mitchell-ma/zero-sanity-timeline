@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Inflamed for the Assault (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "When casting the battle skill Forward March and the combo skill Frontline Support, Ember gains 50% Protection and is less likely to be interrupted."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "EMBER",

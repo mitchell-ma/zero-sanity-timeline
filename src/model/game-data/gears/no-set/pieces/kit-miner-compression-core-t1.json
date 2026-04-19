@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "MINER_COMPRESSION_CORE_T1",
-    "name": "Miner Compression Core T1",
     "gearType": "KIT",
     "gearSet": "NONE"
   },

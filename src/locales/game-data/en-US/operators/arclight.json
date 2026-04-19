@@ -1,0 +1,150 @@
+{
+  "op.ARCLIGHT.event.name": {
+    "text": "Arclight",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.1.event.description": {
+    "text": "Battle skill Tempestuous Arc improved: After triggering additional effects, the skill recovers another 10 SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.1.event.name": {
+    "text": "Child of the Storm (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.2.event.description": {
+    "text": "Agility +{Agi:0}, Intellect +15.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.2.event.name": {
+    "text": "Speed Battler (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.2.segment.0.name": {
+    "text": "Speed Battler (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.3.event.description": {
+    "text": "Talent Wildland Trekker improved: DMG Boost effect increased to 1.3 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.3.event.name": {
+    "text": "\"Hanna\" (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.4.event.description": {
+    "text": "Ultimate Exploding Blitz improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.4.event.name": {
+    "text": "Aldertone's Teachings (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.5.event.description": {
+    "text": "Talent Wildland Trekker improved: Trigger requirement is reduced to 2 time(s).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.potential.5.event.name": {
+    "text": "Servant of the Wildlands (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.EXPLODING_BLITZ.event.description": {
+    "text": "Performs a short forward dash while wreathed in arcs of electricity to deal Electric DMG and apply Electric Infliction to all enemies in the path. The lingering arcs explode after a short while, dealing another hit of Electric DMG. If the enemy has active Electric Infliction, consume the Electric Infliction and forcibly apply Electrification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.EXPLODING_BLITZ.event.name": {
+    "text": "Exploding Blitz",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.EXPLODING_BLITZ.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.EXPLODING_BLITZ.segment.1.name": {
+    "text": "Exploding Blitz",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.EXPLODING_BLITZ.segment.2.name": {
+    "text": "Arc Explosion",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.PEAL_OF_THUNDER.event.description": {
+    "text": "When an enemy suffers Electrification or after an enemy's Electrification is consumed. Blinks to the enemy's side to unleash a flurry of slashes that deals Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.PEAL_OF_THUNDER.event.name": {
+    "text": "Peal of Thunder",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.PEAL_OF_THUNDER.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.PEAL_OF_THUNDER.segment.1.name": {
+    "text": "Peal of Thunder",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.PEAL_OF_THUNDER.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.SEEK_AND_HUNT_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.SEEK_AND_HUNT_BATK.event.name": {
+    "text": "Seek and Hunt",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.SEEK_AND_HUNT_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.SEEK_AND_HUNT_DIVE.event.name": {
+    "text": "Seek and Hunt (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.SEEK_AND_HUNT_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.SEEK_AND_HUNT_FINISHER.event.name": {
+    "text": "Seek and Hunt (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.TEMPESTUOUS_ARC.event.description": {
+    "text": "Instantly blinks to the enemy's side to deal 2 slashes that deal some Physical DMG. If the enemy has active Electrification, consume the Electrification to unleash an additional attack that deals Electric DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.skill.TEMPESTUOUS_ARC.event.name": {
+    "text": "Tempestuous Arc",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.status.WILDLAND_TREKKER_BUFF.event.description": {
+    "text": "Team buff from Wildland Trekker: Electric DMG Dealt +0.05% per point of Arclight's Intellect (+0.08% at T2, ×1.3 at P3). Duration 15s, does not stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.status.WILDLAND_TREKKER_BUFF.event.name": {
+    "text": "Wildland Trekker (Buff)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.status.WILDLAND_TREKKER_BUFF.segment.0.name": {
+    "text": "Wildland Trekker (Buff)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.talent.HANNABIT_WISDOM_TALENT.event.description": {
+    "text": "50% chance to ignore an Arts Infliction applied on her.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.talent.HANNABIT_WISDOM_TALENT.event.name": {
+    "text": "Hannabit Wisdom (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.talent.WILDLAND_TREKKER_TALENT.event.description": {
+    "text": "Battle skill Tempestuous Arc improved: Triggering the additional effect 3 time(s) grants the team Electric DMG Dealt +0.05% for every point of Arclight's Intellect. This effect has a 15s duration and cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ARCLIGHT.talent.WILDLAND_TREKKER_TALENT.event.name": {
+    "text": "Wildland Trekker (T1)",
+    "dataStatus": "RECONCILED"
+  }
+}

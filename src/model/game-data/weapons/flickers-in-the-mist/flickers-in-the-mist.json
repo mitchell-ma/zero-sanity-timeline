@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Flickers in the Mist"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Flickers in the Mist",
     "id": "FLICKERS_IN_THE_MIST",
     "type": "ARTS_UNIT",
     "rarity": 6

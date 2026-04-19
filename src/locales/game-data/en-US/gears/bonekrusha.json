@@ -1,0 +1,74 @@
+{
+  "gear.BONEKRUSHA_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's ATK +{atk_up:0%}. When the wearer casts a combo skill, the wearer gains 1 stack of Bonekrushing Smash that grants the wearer's next battle skill DMG Dealt +{dmg_up:0%}. Bonekrushing Smash can stack {max_stack:0} time(s).",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.event.name": {
+    "text": "Bonekrusha",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_FIGURINE.event.name": {
+    "text": "Bonekrusha Figurine",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_FIGURINE_T1.event.name": {
+    "text": "Bonekrusha Figurine T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_HEAVY_ARMOR.event.name": {
+    "text": "Bonekrusha Heavy Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_HEAVY_ARMOR_T1.event.name": {
+    "text": "Bonekrusha Heavy Armor T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_HEAVY_ARMOR_T2.event.name": {
+    "text": "Bonekrusha Heavy Armor T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_MASK.event.name": {
+    "text": "Bonekrusha Mask",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_MASK_T1.event.name": {
+    "text": "Bonekrusha Mask T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_MASK_T2.event.name": {
+    "text": "Bonekrusha Mask T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_PONCHO.event.name": {
+    "text": "Bonekrusha Poncho",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_PONCHO_T1.event.name": {
+    "text": "Bonekrusha Poncho T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_WRISTBAND.event.name": {
+    "text": "Bonekrusha Wristband",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.piece.BONEKRUSHA_WRISTBAND_T1.event.name": {
+    "text": "Bonekrusha Wristband T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.segment.0.name": {
+    "text": "Bonekrusha",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.status.BONEKRUSHA.event.description": {
+    "text": "Consumed on next battle skill cast",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.status.BONEKRUSHA.event.name": {
+    "text": "Bonekrusha",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.BONEKRUSHA_STAT.status.BONEKRUSHA.segment.0.name": {
+    "text": "Bonekrusha",
+    "dataStatus": "RECONCILED"
+  }
+}

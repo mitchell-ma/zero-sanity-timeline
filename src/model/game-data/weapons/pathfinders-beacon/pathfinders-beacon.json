@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Pathfinder's Beacon"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Pathfinder's Beacon",
     "id": "PATHFINDERS_BEACON",
     "type": "POLEARM",
     "rarity": 4
@@ -145,7 +143,7 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/pathfinder%27s_beacon_icon.png",
+    "icon": "weapons/pathfinders_beacon_icon.png",
     "dataStatus": "RECONCILED"
   }
 }

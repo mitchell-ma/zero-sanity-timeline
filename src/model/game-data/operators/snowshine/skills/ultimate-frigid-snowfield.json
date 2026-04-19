@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Frigid Snowfield",
-    "description": "Leaps into mid-air with a jetpack before slamming down with her shield to deal massive Cryo DMG to enemies in the area of effect. Also generates a Snow Zone (lasting several seconds) that deals Cryo DMG over time to enemies. The Snow Zone forcibly applies Solidification to enemies caught within it for a certain duration.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "CRYO",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",

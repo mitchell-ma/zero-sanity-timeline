@@ -1,0 +1,66 @@
+{
+  "gear.AETHERTECH_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's ATK +{atk_up:0%}. After the wearer applies Vulnerability, the wearer gains Physical DMG +{phy_dmg_up:0%} for {duration}s. This effect can reach {max_stack:0} stacks. If the target already has 4 stack(s) of Vulnerability, the wearer gains an additional Physical DMG +{phy_dmg_up2:0%} for {duration2}s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.event.name": {
+    "text": "Æthertech",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.piece.THERTECH_ANALYSIS_BAND.event.name": {
+    "text": "Æthertech Analysis Band",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.piece.THERTECH_GLOVES.event.name": {
+    "text": "Æthertech Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.piece.THERTECH_LIGHT_GLOVES.event.name": {
+    "text": "Æthertech Light Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.piece.THERTECH_PLATING.event.name": {
+    "text": "Æthertech Plating",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.piece.THERTECH_STABILIZER.event.name": {
+    "text": "Æthertech Stabilizer",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.piece.THERTECH_STABILIZER_T1.event.name": {
+    "text": "Æthertech Stabilizer T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.piece.THERTECH_WATCH.event.name": {
+    "text": "Æthertech Watch",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.segment.0.name": {
+    "text": "Æthertech",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.status.AETHERTECH.event.description": {
+    "text": "Physical DMG +8% for 15s after applying Vulnerability. Max 4 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.status.AETHERTECH.event.name": {
+    "text": "Æthertech",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.status.AETHERTECH.segment.0.name": {
+    "text": "Æthertech",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.status.AETHERTECH_MAJOR.event.description": {
+    "text": "Physical DMG +16% for 10s. Activates at 4 stacks of Vulnerability.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.status.AETHERTECH_MAJOR.event.name": {
+    "text": "Æthertech (Major)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AETHERTECH_STAT.status.AETHERTECH_MAJOR.segment.0.name": {
+    "text": "Æthertech (Major)",
+    "dataStatus": "RECONCILED"
+  }
+}

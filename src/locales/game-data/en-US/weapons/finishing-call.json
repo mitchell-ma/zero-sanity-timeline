@@ -1,0 +1,22 @@
+{
+  "weapon.FINISHING_CALL.event.name": {
+    "text": "Finishing Call",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINISHING_CALL.segment.0.name": {
+    "text": "Finishing Call",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINISHING_CALL.skill.MEDICANT_GLORY_OF_KNIGHTHOOD.event.description": {
+    "text": "Secondary Attribute +{second_attr_up:0.0%}. Combo skill HP treatment effect +{heal_up:0.0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINISHING_CALL.skill.MEDICANT_GLORY_OF_KNIGHTHOOD.event.name": {
+    "text": "Medicant: Glory of Knighthood",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FINISHING_CALL.skill.MEDICANT_GLORY_OF_KNIGHTHOOD.segment.0.name": {
+    "text": "Medicant: Glory of Knighthood",
+    "dataStatus": "RECONCILED"
+  }
+}

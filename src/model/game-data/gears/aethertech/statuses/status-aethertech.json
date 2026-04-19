@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "\u00c6thertech"
+        }
       },
       "clause": [
         {
@@ -39,7 +38,6 @@
   ],
   "properties": {
     "id": "AETHERTECH",
-    "name": "\u00c6thertech",
     "duration": {
       "value": {
         "verb": "IS",
@@ -54,7 +52,6 @@
       },
       "interactionType": "NONE"
     },
-    "description": "Physical DMG +8% for 15s after applying Vulnerability. Max 4 stacks.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

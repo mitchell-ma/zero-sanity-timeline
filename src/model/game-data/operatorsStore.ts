@@ -184,22 +184,16 @@ for (const key of operatorIconContext.keys()) {
   }
 }
 
-function resolveOperatorIcon(name: string): string | undefined {
-  // Try exact match with splash suffix
-  const key = name.replace(/ /g, '_').toLowerCase();
-  const splashKey = `${key}_splash`;
-  if (OPERATOR_ICONS[splashKey]) return OPERATOR_ICONS[splashKey];
-
-  // Try banner suffix
-  const bannerKey = `${key}_banner`;
-  if (OPERATOR_ICONS[bannerKey]) return OPERATOR_ICONS[bannerKey];
-
-  // Try case-insensitive match
-  const lcKey = key;
-  for (const [k, v] of Object.entries(OPERATOR_ICONS)) {
-    if (k.toLowerCase().includes(lcKey)) return v;
-  }
-  return undefined;
+/**
+ * Resolve the operator icon/banner asset by ID (e.g. "DA_PAN" → da_pan_splash
+ * → da_pan_banner → da_pan_icon). Asset filenames are hard-wired to
+ * `id.toLowerCase()` so the resolver is locale-independent.
+ */
+function resolveOperatorIcon(operatorId: string): string | undefined {
+  const key = operatorId.toLowerCase();
+  return OPERATOR_ICONS[`${key}_splash`]
+      ?? OPERATOR_ICONS[`${key}_banner`]
+      ?? OPERATOR_ICONS[`${key}_icon`];
 }
 
 // ── Potential file → consumer format conversion ─────────────────────────────
@@ -380,7 +374,7 @@ for (const key of operatorContext.keys()) {
   const operator = new OperatorBase(resolvedJson);
   if (operator.id) {
     const operatorId = operator.id;
-    operator.icon = resolveOperatorIcon(operator.name);
+    operator.icon = resolveOperatorIcon(operatorId);
     operatorCache.set(operatorId, operator);
     operatorNameIndex.set(operator.name, operatorId);
     dirToIdIndex.set(dirName, operatorId);
@@ -450,7 +444,7 @@ export function getOperatorBasesByElement(elementType: string): readonly Operato
 /** Register a custom operator (overlay — takes priority over built-in). */
 export function registerCustomOperatorBase(operatorId: string, json: Record<string, unknown>, icon?: string): OperatorBase {
   const operator = OperatorBase.deserialize(json, 'custom');
-  operator.icon = icon ?? resolveOperatorIcon(operator.name);
+  operator.icon = icon ?? resolveOperatorIcon(operatorId);
   customOperatorCache.set(operatorId, operator);
   operatorNameIndex.set(operator.name, operatorId);
   return operator;

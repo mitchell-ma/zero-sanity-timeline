@@ -35,8 +35,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Wolven Blood"
+        }
       },
       "clause": [
         {
@@ -107,8 +106,6 @@
   ],
   "properties": {
     "id": "LUPINE_SCARLET_WOLVEN_BLOOD",
-    "name": "Wolven Blood",
-    "description": "Physical and Heat DMG Dealt per stack. At 16 stacks, grants Wolven Blood (Max Stacks) bonus.",
     "duration": {
       "value": {
         "verb": "IS",

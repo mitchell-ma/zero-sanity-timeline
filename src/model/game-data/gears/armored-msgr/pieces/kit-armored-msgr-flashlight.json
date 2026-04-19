@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "ARMORED_MSGR_FLASHLIGHT",
-    "name": "Armored MSGR Flashlight",
     "gearType": "KIT",
     "gearSet": "ARMORED_MSGR_STAT"
   },

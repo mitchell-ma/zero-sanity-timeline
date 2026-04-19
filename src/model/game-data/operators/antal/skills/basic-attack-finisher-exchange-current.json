@@ -3,8 +3,6 @@
     "enhancementTypes": [
       "FINISHER"
     ],
-    "name": "Exchange Current (Finisher)",
-    "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Electric DMG and recovers some SP.",
     "eventType": "SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",

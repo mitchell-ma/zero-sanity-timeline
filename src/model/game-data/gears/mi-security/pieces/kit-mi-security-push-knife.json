@@ -115,7 +115,6 @@
   ],
   "properties": {
     "id": "MI_SECURITY_PUSH_KNIFE",
-    "name": "MI Security Push Knife",
     "gearType": "KIT",
     "gearSet": "MI_SECURITY_STAT"
   },

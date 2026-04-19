@@ -1,0 +1,34 @@
+{
+  "weapon.STANZA_OF_MEMORIALS.event.name": {
+    "text": "Stanza of Memorials",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.STANZA_OF_MEMORIALS.segment.0.name": {
+    "text": "Stanza of Memorials",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.STANZA_OF_MEMORIALS.skill.TWILIGHT_LUSTROUS_PYRE.event.description": {
+    "text": "Max HP +{hp_up:0.0%}. When the wielder casts an ultimate, operators whose elements differ from the wielder gain ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.STANZA_OF_MEMORIALS.skill.TWILIGHT_LUSTROUS_PYRE.event.name": {
+    "text": "Twilight: Lustrous Pyre",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.STANZA_OF_MEMORIALS.skill.TWILIGHT_LUSTROUS_PYRE.segment.0.name": {
+    "text": "Twilight: Lustrous Pyre",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.STANZA_OF_MEMORIALS.status.STANZA_OF_MEMORIALS_LUSTROUS_PYRE.event.description": {
+    "text": "Applies to different-element operators",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.STANZA_OF_MEMORIALS.status.STANZA_OF_MEMORIALS_LUSTROUS_PYRE.event.name": {
+    "text": "Lustrous Pyre",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.STANZA_OF_MEMORIALS.status.STANZA_OF_MEMORIALS_LUSTROUS_PYRE.segment.0.name": {
+    "text": "Lustrous Pyre",
+    "dataStatus": "RECONCILED"
+  }
+}

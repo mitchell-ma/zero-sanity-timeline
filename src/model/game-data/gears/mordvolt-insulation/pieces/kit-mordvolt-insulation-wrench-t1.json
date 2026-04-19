@@ -92,7 +92,6 @@
   ],
   "properties": {
     "id": "MORDVOLT_INSULATION_WRENCH_T1",
-    "name": "Mordvolt Insulation Wrench T1",
     "gearType": "KIT",
     "gearSet": "MORDVOLT_INSULATION_STAT"
   },

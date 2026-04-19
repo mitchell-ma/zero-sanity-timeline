@@ -30,8 +30,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Pursuit: Aid from the Past"
+        }
       },
       "clause": [
         {
@@ -71,8 +70,6 @@
     }
   ],
   "properties": {
-    "name": "Pursuit: Aid from the Past",
-    "description": "Battle Skill DMG +{dmg_up:0.0%}. When the wielder's combo skill applies Arts Burst or Combusted, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
     "id": "PURSUIT_AID_FROM_THE_PAST",
     "eventCategoryType": "WEAPON_STAT"
   },

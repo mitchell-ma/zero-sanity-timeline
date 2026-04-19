@@ -320,7 +320,7 @@ function EventPane({
               </div>
               {sourceName && (
                 <div style={{ fontSize: 11, marginTop: 2 }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Source: </span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('eventPane.label.source')}: </span>
                   <span style={{ color: sourceColor }}>{sourceName}</span>
                   {sourceSkillLabel && (
                     <span style={{ color: 'var(--text-muted)' }}> · {sourceSkillLabel}</span>
@@ -343,11 +343,11 @@ function EventPane({
                 : 'var(--text-muted)',
             }}>
               {event.isForced && (
-                <span style={{ color: 'var(--red)' }}>FORCED{event.eventStatus ? ' · ' : ''}</span>
+                <span style={{ color: 'var(--red)' }}>{t('eventPane.badge.forced')}{event.eventStatus ? ' · ' : ''}</span>
               )}
               {event.eventStatus && (
                 <>
-                  <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Event status: </span>{event.eventStatus.toUpperCase()}
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>{t('eventPane.label.eventStatus')}: </span>{event.eventStatus.toUpperCase()}
                   {(() => {
                     const dec = getLastController();
                     const causalityGraph = dec?.getCausality();
@@ -365,7 +365,7 @@ function EventPane({
                       : null;
                     return (
                       <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
-                        {' by '}
+                        {t('eventPane.label.by')}
                         <span style={{ color: statusOpColor ?? 'inherit', fontWeight: 600 }}>{statusOpName}</span>
                         {statusSkillLabel && <span> ({statusSkillLabel})</span>}
                       </span>
@@ -400,9 +400,9 @@ function EventPane({
           if (event.columnId === OPERATOR_COLUMNS.INPUT) {
             skillRows.push(
               <div key="type" className="ops-field">
-                <span className="ops-field-label">Type</span>
+                <span className="ops-field-label">{t('eventPane.label.type')}</span>
                 <span className="ops-field-value">
-                  {event.isPerfectDodge ? 'Dodge \u2014 Time Stop, +7.5 SP' : 'Dash'}
+                  {event.isPerfectDodge ? t('eventPane.input.dodge') : t('eventPane.input.dash')}
                 </span>
               </div>
             );
@@ -412,7 +412,7 @@ function EventPane({
             const { summary: sp, spNotes } = spData;
             skillRows.push(
               <div key="spCost" className="ops-field">
-                <span className="ops-field-label">SP Cost</span>
+                <span className="ops-field-label">{t('eventPane.label.spCost')}</span>
                 <span className="ops-field-value">
                   {editState ? (
                     <EditableValue value={event.skillPointCost ?? 0} path="skillPointCost" editState={editState} />
@@ -424,13 +424,13 @@ function EventPane({
             );
             // Readonly SP derived info (return, natural/returned, ult charge)
             const derivedLines: string[] = [];
-            if (sp.totalSpReturn > 0) derivedLines.push(`Return: ${formatFlat(sp.totalSpReturn)}`);
-            if (sp.returnedConsumed > 0) derivedLines.push(`Natural SP: ${formatFlat(sp.naturalConsumed)} / Returned SP: ${formatFlat(sp.returnedConsumed)}`);
-            derivedLines.push(`Team Ult Charge: +${formatFlat(sp.derivedUltimateCharge)}`);
+            if (sp.totalSpReturn > 0) derivedLines.push(`${t('eventPane.label.return')}: ${formatFlat(sp.totalSpReturn)}`);
+            if (sp.returnedConsumed > 0) derivedLines.push(`${t('eventPane.label.naturalSp')}: ${formatFlat(sp.naturalConsumed)} / ${t('eventPane.label.returnedSp')}: ${formatFlat(sp.returnedConsumed)}`);
+            derivedLines.push(`${t('eventPane.label.teamUltCharge')}: +${formatFlat(sp.derivedUltimateCharge)}`);
             if (derivedLines.length > 0) {
               skillRows.push(
                 <div key="spDerived" className="ops-field">
-                  <span className="ops-field-label">SP Info</span>
+                  <span className="ops-field-label">{t('eventPane.label.spInfo')}</span>
                   <span className="ops-field-value" style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
                     {derivedLines.map((l, i) => <div key={i}>{l}</div>)}
                     {spNotes.map((note, i) => (
@@ -445,7 +445,7 @@ function EventPane({
           const skillExtraFields = skillRows.length > 0 ? <>{skillRows}</> : undefined;
           return (
             <div className="edit-panel-section">
-              <span className="edit-section-label">Skill Definition</span>
+              <span className="edit-section-label">{t('eventPane.section.skillDefinition')}</span>
               <DataCardBody data={skillCardData} critState={critState} editState={editState} extraFields={skillExtraFields} varyByLoadout={varyByLoadout} />
             </div>
           );
@@ -481,7 +481,7 @@ function EventPane({
             const label = ELEMENT_LABELS[reactionElement] ?? reactionElement;
             statusRows.push(
               <div key="element" className="ops-field">
-                <span className="ops-field-label">Element</span>
+                <span className="ops-field-label">{t('eventPane.label.element')}</span>
                 <span className="ops-field-value" style={{ color }}>{label}</span>
               </div>
             );
@@ -491,7 +491,7 @@ function EventPane({
             const maxStacks = isReaction ? 4 : (statusDef?.maxStacks ?? 4);
             statusRows.push(
               <div key="stacks" className="ops-field">
-                <span className="ops-field-label">{isReaction ? 'Status Level' : 'Active Stacks'}</span>
+                <span className="ops-field-label">{isReaction ? t('eventPane.label.statusLevel') : t('eventPane.label.activeStacks')}</span>
                 <span className="ops-field-value">
                   {editState ? (
                     <EditableValue value={event.stacks} path="stacks" editState={editState} />
@@ -509,7 +509,7 @@ function EventPane({
             const isAutoReaction = !event.isForced;
             statusRows.push(
               <div key="isForced" className="ops-field">
-                <span className="ops-field-label">Forced</span>
+                <span className="ops-field-label">{t('dsl.objectQualifier.FORCED')}</span>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: readOnly ? 'default' : 'pointer' }}>
                   <input
                     type="checkbox"
@@ -519,7 +519,7 @@ function EventPane({
                     style={{ accentColor: elColor }}
                   />
                   <span style={{ fontSize: 11, color: event.isForced ? '#ff5522' : 'var(--text-muted)' }}>
-                    {event.isForced ? 'Yes \u2014 no infliction stacks required' : 'No'}
+                    {event.isForced ? t('eventPane.forced.yes') : t('eventPane.forced.no')}
                   </span>
                 </label>
               </div>
@@ -532,7 +532,7 @@ function EventPane({
               const label = ELEMENT_LABELS[element as ElementType] ?? element;
               statusRows.push(
                 <div key={`susc-${element}`} className="ops-field">
-                  <span className="ops-field-label" style={{ color }}>Susc. {label}</span>
+                  <span className="ops-field-label" style={{ color }}>{t('eventPane.label.susc')} {label}</span>
                   <span className="ops-field-value">
                     {editState ? (
                       <EditableValue
@@ -586,14 +586,14 @@ function EventPane({
             // nothing is lost.
             return (
               <div className="edit-panel-section">
-                <span className="edit-section-label">Status Properties</span>
+                <span className="edit-section-label">{t('eventPane.section.statusProperties')}</span>
                 <div className="ops-skill-form">{statusExtraFields}</div>
               </div>
             );
           }
           return (
             <div className="edit-panel-section">
-              <span className="edit-section-label">Status Definition</span>
+              <span className="edit-section-label">{t('eventPane.section.statusDefinition')}</span>
               <DataCardBody data={statusCardData!} editState={editState} extraFields={statusExtraFields} varyByLoadout={varyByLoadout} />
             </div>
           );
@@ -606,11 +606,11 @@ function EventPane({
           const winDuration = winEnd - winStart;
           return (
             <div className="edit-panel-section">
-              <span className="edit-section-label">Timing</span>
+              <span className="edit-section-label">{t('eventPane.section.timing')}</span>
               <div className="edit-info-text">
-                <div>Start: {frameToTimeLabelPrecise(winStart)}</div>
-                <div>End: {frameToTimeLabelPrecise(winEnd)}</div>
-                <div>Duration: {framesToSeconds(winDuration)}s ({winDuration}f)</div>
+                <div>{t('eventPane.label.start')}: {frameToTimeLabelPrecise(winStart)}</div>
+                <div>{t('eventPane.label.end')}: {frameToTimeLabelPrecise(winEnd)}</div>
+                <div>{t('dsl.property.duration')}: {framesToSeconds(winDuration)}s ({winDuration}f)</div>
               </div>
             </div>
           );
@@ -620,13 +620,13 @@ function EventPane({
           const chain = resolveComboChain(event, allProcessedEvents ?? [], slots);
           return (
             <div className="edit-panel-trigger">
-              <div>Trigger: {comboTriggerLabels.join(' / ')}</div>
+              <div>{t('eventPane.label.trigger')}: {comboTriggerLabels.join(' / ')}</div>
               {comboRequiresLabels.length > 0 && (
-                <div>Requires: {comboRequiresLabels.join(', ')}</div>
+                <div>{t('eventPane.label.requires')}: {comboRequiresLabels.join(', ')}</div>
               )}
               {chain && chain.length > 0 && (
                 <div style={{ marginTop: 6, paddingLeft: 2 }}>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 10, marginBottom: 3 }}>Source chain:</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 10, marginBottom: 3 }}>{t('eventPane.label.sourceChain')}:</div>
                   {chain.map((link, i) => (
                     <div
                       key={i}
@@ -693,15 +693,15 @@ function EventPane({
 
         {/* ── Status Properties (reaction events on enemy timeline) ────────── */}
 <div className="edit-panel-section">
-          <span className="edit-section-label">Timing</span>
+          <span className="edit-section-label">{t('eventPane.section.timing')}</span>
           <div style={{ padding: '4px 6px' }}>
             {(readOnly || isDerived) ? (
               <div className="edit-info-text">
-                <div>Start: {dualTimePrecise(event.startFrame)}</div>
+                <div>{t('eventPane.label.start')}: {dualTimePrecise(event.startFrame)}</div>
               </div>
             ) : (
               <div className="edit-field">
-                <span className="edit-field-label">Start offset</span>
+                <span className="edit-field-label">{t('eventPane.label.startOffset')}</span>
                 <div className="edit-field-row">
                   <input
                     className="edit-input"
@@ -738,10 +738,10 @@ function EventPane({
               if (rawDuration === 0 && !hasAdjustment) return null;
               return (
                 <div className="edit-info-text" style={{ marginTop: 6 }}>
-                  <div>Duration: {framesToSeconds(rawDuration)}s ({rawDuration}f)</div>
+                  <div>{t('dsl.property.duration')}: {framesToSeconds(rawDuration)}s ({rawDuration}f)</div>
                   {hasAdjustment && (
                     <div style={{ color: 'var(--gold)' }}>
-                      Time-stop adjusted: {framesToSeconds(adjDuration)}s ({adjDuration}f)
+                      {t('eventPane.label.timeStopAdjusted')}: {framesToSeconds(adjDuration)}s ({adjDuration}f)
                     </div>
                   )}
                 </div>
@@ -757,7 +757,7 @@ function EventPane({
           if (mods.length === 0) return null;
           return (
             <div className="edit-panel-section">
-              <span className="edit-section-label">Active Modifiers</span>
+              <span className="edit-section-label">{t('eventPane.section.activeModifiers')}</span>
               <div className="edit-info-text">
                 {mods.map((mod, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
@@ -779,11 +779,11 @@ function EventPane({
         <div className="edit-panel-footer">
           {onSaveAsCustomSkill && SKILL_COLUMN_SET.has(event.columnId) && (
             <button className="btn-save-custom" onClick={() => onSaveAsCustomSkill(event)}>
-              SAVE AS CUSTOM
+              {t('eventPane.btn.saveAsCustom')}
             </button>
           )}
           <button className="btn-delete-event" onClick={() => onRemove(event.uid)}>
-            REMOVE EVENT
+            {t('eventPane.btn.removeEvent')}
           </button>
         </div>
       )}

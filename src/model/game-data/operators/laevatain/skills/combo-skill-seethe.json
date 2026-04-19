@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Seethe",
-    "description": "When an enemy suffers Combustion or Corrosion. Fire erupts beneath the feet of any enemy with Combustion or Corrosion, dealing Heat DMG to them. If the skill hits the enemy, Laevatain gains 1 stack of Melting Flame and further gains Ultimate Energy per enemy hit.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "HEAT",
@@ -30,7 +28,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -56,8 +53,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "HEAT",
-        "name": "Seethe"
+        "element": "HEAT"
       },
       "frames": [
         {
@@ -174,7 +170,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "IS",

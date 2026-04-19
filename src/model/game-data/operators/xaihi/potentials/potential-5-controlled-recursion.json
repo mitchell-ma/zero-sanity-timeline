@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "XAIHI_POTENTIAL_5",
-    "name": "Controlled Recursion (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Stack Overflow improved: Amp effect is increased to 1.1 times the original."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "XAIHI",

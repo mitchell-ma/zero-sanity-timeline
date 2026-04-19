@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "TANGTANG_POTENTIAL_3",
-    "name": "Chiefly Vibe (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill IMA WAVERIDAAH! improved: DMG Multiplier is increased to 1.1 times the original. When forming multiple Waterspouts, the resulting Arts Susceptibility effect is increased by +5%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "TANGTANG",

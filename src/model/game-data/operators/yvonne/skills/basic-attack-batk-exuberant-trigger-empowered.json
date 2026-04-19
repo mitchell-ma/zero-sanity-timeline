@@ -6232,8 +6232,7 @@
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "EXUBERANT_TRIGGER_BATK_EMPOWERED",
-    "name": "Exuberant Trigger (Enhanced)"
+    "id": "EXUBERANT_TRIGGER_BATK_EMPOWERED"
   },
   "metadata": {
     "originId": "YVONNE",

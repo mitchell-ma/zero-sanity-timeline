@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "MINER_DRIVE_WHEEL",
-    "name": "Miner Drive Wheel",
     "gearType": "KIT",
     "gearSet": "NONE"
   },

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ARCLIGHT_POTENTIAL_5",
-    "name": "Servant of the Wildlands (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Wildland Trekker improved: Trigger requirement is reduced to 2 time(s)."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ARCLIGHT",

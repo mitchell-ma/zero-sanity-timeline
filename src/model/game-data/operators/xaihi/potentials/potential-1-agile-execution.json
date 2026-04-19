@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "XAIHI_POTENTIAL_1",
-    "name": "Agile Execution (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Arts Amp granted by the Auxiliary Crystal is increased by another 5%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "XAIHI",

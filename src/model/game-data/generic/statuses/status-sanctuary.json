@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "SANCTUARY",
-    "name": "Sanctuary",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "stacks": {
@@ -12,8 +11,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
-    "description": "Damage reduction buff on operator."
+    "eventCategoryType": "STATUS"
   },
   "metadata": {
     "originId": "generic",

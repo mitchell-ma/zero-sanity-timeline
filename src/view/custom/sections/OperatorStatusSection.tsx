@@ -5,6 +5,7 @@ import type { CustomOperatorStatus } from '../../../model/custom/customOperatorS
 import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
 import StatusEventFields from './StatusEventFields';
+import { t } from '../../../locales/locale';
 
 interface Props {
   data: CustomOperatorStatus;
@@ -17,7 +18,7 @@ export default function OperatorStatusSection({ data, onChange, originalId }: Pr
 
   return (
     <>
-      <CollapsibleSection title="Identity">
+      <CollapsibleSection title={t('customizer.section.identity')}>
         <div className="wizard-section">
           <IdField value={data.id} onChange={(id) => update({ id })} originalId={originalId} />
           <label className="wz-field">
@@ -26,12 +27,12 @@ export default function OperatorStatusSection({ data, onChange, originalId }: Pr
           </label>
           <label className="wz-field">
             <span>Operator ID (optional)</span>
-            <input type="text" value={data.operatorId ?? ''} onChange={(e) => update({ operatorId: e.target.value || undefined })} placeholder="Link to an operator" />
+            <input type="text" value={data.operatorId ?? ''} onChange={(e) => update({ operatorId: e.target.value || undefined })} placeholder={t('customizer.placeholder.linkOperator')} />
           </label>
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Status Event">
+      <CollapsibleSection title={t('customizer.section.statusEvent')}>
         <div className="wizard-section">
           <StatusEventFields
             event={data.statusEvent}

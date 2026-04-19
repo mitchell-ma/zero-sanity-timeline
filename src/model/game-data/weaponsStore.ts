@@ -181,12 +181,9 @@ for (const key of weaponIconContext.keys()) {
   }
 }
 
-function resolveWeaponIcon(name: string): string | undefined {
-  const key = name.replace(/ /g, '_').toLowerCase();
-  if (WEAPON_ICONS[key]) return WEAPON_ICONS[key];
-  const encoded = key.replace(/'/g, '%27');
-  if (WEAPON_ICONS[encoded]) return WEAPON_ICONS[encoded];
-  return undefined;
+/** Hard-wired ID → asset: `<id.toLowerCase()>_icon.(png|webp)`. */
+function resolveWeaponIcon(weaponId: string): string | undefined {
+  return WEAPON_ICONS[weaponId.toLowerCase()];
 }
 
 // ── Loader ──────────────────────────────────────────────────────────────────
@@ -209,7 +206,7 @@ for (const key of weaponContext.keys()) {
   const json = weaponContext(key) as Record<string, unknown>;
   const weapon = Weapon.deserialize(json, key);
   if (weapon.id) {
-    weapon.icon = resolveWeaponIcon(weapon.name);
+    weapon.icon = resolveWeaponIcon(weapon.id);
     weaponCache.set(weapon.id, weapon);
     weaponNameIndex.set(weapon.name, weapon.id);
   }
@@ -256,7 +253,7 @@ export function getWeaponsByType(weaponType: string): readonly Weapon[] {
 /** Register a custom weapon (overlay — takes priority over built-in). */
 export function registerCustomWeapon(json: Record<string, unknown>, icon?: string): Weapon {
   const weapon = Weapon.deserialize(json, 'custom');
-  weapon.icon = icon ?? resolveWeaponIcon(weapon.name);
+  weapon.icon = icon ?? resolveWeaponIcon(weapon.id);
   customWeaponCache.set(weapon.id, weapon);
   weaponNameIndex.set(weapon.name, weapon.id);
   return weapon;

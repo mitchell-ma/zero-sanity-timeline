@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Winter's Devourer",
-    "description": "When an enemy has {count:0} or more Cryo Infliction stacks. Encases the target enemy in icicles and shatters them to consume all Cryo Infliction stacks of the said enemy. The number of Cryo Infliction stacks consumed determines the amount of Cryo DMG dealt to the said enemy and Ultimate Energy gained by Last Rite.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "CRYO",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -43,8 +40,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "CRYO",
-        "name": "Winter's Devourer"
+        "element": "CRYO"
       },
       "frames": [
         {
@@ -275,7 +271,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

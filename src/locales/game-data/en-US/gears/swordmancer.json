@@ -1,0 +1,54 @@
+{
+  "gear.SWORDMANCER_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Stagger Efficiency Bonus +{poise_up:0%}. After the wearer applies a Physical Status, the wearer also performs 1 hit that deals {atk_scale:0%} ATK of Physical DMG and [{poise} Stagger]. Effect trigger cooldown: {duration}s.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.event.name": {
+    "text": "Swordmancer",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.piece.SWORDMANCER_FLINT.event.name": {
+    "text": "Swordmancer Flint",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.piece.SWORDMANCER_HEAVY_ARMOR.event.name": {
+    "text": "Swordmancer Heavy Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.piece.SWORDMANCER_LIGHT_ARMOR.event.name": {
+    "text": "Swordmancer Light Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.piece.SWORDMANCER_MICRO_FILTER.event.name": {
+    "text": "Swordmancer Micro Filter",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.piece.SWORDMANCER_NAV_BEACON.event.name": {
+    "text": "Swordmancer NAV Beacon",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.piece.SWORDMANCER_TAC_GAUNTLETS.event.name": {
+    "text": "Swordmancer TAC Gauntlets",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.piece.SWORDMANCER_TAC_GLOVES.event.name": {
+    "text": "Swordmancer TAC Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.segment.0.name": {
+    "text": "Swordmancer",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.status.SWORDMANCER.event.description": {
+    "text": "Deals 250% ATK Physical DMG + 10 Stagger. 15s cooldown.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.status.SWORDMANCER.event.name": {
+    "text": "Swordmancer",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.SWORDMANCER_STAT.status.SWORDMANCER.segment.0.name": {
+    "text": "Swordmancer",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "LIFENG_POTENTIAL_3",
-    "name": "Spiritual Cultivation (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Illumination improved: Every point in the attributes of Intellect and Will grants Lifeng an additional ATK +0.05%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "LIFENG",

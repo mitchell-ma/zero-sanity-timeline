@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Imposing Champion"
+        }
       },
       "clause": [
         {
@@ -48,8 +47,6 @@
   ],
   "properties": {
     "id": "DETONATION_UNIT_IMPOSING_CHAMPION",
-    "name": "Imposing Champion",
-    "description": "Secondary attribute bonus",
     "duration": {
       "value": {
         "verb": "IS",

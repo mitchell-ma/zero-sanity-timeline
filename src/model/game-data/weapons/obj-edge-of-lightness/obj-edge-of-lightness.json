@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "OBJ Edge of Lightness"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "OBJ Edge of Lightness",
     "id": "OBJ_EDGE_OF_LIGHTNESS",
     "type": "SWORD",
     "rarity": 5

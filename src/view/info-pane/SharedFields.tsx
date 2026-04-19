@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { framesToSeconds, secondsToFrames } from '../../utils/timeline';
 import { evaluateMathExpr } from '../../utils/mathExpr';
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
+import { t } from '../../locales/locale';
 import NumberInputWithFastForwardButtons from '../components/inputs/NumberInputWithFastForwardButtons';
 
 export const LEVEL_BREAKPOINTS = [1, 20, 40, 60, 80, 90];
@@ -90,7 +91,7 @@ export function SegmentDurationField({ eventId, segmentIndex, durationFrames, on
   };
 
   return (
-    <DurationField label="Duration" value={sec} onChange={setSec} onCommit={commit} />
+    <DurationField label={t('dsl.property.duration')} value={sec} onChange={setSec} onCommit={commit} />
   );
 }
 

@@ -1,0 +1,174 @@
+{
+  "op.SNOWSHINE.event.name": {
+    "text": "Snowshine",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.1.event.description": {
+    "text": "Battle skill Saturated Defense improved: During the blocking effect, Arts Inflictions cannot be applied to allied operators with Protection.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.1.event.name": {
+    "text": "Cold Shelter (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.2.event.description": {
+    "text": "Ultimate Frigid Snowfield improved: Effect radius +20%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.2.event.name": {
+    "text": "Storm Region (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.3.event.description": {
+    "text": "Ultimate Frigid Snowfield improved: Duration of the Solidification applied by the skill is increased by 2s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.3.event.name": {
+    "text": "Polar Survival Guide (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.4.event.description": {
+    "text": "DEF +20, Will +20.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.4.event.name": {
+    "text": "Tundra Aegis (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.4.segment.0.name": {
+    "text": "Tundra Aegis (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.5.event.description": {
+    "text": "Battle skill Saturated Defense improved: Successfully retaliating an enemy attack returns 10 SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.potential.5.event.name": {
+    "text": "Cold Disaster Specialist (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.FRIGID_SNOWFIELD.event.description": {
+    "text": "Leaps into mid-air with a jetpack before slamming down with her shield to deal massive Cryo DMG to enemies in the area of effect. Also generates a Snow Zone (lasting several seconds) that deals Cryo DMG over time to enemies. The Snow Zone forcibly applies Solidification to enemies caught within it for a certain duration.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.FRIGID_SNOWFIELD.event.name": {
+    "text": "Frigid Snowfield",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.FRIGID_SNOWFIELD.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.HYPOTHERMIC_ASSAULT_BATK.event.description": {
+    "text": "An attack with up to 3 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.HYPOTHERMIC_ASSAULT_BATK.event.name": {
+    "text": "Hypothermic Assault",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.HYPOTHERMIC_ASSAULT_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.HYPOTHERMIC_ASSAULT_DIVE.event.name": {
+    "text": "Hypothermic Assault (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.HYPOTHERMIC_ASSAULT_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.HYPOTHERMIC_ASSAULT_FINISHER.event.name": {
+    "text": "Hypothermic Assault (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.POLAR_RESCUE.event.description": {
+    "text": "After controlled operator gets attacked and drops below {trigger_hp_ratio:0%} HP. Snowshine throws a Snowfield SAR Assistant at the controlled operator. Upon target contact, the Assistant gives massive instant HP Treatment to nearby operators as well as continuous HP Treatment to operators in the area of effect. The attribute of Will increases the amount of HP treatment.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.POLAR_RESCUE.event.name": {
+    "text": "Polar Rescue",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.POLAR_RESCUE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.POLAR_RESCUE.segment.1.name": {
+    "text": "Polar Rescue",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.POLAR_RESCUE.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.SATURATED_DEFENSE.event.description": {
+    "text": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Cryo DMG and applies Cryo Infliction on the attacker.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.skill.SATURATED_DEFENSE.event.name": {
+    "text": "Saturated Defense",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SATURATED_DEFENSE_RETALIATION.event.description": {
+    "text": "While the Saturated Defense shield is up, retaliates against attackers with Cryo DMG, Cryo Infliction, and stagger. Each retaliation also recovers Ultimate Energy via SAR Professional (T2).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SATURATED_DEFENSE_RETALIATION.event.name": {
+    "text": "Saturated Defense Retaliation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SATURATED_DEFENSE_RETALIATION_BURST.event.description": {
+    "text": "Single retaliation hit fired by Saturated Defense Retaliation. Deals Cryo DMG, applies Cryo Infliction and stagger, recovers Ultimate Energy via SAR Professional, and at P5+ returns Skill Points.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SATURATED_DEFENSE_RETALIATION_BURST.event.name": {
+    "text": "Saturated Defense Retaliation Burst",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SATURATED_DEFENSE_RETALIATION_BURST.segment.0.name": {
+    "text": "Retaliation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SNOWFIELD_SAR_ASSISTANCE.event.description": {
+    "text": "Snowfield SAR Assistant: instant HP recovery followed by continuous HP recovery ticks over 3 seconds. Heal formula scales with source operator's Will; Polar Survival (T1) multiplies the total by 1 + 15% / 25%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SNOWFIELD_SAR_ASSISTANCE.event.name": {
+    "text": "Snowfield SAR Assistance",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SNOWFIELD_SAR_ASSISTANCE.segment.0.name": {
+    "text": "SAR Assistance",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SNOW_ZONE.event.description": {
+    "text": "A freezing zone created by Frigid Snowfield. Deals Cryo DMG over time (10 ticks at 0.5s intervals over 5s) and forcibly applies Solidification to enemies caught within. At P3+ the Solidification lasts 2s longer than the zone itself.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SNOW_ZONE.event.name": {
+    "text": "Snow Zone",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.status.SNOW_ZONE.segment.0.name": {
+    "text": "Snow Zone",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.talent.POLAR_SURVIVAL_TALENT.event.description": {
+    "text": "Snowfield SAR Assistance treatment values are increased by 15% / 25% at talent level 1 / 2.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.talent.POLAR_SURVIVAL_TALENT.event.name": {
+    "text": "Polar Survival (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.talent.SAR_PROFESSIONAL_TALENT.event.description": {
+    "text": "After each successful retaliation while Saturated Defense's shield is active, Snowshine gains 6 (T1) / 10 (T2) Ultimate Energy. Effect is baked into the Saturated Defense Retaliation status.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.SNOWSHINE.talent.SAR_PROFESSIONAL_TALENT.event.name": {
+    "text": "SAR Professional (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

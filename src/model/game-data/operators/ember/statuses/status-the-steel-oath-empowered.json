@@ -8,8 +8,7 @@
             "value": 10
           },
           "unit": "SECOND"
-        },
-        "name": "The Steel Oath (Empowered)"
+        }
       },
       "clause": [
         {
@@ -87,7 +86,6 @@
   ],
   "properties": {
     "id": "THE_STEEL_OATH_EMPOWERED",
-    "name": "The Steel Oath (Empowered)",
     "to": "OPERATOR",
     "toDeterminer": "ALL",
     "duration": {
@@ -105,8 +103,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by 1.2; while this shield is active, the wielder gains ATK +10%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "THE_STEEL_OATH",

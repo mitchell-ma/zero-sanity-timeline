@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Assault: Armament Prep"
+        }
       },
       "clause": [
         {
@@ -49,9 +48,7 @@
     }
   ],
   "properties": {
-    "id": "ASSAULT_ARMAMENT_PREP",
-    "name": "Assault: Armament Prep",
-    "description": "ATK +"
+    "id": "ASSAULT_ARMAMENT_PREP"
   },
   "metadata": {
     "originId": "game",

@@ -18,6 +18,7 @@
 import type { Clause, Predicate, Interaction, Effect } from '../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import EffectBuilder, { defaultEffect } from './EffectBuilder';
+import { t } from '../../locales/locale';
 
 interface ClauseBuilderProps {
   value: Clause;
@@ -47,11 +48,11 @@ export default function ClauseBuilder({ value, onChange, conditionsOnly, label }
     <div className="clause-builder">
       <div className="wz-subsection-header">
         <span>{label ?? (conditionsOnly ? 'Activation Conditions' : 'Clause (predicates)')}</span>
-        <button className="btn-add-sm" onClick={addPredicate} title="Add predicate (OR)">+</button>
+        <button className="btn-add-sm" onClick={addPredicate} title={t('customizer.btn.addPredicate')}>+</button>
       </div>
 
       {value.length === 0 && (
-        <div className="clause-empty">No conditions — always available</div>
+        <div className="clause-empty">{t('customizer.empty.noConditionsAvailable')}</div>
       )}
 
       {value.map((predicate, pi) => (
@@ -114,8 +115,8 @@ function PredicateEditor({ index, predicate, onChange, onRemove, conditionsOnly,
         <div className="predicate-header">
           <span className="predicate-label">When ALL of:</span>
           <div className="predicate-actions">
-            <button className="btn-add-sm" onClick={addCondition} title="Add condition (AND)">+</button>
-            {onRemove && <button className="ib-remove" onClick={onRemove} title="Remove predicate">×</button>}
+            <button className="btn-add-sm" onClick={addCondition} title={t('customizer.btn.addCondition')}>+</button>
+            {onRemove && <button className="ib-remove" onClick={onRemove} title={t('customizer.btn.removePredicate')}>×</button>}
           </div>
         </div>
 
@@ -133,11 +134,11 @@ function PredicateEditor({ index, predicate, onChange, onRemove, conditionsOnly,
           <>
             <div className="predicate-divider">
               <span className="predicate-label">Then:</span>
-              <button className="btn-add-sm" onClick={addEffect} title="Add effect">+</button>
+              <button className="btn-add-sm" onClick={addEffect} title={t('customizer.btn.addEffect')}>+</button>
             </div>
 
             {predicate.effects.length === 0 && (
-              <div className="clause-empty">No effects (trigger-only)</div>
+              <div className="clause-empty">{t('customizer.empty.noEffectsTrigger')}</div>
             )}
 
             {predicate.effects.map((eff, ei) => (

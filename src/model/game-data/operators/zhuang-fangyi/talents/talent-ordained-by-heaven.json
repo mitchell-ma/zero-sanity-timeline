@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Ordained by Heaven (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Gains a 9% chance of immunity against DMG taken, with each Sunderblade nearby increasing this chance by +1%. After DMG Immunity is triggered, Zhuang Fangyi is also restored for 9%/18% (L1/L2) Max HP. The HP restoration effect only triggers once every 99s."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",

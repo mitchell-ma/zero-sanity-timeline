@@ -45,7 +45,7 @@ export default function SkillSection({ data, onChange, originalId }: Props) {
 
   return (
     <>
-      <CollapsibleSection title="Properties">
+      <CollapsibleSection title={t('customizer.section.properties')}>
         <CardBody>
           {/* Mirrors the skill-JSON `properties` bucket: id, name, description, element, eventCategoryType.
             * Duration & time-interaction live on segments; SP cost lives as a clause effect. No cooldown or
@@ -82,7 +82,7 @@ export default function SkillSection({ data, onChange, originalId }: Props) {
         </CardBody>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Clauses">
+      <CollapsibleSection title={t('customizer.section.clauses')}>
         <CardBody>
           <ClauseTabsEditor
             clauses={{
@@ -96,20 +96,20 @@ export default function SkillSection({ data, onChange, originalId }: Props) {
         </CardBody>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Segments">
+      <CollapsibleSection title={t('customizer.section.segments')}>
         <SegmentsEditor
           segments={data.segments ?? []}
           onChange={(segments) => update({ segments })}
         />
       </CollapsibleSection>
 
-      <CollapsibleSection title="Multipliers" defaultOpen={false}>
+      <CollapsibleSection title={t('customizer.section.multipliers')} defaultOpen={false}>
         <CardBody>
           {(data.multipliers ?? []).map((mult, i) => (
             <div key={i} className="ops-subcard">
               <div className="ops-subcard-header">
                 <span className="ops-subcard-title">{mult.label || `Multiplier ${i + 1}`}</span>
-                <button className="ops-btn-micro ops-btn-micro--dim" onClick={() => update({ multipliers: (data.multipliers ?? []).filter((_, j) => j !== i) })} title="Remove multiplier">&times;</button>
+                <button className="ops-btn-micro ops-btn-micro--dim" onClick={() => update({ multipliers: (data.multipliers ?? []).filter((_, j) => j !== i) })} title={t('customizer.btn.removeMultiplier')}>&times;</button>
               </div>
               <EditableField label="Label">
                 <input type="text" value={mult.label} onChange={(e) => {
@@ -226,7 +226,7 @@ function SegmentsEditor({ segments, onChange }: {
                   type="button"
                   className="ops-conjoined-close"
                   onClick={(e) => { e.stopPropagation(); removeSegment(si); }}
-                  title="Remove segment"
+                  title={t('customizer.btn.removeSegment')}
                   aria-label={`Remove ${s.name || `Segment ${si + 1}`}`}
                 >&times;</button>
               </div>
@@ -236,7 +236,7 @@ function SegmentsEditor({ segments, onChange }: {
             type="button"
             className="ops-conjoined-add"
             onClick={addSegment}
-            title="Add segment"
+            title={t('customizer.btn.addSegment')}
           >+</button>
         </div>
         <div className="ops-conjoined-row ops-conjoined-row--frame">
@@ -259,7 +259,7 @@ function SegmentsEditor({ segments, onChange }: {
                         type="button"
                         className="ops-conjoined-close ops-conjoined-close--frame"
                         onClick={(e) => { e.stopPropagation(); removeFrame(si, fi); }}
-                        title="Remove frame"
+                        title={t('customizer.btn.removeFrame')}
                         aria-label={`Remove frame ${toRoman(fi + 1)}`}
                       >&times;</button>
                     </span>
@@ -269,7 +269,7 @@ function SegmentsEditor({ segments, onChange }: {
                   type="button"
                   className="ops-conjoined-btn ops-conjoined-btn--add"
                   onClick={() => addFrame(si)}
-                  title="Add frame"
+                  title={t('customizer.btn.addFrame')}
                 >+</button>
               </div>
             );

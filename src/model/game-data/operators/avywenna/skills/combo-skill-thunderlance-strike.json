@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Thunderlance: Strike",
-    "description": "When controlled operator performs a Final Strike on a target with active Electric Infliction or Electrification. Leaps into mid-air and throws 3 Thunderlances at the target, then deals 1 hit of Electric DMG to enemies in the area of effect.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -43,8 +40,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "ELECTRIC",
-        "name": "Thunderlance: Strike"
+        "element": "ELECTRIC"
       },
       "frames": [
         {
@@ -191,7 +187,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

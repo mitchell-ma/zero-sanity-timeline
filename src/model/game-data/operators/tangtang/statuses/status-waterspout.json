@@ -5,7 +5,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Waterspout",
         "duration": {
           "value": {
             "verb": "IS",
@@ -300,7 +299,6 @@
   ],
   "properties": {
     "id": "WATERSPOUT",
-    "name": "Waterspout",
     "to": "ENEMY",
     "stacks": {
       "limit": {
@@ -317,8 +315,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "A Waterspout created by IMA WAVERIDAAH! Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. DMG dealt by the Waterspout is treated as Battle Skill DMG."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "TANGTANG",

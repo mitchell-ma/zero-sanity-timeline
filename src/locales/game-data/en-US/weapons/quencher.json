@@ -1,0 +1,30 @@
+{
+  "weapon.QUENCHER.event.name": {
+    "text": "Quencher",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.QUENCHER.segment.0.name": {
+    "text": "Quencher",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.QUENCHER.skill.CRUSHER_HONED_INTO_LEGION.event.description": {
+    "text": "When the wielder performs a Final Strike on the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.QUENCHER.skill.CRUSHER_HONED_INTO_LEGION.event.name": {
+    "text": "Crusher: Honed into Legion",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.QUENCHER.status.QUENCHER_HONED_INTO_LEGION.event.description": {
+    "text": "When the wielder performs a Final Strike on the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.QUENCHER.status.QUENCHER_HONED_INTO_LEGION.event.name": {
+    "text": "Honed into Legion",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.QUENCHER.status.QUENCHER_HONED_INTO_LEGION.segment.0.name": {
+    "text": "Honed into Legion",
+    "dataStatus": "RECONCILED"
+  }
+}

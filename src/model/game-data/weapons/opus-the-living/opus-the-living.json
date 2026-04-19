@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Opus: The Living"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Opus: The Living",
     "id": "OPUS_THE_LIVING",
     "type": "HANDCANNON",
     "rarity": 5

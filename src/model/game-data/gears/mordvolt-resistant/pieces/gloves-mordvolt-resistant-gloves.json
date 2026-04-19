@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "MORDVOLT_RESISTANT_GLOVES",
-    "name": "Mordvolt Resistant Gloves",
     "gearType": "GLOVES",
     "gearSet": "MORDVOLT_RESISTANT_STAT"
   },

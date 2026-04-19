@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Fluorescent Roc"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Fluorescent Roc",
     "id": "FLUORESCENT_ROC",
     "type": "ARTS_UNIT",
     "rarity": 4

@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Former Finery"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Former Finery",
     "id": "FORMER_FINERY",
     "type": "GREAT_SWORD",
     "rarity": 6

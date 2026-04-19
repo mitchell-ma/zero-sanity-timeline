@@ -1,0 +1,158 @@
+{
+  "op.AVYWENNA.event.name": {
+    "text": "Avywenna",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.1.event.description": {
+    "text": "Talent Expedited Delivery improved: Ultimate Energy gain +2.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.1.event.name": {
+    "text": "Doubling Down (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.2.event.description": {
+    "text": "Thunderlance and Thunderlance EX duration +20s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.2.event.name": {
+    "text": "Pole of Menace (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.3.event.description": {
+    "text": "Will +{Will:0}, Electric DMG Dealt +{PulseDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.3.event.name": {
+    "text": "Hard Negotiator (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.4.event.description": {
+    "text": "Ultimate Thunderlance: Final Shock improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.4.event.name": {
+    "text": "Very Experienced (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.5.event.description": {
+    "text": "When returning Thunderlances or Thunderlances EX hit an Electric Susceptible enemy, the DMG multipliers are increased to 1.15 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.potential.5.event.name": {
+    "text": "Carrot and Sharp Stick (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_BLITZ_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_BLITZ_BATK.event.name": {
+    "text": "Thunderlance: Blitz",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_BLITZ_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_BLITZ_DIVE.event.name": {
+    "text": "Thunderlance: Blitz (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_BLITZ_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_BLITZ_FINISHER.event.name": {
+    "text": "Thunderlance: Blitz (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_FINAL_SHOCK.event.description": {
+    "text": "Throws a Thunderlance EX at the target area that deals massive Electric DMG to enemies nearby.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_FINAL_SHOCK.event.name": {
+    "text": "Thunderlance: Final Shock",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_FINAL_SHOCK.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_INTERDICTION.event.description": {
+    "text": "Leaps into mid-air to stir up a maelstrom with her lance, dealing some Electric DMG to nearby enemies while pulling back all Thunderlances and Thunderlance EX in the battlefield towards herself. \nThe returning Thunderlances pierce through all enemies along their paths and deal Electric DMG, while returning Thunderlances EX deal more Electric DMG and also apply Electric Infliction.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_INTERDICTION.event.name": {
+    "text": "Thunderlance: Interdiction",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_STRIKE.event.description": {
+    "text": "When controlled operator performs a Final Strike on a target with active Electric Infliction or Electrification. Leaps into mid-air and throws 3 Thunderlances at the target, then deals 1 hit of Electric DMG to enemies in the area of effect.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_STRIKE.event.name": {
+    "text": "Thunderlance: Strike",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_STRIKE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_STRIKE.segment.1.name": {
+    "text": "Thunderlance: Strike",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.skill.THUNDERLANCE_STRIKE.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.status.THUNDERLANCE.event.description": {
+    "text": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.status.THUNDERLANCE.event.name": {
+    "text": "Thunderlance",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.status.THUNDERLANCE_EX.event.description": {
+    "text": "Thunderlance EX deployed by ultimate. Retrieved by battle skill for increased Electric DMG and Electric Infliction.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.status.THUNDERLANCE_EX.event.name": {
+    "text": "Thunderlance EX",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.status.THUNDERLANCE_EX_PIERCE.event.description": {
+    "text": "Returning Thunderlances EX pierce enemies, dealing Electric DMG per lance.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.status.THUNDERLANCE_EX_PIERCE.event.name": {
+    "text": "Thunderlances EX Pierce",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.status.THUNDERLANCE_PIERCE.event.description": {
+    "text": "Returning Thunderlances pierce enemies in their path, dealing Electric DMG per lance.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.status.THUNDERLANCE_PIERCE.event.name": {
+    "text": "Thunderlances Pierce",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.talent.EXPEDITED_DELIVERY_TALENT.event.description": {
+    "text": "After a thrown or returning Thunderlance or Thunderlance EX hits the enemy, Avywenna gains 3 Ultimate Energy.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.talent.EXPEDITED_DELIVERY_TALENT.event.name": {
+    "text": "EXPEDITED DELIVERY (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.talent.TACTFUL_APPROACH_TALENT.event.description": {
+    "text": "Ultimate Thunderlance: Final Shock improved: Also applies 10% Electric Susceptibility for 10s to enemies it hits.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AVYWENNA.talent.TACTFUL_APPROACH_TALENT.event.name": {
+    "text": "Tactful Approach (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

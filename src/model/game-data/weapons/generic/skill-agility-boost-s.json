@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Agility Boost [S]"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
     }
   ],
   "properties": {
-    "name": "Agility Boost [S]",
-    "description": "Agility +",
     "id": "AGILITY_BOOST_S"
   },
   "metadata": {

@@ -8,8 +8,7 @@
             "value": 20
           },
           "unit": "SECOND"
-        },
-        "name": "Lustrous Pyre"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
   ],
   "properties": {
     "id": "STANZA_OF_MEMORIALS_LUSTROUS_PYRE",
-    "name": "Lustrous Pyre",
-    "description": "Applies to different-element operators",
     "duration": {
       "value": {
         "verb": "IS",

@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "EXPEDITED DELIVERY (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "After a thrown or returning Thunderlance or Thunderlance EX hits the enemy, Avywenna gains 3 Ultimate Energy."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "AVYWENNA",

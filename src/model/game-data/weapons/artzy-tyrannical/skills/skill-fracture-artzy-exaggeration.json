@@ -29,8 +29,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Fracture: Artzy Exaggeration"
+        }
       },
       "clause": [
         {
@@ -71,8 +70,6 @@
     }
   ],
   "properties": {
-    "name": "Fracture: Artzy Exaggeration",
-    "description": "Cryo DMG Dealt +{cryst_dmg_up:0.0%}. After the wielder scores a critical hit with a battle skill or combo skill, the wielder gains Cryo DMG Dealt +{cryst_dmg_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
     "id": "FRACTURE_ARTZY_EXAGGERATION",
     "eventCategoryType": "WEAPON_STAT"
   },

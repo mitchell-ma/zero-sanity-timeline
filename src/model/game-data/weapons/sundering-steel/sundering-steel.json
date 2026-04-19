@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Sundering Steel"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Sundering Steel",
     "id": "SUNDERING_STEEL",
     "type": "SWORD",
     "rarity": 5

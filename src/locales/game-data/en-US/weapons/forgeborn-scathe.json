@@ -1,0 +1,34 @@
+{
+  "weapon.FORGEBORN_SCATHE.event.name": {
+    "text": "Forgeborn Scathe",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORGEBORN_SCATHE.segment.0.name": {
+    "text": "Forgeborn Scathe",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORGEBORN_SCATHE.skill.TWILIGHT_BLAZING_WAIL.event.description": {
+    "text": "Heat DMG Dealt +{fire_dmg_up:0.0%}. When the wielder casts an ultimate, the wielder gains Basic Attack DMG Dealt +{normal_atk_up:0.0%} for {duration:0.0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORGEBORN_SCATHE.skill.TWILIGHT_BLAZING_WAIL.event.name": {
+    "text": "Twilight: Blazing Wail",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORGEBORN_SCATHE.skill.TWILIGHT_BLAZING_WAIL.segment.0.name": {
+    "text": "Twilight: Blazing Wail",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORGEBORN_SCATHE.status.FORGEBORN_SCATHE_BLAZING_WAIL.event.description": {
+    "text": "Heat DMG Dealt +{fire_dmg_up:0.0%}. When the wielder casts an ultimate, the wielder gains Basic Attack DMG Dealt +{normal_atk_up:0.0%} for {duration:0.0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORGEBORN_SCATHE.status.FORGEBORN_SCATHE_BLAZING_WAIL.event.name": {
+    "text": "Blazing Wail",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORGEBORN_SCATHE.status.FORGEBORN_SCATHE_BLAZING_WAIL.segment.0.name": {
+    "text": "Blazing Wail",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "POGRANICHNIK_POTENTIAL_1",
-    "name": "Frontline Sweep (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill The Pulverizing Front improved: When hitting at least 2 enemies, 15 SP is returned."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "POGRANICHNIK",

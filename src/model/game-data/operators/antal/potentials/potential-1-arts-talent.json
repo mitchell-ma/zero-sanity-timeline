@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ANTAL_POTENTIAL_1",
-    "name": "Arts Talent (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Overclocked Moment improved: Electric Amp and Heat Amp effects are increased to 1.1 times the original."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ANTAL",

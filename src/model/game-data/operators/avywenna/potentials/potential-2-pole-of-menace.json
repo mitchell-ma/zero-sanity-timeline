@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "AVYWENNA_POTENTIAL_2",
-    "name": "Pole of Menace (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Thunderlance and Thunderlance EX duration +20s."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "AVYWENNA",

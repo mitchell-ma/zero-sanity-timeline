@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "THERTECH_STABILIZER",
-    "name": "\u00c6thertech Stabilizer",
     "gearType": "KIT",
     "gearSet": "AETHERTECH_STAT"
   },

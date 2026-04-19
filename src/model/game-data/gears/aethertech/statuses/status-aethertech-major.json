@@ -8,8 +8,7 @@
             "value": 10
           },
           "unit": "SECOND"
-        },
-        "name": "\u00c6thertech (Major)"
+        }
       },
       "clause": [
         {
@@ -36,7 +35,6 @@
   ],
   "properties": {
     "id": "AETHERTECH_MAJOR",
-    "name": "\u00c6thertech (Major)",
     "enhancementType": "MAJOR",
     "duration": {
       "value": {
@@ -52,7 +50,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Physical DMG +16% for 10s. Activates at 4 stacks of Vulnerability.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

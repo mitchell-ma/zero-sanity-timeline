@@ -29,8 +29,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "AIC Light"
+        }
       },
       "clause": [
         {
@@ -56,10 +55,8 @@
   ],
   "properties": {
     "id": "AIC_LIGHT_STAT",
-    "name": "AIC Light",
     "rarity": 2,
     "piecesRequired": 3,
-    "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer gains ATK +{atk_up} for {duration}s.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_STAT"
   },

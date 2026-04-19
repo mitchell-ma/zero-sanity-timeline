@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Unconventional Lure",
-    "description": "Hooks a block of ice and slams it to deal Physical DMG to the enemy target. When hitting a target with Cryo Infliction, Alesh consumes all of the target's Cryo Infliction stacks, forcibly applies Solidification to the target, and recovers some SP based on the number of stacks consumed. This SP recovery effect can only trigger 1 time, even if the skill hits multiple enemies.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",

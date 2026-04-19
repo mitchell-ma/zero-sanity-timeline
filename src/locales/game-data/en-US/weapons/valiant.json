@@ -1,0 +1,34 @@
+{
+  "weapon.VALIANT.event.name": {
+    "text": "Valiant",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.VALIANT.segment.0.name": {
+    "text": "Valiant",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.VALIANT.skill.COMBATIVE_VIRTUOUS_GAIN.event.description": {
+    "text": "ATK +{atk_up:0.0%}. After the wielder applies Physical Statuses, the wielder also deals another hit of Physical DMG equal to {atk_scale:0.0%} of the wielder's ATK.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.VALIANT.skill.COMBATIVE_VIRTUOUS_GAIN.event.name": {
+    "text": "Combative: Virtuous Gain",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.VALIANT.skill.COMBATIVE_VIRTUOUS_GAIN.segment.0.name": {
+    "text": "Combative: Virtuous Gain",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.VALIANT.status.VALIANT_VIRTUOUS_GAIN.event.description": {
+    "text": "Extra hit + ATK buff",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.VALIANT.status.VALIANT_VIRTUOUS_GAIN.event.name": {
+    "text": "Virtuous Gain",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.VALIANT.status.VALIANT_VIRTUOUS_GAIN.segment.0.name": {
+    "text": "Virtuous Gain",
+    "dataStatus": "RECONCILED"
+  }
+}

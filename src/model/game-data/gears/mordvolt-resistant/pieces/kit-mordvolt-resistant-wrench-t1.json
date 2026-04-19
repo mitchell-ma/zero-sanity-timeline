@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "MORDVOLT_RESISTANT_WRENCH_T1",
-    "name": "Mordvolt Resistant Wrench T1",
     "gearType": "KIT",
     "gearSet": "MORDVOLT_RESISTANT_STAT"
   },

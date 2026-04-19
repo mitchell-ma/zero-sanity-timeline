@@ -51,8 +51,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Detonate: Brigand's Bane"
+        }
       },
       "clause": [
         {
@@ -93,8 +92,6 @@
     }
   ],
   "properties": {
-    "name": "Detonate: Brigand's Bane",
-    "description": "Cryo DMG Dealt +{cryst_dmg_up:0.0%}. When the wielder applies Cryo Infliction via battle skills or ultimates, the wielder gains Cryo DMG Dealt +{cryst_dmg_up2:0.0%} for {duration:0}s. When the wielder's battle skill or ultimate applies Arts Susceptibility, the target enemy suffers Arts DMG Taken +{spell_damage_taken_up:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
     "id": "DETONATE_BRIGANDS_BANE",
     "eventCategoryType": "WEAPON_STAT"
   },

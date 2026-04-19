@@ -1,79 +1,23 @@
-import { useState, useRef, useEffect } from 'react';
 import { IS_DEV } from '../consts/devFlags';
-import { InteractionModeType, ConnectionStatus } from '../consts/enums';
+import { InteractionModeType } from '../consts/enums';
 import { t } from '../locales/locale';
-
-interface CollaborationReconnectInfo {
-  attempt: number;
-  nextRetryAt: number | null;
-  givenUp: boolean;
-}
-
-interface CollaborationPeerDescriptor {
-  peerId: string;
-  displayName: string;
-  role: string;
-  isLocal: boolean;
-}
 
 interface AppBarProps {
   onDevlog: () => void;
   onSettings: () => void;
   onKeys: () => void;
+  onFeedback: () => void;
   interactionMode?: InteractionModeType;
   onToggleInteractionMode?: () => void;
   lightMode?: boolean;
   onToggleTheme?: () => void;
-  collaborationStatus?: ConnectionStatus | null;
-  collaborationPeerCount?: number;
-  collaborationRoomId?: string | null;
-  collaborationPeers?: CollaborationPeerDescriptor[];
-  collaborationReconnect?: CollaborationReconnectInfo;
-  onHostCollaboration?: () => void;
-  onJoinCollaboration?: () => void;
-  onLeaveCollaboration?: () => void;
 }
 
 export default function AppBar({
-  onDevlog, onSettings, onKeys,
+  onDevlog, onSettings, onKeys, onFeedback,
   interactionMode, onToggleInteractionMode,
   lightMode, onToggleTheme,
-  collaborationStatus, collaborationPeerCount, collaborationRoomId, collaborationPeers,
-  collaborationReconnect,
-  onHostCollaboration, onJoinCollaboration, onLeaveCollaboration,
 }: AppBarProps) {
-  const [collabMenuOpen, setCollabMenuOpen] = useState(false);
-  const collabMenuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!collabMenuOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (collabMenuRef.current && !collabMenuRef.current.contains(e.target as Node)) {
-        setCollabMenuOpen(false);
-      }
-    };
-    window.addEventListener('mousedown', handler);
-    return () => window.removeEventListener('mousedown', handler);
-  }, [collabMenuOpen]);
-  const collabActive = collaborationStatus != null && collaborationStatus !== ConnectionStatus.DISCONNECTED;
-  const collabColor = collaborationStatus === ConnectionStatus.CONNECTED ? '#3cc46e'
-    : collaborationStatus === ConnectionStatus.CONNECTING ? '#e8b23a'
-    : collaborationStatus === ConnectionStatus.RECONNECTING ? '#e8732a'
-    : collaborationStatus === ConnectionStatus.ERROR ? '#e05555'
-    : 'transparent';
-  const isReconnecting = collaborationStatus === ConnectionStatus.RECONNECTING;
-
-  // Tick once a second while reconnecting so the "next retry in N s" countdown updates.
-  const [, forceTick] = useState(0);
-  useEffect(() => {
-    if (!isReconnecting || !collaborationReconnect?.nextRetryAt) return;
-    const timer = setInterval(() => forceTick((n) => n + 1), 500);
-    return () => clearInterval(timer);
-  }, [isReconnecting, collaborationReconnect?.nextRetryAt]);
-
-  const retrySecondsLeft = collaborationReconnect?.nextRetryAt
-    ? Math.max(0, Math.ceil((collaborationReconnect.nextRetryAt - Date.now()) / 1000))
-    : null;
-
   return (
     <div className="app-bar">
       <div className="app-brand">
@@ -108,117 +52,9 @@ export default function AppBar({
           {t('app.btn.freeform')}
         </button>
         {!IS_DEV && <span className="wip-badge">{t('app.badge.wip')}</span>}
-        <div ref={collabMenuRef} style={{ position: 'relative' }}>
-          <button
-            className="btn-devlog"
-            onClick={() => setCollabMenuOpen((v) => !v)}
-            title={
-              isReconnecting
-                ? `Reconnecting (attempt ${collaborationReconnect?.attempt ?? 0})${retrySecondsLeft != null ? ` — next try in ${retrySecondsLeft}s` : ''}`
-                : collabActive ? `Room ${collaborationRoomId ?? ''} — ${collaborationPeerCount ?? 0} peer(s)` : 'Collaborate'
-            }
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            {collabActive && (
-              <span
-                aria-hidden
-                style={{
-                  display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-                  background: collabColor,
-                }}
-              />
-            )}
-            Collab{collabActive && collaborationPeerCount != null ? ` (${collaborationPeerCount})` : ''}
-          </button>
-          {collabMenuOpen && (
-            <div
-              style={{
-                position: 'absolute', top: '100%', right: 0, marginTop: 4,
-                background: 'var(--bg-panel, #1a1a1a)', border: '1px solid var(--border-muted, #333)',
-                padding: 6, display: 'flex', flexDirection: 'column', gap: 4,
-                minWidth: 160, zIndex: 50, borderRadius: 4,
-              }}
-            >
-              {collabActive ? (
-                <>
-                  <div style={{ fontSize: 11, opacity: 0.7, padding: '2px 6px' }}>
-                    Room: <code>{collaborationRoomId ?? ''}</code>
-                  </div>
-                  <div style={{ fontSize: 11, opacity: 0.7, padding: '2px 6px' }}>
-                    Status: {collaborationStatus}
-                  </div>
-                  {isReconnecting && (
-                    <div style={{ fontSize: 11, padding: '2px 6px', color: '#e8732a' }}>
-                      Reconnecting (attempt {collaborationReconnect?.attempt ?? 0})
-                      {retrySecondsLeft != null ? ` — next try in ${retrySecondsLeft}s` : ''}
-                    </div>
-                  )}
-                  {collaborationReconnect?.givenUp && (
-                    <div style={{ fontSize: 11, padding: '2px 6px', color: '#e05555' }}>
-                      Gave up reconnecting. Leave and rejoin to retry.
-                    </div>
-                  )}
-                  <div style={{ height: 1, background: 'var(--border-muted, #333)', margin: '2px 0' }} />
-                  <div style={{ fontSize: 11, opacity: 0.7, padding: '2px 6px' }}>
-                    Peers ({collaborationPeers?.length ?? 0})
-                  </div>
-                  {(collaborationPeers ?? []).length === 0 ? (
-                    <div style={{ fontSize: 11, opacity: 0.5, padding: '2px 10px' }}>—</div>
-                  ) : (
-                    (collaborationPeers ?? []).map((p) => (
-                      <div
-                        key={p.peerId}
-                        style={{
-                          fontSize: 12, padding: '3px 10px',
-                          display: 'flex', alignItems: 'center', gap: 6,
-                          opacity: p.isLocal ? 1 : 0.9,
-                        }}
-                        title={p.peerId}
-                      >
-                        <span
-                          aria-hidden
-                          style={{
-                            display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
-                            background: p.role === 'host' ? '#e8b23a' : '#7cb7e8',
-                          }}
-                        />
-                        <span style={{ fontWeight: p.isLocal ? 600 : 400 }}>
-                          {p.displayName || '(unnamed)'}{p.isLocal ? ' (you)' : ''}
-                        </span>
-                        <span style={{ marginLeft: 'auto', fontSize: 10, opacity: 0.6 }}>{p.role}</span>
-                      </div>
-                    ))
-                  )}
-                  <div style={{ height: 1, background: 'var(--border-muted, #333)', margin: '2px 0' }} />
-                  <button
-                    className="btn-devlog"
-                    style={{ textAlign: 'left' }}
-                    onClick={() => { setCollabMenuOpen(false); onLeaveCollaboration?.(); }}
-                  >
-                    Leave room
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    className="btn-devlog"
-                    style={{ textAlign: 'left' }}
-                    onClick={() => { setCollabMenuOpen(false); onHostCollaboration?.(); }}
-                  >
-                    Host a room
-                  </button>
-                  <button
-                    className="btn-devlog"
-                    style={{ textAlign: 'left' }}
-                    onClick={() => { setCollabMenuOpen(false); onJoinCollaboration?.(); }}
-                  >
-                    Join a room
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+        <button className="btn-devlog" onClick={onFeedback} title={t('app.tooltip.feedback')}>
+          {t('app.btn.feedback')}
+        </button>
         <button className="btn-devlog" onClick={onDevlog}>
           {t('app.btn.devlog')}
         </button>

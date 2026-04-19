@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Thunderlance: Final Shock",
-    "description": "Throws a Thunderlance EX at the target area that deals massive Electric DMG to enemies nearby.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",

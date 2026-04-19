@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "MINER_COMPRESSION_CORE",
-    "name": "Miner Compression Core",
     "gearType": "KIT",
     "gearSet": "NONE"
   },

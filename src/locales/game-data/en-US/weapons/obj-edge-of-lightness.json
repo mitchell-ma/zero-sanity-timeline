@@ -1,0 +1,34 @@
+{
+  "weapon.OBJ_EDGE_OF_LIGHTNESS.event.name": {
+    "text": "OBJ Edge of Lightness",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_EDGE_OF_LIGHTNESS.segment.0.name": {
+    "text": "OBJ Edge of Lightness",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_EDGE_OF_LIGHTNESS.skill.FLOW_UNBRIDLED_EDGE.event.description": {
+    "text": "Secondary Attribute +{second_attr_up:0.0%}. After the wielder's skill recovers SP, the entire team gains Heat DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_EDGE_OF_LIGHTNESS.skill.FLOW_UNBRIDLED_EDGE.event.name": {
+    "text": "Flow: Unbridled Edge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_EDGE_OF_LIGHTNESS.skill.FLOW_UNBRIDLED_EDGE.segment.0.name": {
+    "text": "Flow: Unbridled Edge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_EDGE_OF_LIGHTNESS.status.OBJ_EDGE_OF_LIGHTNESS_UNBRIDLED_EDGE.event.description": {
+    "text": "Secondary Attribute +{second_attr_up:0.0%}. After the wielder's skill recovers SP, the entire team gains Heat DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_EDGE_OF_LIGHTNESS.status.OBJ_EDGE_OF_LIGHTNESS_UNBRIDLED_EDGE.event.name": {
+    "text": "Unbridled Edge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_EDGE_OF_LIGHTNESS.status.OBJ_EDGE_OF_LIGHTNESS_UNBRIDLED_EDGE.segment.0.name": {
+    "text": "Unbridled Edge",
+    "dataStatus": "RECONCILED"
+  }
+}

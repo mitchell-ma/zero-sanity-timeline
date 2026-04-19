@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "EMBER_POTENTIAL_2",
-    "name": "Steel-Hardened Veteran (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Strength +{Str:0}, Will +{Will:0}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "EMBER",

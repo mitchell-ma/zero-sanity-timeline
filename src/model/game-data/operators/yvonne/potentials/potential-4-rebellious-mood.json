@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "YVONNE_POTENTIAL_4",
-    "name": "Rebellious Mood (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Brr-Brr-Bomb β improved: If the explosion hits only one enemy, return 10 SP."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "YVONNE",

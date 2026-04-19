@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ARDELIA_POTENTIAL_4",
-    "name": "Rock Blossom (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Wooly Party improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ARDELIA",

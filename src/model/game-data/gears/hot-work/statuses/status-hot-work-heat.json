@@ -8,8 +8,7 @@
             "value": 10
           },
           "unit": "SECOND"
-        },
-        "name": "Hot Work (Heat)"
+        }
       },
       "clause": [
         {
@@ -36,7 +35,6 @@
   ],
   "properties": {
     "id": "HOT_WORK_HEAT",
-    "name": "Hot Work (Heat)",
     "duration": {
       "value": {
         "verb": "IS",
@@ -51,7 +49,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Heat DMG +50% for 10s after applying Combustion. Cannot stack.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

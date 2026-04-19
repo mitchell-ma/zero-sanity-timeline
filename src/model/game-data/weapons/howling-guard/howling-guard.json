@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Howling Guard"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Howling Guard",
     "id": "HOWLING_GUARD",
     "type": "HANDCANNON",
     "rarity": 4

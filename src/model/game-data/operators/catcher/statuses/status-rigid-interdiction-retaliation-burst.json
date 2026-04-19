@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "RIGID_INTERDICTION_RETALIATION_BURST",
-    "name": "Rigid Interdiction Retaliation Burst",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -20,8 +19,7 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "element": "PHYSICAL",
-    "description": "Single retaliation hit fired by Rigid Interdiction Retaliation. Deals Physical DMG, applies Vulnerable infliction and stagger. P1+ adds a DEF-scaling bonus strike at +0.1s. P5+ returns Skill Points."
+    "element": "PHYSICAL"
   },
   "metadata": {
     "originId": "CATCHER",
@@ -33,7 +31,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Retaliation",
         "duration": {
           "value": {
             "verb": "IS",

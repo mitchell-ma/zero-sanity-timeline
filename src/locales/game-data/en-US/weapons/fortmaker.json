@@ -1,0 +1,22 @@
+{
+  "weapon.FORTMAKER.event.name": {
+    "text": "Fortmaker",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORTMAKER.segment.0.name": {
+    "text": "Fortmaker",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORTMAKER.skill.INSPIRING_BACK_TO_THE_BROKEN_CITY.event.description": {
+    "text": "ATK +{atk_up:0.0%}. Arts Intensity +{phy_spell_up:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORTMAKER.skill.INSPIRING_BACK_TO_THE_BROKEN_CITY.event.name": {
+    "text": "Inspiring: Back to the Broken City",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.FORTMAKER.skill.INSPIRING_BACK_TO_THE_BROKEN_CITY.segment.0.name": {
+    "text": "Inspiring: Back to the Broken City",
+    "dataStatus": "RECONCILED"
+  }
+}

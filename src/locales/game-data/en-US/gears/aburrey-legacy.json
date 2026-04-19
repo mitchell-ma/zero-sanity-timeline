@@ -1,0 +1,94 @@
+{
+  "gear.ABURREY_LEGACY_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Skill DMG +{dmg_up:0%}. When the wearer casts a battle skill, combo skill, or ultimate, the wearer gains ATK +{atk_up:0%} for {duration}s. The buff from each of the three skill types is unique and does not stack with itself.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.event.name": {
+    "text": "Aburrey's Legacy",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_AUDITORY_CHIP.event.name": {
+    "text": "Aburrey Auditory Chip",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_AUDITORY_CHIP_T1.event.name": {
+    "text": "Aburrey Auditory Chip T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_FLASHLIGHT.event.name": {
+    "text": "Aburrey Flashlight",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_GAUNTLETS.event.name": {
+    "text": "Aburrey Gauntlets",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_HEAVY_ARMOR.event.name": {
+    "text": "Aburrey Heavy Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_HEAVY_ARMOR_T1.event.name": {
+    "text": "Aburrey Heavy Armor T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_LIGHT_ARMOR.event.name": {
+    "text": "Aburrey Light Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_LIGHT_ARMOR_T1.event.name": {
+    "text": "Aburrey Light Armor T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_SENSOR_CHIP.event.name": {
+    "text": "Aburrey Sensor Chip",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_SENSOR_CHIP_T1.event.name": {
+    "text": "Aburrey Sensor Chip T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.piece.ABURREY_UV_LAMP.event.name": {
+    "text": "Aburrey UV Lamp",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.segment.0.name": {
+    "text": "Aburrey's Legacy",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.status.ABURREY_LEGACY_BATTLE_SKILL.event.description": {
+    "text": "ATK +5% for 15s. Refreshes on battle skill cast.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.status.ABURREY_LEGACY_BATTLE_SKILL.event.name": {
+    "text": "Aburrey's Legacy (Battle Skill)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.status.ABURREY_LEGACY_BATTLE_SKILL.segment.0.name": {
+    "text": "Aburrey's Legacy (Battle Skill)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.status.ABURREY_LEGACY_COMBO_SKILL.event.description": {
+    "text": "ATK +5% for 15s. Refreshes on combo skill cast.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.status.ABURREY_LEGACY_COMBO_SKILL.event.name": {
+    "text": "Aburrey's Legacy (Combo Skill)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.status.ABURREY_LEGACY_COMBO_SKILL.segment.0.name": {
+    "text": "Aburrey's Legacy (Combo Skill)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.status.ABURREY_LEGACY_ULTIMATE.event.description": {
+    "text": "ATK +5% for 15s. Refreshes on ultimate cast.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.status.ABURREY_LEGACY_ULTIMATE.event.name": {
+    "text": "Aburrey's Legacy (Ultimate)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ABURREY_LEGACY_STAT.status.ABURREY_LEGACY_ULTIMATE.segment.0.name": {
+    "text": "Aburrey's Legacy (Ultimate)",
+    "dataStatus": "RECONCILED"
+  }
+}

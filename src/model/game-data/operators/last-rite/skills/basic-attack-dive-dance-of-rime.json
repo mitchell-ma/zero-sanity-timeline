@@ -3,8 +3,6 @@
     "enhancementTypes": [
       "DIVE"
     ],
-    "name": "Dance of Rime (Dive)",
-    "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies.",
     "eventType": "SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",

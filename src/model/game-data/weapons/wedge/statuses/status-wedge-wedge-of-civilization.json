@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Wedge of Civilization"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
   ],
   "properties": {
     "id": "WEDGE_WEDGE_OF_CIVILIZATION",
-    "name": "Wedge of Civilization",
-    "description": "Battle skill: +8-22.4%, Arts reaction: +16-44.8%",
     "duration": {
       "value": {
         "verb": "IS",

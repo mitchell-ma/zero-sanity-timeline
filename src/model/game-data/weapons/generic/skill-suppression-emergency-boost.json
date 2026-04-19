@@ -22,8 +22,6 @@
     }
   ],
   "properties": {
-    "name": "Suppression: Emergency Boost",
-    "description": "When the wielder's battle skill hits the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
     "id": "SUPPRESSION_EMERGENCY_BOOST"
   },
   "metadata": {

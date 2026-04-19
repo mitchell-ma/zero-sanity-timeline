@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Full Moon Slash",
-    "description": "When Crush or Breach consumes the enemy's Vulnerability stack(s). Performs a number of slash sequences (up to 3) based on the max number of Vulnerability stacks consumed, dealing Physical DMG and recovering some SP. Each slash deals more DMG and gives better SP recovery. Consuming 4 stacks of Vulnerability enhances the 3rd slash sequence.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -61,8 +58,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL",
-        "name": "Full Moon Slash"
+        "element": "PHYSICAL"
       },
       "frames": [
         {
@@ -519,7 +515,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

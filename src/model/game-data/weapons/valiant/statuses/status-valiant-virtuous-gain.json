@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Virtuous Gain"
+        }
       },
       "clause": [
         {
@@ -48,8 +47,6 @@
   ],
   "properties": {
     "id": "VALIANT_VIRTUOUS_GAIN",
-    "name": "Virtuous Gain",
-    "description": "Extra hit + ATK buff",
     "duration": {
       "value": {
         "verb": "IS",

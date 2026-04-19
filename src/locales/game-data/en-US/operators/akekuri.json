@@ -1,0 +1,162 @@
+{
+  "op.AKEKURI.event.name": {
+    "text": "Akekuri",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.1.event.description": {
+    "text": "After recovering SP with skills, Akekuri gains ATK +10% for 10s. This effect can reach 5 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.1.event.name": {
+    "text": "Positive Feedback (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.2.event.description": {
+    "text": "Agility +{Agi:0}, Intellect +10.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.2.event.name": {
+    "text": "Passionate Idealist (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.2.segment.0.name": {
+    "text": "Passionate Idealist (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.3.event.description": {
+    "text": "Ultimate SQUAD! ON ME! improved: While ultimate is active, entire team gains ATK +10%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.3.event.name": {
+    "text": "Committed Team Player (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.4.event.description": {
+    "text": "Ultimate SQUAD! ON ME! improved: Ultimate Energy cost -{1-costValue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.4.event.name": {
+    "text": "Super Perfect Status (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.5.event.description": {
+    "text": "Talent Staying in the Zone improved: Even when the ultimate SQUAD! ON ME! ends, the Link buff persists for 5s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.5.event.name": {
+    "text": "Tempo of Awareness (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.potential.5.segment.0.name": {
+    "text": "Tempo of Awareness (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.BURST_OF_PASSION.event.description": {
+    "text": "A frontal slash that deals Heat DMG and applies Heat Infliction.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.BURST_OF_PASSION.event.name": {
+    "text": "Burst of Passion",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.FLASH_AND_DASH.event.description": {
+    "text": "When an enemy becomes Staggered or hits a Stagger Node. Performs a returning dash with 2 thrust sequences, with each sequence dealing Physical DMG and recovering some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.FLASH_AND_DASH.event.name": {
+    "text": "Flash and Dash",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.FLASH_AND_DASH.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.FLASH_AND_DASH.segment.1.name": {
+    "text": "Flash and Dash",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.FLASH_AND_DASH.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SQUAD_ON_ME.event.description": {
+    "text": "Enters a channeling state and fires 3 Rallying Flares. Each firing recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SQUAD_ON_ME.event.name": {
+    "text": "SQUAD! ON ME!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SQUAD_ON_ME.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SQUAD_ON_ME.segment.1.name": {
+    "text": "SQUAD! ON ME!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SWORD_OF_ASPIRATION_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SWORD_OF_ASPIRATION_BATK.event.name": {
+    "text": "Sword of Aspiration",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SWORD_OF_ASPIRATION_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SWORD_OF_ASPIRATION_DIVE.event.name": {
+    "text": "Sword of Aspiration (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SWORD_OF_ASPIRATION_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.skill.SWORD_OF_ASPIRATION_FINISHER.event.name": {
+    "text": "Sword of Aspiration (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.status.AKEKURI_P1_POSITIVE_FEEDBACK.event.description": {
+    "text": "After recovering SP with skills, Akekuri gains ATK +10% for 10s. This effect can reach 5 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.status.AKEKURI_P1_POSITIVE_FEEDBACK.event.name": {
+    "text": "Positive Feedback",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.status.AKEKURI_P1_POSITIVE_FEEDBACK.segment.0.name": {
+    "text": "Positive Feedback",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.status.AKEKURI_P3_COMMITTED_TEAM_PLAYER.event.description": {
+    "text": "Ultimate SQUAD! ON ME! improved: While ultimate is active, entire team gains ATK +10%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.status.AKEKURI_P3_COMMITTED_TEAM_PLAYER.event.name": {
+    "text": "Committed Team Player",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.status.AKEKURI_P3_COMMITTED_TEAM_PLAYER.segment.0.name": {
+    "text": "Committed Team Player",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.talent.CHEER_OF_VICTORY_TALENT.event.description": {
+    "text": "Combo skill Flash and Dash improved: For every 10 points of Intellect, SP Recovery +{sp_rate:0%} (max: {sp_cap:0%}).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.talent.CHEER_OF_VICTORY_TALENT.event.name": {
+    "text": "Cheer of Victory (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.talent.STAYING_IN_THE_ZONE_TALENT.event.description": {
+    "text": "Ultimate SQUAD! ON ME! improved: When ultimate is active, gains Link.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.AKEKURI.talent.STAYING_IN_THE_ZONE_TALENT.event.name": {
+    "text": "Staying in the Zone (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -54,8 +54,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Pulser Labs"
+        }
       },
       "clause": [
         {
@@ -81,10 +80,8 @@
   ],
   "properties": {
     "id": "PULSER_LABS_STAT",
-    "name": "Pulser Labs",
     "rarity": 5,
     "piecesRequired": 3,
-    "description": "3-piece set effect: Wearer's Arts Intensity +{phy_spell_up:0}. After the wearer applies Electrification, the wearer gains Electric DMG +{pulse_dmg_up:0%} for {duration}s. After the wearer applies Solidification, the wearer gains Cryo DMG +{cryst_dmg_up:0%} for {duration2}s. The aforementioned effects cannot stack.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR_STAT"
   },

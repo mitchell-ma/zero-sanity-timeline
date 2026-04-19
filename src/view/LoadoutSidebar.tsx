@@ -12,11 +12,25 @@ import {
   uniqueName,
   isReadOnlyNode,
 } from '../utils/loadoutStorage';
-import { LoadoutNodeType, SidebarMode as SidebarModeEnum } from '../consts/enums';
+import { LoadoutNodeType, SidebarMode as SidebarModeEnum, ConnectionStatus } from '../consts/enums';
 import { t } from '../locales/locale';
 import { COMMUNITY_FOLDERS, CommunityFolder } from '../app/communityLoadouts';
+import CollaborationMenu from './CollaborationMenu';
 
 export type SidebarMode = SidebarModeEnum | null;
+
+interface CollaborationPeerDescriptor {
+  peerId: string;
+  displayName: string;
+  role: string;
+  isLocal: boolean;
+}
+
+interface CollaborationReconnectInfo {
+  attempt: number;
+  nextRetryAt: number | null;
+  givenUp: boolean;
+}
 
 interface LoadoutSidebarProps {
   tree: LoadoutTree;
@@ -38,6 +52,15 @@ interface LoadoutSidebarProps {
   viewWarningMap?: Record<string, string[]>;
   /** UUIDs of loadouts currently being synchronized with collaborators. */
   syncingLoadoutUuids?: string[];
+  collaborationStatus?: ConnectionStatus | null;
+  collaborationPeerCount?: number;
+  collaborationRoomId?: string | null;
+  collaborationPeers?: CollaborationPeerDescriptor[];
+  collaborationReconnect?: CollaborationReconnectInfo;
+  onHostCollaboration?: () => void;
+  onJoinCollaboration?: () => void;
+  onLeaveCollaboration?: () => void;
+  onManageSharedLoadouts?: () => void;
   sidebarMode: SidebarMode;
   onSidebarModeChange: (mode: SidebarMode) => void;
 }
@@ -83,11 +106,22 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   onClearViews,
   viewWarningMap,
   syncingLoadoutUuids,
+  collaborationStatus,
+  collaborationPeerCount,
+  collaborationRoomId,
+  collaborationPeers,
+  collaborationReconnect,
+  onHostCollaboration,
+  onJoinCollaboration,
+  onLeaveCollaboration,
+  onManageSharedLoadouts,
   sidebarMode,
   onSidebarModeChange,
 }, ref) {
   const syncingUuidSet = useMemo(() => new Set(syncingLoadoutUuids ?? []), [syncingLoadoutUuids]);
   const [filter, setFilter] = useState('');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterInputRef = useRef<HTMLInputElement>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const renameRef = useRef<HTMLInputElement>(null);
@@ -117,6 +151,11 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
       renameRef.current.select();
     }
   }, [renamingId]);
+
+  // Focus filter input when the toggle opens it.
+  useEffect(() => {
+    if (filterOpen) filterInputRef.current?.focus();
+  }, [filterOpen]);
 
   const filterLower = filter.toLowerCase();
 
@@ -465,8 +504,8 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
               {syncingUuidSet.has(node.uuid) && (
                 <span
                   className="loadout-node-sync-icon"
-                  title="Synced with collaborators"
-                  aria-label="synced"
+                  title={t('sidebar.collab.synced')}
+                  aria-label={t('sidebar.collab.syncedAria')}
                   style={{ display: 'inline-flex', alignItems: 'center', marginRight: 4, opacity: 0.85 }}
                 >
                   <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor" aria-hidden>
@@ -604,50 +643,82 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
         <div className="sidebar-panel">
           <div className="loadout-sidebar-header">
             <span className="loadout-sidebar-title">{t('sidebar.title')}</span>
-            <div className="loadout-sidebar-header-actions">
-              <button
-                className="loadout-action-btn"
-                title={t('sidebar.btn.newLoadout')}
-                onClick={() => handleAddLoadout(null)}
-              >+</button>
-              <button
-                className="loadout-action-btn"
-                title={t('sidebar.btn.newFolder')}
-                onClick={() => handleAddFolder(null)}
-              >
-                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-                  <path d="M1 3.5A1.5 1.5 0 012.5 2h3.879a1.5 1.5 0 011.06.44l1.122 1.12A1.5 1.5 0 009.62 4H13.5A1.5 1.5 0 0115 5.5v7a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 011 12.5v-9z"/>
-                </svg>
-              </button>
-              <button
-                className="loadout-action-btn"
-                title={t('sidebar.btn.import')}
-                onClick={onImport}
-              >
-                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-                  <path d="M8 1a.5.5 0 01.354.146l3.5 3.5a.5.5 0 01-.708.708L8.5 2.707V10.5a.5.5 0 01-1 0V2.707L4.854 5.354a.5.5 0 11-.708-.708l3.5-3.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
-                </svg>
-              </button>
-              <button
-                className="loadout-action-btn"
-                title={t('sidebar.btn.export')}
-                onClick={onExport}
-              >
-                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-                  <path d="M8 1a.5.5 0 01.5.5v7.793l2.646-2.647a.5.5 0 01.708.708l-3.5 3.5a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L7.5 9.293V1.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
-                </svg>
-              </button>
-            </div>
           </div>
 
-          <div className="loadout-filter-row">
-            <input
-              className="loadout-filter-input"
-              placeholder={t('sidebar.filter.placeholder')}
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            />
+          <div className="loadout-sidebar-toolbar">
+            <button
+              className="loadout-action-btn"
+              title={t('sidebar.btn.newLoadout')}
+              onClick={() => handleAddLoadout(null)}
+            >+</button>
+            <button
+              className="loadout-action-btn"
+              title={t('sidebar.btn.newFolder')}
+              onClick={() => handleAddFolder(null)}
+            >
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M1 3.5A1.5 1.5 0 012.5 2h3.879a1.5 1.5 0 011.06.44l1.122 1.12A1.5 1.5 0 009.62 4H13.5A1.5 1.5 0 0115 5.5v7a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 011 12.5v-9z"/>
+              </svg>
+            </button>
+            <button
+              className="loadout-action-btn"
+              title={t('sidebar.btn.import')}
+              onClick={onImport}
+            >
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M8 1a.5.5 0 01.354.146l3.5 3.5a.5.5 0 01-.708.708L8.5 2.707V10.5a.5.5 0 01-1 0V2.707L4.854 5.354a.5.5 0 11-.708-.708l3.5-3.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
+              </svg>
+            </button>
+            <button
+              className="loadout-action-btn"
+              title={t('sidebar.btn.export')}
+              onClick={onExport}
+            >
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M8 1a.5.5 0 01.5.5v7.793l2.646-2.647a.5.5 0 01.708.708l-3.5 3.5a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L7.5 9.293V1.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
+              </svg>
+            </button>
+            <button
+              className={`loadout-action-btn${filterOpen || filter ? ' loadout-action-btn--active' : ''}`}
+              title={t('sidebar.btn.filter')}
+              onClick={() => setFilterOpen((v) => !v)}
+            >
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden>
+                <path d="M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85a1.007 1.007 0 00-.115-.1zM12 6.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"/>
+              </svg>
+            </button>
+            {onHostCollaboration && onJoinCollaboration && onLeaveCollaboration && (
+              <CollaborationMenu
+                status={collaborationStatus ?? null}
+                peerCount={collaborationPeerCount ?? 0}
+                roomId={collaborationRoomId ?? null}
+                peers={collaborationPeers ?? []}
+                reconnect={collaborationReconnect}
+                onHost={onHostCollaboration}
+                onJoin={onJoinCollaboration}
+                onLeave={onLeaveCollaboration}
+                onManageSharedLoadouts={onManageSharedLoadouts}
+              />
+            )}
           </div>
+
+          {filterOpen && (
+            <div className="loadout-filter-row">
+              <input
+                ref={filterInputRef}
+                className="loadout-filter-input"
+                placeholder={t('sidebar.filter.placeholder')}
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setFilter('');
+                    setFilterOpen(false);
+                  }
+                }}
+              />
+            </div>
+          )}
 
           <div
             ref={treeRef}

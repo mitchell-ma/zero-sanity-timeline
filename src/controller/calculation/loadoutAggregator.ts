@@ -13,6 +13,7 @@
  */
 
 import { GearSetType, StatType, WeaponSkillType } from '../../consts/enums';
+import { t } from '../../locales/locale';
 import type { SkillLevel } from '../../consts/types';
 import { getGears } from '../../consts/gearSetEffects';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
@@ -202,21 +203,21 @@ export function aggregateLoadoutStats(
 
   // 1. Record operator base stats
   for (const [key, value] of Object.entries(model.stats)) {
-    if ((value as number) !== 0) trackSource(key as StatType, 'Operator', value as number);
+    if ((value as number) !== 0) trackSource(key as StatType, t('breakdown.source.operator'), value as number);
   }
 
   // 1b. Apply potential stat bonuses
   const potentialStats = model.getPotentialStats();
   for (const [key, value] of Object.entries(potentialStats)) {
     stats[key as StatType] += value as number;
-    trackSource(key as StatType, 'Potential', value as number);
+    trackSource(key as StatType, t('breakdown.source.potential'), value as number);
   }
 
   // 1c. Apply attribute increase
   const attrIncreaseValue = model.getAttributeIncrease();
   if (attrIncreaseValue > 0) {
     stats[model.attributeIncreaseAttribute] += attrIncreaseValue;
-    trackSource(model.attributeIncreaseAttribute, 'Attr Increase', attrIncreaseValue);
+    trackSource(model.attributeIncreaseAttribute, t('breakdown.source.attrIncrease'), attrIncreaseValue);
   }
 
   // Helper: add a stat value.
@@ -289,11 +290,11 @@ export function aggregateLoadoutStats(
   }
 
   // 3. Gear pieces — collect stats and count effect types for set bonus
-  const gearPieces: { id: string | null; ranksKey: keyof typeof loadoutProperties.gear }[] = [
-    { id: loadout.armorId,  ranksKey: 'armorRanks' },
-    { id: loadout.glovesId, ranksKey: 'glovesRanks' },
-    { id: loadout.kit1Id,   ranksKey: 'kit1Ranks' },
-    { id: loadout.kit2Id,   ranksKey: 'kit2Ranks' },
+  const gearPieces: { id: string | null; ranksKey: keyof typeof loadoutProperties.gear; slotLabel: string }[] = [
+    { id: loadout.armorId,  ranksKey: 'armorRanks',  slotLabel: 'Armor' },
+    { id: loadout.glovesId, ranksKey: 'glovesRanks', slotLabel: 'Gloves' },
+    { id: loadout.kit1Id,   ranksKey: 'kit1Ranks',   slotLabel: 'Kit 1' },
+    { id: loadout.kit2Id,   ranksKey: 'kit2Ranks',   slotLabel: 'Kit 2' },
   ];
   const effectCounts = new Map<string, number>();
 
@@ -303,8 +304,9 @@ export function aggregateLoadoutStats(
     if (!gearPiece) continue;
     const lineRanks = loadoutProperties.gear[piece.ranksKey] ?? {};
     const gearStats = gearPiece.getStatsPerLine(lineRanks);
+    const sourceLabel = `${gearPiece.name} (${piece.slotLabel})`;
     for (const [key, value] of Object.entries(gearStats)) {
-      addStat(key as StatType, value as number, gearPiece.name);
+      addStat(key as StatType, value as number, sourceLabel);
     }
     // Count gear set for set bonus
     effectCounts.set(

@@ -1,0 +1,46 @@
+{
+  "weapon.LUPINE_SCARLET.event.name": {
+    "text": "Lupine Scarlet",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.segment.0.name": {
+    "text": "Lupine Scarlet",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.skill.FRACTURE_GNASHING_WOLVES.event.description": {
+    "text": "ATK +{atk_up:0.0%}. After the wielder's skill deals Critical DMG, the wielder gains 1 stack of Wolven Blood that grants Physical and Heat DMG Dealt +{dmg_up:0.0%}. Wolven Blood can reach {max_stack:0} stacks. After reaching {max_stack:0} stacks, the wielder gains another Physical and Heat DMG Dealt +{dmg_up2:0.0%} for {duration:0}s. After the duration ends, all Wolven Blood stacks are removed.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.skill.FRACTURE_GNASHING_WOLVES.event.name": {
+    "text": "Fracture: Gnashing Wolves",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.skill.FRACTURE_GNASHING_WOLVES.segment.0.name": {
+    "text": "Fracture: Gnashing Wolves",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.status.LUPINE_SCARLET_WOLVEN_BLOOD.event.description": {
+    "text": "Physical and Heat DMG Dealt per stack. At 16 stacks, grants Wolven Blood (Max Stacks) bonus.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.status.LUPINE_SCARLET_WOLVEN_BLOOD.event.name": {
+    "text": "Wolven Blood",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.status.LUPINE_SCARLET_WOLVEN_BLOOD.segment.0.name": {
+    "text": "Wolven Blood",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.status.LUPINE_SCARLET_WOLVEN_BLOOD_MAX.event.description": {
+    "text": "Additional Physical and Heat DMG Dealt at max stacks. On expiry, removes all Wolven Blood stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.status.LUPINE_SCARLET_WOLVEN_BLOOD_MAX.event.name": {
+    "text": "Wolven Blood (Max Stacks)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LUPINE_SCARLET.status.LUPINE_SCARLET_WOLVEN_BLOOD_MAX.segment.0.name": {
+    "text": "Wolven Blood (Max Stacks)",
+    "dataStatus": "RECONCILED"
+  }
+}

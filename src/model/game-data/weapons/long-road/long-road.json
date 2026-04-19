@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Long Road"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Long Road",
     "id": "LONG_ROAD",
     "type": "HANDCANNON",
     "rarity": 4

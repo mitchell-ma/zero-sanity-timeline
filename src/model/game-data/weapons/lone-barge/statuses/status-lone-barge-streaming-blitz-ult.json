@@ -8,8 +8,7 @@
             "value": 25
           },
           "unit": "SECOND"
-        },
-        "name": "Streaming Blitz (Ultimate)"
+        }
       },
       "clause": [
         {
@@ -51,7 +50,6 @@
   ],
   "properties": {
     "id": "LONE_BARGE_SUPPRESSION_STREAMING_BLITZ_ULT",
-    "name": "Streaming Blitz (Ultimate)",
     "duration": {
       "value": {
         "verb": "IS",
@@ -69,8 +67,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "Battle Skill Electric DMG Dealt +{pulse_dmg_up3:0.0%} for 25s after ultimate cast. Cannot stack."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "LONE_BARGE",

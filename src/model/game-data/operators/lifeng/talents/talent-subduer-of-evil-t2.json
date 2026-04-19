@@ -35,7 +35,6 @@
           },
           "unit": "SECOND"
         },
-        "name": "Subduer of Evil",
         "element": "PHYSICAL"
       },
       "frames": [
@@ -98,7 +97,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Subduer of Evil",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
@@ -109,8 +107,7 @@
         "value": 1
       },
       "interactionType": "RESET"
-    },
-    "description": "Applying Knock Down also deals 100% ATK of Physical DMG."
+    }
   },
   "metadata": {
     "originId": "LIFENG",

@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Main Attribute Boost [L]"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
     }
   ],
   "properties": {
-    "name": "Main Attribute Boost [L]",
-    "description": "Main attribute +",
     "id": "MAIN_ATTRIBUTE_BOOST_L"
   },
   "metadata": {

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "PERLICA_POTENTIAL_1",
-    "name": "Crisis Handling (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Combo skill Instant Protocol: Chain improved: Electrification duration +{duration-1:0%}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "PERLICA",

@@ -1,0 +1,62 @@
+{
+  "gear.ARMORED_MSGR_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Strength +50. When the wearer's HP drops below 50%, the wearer gains 30% DMG Reduction against all types of DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.event.name": {
+    "text": "Armored MSGR",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.piece.ARMORED_MSGR_FLASHLIGHT.event.name": {
+    "text": "Armored MSGR Flashlight",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.piece.ARMORED_MSGR_FLASHLIGHT_T1.event.name": {
+    "text": "Armored MSGR Flashlight T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.piece.ARMORED_MSGR_GLOVES.event.name": {
+    "text": "Armored MSGR Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.piece.ARMORED_MSGR_GLOVES_T1.event.name": {
+    "text": "Armored MSGR Gloves T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.piece.ARMORED_MSGR_GLOVES_T2.event.name": {
+    "text": "Armored MSGR Gloves T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.piece.ARMORED_MSGR_GYRO.event.name": {
+    "text": "Armored MSGR Gyro",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.piece.ARMORED_MSGR_GYRO_T1.event.name": {
+    "text": "Armored MSGR Gyro T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.piece.ARMORED_MSGR_JACKET.event.name": {
+    "text": "Armored MSGR Jacket",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.piece.ARMORED_MSGR_JACKET_T1.event.name": {
+    "text": "Armored MSGR Jacket T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.segment.0.name": {
+    "text": "Armored MSGR",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.status.ARMORED_MSGR.event.description": {
+    "text": "30% DMG Reduction when HP below 50%.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.status.ARMORED_MSGR.event.name": {
+    "text": "Armored MSGR",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ARMORED_MSGR_STAT.status.ARMORED_MSGR.segment.0.name": {
+    "text": "Armored MSGR",
+    "dataStatus": "RECONCILED"
+  }
+}

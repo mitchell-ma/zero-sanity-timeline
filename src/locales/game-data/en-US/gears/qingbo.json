@@ -1,0 +1,54 @@
+{
+  "gear.QINGBO_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Combo Skill Cooldown Reduction +15%. When the wearer casts a combo skill, the wearer gains Skill DMG Dealt +20% for 15s. This effect can reach 2 stacks. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.event.name": {
+    "text": "Qingbo",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.piece.QINGBO_BAMBOO_CUTTER.event.name": {
+    "text": "Qingbo Bamboo Cutter",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.piece.QINGBO_CASK.event.name": {
+    "text": "Qingbo Cask",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.piece.QINGBO_GAUNTLETS.event.name": {
+    "text": "Qingbo Gauntlets",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.piece.QINGBO_GLOVES.event.name": {
+    "text": "Qingbo Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.piece.QINGBO_HEAVY_ARMOR.event.name": {
+    "text": "Qingbo Heavy Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.piece.QINGBO_LIGHT_ARMOR.event.name": {
+    "text": "Qingbo Light Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.piece.QINGBO_POSITIONING_KIT.event.name": {
+    "text": "Qingbo Positioning Kit",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.segment.0.name": {
+    "text": "Qingbo",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.status.QINGBO.event.description": {
+    "text": "Skill DMG +20% per stack for 15s after combo skill cast. Max 2 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.status.QINGBO.event.name": {
+    "text": "Qingbo",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.QINGBO_STAT.status.QINGBO.segment.0.name": {
+    "text": "Qingbo",
+    "dataStatus": "RECONCILED"
+  }
+}

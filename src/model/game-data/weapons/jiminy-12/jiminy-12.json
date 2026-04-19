@@ -12,8 +12,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Jiminy 12"
+        }
       },
       "clause": [
         {
@@ -134,7 +133,6 @@
     }
   ],
   "properties": {
-    "name": "Jiminy 12",
     "id": "JIMINY_12",
     "type": "ARTS_UNIT",
     "rarity": 3

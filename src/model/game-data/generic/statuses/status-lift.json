@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "LIFT",
-    "name": "Lift",
     "to": "ENEMY",
     "element": "PHYSICAL",
     "duration": {
@@ -22,8 +21,7 @@
     "eventCategoryType": "PHYSICAL_STATUS",
     "crowdControls": [
       "LIFT"
-    ],
-    "description": "Physical status. Launches the enemy into the air for 1 second. Deals 120% ATK Physical DMG. Requires Vulnerable on the enemy (or forced application)."
+    ]
   },
   "metadata": {
     "originId": "game",

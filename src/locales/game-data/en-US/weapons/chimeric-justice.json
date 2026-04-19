@@ -1,0 +1,34 @@
+{
+  "weapon.CHIMERIC_JUSTICE.event.name": {
+    "text": "Chimeric Justice",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIMERIC_JUSTICE.segment.0.name": {
+    "text": "Chimeric Justice",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIMERIC_JUSTICE.skill.BRUTALITY_CEMENTED_FURY.event.description": {
+    "text": "Critical Rate +{crit_up:0.0%}. When the wielder applies Vulnerability to an enemy with no Vulnerability stacks, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIMERIC_JUSTICE.skill.BRUTALITY_CEMENTED_FURY.event.name": {
+    "text": "Brutality: Cemented Fury",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIMERIC_JUSTICE.skill.BRUTALITY_CEMENTED_FURY.segment.0.name": {
+    "text": "Brutality: Cemented Fury",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIMERIC_JUSTICE.status.CHIMERIC_JUSTICE_CEMENTED_FURY.event.description": {
+    "text": "On applying Vulnerability to 0-stack enemy",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIMERIC_JUSTICE.status.CHIMERIC_JUSTICE_CEMENTED_FURY.event.name": {
+    "text": "Cemented Fury",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIMERIC_JUSTICE.status.CHIMERIC_JUSTICE_CEMENTED_FURY.segment.0.name": {
+    "text": "Cemented Fury",
+    "dataStatus": "RECONCILED"
+  }
+}

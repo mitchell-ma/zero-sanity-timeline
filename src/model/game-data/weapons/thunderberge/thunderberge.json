@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Thunderberge"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Thunderberge",
     "id": "THUNDERBERGE",
     "type": "GREAT_SWORD",
     "rarity": 6

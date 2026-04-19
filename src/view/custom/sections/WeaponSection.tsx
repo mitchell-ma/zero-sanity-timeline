@@ -12,6 +12,7 @@ import IdField from '../IdField';
 import type { Interaction } from '../../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from '../InteractionBuilder';
 import StatusEventFields from './StatusEventFields';
+import { t } from '../../../locales/locale';
 
 const WEAPON_TYPES = Object.values(WeaponType);
 const RARITIES = [3, 4, 5, 6] as const;
@@ -84,7 +85,7 @@ function SkillEditor({ skill, index, onChange, onRemove }: {
     <div className="wz-subsection">
       <div className="wz-subsection-header">
         <span>Skill {index + 1}</span>
-        <button className="btn-add-sm" onClick={onRemove} title="Remove skill">&times;</button>
+        <button className="btn-add-sm" onClick={onRemove} title={t('customizer.btn.removeSkill')}>&times;</button>
       </div>
       <label className="wz-field">
         <span>Label</span>
@@ -203,7 +204,7 @@ export default function WeaponSection({ data, onChange, originalId }: Props) {
 
   return (
     <>
-      <CollapsibleSection title="Identity">
+      <CollapsibleSection title={t('customizer.section.identity')}>
         <div className="wizard-section">
           <IdField value={data.id} onChange={(id) => update({ id })} originalId={originalId} />
           <label className="wz-field">

@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Cryogenic Embrittlement (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Ultimate Vigil Services improved: When the ultimate deals DMG to an enemy with Cryo Susceptibility, the effect of that Cryo Susceptibility is 1.2 times the original."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "LAST_RITE",

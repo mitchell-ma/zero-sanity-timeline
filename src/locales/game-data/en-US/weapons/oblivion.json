@@ -1,0 +1,34 @@
+{
+  "weapon.OBLIVION.event.name": {
+    "text": "Oblivion",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBLIVION.segment.0.name": {
+    "text": "Oblivion",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBLIVION.skill.TWILIGHT_HUMILIATION.event.description": {
+    "text": "Critical Rate +{crit_up:0.0%}. When the wielder casts an ultimate, the wielder gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. When the wielder casts a combo skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBLIVION.skill.TWILIGHT_HUMILIATION.event.name": {
+    "text": "Twilight: Humiliation",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBLIVION.skill.TWILIGHT_HUMILIATION.segment.0.name": {
+    "text": "Twilight: Humiliation",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBLIVION.status.OBLIVION_HUMILIATION.event.description": {
+    "text": "Ultimate: 24-48%, Combo: 12-24%",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBLIVION.status.OBLIVION_HUMILIATION.event.name": {
+    "text": "Humiliation",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBLIVION.status.OBLIVION_HUMILIATION.segment.0.name": {
+    "text": "Humiliation",
+    "dataStatus": "RECONCILED"
+  }
+}

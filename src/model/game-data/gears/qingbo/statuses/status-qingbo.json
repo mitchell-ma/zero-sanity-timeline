@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Qingbo"
+        }
       },
       "clause": [
         {
@@ -35,7 +34,6 @@
   ],
   "properties": {
     "id": "QINGBO",
-    "name": "Qingbo",
     "duration": {
       "value": {
         "verb": "IS",
@@ -50,7 +48,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Skill DMG +20% per stack for 15s after combo skill cast. Max 2 stacks.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

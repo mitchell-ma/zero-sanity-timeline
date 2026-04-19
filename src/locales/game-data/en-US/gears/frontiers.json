@@ -1,0 +1,74 @@
+{
+  "gear.FRONTIERS_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Combo Skill Cooldown Reduction +{1-comboskill_cooldown:0%}. After the wearer's skill recovers SP, the team gains DMG +{dmg_up:0%} for {duration}s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.event.name": {
+    "text": "Frontiers",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_ANALYZER.event.name": {
+    "text": "Frontiers Analyzer",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_ARMOR.event.name": {
+    "text": "Frontiers Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_ARMOR_T1.event.name": {
+    "text": "Frontiers Armor T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_ARMOR_T2.event.name": {
+    "text": "Frontiers Armor T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_ARMOR_T3.event.name": {
+    "text": "Frontiers Armor T3",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_BLIGHT_RES_GLOVES.event.name": {
+    "text": "Frontiers Blight RES Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_COMM.event.name": {
+    "text": "Frontiers Comm",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_COMM_T1.event.name": {
+    "text": "Frontiers Comm T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_EXTRA_O2_TUBE.event.name": {
+    "text": "Frontiers Extra O2 Tube",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_FIBER_GLOVES.event.name": {
+    "text": "Frontiers Fiber Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_O2_TUBE.event.name": {
+    "text": "Frontiers O2 Tube",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.piece.FRONTIERS_PROTECTION_SUIT.event.name": {
+    "text": "Frontiers Protection Suit",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.segment.0.name": {
+    "text": "Frontiers",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.status.FRONTIERS.event.description": {
+    "text": "Team DMG +16%",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.status.FRONTIERS.event.name": {
+    "text": "Frontiers",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.FRONTIERS_STAT.status.FRONTIERS.segment.0.name": {
+    "text": "Frontiers",
+    "dataStatus": "RECONCILED"
+  }
+}

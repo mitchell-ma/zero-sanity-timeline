@@ -1,0 +1,142 @@
+{
+  "op.PERLICA.event.name": {
+    "text": "Perlica",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.1.event.description": {
+    "text": "Combo skill Instant Protocol: Chain improved: Electrification duration +{duration-1:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.1.event.name": {
+    "text": "Crisis Handling (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.2.event.description": {
+    "text": "Ultimate Protocol ε: 70.41K improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.2.event.name": {
+    "text": "Negotiation Tactics (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.3.event.description": {
+    "text": "After Perlica applies Electrification to the enemy, she gains ATK +20% for 5s. This effect can reach 2 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.3.event.name": {
+    "text": "Supervisory Duties (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.4.event.description": {
+    "text": "Combo skill Instant Protocol: Chain improved: The Arts DMG Taken debuff effects on the enemy applied by the skill's Electrification are increased to 1.33 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.4.event.name": {
+    "text": "Constant Guidance (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.5.event.description": {
+    "text": "Ultimate Protocol ε: 70.41K improved: Critical Rate +30%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.potential.5.event.name": {
+    "text": "Reentry Control (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.INSTANT_PROTOCOL_CHAIN.event.description": {
+    "text": "When controlled operator performs a Final Strike on any enemy. Unleashes stored electro-magnetic energy to bombard the target, dealing Electric DMG and forcibly inflicting temporary Electrification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.INSTANT_PROTOCOL_CHAIN.event.name": {
+    "text": "Instant Protocol: Chain",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.INSTANT_PROTOCOL_CHAIN.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.INSTANT_PROTOCOL_CHAIN.segment.1.name": {
+    "text": "Instant Protocol: Chain",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.INSTANT_PROTOCOL_CHAIN.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_ALPHA_BREACH_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Electric DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_ALPHA_BREACH_BATK.event.name": {
+    "text": "Protocol α: Breach",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_ALPHA_BREACH_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Electric DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_ALPHA_BREACH_DIVE.event.name": {
+    "text": "Protocol α: Breach (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_ALPHA_BREACH_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Electric DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_ALPHA_BREACH_FINISHER.event.name": {
+    "text": "Protocol α: Breach (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_EPSILON.event.description": {
+    "text": "Tele-protocols a massive piece of orbital debris into the battlefield with devastating impact. All enemies in the area of effect suffer massive Electric DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_EPSILON.event.name": {
+    "text": "Protocol ε: 70.41K",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_EPSILON.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_OMEGA_STRIKE.event.description": {
+    "text": "Unleashes a bolt of electro-magnetic energy that deals Electric DMG and Electric Infliction to enemies in a small area.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.skill.PROTOCOL_OMEGA_STRIKE.event.name": {
+    "text": "Protocol ω: Strike",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.status.PERLICA_POTENTIAL3_SUPERVISORY_DUTIES.event.description": {
+    "text": "After Perlica applies Electrification, ATK +20% for 5s. Max 2 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.status.PERLICA_POTENTIAL3_SUPERVISORY_DUTIES.event.name": {
+    "text": "Supervisory Duties",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.status.PERLICA_POTENTIAL3_SUPERVISORY_DUTIES.segment.0.name": {
+    "text": "Supervisory Duties",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.talent.CYCLE_PROTOCOL_TALENT.event.description": {
+    "text": "Combo skill Instant Protocol: Chain improved: When hitting a Vulnerable enemy, the hit chains 1 more time.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.talent.CYCLE_PROTOCOL_TALENT.event.name": {
+    "text": "Cycle Protocol (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.talent.OBLITERATION_PROTOCOL_TALENT.event.description": {
+    "text": "DMG Dealt +20%/+30% to Staggered enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.talent.OBLITERATION_PROTOCOL_TALENT.event.name": {
+    "text": "Obliteration Protocol (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.PERLICA.talent.OBLITERATION_PROTOCOL_TALENT.segment.0.name": {
+    "text": "Obliteration Protocol (T1)",
+    "dataStatus": "RECONCILED"
+  }
+}

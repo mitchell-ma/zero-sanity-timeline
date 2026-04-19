@@ -16,8 +16,6 @@
     "enhancementTypes": [
       "EMPOWERED"
     ],
-    "name": "Moment of Blazing Shadow (Empowered)",
-    "description": "Consumes all Arts Infliction stacks on the target, dealing Physical DMG scaled by the number of stacks consumed. Applies Lift and grants increased Critical Rate and Critical DMG Dealt.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
@@ -41,7 +39,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -88,8 +85,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL",
-        "name": "Moment of Blazing Shadow (Empowered)"
+        "element": "PHYSICAL"
       },
       "frames": [
         {
@@ -385,7 +381,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

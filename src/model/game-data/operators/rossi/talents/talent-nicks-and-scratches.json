@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Nicks and Scratches (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "After Wolven Ambrage activates, applies Razor Clawmark to target. While active: target takes Physical DMG per second and increased Physical + Heat DMG taken. Effect baked into battle skill Crimson Shadow."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "ROSSI",

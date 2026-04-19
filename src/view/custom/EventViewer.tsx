@@ -322,7 +322,7 @@ function SegmentsPage({ segments, onChange, clauseTabs, onEditFrames }: {
               <span className="ev-seg-chevron">{expanded ? '\u25BE' : '\u25B8'}</span>
               <span className="ev-seg-name">{(sp.name as string) || t('eventViewer.segmentLabel', { number: String(si + 1) })}</span>
               <span className="ev-seg-meta">{frameCount} frame{frameCount !== 1 ? 's' : ''}</span>
-              <button className="ev-clear" onClick={(e) => { e.stopPropagation(); removeSegment(si); }} title="Remove">&times;</button>
+              <button className="ev-clear" onClick={(e) => { e.stopPropagation(); removeSegment(si); }} title={t('common.remove')}>&times;</button>
             </div>
 
             {expanded && (
@@ -417,7 +417,7 @@ function FramesPage({ segment, onChange }: {
               <span className="ev-seg-chevron">{expanded ? '\u25BE' : '\u25B8'}</span>
               <span className="ev-seg-name">{t('eventViewer.frameLabel', { number: String(fi + 1) })}</span>
               {fp.offset != null && <span className="ev-seg-meta">offset: {fp.offset as number}</span>}
-              <button className="ev-clear" onClick={(e) => { e.stopPropagation(); removeFrame(fi); }} title="Remove">&times;</button>
+              <button className="ev-clear" onClick={(e) => { e.stopPropagation(); removeFrame(fi); }} title={t('common.remove')}>&times;</button>
             </div>
 
             {expanded && (

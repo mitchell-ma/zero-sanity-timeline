@@ -31,7 +31,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Hypothermia",
         "duration": {
           "value": {
             "verb": "IS",
@@ -115,7 +114,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Hypothermia (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
@@ -133,8 +131,7 @@
         "value": 1
       },
       "interactionType": "NONE"
-    },
-    "description": "After Last Rite consumes any Arts Infliction, she applies Cryo Susceptibility to the target with the effect of [Number of Arts Infliction stacks consumed × 4%] for 15s. This effect cannot stack."
+    }
   },
   "metadata": {
     "originId": "LAST_RITE",

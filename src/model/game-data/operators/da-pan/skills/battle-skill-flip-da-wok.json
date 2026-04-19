@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "FLIP DA WOK!",
-    "description": "Takes out a wok, quickly charges it up, and performs a powerful wok flip that deals Physical DMG and Lift to the enemy.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",

@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Tempo of Awareness (P5)"
+        }
       },
       "clause": [
         {
@@ -30,11 +29,9 @@
   ],
   "properties": {
     "id": "AKEKURI_POTENTIAL_5",
-    "name": "Tempo of Awareness (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Staying in the Zone improved: Even when the ultimate SQUAD! ON ME! ends, the Link buff persists for 5s."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "AKEKURI",

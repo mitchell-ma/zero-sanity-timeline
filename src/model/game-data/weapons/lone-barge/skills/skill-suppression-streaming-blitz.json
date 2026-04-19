@@ -54,8 +54,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Suppression: Streaming Blitz"
+        }
       },
       "clause": [
         {
@@ -96,8 +95,6 @@
     }
   ],
   "properties": {
-    "name": "Suppression: Streaming Blitz",
-    "description": "Electric DMG Dealt +{pulse_dmg_up:0.0%}. When the wielder's battle skill consumes Arts Reactions, the wielder gains Battle Skill Electric DMG Dealt +{pulse_dmg_up2:0.0%} for {duration:0}s (max {max_stack:0} stacks, per-stack duration, triggers once every 0.1s). After the wielder casts an ultimate, the wielder gains Battle Skill Electric DMG Dealt +{pulse_dmg_up3:0.0%} for {duration2:0}s (cannot stack).",
     "id": "LONE_BARGE_SUPPRESSION_STREAMING_BLITZ_STAT",
     "eventCategoryType": "WEAPON_STAT"
   },

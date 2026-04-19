@@ -33,8 +33,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Infliction: Sincere Interrogation"
+        }
       },
       "clause": [
         {
@@ -74,8 +73,6 @@
     }
   ],
   "properties": {
-    "name": "Infliction: Sincere Interrogation",
-    "description": "Secondary Attribute +{second_attr_up:0.0%}. After the wielder consumes an Arts Reaction, ATK +{atk_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
     "id": "INFLICTION_SINCERE_INTERROGATION",
     "eventCategoryType": "WEAPON_STAT"
   },

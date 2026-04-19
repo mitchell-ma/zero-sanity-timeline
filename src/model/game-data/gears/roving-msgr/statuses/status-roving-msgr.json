@@ -8,8 +8,7 @@
             "value": 1
           },
           "unit": "SECOND"
-        },
-        "name": "Roving MSGR"
+        }
       },
       "clause": [
         {
@@ -36,7 +35,6 @@
   ],
   "properties": {
     "id": "ROVING_MSGR",
-    "name": "Roving MSGR",
     "duration": {
       "value": {
         "verb": "IS",
@@ -51,7 +49,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Physical DMG +20% when HP above 80%.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

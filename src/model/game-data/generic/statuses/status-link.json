@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "LINK",
-    "name": "Link",
     "to": "TEAM",
     "duration": {
       "value": {
@@ -18,8 +17,7 @@
       "interactionType": "REFRESH"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "Next battle skill or ultimate cast by the team consumes the Link buff and deals more DMG, with battle skills getting a higher increase. Effects of the same type can stack, but with diminishing returns."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "game",

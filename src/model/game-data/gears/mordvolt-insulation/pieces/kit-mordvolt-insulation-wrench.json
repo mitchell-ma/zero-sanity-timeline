@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "MORDVOLT_INSULATION_WRENCH",
-    "name": "Mordvolt Insulation Wrench",
     "gearType": "KIT",
     "gearSet": "MORDVOLT_INSULATION_STAT"
   },

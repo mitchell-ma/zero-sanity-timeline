@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 1
     },
-    "name": "Freeze Protocol (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Ultimate Stack Overflow improved: The ultimate also dispels Cryo Infliction and Solidification from the entire team."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "XAIHI",

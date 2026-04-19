@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Aid from the Past"
+        }
       },
       "clause": [
         {
@@ -75,8 +74,6 @@
   ],
   "properties": {
     "id": "RATIONAL_FAREWELL_AID_FROM_THE_PAST",
-    "name": "Aid from the Past",
-    "description": "When combo applies Arts Burst/Combustion",
     "duration": {
       "value": {
         "verb": "IS",

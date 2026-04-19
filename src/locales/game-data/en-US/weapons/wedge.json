@@ -1,0 +1,34 @@
+{
+  "weapon.WEDGE.event.name": {
+    "text": "Wedge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WEDGE.segment.0.name": {
+    "text": "Wedge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WEDGE.skill.INFLICTION_WEDGE_OF_CIVILIZATION.event.description": {
+    "text": "Arts DMG Dealt +{spell_dmg_up:0.0%}. When the wielder casts a battle skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration:0}s. When the wielder's battle skill applies an Arts Reaction, the wielder gains Arts DMG Dealt +{spell_dmg_up3:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WEDGE.skill.INFLICTION_WEDGE_OF_CIVILIZATION.event.name": {
+    "text": "Infliction: Wedge of Civilization",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WEDGE.skill.INFLICTION_WEDGE_OF_CIVILIZATION.segment.0.name": {
+    "text": "Infliction: Wedge of Civilization",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WEDGE.status.WEDGE_WEDGE_OF_CIVILIZATION.event.description": {
+    "text": "Battle skill: +8-22.4%, Arts reaction: +16-44.8%",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WEDGE.status.WEDGE_WEDGE_OF_CIVILIZATION.event.name": {
+    "text": "Wedge of Civilization",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WEDGE.status.WEDGE_WEDGE_OF_CIVILIZATION.segment.0.name": {
+    "text": "Wedge of Civilization",
+    "dataStatus": "RECONCILED"
+  }
+}

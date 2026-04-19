@@ -55,7 +55,7 @@ function DamageBreakdownPane({ row, frame, onToggleCrit }: DamageBreakdownPanePr
       </div>
       <div className="edit-panel-body">
         <div className="dmg-tree">
-          <TopEntry entry={{ label: 'Damage', value: finalDamage, format: 'flat', source: '', formattedValue: Math.round(finalDamage).toLocaleString(), cssClass: '' }} />
+          <TopEntry entry={{ label: t('damageBreakdown.root.damage'), value: finalDamage, format: 'flat', source: '', formattedValue: Math.round(finalDamage).toLocaleString(), cssClass: '' }} />
           {entries.map((entry) => (
             <TopEntry key={entry.label} entry={entry} />
           ))}
@@ -70,7 +70,7 @@ function DamageBreakdownPane({ row, frame, onToggleCrit }: DamageBreakdownPanePr
           // Distinguish segment vs event by whether all folded rows share one segment.
           const singleSegment = isFolded
             && folded!.every((r) => r.segmentIndex === folded![0].segmentIndex);
-          const sectionLabel = !isFolded ? 'Frame' : singleSegment ? 'Segment' : 'Event';
+          const sectionLabel = !isFolded ? t('sheet.fold.frame') : singleSegment ? t('sheet.fold.segment') : t('sheet.fold.event');
           const formatMul = (m: number) =>
             nf === NumberFormatType.DECIMAL ? m.toFixed(dp) : `${(m * 100).toFixed(dp)}%`;
           const singleMul = (() => {
@@ -88,15 +88,15 @@ function DamageBreakdownPane({ row, frame, onToggleCrit }: DamageBreakdownPanePr
             <div className="edit-panel-section">
               <span className="edit-section-label">{sectionLabel}</span>
               <div className="edit-info-text">
-                {frame.absoluteFrame != null && <div>Time: {frameToTimeLabelPrecise(frame.absoluteFrame)}</div>}
-                {mul != null && <div>Multiplier: {formatMul(mul)}</div>}
-                {!isFolded && singleSp != null && <div>SP Recovery: {singleSp}</div>}
-                {!isFolded && singleStag != null && <div>Stagger: {singleStag}</div>}
-                {!isFolded && singleGauge != null && <div>Gauge: {singleGauge}</div>}
+                {frame.absoluteFrame != null && <div>{t('damageBreakdown.label.time')}: {frameToTimeLabelPrecise(frame.absoluteFrame)}</div>}
+                {mul != null && <div>{t('damageBreakdown.header.multiplier')}: {formatMul(mul)}</div>}
+                {!isFolded && singleSp != null && <div>{t('damageBreakdown.label.spRecovery')}: {singleSp}</div>}
+                {!isFolded && singleStag != null && <div>{t('dsl.property.stagger')}: {singleStag}</div>}
+                {!isFolded && singleGauge != null && <div>{t('damageBreakdown.label.gauge')}: {singleGauge}</div>}
               </div>
               {!isFolded && frame.damageType !== DamageType.DAMAGE_OVER_TIME && onToggleCrit && (
                 <div className="edit-field">
-                  <span className="edit-field-label">Critical Hit</span>
+                  <span className="edit-field-label">{t('damageBreakdown.label.criticalHit')}</span>
                   <label className="crit-toggle" onClick={() => onToggleCrit(row.eventUid, row.segmentIndex, row.frameIndex, !frame.isCrit)}>
                     <span className={`crit-toggle-track${frame.isCrit ? ' crit-toggle-track--on' : ''}`}>
                       <span className="crit-toggle-thumb" />

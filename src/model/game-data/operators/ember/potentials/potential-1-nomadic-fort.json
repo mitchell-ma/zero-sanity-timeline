@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "EMBER_POTENTIAL_1",
-    "name": "Nomadic Fort (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Inflamed for the Assault improved: Protection effect +20%; hitting an enemy extends the duration by 1.5s."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "EMBER",

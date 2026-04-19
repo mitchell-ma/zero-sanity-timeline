@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "BASIC_GAUNTLETS",
-    "name": "Basic Gauntlets",
     "gearType": "GLOVES",
     "gearSet": "NONE"
   },

@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Polar Survival (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Snowfield SAR Assistance treatment values are increased by 15% / 25% at talent level 1 / 2."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "SNOWSHINE",

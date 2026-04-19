@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "PHYSICAL_FRAGILITY",
-    "name": "Physical Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Physical Fragility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

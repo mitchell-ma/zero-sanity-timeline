@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Skirmisher"
+        }
       },
       "clause": [
         {
@@ -47,7 +46,6 @@
   ],
   "properties": {
     "id": "SKIRMISHER",
-    "name": "Skirmisher",
     "target": "OPERATOR",
     "targetDeterminer": "THIS",
     "eventCategoryType": "STATUS"

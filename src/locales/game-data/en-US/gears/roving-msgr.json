@@ -1,0 +1,62 @@
+{
+  "gear.ROVING_MSGR_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Agility +50. When the wearer's HP exceeds 80%, the wearer's Physical DMG increases by 20%.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.event.name": {
+    "text": "Roving MSGR",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.piece.ROVING_MSGR_FISTS.event.name": {
+    "text": "Roving MSGR Fists",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.piece.ROVING_MSGR_FISTS_T1.event.name": {
+    "text": "Roving MSGR Fists T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.piece.ROVING_MSGR_FLASHLIGHT.event.name": {
+    "text": "Roving MSGR Flashlight",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.piece.ROVING_MSGR_FLASHLIGHT_T1.event.name": {
+    "text": "Roving MSGR Flashlight T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.piece.ROVING_MSGR_FLASHLIGHT_T2.event.name": {
+    "text": "Roving MSGR Flashlight T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.piece.ROVING_MSGR_GYRO.event.name": {
+    "text": "Roving MSGR Gyro",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.piece.ROVING_MSGR_GYRO_T1.event.name": {
+    "text": "Roving MSGR Gyro T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.piece.ROVING_MSGR_JACKET.event.name": {
+    "text": "Roving MSGR Jacket",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.piece.ROVING_MSGR_JACKET_T1.event.name": {
+    "text": "Roving MSGR Jacket T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.segment.0.name": {
+    "text": "Roving MSGR",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.status.ROVING_MSGR.event.description": {
+    "text": "Physical DMG +20% when HP above 80%.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.status.ROVING_MSGR.event.name": {
+    "text": "Roving MSGR",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ROVING_MSGR_STAT.status.ROVING_MSGR.segment.0.name": {
+    "text": "Roving MSGR",
+    "dataStatus": "RECONCILED"
+  }
+}

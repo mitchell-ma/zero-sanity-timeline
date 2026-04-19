@@ -143,9 +143,10 @@ When invoked with an operator name, perform a full audit of the operator's JSON 
 | VARY_BY TALENT_LEVEL | `gilberta/talents/talent-messenger-s-song-talent.json` | Talent-level scaling on effects |
 | ValueExpression (stack-based) | `gilberta/statuses/status-anomalous-gravity-field.json` | Enemy stacks in ValueStat, ADD/MULT/MIN composition |
 | Description-only potential | `laevatain/potentials/potential-4-ice-cream-furnace.json` | properties + metadata only, no clause |
-| APPLY SUSCEPTIBILITY | `gilberta/statuses/status-anomalous-gravity-field.json` | objectQualifier + object: SUSCEPTIBILITY, value+unit wrapper |
-| APPLY INFLICTION | `wulfgard/skills/battle-skill-thermite-tracers-empowered.json` | object: INFLICTION, objectQualifier: element |
-| APPLY physical status | `pogranichnik/skills/combo-skill-full-moon-slash.json` | object: STATUS, objectId: PHYSICAL, objectQualifier: LIFT/BREACH/etc |
+| APPLY SUSCEPTIBILITY | `gilberta/statuses/status-anomalous-gravity-field.json` | `object: STATUS, objectId: SUSCEPTIBILITY, objectQualifier: <element>` (HEAT/CRYO/NATURE/ELECTRIC/ARTS/PHYSICAL); value+unit wrapper |
+| APPLY arts infliction | `wulfgard/skills/battle-skill-thermite-tracers-empowered.json` | `object: STATUS, objectId: INFLICTION, objectQualifier: <element>` (HEAT/CRYO/NATURE/ELECTRIC/ARTS) |
+| APPLY VULNERABLE infliction | `endministrator/talents/talent-realspace-stasis.json` | `object: STATUS, objectId: INFLICTION, objectQualifier: VULNERABLE` — the physical-infliction counterpart |
+| APPLY physical status | `pogranichnik/skills/combo-skill-full-moon-slash.json` | `object: STATUS, objectId: PHYSICAL, objectQualifier: LIFT/BREACH/KNOCK_DOWN/CRUSH` |
 | Talent with passive clause | `gilberta/talents/talent-messenger-s-song-talent.json` | clause directly on talent file |
 | Talent with trigger | `wulfgard/talents/talent-1-scorching-fangs-minor.json` | onTriggerClause on talent |
 | Status with self-referential trigger | `laevatain/statuses/` | onTriggerClause watching own stacks |
@@ -248,9 +249,9 @@ NOT `{ "verb": "IS", "value": 0.8, "unit": "PERCENTAGE" }` — `unit` is never o
 `DAMAGE_BONUS`, `AMP`, and `SUSCEPTIBILITY` are all NounTypes AND StatTypes. They each have their own element qualifier mappings in `NOUN_QUALIFIER_MAPPING`. The conceptual hierarchy is:
 ```
 STAT (parent concept)
-├── DAMAGE_BONUS → HEAT/CRYO/NATURE/ELECTRIC/PHYSICAL/ARTS + BASIC_ATTACK/BATTLE_SKILL/COMBO_SKILL/ULTIMATE/STAGGER
-├── AMP          → HEAT/CRYO/NATURE/ELECTRIC/PHYSICAL/ARTS
-└── SUSCEPTIBILITY → HEAT/CRYO/NATURE/ELECTRIC/ARTS
+├── DAMAGE_BONUS   → HEAT/CRYO/NATURE/ELECTRIC/PHYSICAL/ARTS + BASIC_ATTACK/BATTLE_SKILL/COMBO_SKILL/ULTIMATE/STAGGER
+├── AMP            → HEAT/CRYO/NATURE/ELECTRIC/PHYSICAL/ARTS
+└── SUSCEPTIBILITY → HEAT/CRYO/NATURE/ELECTRIC/ARTS/PHYSICAL
 ```
 
 `ARTS` is an umbrella qualifier covering all arts elements (HEAT/CRYO/NATURE/ELECTRIC).

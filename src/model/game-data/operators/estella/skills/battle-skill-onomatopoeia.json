@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Onomatopoeia",
-    "description": "A lance thrust that fires a stream of freezing sound waves that deal Cryo DMG and apply Cryo Infliction to all enemies along its straight path.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "CRYO",

@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "AIC_HEAVY_PLATE",
-    "name": "AIC Heavy Plate",
     "gearType": "KIT",
     "gearSet": "AIC_HEAVY_STAT"
   },

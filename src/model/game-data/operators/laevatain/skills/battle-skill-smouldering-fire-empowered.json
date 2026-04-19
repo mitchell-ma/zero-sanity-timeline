@@ -27,8 +27,7 @@
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
-    "id": "SMOULDERING_FIRE_EMPOWERED",
-    "name": "Smouldering Fire (Empowered)"
+    "id": "SMOULDERING_FIRE_EMPOWERED"
   },
   "segments": [
     {

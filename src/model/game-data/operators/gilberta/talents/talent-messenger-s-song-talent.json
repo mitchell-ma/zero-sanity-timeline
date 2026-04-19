@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Messenger's Song (T1)"
+        }
       },
       "clause": [
         {
@@ -152,11 +151,9 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Messenger's Song (T1)",
     "to": "TEAM",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "When fighting in the battlefield, all allied guards, casters, and supporters gain Ultimate Gain Efficiency +{add:0%}."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "GILBERTA",

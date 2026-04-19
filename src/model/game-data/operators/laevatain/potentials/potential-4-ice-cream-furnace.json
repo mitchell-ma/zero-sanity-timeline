@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_4",
-    "name": "Ice Cream Furnace (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Twilight improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "LAEVATAIN",

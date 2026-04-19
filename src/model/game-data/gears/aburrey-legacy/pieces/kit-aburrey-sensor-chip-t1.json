@@ -91,7 +91,6 @@
   ],
   "properties": {
     "id": "ABURREY_SENSOR_CHIP_T1",
-    "name": "Aburrey Sensor Chip T1",
     "gearType": "KIT",
     "gearSet": "ABURREY_LEGACY_STAT"
   },

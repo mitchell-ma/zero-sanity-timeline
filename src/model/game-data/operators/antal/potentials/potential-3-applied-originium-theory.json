@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ANTAL_POTENTIAL_3",
-    "name": "Applied Originium Theory (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "When an enemy with an active Focus debuff is defeated, return 15 SP."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ANTAL",

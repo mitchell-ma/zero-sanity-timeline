@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "PULSER_LABS_PROBE",
-    "name": "Pulser Labs Probe",
     "gearType": "KIT",
     "gearSet": "PULSER_LABS_STAT"
   },

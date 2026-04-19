@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Navigator"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Navigator",
     "id": "NAVIGATOR",
     "type": "HANDCANNON",
     "rarity": 6

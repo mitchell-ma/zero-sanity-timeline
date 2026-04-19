@@ -1,0 +1,46 @@
+{
+  "weapon.KHRAVENGGER.event.name": {
+    "text": "Khravengger",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.segment.0.name": {
+    "text": "Khravengger",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.skill.DETONATE_BONECHILLING.event.description": {
+    "text": "Skill DMG Dealt +{dmg_up:0.0%} (for every skill). When the wielder's battle skill applies Cryo Infliction, the wielder gains Cryo DMG Dealt +{cryst_dmg_up:0.0%} for {duration:0}s. When the wielder deals combo skill DMG to an enemy with Cryo Infliction, the wielder gains Cryo DMG Dealt +{cryst_dmg_up2:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.skill.DETONATE_BONECHILLING.event.name": {
+    "text": "Detonate: Bonechilling",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.skill.DETONATE_BONECHILLING.segment.0.name": {
+    "text": "Detonate: Bonechilling",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.status.KHRAVENGGER_BONECHILLING.event.description": {
+    "text": "Cryo DMG Dealt bonus from battle skill Cryo Infliction",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.status.KHRAVENGGER_BONECHILLING.event.name": {
+    "text": "Bonechilling",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.status.KHRAVENGGER_BONECHILLING.segment.0.name": {
+    "text": "Bonechilling",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.status.KHRAVENGGER_BONECHILLING_COMBO.event.description": {
+    "text": "Cryo DMG Dealt bonus from combo skill vs Cryo Infliction enemy",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.status.KHRAVENGGER_BONECHILLING_COMBO.event.name": {
+    "text": "Bonechilling (Combo)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.KHRAVENGGER.status.KHRAVENGGER_BONECHILLING_COMBO.segment.0.name": {
+    "text": "Bonechilling (Combo)",
+    "dataStatus": "RECONCILED"
+  }
+}

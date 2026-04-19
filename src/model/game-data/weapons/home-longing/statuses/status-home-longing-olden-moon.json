@@ -8,8 +8,7 @@
             "value": 20
           },
           "unit": "SECOND"
-        },
-        "name": "Olden Moon"
+        }
       },
       "clause": [
         {
@@ -80,8 +79,6 @@
   ],
   "properties": {
     "id": "HOME_LONGING_OLDEN_MOON",
-    "name": "Olden Moon",
-    "description": "Cryo and Nature DMG Dealt bonus on next battle skill after combo",
     "duration": {
       "value": {
         "verb": "IS",

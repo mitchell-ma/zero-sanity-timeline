@@ -30,8 +30,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Twilight: Blazing Wail"
+        }
       },
       "clause": [
         {
@@ -72,8 +71,6 @@
     }
   ],
   "properties": {
-    "name": "Twilight: Blazing Wail",
-    "description": "Heat DMG Dealt +{fire_dmg_up:0.0%}. When the wielder casts an ultimate, the wielder gains Basic Attack DMG Dealt +{normal_atk_up:0.0%} for {duration:0.0}s. Effects of the same name cannot stack.",
     "id": "TWILIGHT_BLAZING_WAIL",
     "eventCategoryType": "WEAPON_STAT"
   },

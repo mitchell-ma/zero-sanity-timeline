@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Blazing Shadow Crit"
+        }
       },
       "clause": [
         {
@@ -85,7 +84,6 @@
   ],
   "properties": {
     "id": "BLAZING_SHADOW_CRIT",
-    "name": "Blazing Shadow Crit",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -103,8 +101,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
-    "description": "Combo skill Moment of Blazing Shadow grants increased Critical Rate and Critical DMG Dealt."
+    "eventCategoryType": "STATUS"
   },
   "metadata": {
     "originId": "ROSSI",

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ARTS_SUSCEPTIBILITY",
-    "name": "Arts Susceptibility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Arts Susceptibility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

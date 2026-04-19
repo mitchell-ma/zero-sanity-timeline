@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "IMPROVISED_EXPLOSIVE",
-    "name": "Improvised Explosive",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -19,8 +18,7 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "element": "NATURE",
-    "description": "An Improvised Explosive stuck to the target. Slows the target and explodes after a short duration, dealing Nature DMG and applying Nature Infliction."
+    "element": "NATURE"
   },
   "segments": [
     {
@@ -35,8 +33,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "NATURE",
-        "name": "Improvised Explosive"
+        "element": "NATURE"
       },
       "frames": [
         {
@@ -71,7 +68,8 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "NATURE",
-                  "object": "STATUS", "objectId": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {

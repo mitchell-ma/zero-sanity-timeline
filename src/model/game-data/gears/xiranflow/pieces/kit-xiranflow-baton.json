@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "XIRANFLOW_BATON",
-    "name": "Xiranflow Baton",
     "gearType": "KIT",
     "gearSet": "XIRANFLOW_STAT"
   },

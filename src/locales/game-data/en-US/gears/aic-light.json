@@ -1,0 +1,42 @@
+{
+  "gear.AIC_LIGHT_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer gains ATK +{atk_up} for {duration}s.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_LIGHT_STAT.event.name": {
+    "text": "AIC Light",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_LIGHT_STAT.piece.AIC_CERAMIC_PLATE.event.name": {
+    "text": "AIC Ceramic Plate",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_LIGHT_STAT.piece.AIC_LIGHT_ARMOR.event.name": {
+    "text": "AIC Light Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_LIGHT_STAT.piece.AIC_LIGHT_PLATE.event.name": {
+    "text": "AIC Light Plate",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_LIGHT_STAT.piece.AIC_TACTICAL_GLOVES.event.name": {
+    "text": "AIC Tactical Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_LIGHT_STAT.segment.0.name": {
+    "text": "AIC Light",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_LIGHT_STAT.status.AIC_LIGHT.event.description": {
+    "text": "ATK +20 for 5s after defeating an enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_LIGHT_STAT.status.AIC_LIGHT.event.name": {
+    "text": "AIC Light",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_LIGHT_STAT.status.AIC_LIGHT.segment.0.name": {
+    "text": "AIC Light",
+    "dataStatus": "RECONCILED"
+  }
+}

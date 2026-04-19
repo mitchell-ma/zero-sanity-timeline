@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "CRYO_FRAGILITY",
-    "name": "Cryo Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Cryo Fragility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

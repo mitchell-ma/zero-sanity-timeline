@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "MORDVOLT_INSULATION_BATTERY_T1",
-    "name": "Mordvolt Insulation Battery T1",
     "gearType": "KIT",
     "gearSet": "MORDVOLT_INSULATION_STAT"
   },

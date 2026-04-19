@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Mantra of Sundering",
-    "description": "Consumes the target's Electrification to increase the DMG multiplier of this battle skill and create [Status Level of Electrification consumed +1] Sunderblades (max 3 per cast). If the battlefield has fewer than 3 Sunderblades, Mantra of Sundering can still create 1 Sunderblade, even if it does not consume any target's Electrification. Zhuang Fangyi then channels all Sunderblades nearby to successively unleash Thunder Strikes on the target, dealing Electric DMG and giving bonus Ultimate Energy, with the final Thunder Strike dealing 6 times the DMG. A single battle skill casting can only create a max of 3 Sunderblades. Each Thunder Strike hit also raises the Force of Nature Electric Amp by +1%/+2% (at talent level 1/2); the final strike's amp bump scales with the total Sunderblade count that actually landed. P1 (Four Symbols of Harmony): DMG multiplier \u00d71.15.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "ELECTRIC",

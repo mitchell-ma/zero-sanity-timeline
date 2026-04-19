@@ -1,0 +1,34 @@
+{
+  "weapon.SUNDERING_STEEL.event.name": {
+    "text": "Sundering Steel",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERING_STEEL.segment.0.name": {
+    "text": "Sundering Steel",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERING_STEEL.skill.COMBATIVE_ANTHEM_OF_CINDER.event.description": {
+    "text": "ATK +{atk_up1:0.0%}. When the wielder deals a Physical Status, the wielder gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERING_STEEL.skill.COMBATIVE_ANTHEM_OF_CINDER.event.name": {
+    "text": "Combative: Anthem of Cinder",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERING_STEEL.skill.COMBATIVE_ANTHEM_OF_CINDER.segment.0.name": {
+    "text": "Combative: Anthem of Cinder",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERING_STEEL.status.SUNDERING_STEEL_ANTHEM_OF_CINDER.event.description": {
+    "text": "ATK +{atk_up1:0.0%}. When the wielder deals a Physical Status, the wielder gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERING_STEEL.status.SUNDERING_STEEL_ANTHEM_OF_CINDER.event.name": {
+    "text": "Anthem of Cinder",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERING_STEEL.status.SUNDERING_STEEL_ANTHEM_OF_CINDER.segment.0.name": {
+    "text": "Anthem of Cinder",
+    "dataStatus": "RECONCILED"
+  }
+}

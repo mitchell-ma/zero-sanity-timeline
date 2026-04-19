@@ -1,0 +1,34 @@
+{
+  "weapon.WHITE_NIGHT_NOVA.event.name": {
+    "text": "White Night Nova",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WHITE_NIGHT_NOVA.segment.0.name": {
+    "text": "White Night Nova",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WHITE_NIGHT_NOVA.skill.INFLICTION_WHITE_NIGHT_NOVA.event.description": {
+    "text": "Arts DMG Dealt +{spell_dmg_up:0.0%}. After the wielder applies Combustion or Electrification, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} and Arts Intensity +{phy_spell_up:0} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WHITE_NIGHT_NOVA.skill.INFLICTION_WHITE_NIGHT_NOVA.event.name": {
+    "text": "Infliction: White Night Nova",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WHITE_NIGHT_NOVA.skill.INFLICTION_WHITE_NIGHT_NOVA.segment.0.name": {
+    "text": "Infliction: White Night Nova",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WHITE_NIGHT_NOVA.status.WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA.event.description": {
+    "text": "Arts DMG Dealt +{spell_dmg_up:0.0%}. After the wielder applies Combustion or Electrification, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} and Arts Intensity +{phy_spell_up:0} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WHITE_NIGHT_NOVA.status.WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA.event.name": {
+    "text": "White Night Nova",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WHITE_NIGHT_NOVA.status.WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA.segment.0.name": {
+    "text": "White Night Nova",
+    "dataStatus": "RECONCILED"
+  }
+}

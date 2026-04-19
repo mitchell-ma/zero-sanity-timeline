@@ -1,0 +1,206 @@
+{
+  "op.ROSSI.event.name": {
+    "text": "Rossi",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.1.event.description": {
+    "text": "Battle skill Crimson Shadow and combo skill Moment of Blazing Shadow improved: The DMG Multipliers of these skills are increased to 1.15 times of the original. Wolven Ambrage of the battle skill also returns 10 SP after hitting the enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.1.event.name": {
+    "text": "Origin of Admiration (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.2.event.description": {
+    "text": "Agility +20, Critical Rate +7%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.2.event.name": {
+    "text": "Gap to Perfection (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.3.event.description": {
+    "text": "Talent Seething Blood improved: When triggered, it grants Base DMG Multiplier +8% and restores HP +[Intellect x 04].",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.3.event.name": {
+    "text": "Tangible Duties (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.4.event.description": {
+    "text": "Ultimate \"Razorclaw\" Ambuscade improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.4.event.name": {
+    "text": "Innocent Wish (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.5.event.description": {
+    "text": "Ultimate \"Razorclaw\" Ambuscade improved: DMG Multiplier is increased to 1.1 times of the original; Critical DMG Dealt is increased by +30%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.potential.5.event.name": {
+    "text": "Legendary Destination (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.CRIMSON_SHADOW.event.description": {
+    "text": "Charges to the target to deal Physical DMG and apply Lift.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.CRIMSON_SHADOW.event.name": {
+    "text": "Crimson Shadow",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.CRIMSON_SHADOW_EMPOWERED.event.description": {
+    "text": "Charges to the target to deal Physical DMG and apply Lift. If the target already has Vulnerability stack(s), the skill also unleashes a Wolven Ambrage that charges at the target to deal Heat DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.CRIMSON_SHADOW_EMPOWERED.event.name": {
+    "text": "Crimson Shadow (Empowered)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.CRIMSON_SHADOW_EMPOWERED.segment.0.name": {
+    "text": "Crimson Shadow",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.CRIMSON_SHADOW_EMPOWERED.segment.1.name": {
+    "text": "Wolven Ambrage",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW.event.description": {
+    "text": "When an enemy has both Vulnerability and Arts Infliction stacks. Fire erupts beneath the enemy's feet, dealing Physical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW.event.name": {
+    "text": "Moment of Blazing Shadow",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW.segment.1.name": {
+    "text": "Moment of Blazing Shadow",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW_EMPOWERED.event.description": {
+    "text": "Consumes all Arts Infliction stacks on the target, dealing Physical DMG scaled by the number of stacks consumed. Applies Lift and grants increased Critical Rate and Critical DMG Dealt.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW_EMPOWERED.event.name": {
+    "text": "Moment of Blazing Shadow (Empowered)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW_EMPOWERED.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW_EMPOWERED.segment.1.name": {
+    "text": "Moment of Blazing Shadow (Empowered)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.MOMENT_OF_BLAZING_SHADOW_EMPOWERED.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.RAZORCLAW_AMBUSCADE.event.description": {
+    "text": "Rossi flutters her cape and unleashes a flurry of stabs that quickly deals multiple sequences of Heat DMG to the target. She then performs a two-sequence slash attack with her dagger that deals massive Heat DMG and applies Heat Infliction. When this skill successfully scores a critical hit, it deals higher Critical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.RAZORCLAW_AMBUSCADE.event.name": {
+    "text": "\"Razorclaw\" Ambuscade",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.RAZORCLAW_AMBUSCADE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.RAZORCLAW_AMBUSCADE.segment.1.name": {
+    "text": "Stab Flurry",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.RAZORCLAW_AMBUSCADE.segment.2.name": {
+    "text": "Slash",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.SEETHING_WOLFBLOOD_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Physical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.SEETHING_WOLFBLOOD_BATK.event.name": {
+    "text": "Seething Wolfblood",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.SEETHING_WOLFBLOOD_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.SEETHING_WOLFBLOOD_DIVE.event.name": {
+    "text": "Seething Wolfblood (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.SEETHING_WOLFBLOOD_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP. Final Strike also deals 18 Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.skill.SEETHING_WOLFBLOOD_FINISHER.event.name": {
+    "text": "Seething Wolfblood (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.status.BLAZING_SHADOW_CRIT.event.description": {
+    "text": "Combo skill Moment of Blazing Shadow grants increased Critical Rate and Critical DMG Dealt.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.status.BLAZING_SHADOW_CRIT.event.name": {
+    "text": "Blazing Shadow Crit",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.status.BLAZING_SHADOW_CRIT.segment.0.name": {
+    "text": "Blazing Shadow Crit",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.status.PERFECT_TIMING.event.description": {
+    "text": "Combo timing window. Applied by Normal combo on last frame. Consumed by Empowered combo activation. Duration until end of activation window.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.status.PERFECT_TIMING.event.name": {
+    "text": "Perfect Timing",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.status.RAZOR_CLAWMARK.event.description": {
+    "text": "Target takes Physical DMG per second and increased Physical + Heat DMG. Applied by Wolven Ambrage (Nicks and Scratches talent). Non-stacking. Tick interval: 1s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.status.RAZOR_CLAWMARK.event.name": {
+    "text": "Razor Clawmark",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.status.RAZOR_CLAWMARK.segment.0.name": {
+    "text": "Razor Clawmark",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.talent.NICKS_AND_SCRATCHES_TALENT.event.description": {
+    "text": "After Wolven Ambrage activates, applies Razor Clawmark to target. While active: target takes Physical DMG per second and increased Physical + Heat DMG taken. Effect baked into battle skill Crimson Shadow.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.talent.NICKS_AND_SCRATCHES_TALENT.event.name": {
+    "text": "Nicks and Scratches (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.talent.SEETHING_BLOOD_TALENT.event.description": {
+    "text": "When Rossi's skill deals Critical DMG to a Razor Clawmarked enemy, triggers another hit dealing Heat DMG (ATK%) and restoring HP (INT%). If target is also Combusted, DMG and heal are 1.5x. Trigger interval: 1s (P3: 0.5s). P3: +8% ATK DMG, +INT x0.04 heal.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.talent.SEETHING_BLOOD_TALENT.event.name": {
+    "text": "Seething Blood (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ROSSI.talent.SEETHING_BLOOD_TALENT.segment.0.name": {
+    "text": "Seething Blood",
+    "dataStatus": "RECONCILED"
+  }
+}

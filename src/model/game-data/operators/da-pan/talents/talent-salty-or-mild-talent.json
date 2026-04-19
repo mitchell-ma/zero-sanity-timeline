@@ -34,7 +34,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Salty or Mild (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -52,8 +51,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Ultimate CHOP 'N DUNK! improved: For every enemy hit by the final sequence of the ultimate, gains 1 stack of Prep Ingredients for 20s (max stacks: 2). When Prep Ingredients is active, hitting an enemy with combo skills immediately shortens cooldown by 40% and consumes 1 stack of Prep Ingredients."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "DA_PAN",

@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Eye of Talos"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
   ],
   "properties": {
     "id": "THUNDERBERGE_EYE_OF_TALOS",
-    "name": "Eye of Talos",
-    "description": "Shield from combo HP treatment; 15s CD",
     "duration": {
       "value": {
         "verb": "IS",

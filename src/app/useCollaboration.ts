@@ -95,14 +95,18 @@ function clearPersistedSession(): void {
 }
 
 export interface UseCollaborationParams {
-  /** Snapshot the active loadout as SheetData. */
-  buildSheetData: () => SheetData;
+  /** Load the SheetData for an arbitrary UUID (uses buildSheetData() for the active
+   *  loadout, loadLoadoutData() for background ones). Returns null if the uuid
+   *  doesn't correspond to any local loadout. */
+  loadSheetDataForUuid: (uuid: string) => SheetData | null;
   /** Deliver a remote sheet for a UUID. Caller decides active vs background handling. */
   applyRemoteSheetData: (uuid: string, sheetData: SheetData, isInitial: boolean) => void;
   /** Create a local loadout for a newly-shared UUID. Return the local id or null to skip. */
   createLocalLoadoutForUuid: (uuid: string, name: string) => string | null;
   /** Resolve a UUID to the local loadout id, if one exists. */
   getLocalIdForUuid: (uuid: string) => string | null;
+  /** Resolve a UUID to the local loadout's display name, if one exists. */
+  getLocalNameForUuid: (uuid: string) => string | null;
   /** Rename the local loadout node when a peer renames a shared loadout. */
   renameLocalLoadout: (localId: string, name: string) => void;
 }
@@ -119,16 +123,22 @@ export interface UseCollaborationReturn {
   isConnected: boolean;
   isHost: boolean;
   syncingLoadoutUuids: string[];
+  /** Reconcile the live doc with the current set of tree UUIDs. Called by the
+   *  hook consumer whenever the loadout tree changes, so that deleting a shared
+   *  loadout auto-unshares it (and undoing the delete auto-restores it).
+   *  Remembered share intent is independent of whether the node currently exists. */
+  reconcileWithTree: (presentUuids: ReadonlySet<string>) => void;
   /** Attempt to restore a recent session from localStorage. Returns true if restored. */
   tryRestoreSession: () => boolean;
 }
 
 export function useCollaboration(params: UseCollaborationParams): UseCollaborationReturn {
   const {
-    buildSheetData,
+    loadSheetDataForUuid,
     applyRemoteSheetData,
     createLocalLoadoutForUuid,
     getLocalIdForUuid,
+    getLocalNameForUuid,
     renameLocalLoadout,
   } = params;
 
@@ -141,11 +151,12 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
   const loadoutObserversRef = useRef<Map<string, () => void>>(new Map());
   const metaObserverRef = useRef<(() => void) | null>(null);
   const peersObserverRef = useRef<(() => void) | null>(null);
+  /** UUIDs the host has INTENDED to share. Independent of whether each uuid's
+   *  node currently exists in the tree — so deleting a shared loadout and then
+   *  undoing the delete re-shares automatically. */
+  const rememberedSharedUuidsRef = useRef<Set<string>>(new Set());
   const inboundTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const initialAppliedRef = useRef<Set<string>>(new Set());
-  const latestBuildSheetDataRef = useRef(buildSheetData);
-  latestBuildSheetDataRef.current = buildSheetData;
-
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   const updateSession = useCallback((patch: Partial<CollaborationSession>) => {
@@ -335,15 +346,27 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
 
   const hostRoom = useCallback((displayName: string, _loadoutUuids: string[], maxPeers: number = 4): string => {
     const roomId = generateRoomId();
+    rememberedSharedUuidsRef.current = new Set();
     bootstrapHost(roomId, displayName, maxPeers);
-    // Caller owns shareLoadout calls for each uuid (needs buildSheetData to
-    // be fresh). Persistence of the shared set happens in an effect below.
+    // Caller calls shareLoadout for each selected uuid — that populates
+    // rememberedSharedUuidsRef and writes to the doc.
     savePersistedSession({
       roomId, role: CollaborationRole.HOST, displayName,
       sharedUuids: [], maxPeers, savedAt: Date.now(),
     });
     return roomId;
   }, [bootstrapHost]);
+
+  /** Persist the current rememberedSharedUuidsRef into localStorage. */
+  const persistRemembered = useCallback(() => {
+    const persisted = loadPersistedSession();
+    if (!persisted) return;
+    const next = Array.from(rememberedSharedUuidsRef.current);
+    const same = persisted.sharedUuids.length === next.length
+      && persisted.sharedUuids.every((u, i) => u === next[i]);
+    if (same) return;
+    savePersistedSession({ ...persisted, sharedUuids: next, savedAt: Date.now() });
+  }, []);
 
   const joinRoom = useCallback((roomId: string, displayName: string): void => {
     cleanup();
@@ -401,6 +424,7 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
       try { unregisterPeerFromDoc(doc, s.localPeerId); } catch { /* ignore */ }
     }
     cleanup();
+    rememberedSharedUuidsRef.current = new Set();
     setSession(null);
     clearPersistedSession();
   }, [cleanup]);
@@ -409,23 +433,69 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
     const doc = docRef.current;
     const s = sessionRef.current;
     if (!doc || !s || s.role !== CollaborationRole.HOST) return;
-    // Seed the doc with the current SheetData for this uuid.
-    const sheet = latestBuildSheetDataRef.current();
+    const name = getLocalNameForUuid(uuid);
+    if (name == null) {
+      console.warn('[collab] shareLoadout: uuid not found in local tree, skipping:', uuid);
+      return;
+    }
+    const sheet = loadSheetDataForUuid(uuid);
+    if (!sheet) {
+      console.warn('[collab] shareLoadout: failed to load sheet data for uuid:', uuid);
+      return;
+    }
+    rememberedSharedUuidsRef.current.add(uuid);
     sheetDataToYMap(doc, uuid, sheet);
-    addSharedLoadoutToDoc(doc, { uuid, name: `Shared-${uuid.slice(0, 4)}`, ownerPeerId: s.localPeerId });
+    addSharedLoadoutToDoc(doc, { uuid, name, ownerPeerId: s.localPeerId });
     observeLoadout(uuid);
     initialAppliedRef.current.add(uuid);
     updateSession({ sharedLoadouts: readSharedLoadoutsFromDoc(doc) });
-  }, [observeLoadout, updateSession]);
+    persistRemembered();
+  }, [getLocalNameForUuid, loadSheetDataForUuid, observeLoadout, persistRemembered, updateSession]);
 
   const unshareLoadout = useCallback((uuid: string): void => {
     const doc = docRef.current;
     const s = sessionRef.current;
     if (!doc || !s || s.role !== CollaborationRole.HOST) return;
+    rememberedSharedUuidsRef.current.delete(uuid);
     removeSharedLoadoutFromDoc(doc, uuid);
     stopObservingLoadout(uuid);
     updateSession({ sharedLoadouts: readSharedLoadoutsFromDoc(doc) });
-  }, [stopObservingLoadout, updateSession]);
+    persistRemembered();
+  }, [persistRemembered, stopObservingLoadout, updateSession]);
+
+  /** Reconcile the live doc's shared-loadout set with the current tree.
+   *  Called by the hook consumer whenever the loadout tree changes.
+   *  - If a remembered uuid no longer has a tree node → auto-unshare (doc only;
+   *    intent is preserved so undo restores it).
+   *  - If a remembered uuid reappears in the tree → auto-share (doc only). */
+  const reconcileWithTree = useCallback((presentUuids: ReadonlySet<string>) => {
+    const doc = docRef.current;
+    const s = sessionRef.current;
+    if (!doc || !s || s.role !== CollaborationRole.HOST) return;
+    const inDoc = new Set(readSharedLoadoutsFromDoc(doc).map((e) => e.uuid));
+    let changed = false;
+    rememberedSharedUuidsRef.current.forEach((uuid) => {
+      const treeHas = presentUuids.has(uuid);
+      const docHas = inDoc.has(uuid);
+      if (treeHas && !docHas) {
+        // Reappeared in tree (undo of delete) — re-share.
+        const name = getLocalNameForUuid(uuid);
+        const sheet = loadSheetDataForUuid(uuid);
+        if (name == null || sheet == null) return;
+        sheetDataToYMap(doc, uuid, sheet);
+        addSharedLoadoutToDoc(doc, { uuid, name, ownerPeerId: s.localPeerId });
+        observeLoadout(uuid);
+        initialAppliedRef.current.add(uuid);
+        changed = true;
+      } else if (!treeHas && docHas) {
+        // Vanished from tree (delete) — auto-unshare from doc but keep intent.
+        removeSharedLoadoutFromDoc(doc, uuid);
+        stopObservingLoadout(uuid);
+        changed = true;
+      }
+    });
+    if (changed) updateSession({ sharedLoadouts: readSharedLoadoutsFromDoc(doc) });
+  }, [getLocalNameForUuid, loadSheetDataForUuid, observeLoadout, stopObservingLoadout, updateSession]);
 
   const pushLocalChange = useCallback((uuid: string, prev: SheetData | null, next: SheetData): void => {
     const doc = docRef.current;
@@ -443,19 +513,17 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
   const isConnected = session?.connectionStatus === ConnectionStatus.CONNECTED;
   const isHost = session?.role === CollaborationRole.HOST;
 
-  // Keep the persisted session's sharedUuids in sync with the live session,
-  // and bump `savedAt` whenever we're actively connected so the TTL doesn't
-  // tick down while a session is alive.
+  // Bump `savedAt` on every CONNECTED transition so an active session's TTL
+  // doesn't tick down. sharedUuids persistence is handled by persistRemembered
+  // called from share/unshare — the live doc set can diverge from intent (when
+  // a shared loadout is deleted), so we intentionally don't mirror session
+  // state into localStorage here.
   useEffect(() => {
     if (!session) return;
+    if (session.connectionStatus !== ConnectionStatus.CONNECTED) return;
     const persisted = loadPersistedSession();
     if (!persisted) return;
-    const nextUuids = session.sharedLoadouts.map((e) => e.uuid);
-    const uuidsChanged = persisted.sharedUuids.length !== nextUuids.length
-      || persisted.sharedUuids.some((u, i) => u !== nextUuids[i]);
-    const isConnected = session.connectionStatus === ConnectionStatus.CONNECTED;
-    if (!uuidsChanged && !isConnected) return;
-    savePersistedSession({ ...persisted, sharedUuids: nextUuids, savedAt: Date.now() });
+    savePersistedSession({ ...persisted, savedAt: Date.now() });
   }, [session]);
 
   // Attempt to restore a recent session saved in localStorage. Returns true
@@ -470,15 +538,24 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
     }
     console.info('[collab] restoring as', persisted.role, 'room=', persisted.roomId);
     if (persisted.role === CollaborationRole.HOST) {
+      // Seed remembered intent from persisted set; the host's localPeerId IS
+      // the roomId, so we can construct doc entries without reading sessionRef
+      // (which hasn't synced yet — setSession inside bootstrapHost is queued).
+      rememberedSharedUuidsRef.current = new Set(persisted.sharedUuids);
       bootstrapHost(persisted.roomId, persisted.displayName, persisted.maxPeers);
-      // Re-share each previously shared uuid with its current SheetData.
       const doc = docRef.current;
-      const s = sessionRef.current;
-      if (doc && s) {
+      if (doc) {
         for (const uuid of persisted.sharedUuids) {
-          const sheet = latestBuildSheetDataRef.current();
+          const name = getLocalNameForUuid(uuid);
+          if (name == null) {
+            // Node was deleted while offline — remembered intent persists,
+            // reconcileWithTree will re-share if the node comes back.
+            continue;
+          }
+          const sheet = loadSheetDataForUuid(uuid);
+          if (sheet == null) continue;
           sheetDataToYMap(doc, uuid, sheet);
-          addSharedLoadoutToDoc(doc, { uuid, name: `Shared-${uuid.slice(0, 4)}`, ownerPeerId: s.localPeerId });
+          addSharedLoadoutToDoc(doc, { uuid, name, ownerPeerId: persisted.roomId });
           observeLoadout(uuid);
           initialAppliedRef.current.add(uuid);
         }
@@ -488,7 +565,7 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
       joinRoom(persisted.roomId, persisted.displayName);
     }
     return true;
-  }, [bootstrapHost, joinRoom, observeLoadout, updateSession]);
+  }, [bootstrapHost, getLocalNameForUuid, joinRoom, loadSheetDataForUuid, observeLoadout, updateSession]);
 
   return {
     session,
@@ -502,6 +579,7 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
     isConnected,
     isHost,
     syncingLoadoutUuids,
+    reconcileWithTree,
     tryRestoreSession,
   };
 }

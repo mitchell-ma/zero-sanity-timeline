@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Granny's Reminder (P4)"
+        }
       },
       "clause": [
         {
@@ -49,11 +48,9 @@
   ],
   "properties": {
     "id": "ANTAL_POTENTIAL_4",
-    "name": "Granny's Reminder (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Intellect +10, Max HP +{MaxHp:0%}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ANTAL",

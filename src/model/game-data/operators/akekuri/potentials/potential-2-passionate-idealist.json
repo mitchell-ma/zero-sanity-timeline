@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Passionate Idealist (P2)"
+        }
       },
       "clause": [
         {
@@ -49,11 +48,9 @@
   ],
   "properties": {
     "id": "AKEKURI_POTENTIAL_2",
-    "name": "Passionate Idealist (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Agility +{Agi:0}, Intellect +10."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "AKEKURI",

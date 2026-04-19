@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Auger Angling",
-    "description": "When a nearby target's Arts Reaction or Originium Crystals are consumed, opens an angling hole beneath the enemy that deals Physical DMG and recovers SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers extra SP. T2 Veteran Angler improves the Rare Fin catching chance by +0.2%/+0.5% per 10 Intellect (cap +30%). P3 May the Willing Bite applies a 10s +15% ATK team buff on Rare Fin catches.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -79,8 +76,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL",
-        "name": "Auger Angling"
+        "element": "PHYSICAL"
       },
       "frames": [
         {
@@ -372,7 +368,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

@@ -1,0 +1,138 @@
+{
+  "op.LIFENG.event.name": {
+    "text": "Lifeng",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.1.event.description": {
+    "text": "Battle skill Turbid Avatar improved: Physical Susceptibility +5%; also triggers this additional effect to enemies with no more than 2 Vulnerability stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.1.event.name": {
+    "text": "Breaking the Obsession (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.2.event.description": {
+    "text": "All attributes +{Str:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.2.event.name": {
+    "text": "Self Refinement (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.3.event.description": {
+    "text": "Talent Illumination improved: Every point in the attributes of Intellect and Will grants Lifeng an additional ATK +0.05%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.3.event.name": {
+    "text": "Spiritual Cultivation (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.4.event.description": {
+    "text": "Ultimate Heart of the Unmoving improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.potential.4.event.name": {
+    "text": "Brief Instant (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.ASPECT_OF_WRATH.event.description": {
+    "text": "When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. Unleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.ASPECT_OF_WRATH.event.name": {
+    "text": "Aspect of Wrath",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.ASPECT_OF_WRATH.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.ASPECT_OF_WRATH.segment.1.name": {
+    "text": "Aspect of Wrath",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.ASPECT_OF_WRATH.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.HEART_OF_THE_UNMOVING.event.description": {
+    "text": "Unleashes an aspect that performs an Immovable Vajra Slam. The Slam deals Physical DMG and applies Knock Down to all enemies in a large area of effect (AOE), and pulls enemies towards the center of the AOE. After a while, the Slam unleashes one more hit that deals massive Physical DMG and applies another Knock Down to enemies still within its AOE.\nIf the skill consumes a Link, then it deals an additional hit of massive Physical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.HEART_OF_THE_UNMOVING.event.name": {
+    "text": "Heart of the Unmoving",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.HEART_OF_THE_UNMOVING.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.HEART_OF_THE_UNMOVING.segment.1.name": {
+    "text": "Sequence 1",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.HEART_OF_THE_UNMOVING.segment.2.name": {
+    "text": "Sequence 2",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.HEART_OF_THE_UNMOVING.segment.3.name": {
+    "text": "Vajra Impact",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.RUINATION_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.RUINATION_BATK.event.name": {
+    "text": "Ruination",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.RUINATION_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.RUINATION_DIVE.event.name": {
+    "text": "Ruination (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.RUINATION_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.RUINATION_FINISHER.event.name": {
+    "text": "Ruination (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.TURBID_AVATAR.event.description": {
+    "text": "Swings the polearm multiple times to deal 2 hits of Physical DMG, then slams the ground to deal Physical DMG and Knock Down to all enemies in the area of effect. \nIf the enemy struck by the last hit of this skill has no Vulnerability stacks, apply Physical Susceptibility to the said enemy instead.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.skill.TURBID_AVATAR.event.name": {
+    "text": "Turbid Avatar",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.talent.ILLUMINATION_TALENT.event.description": {
+    "text": "Every point of Intellect and Will further grants ATK +{atk_up:0.00%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.talent.ILLUMINATION_TALENT.event.name": {
+    "text": "Illumination (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.talent.ILLUMINATION_TALENT.segment.0.name": {
+    "text": "Illumination (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.talent.SUBDUER_OF_EVIL_T2.event.description": {
+    "text": "Applying Knock Down also deals 100% ATK of Physical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.talent.SUBDUER_OF_EVIL_T2.event.name": {
+    "text": "Subduer of Evil",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LIFENG.talent.SUBDUER_OF_EVIL_T2.segment.0.name": {
+    "text": "Subduer of Evil",
+    "dataStatus": "RECONCILED"
+  }
+}

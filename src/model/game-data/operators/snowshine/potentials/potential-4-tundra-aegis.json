@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Tundra Aegis (P4)"
+        }
       },
       "clause": [
         {
@@ -49,11 +48,9 @@
   ],
   "properties": {
     "id": "SNOWSHINE_POTENTIAL_4",
-    "name": "Tundra Aegis (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "DEF +20, Will +20."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "SNOWSHINE",

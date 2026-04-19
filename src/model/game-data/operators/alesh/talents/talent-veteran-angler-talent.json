@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Veteran Angler (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Combo skill Auger Angling improved: Every 10 Intellect grants Rare Fin catching chance +0.2% (max: +30%)."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "ALESH",

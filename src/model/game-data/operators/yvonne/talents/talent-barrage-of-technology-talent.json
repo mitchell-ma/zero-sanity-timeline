@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Barrage of Technology (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "YVONNE",

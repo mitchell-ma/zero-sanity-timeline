@@ -478,8 +478,6 @@
     }
   ],
   "properties": {
-    "name": "Ruination",
-    "description": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",

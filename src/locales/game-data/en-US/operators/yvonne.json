@@ -1,0 +1,190 @@
+{
+  "op.YVONNE.event.name": {
+    "text": "Yvonne",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.1.event.description": {
+    "text": "Combo skill Flashfreezer υ37 improved: Effect radius +20%; releases energy 2 more times; and gains an additional 15 Ultimate Energy after dealing DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.1.event.name": {
+    "text": "Flash Freezer (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.2.event.description": {
+    "text": "Intellect +20, Critical Rate +{CriticalRate:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.2.event.name": {
+    "text": "Flawless Creation (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.2.segment.0.name": {
+    "text": "Flawless Creation (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.3.event.description": {
+    "text": "Talent Freezing Point improved: Against enemies with Cryo Infliction, Critical DMG Dealt +10%; this effect is also doubled against enemies with Solidification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.3.event.name": {
+    "text": "Tink-a-Power (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.4.event.description": {
+    "text": "Battle skill Brr-Brr-Bomb β improved: If the explosion hits only one enemy, return 10 SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.4.event.name": {
+    "text": "Rebellious Mood (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.5.event.description": {
+    "text": "Ultimate Cryoblasting Pistolier improved: During the ultimate, ATK +10% and Critical DMG Dealt +30%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.potential.5.event.name": {
+    "text": "Expert Mechcrafter (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.BRR_BRR_BOMB.event.description": {
+    "text": "Throws a freezing bomb. The bomb explodes when it hits the enemy to deal Cryo DMG. If hitting an enemy with Cryo Infliction or Nature Infliction, then consume all Arts Infliction stacks, forcibly apply Solidification, and deal Cryo DMG to the target based on the number of stacks consumed.\nAfter the battle skill successfully applies Solidification, Yvonne gains additional Ultimate Energy based on the number of stacks consumed. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.BRR_BRR_BOMB.event.name": {
+    "text": "Brr-Brr-Bomb β",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.CRYOBLASTING_PISTOLIER.event.description": {
+    "text": "Immediately deploys the support bot Tink-a-Bella and makes Yvonne the controlled operator.\nTemporarily enhances Yvonne's basic attack (BATK). Each enhanced BATK sequence performed grants a stack of Critical Rate buff. After reaching max stacks, Yvonne also gains a Critical DMG buff. When the skill is about to end, Yvonne's last enhanced BATK becomes an enhanced Final Strike that deals massive Cryo DMG.\nIf the enemy is Solidified, Yvonne performs an additional attack that deals Cryo DMG and then consumes the enemy's Solidification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.CRYOBLASTING_PISTOLIER.event.name": {
+    "text": "Cryoblasting Pistolier",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.CRYOBLASTING_PISTOLIER.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.CRYOBLASTING_PISTOLIER.segment.1.name": {
+    "text": "Cryoblasting Pistolier",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.EXUBERANT_TRIGGER_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.EXUBERANT_TRIGGER_BATK.event.name": {
+    "text": "Exuberant Trigger",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.EXUBERANT_TRIGGER_BATK_EMPOWERED.event.name": {
+    "text": "Exuberant Trigger (Enhanced)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.EXUBERANT_TRIGGER_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.EXUBERANT_TRIGGER_DIVE.event.name": {
+    "text": "Exuberant Trigger (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.EXUBERANT_TRIGGER_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.EXUBERANT_TRIGGER_FINISHER.event.name": {
+    "text": "Exuberant Trigger (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.FLASHFREEZER.event.description": {
+    "text": "When the controlled operator performs a Final Strike on an enemy with Solidification. Immediately deploys Frost-e-Bytee next to the enemy. While active, Frost-e-Bytee constantly releases energy to attack nearby enemies, deals Cryo DMG to them, and pulls them towards itself. After Frost-e-Bytee expires, it explodes to forcibly apply Solidification and deal Cryo DMG to nearby enemies. After the combo skill successfully hits the enemy, Yvonne gains additional Ultimate Energy. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.FLASHFREEZER.event.name": {
+    "text": "Flashfreezer υ37",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.FLASHFREEZER.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.FLASHFREEZER.segment.1.name": {
+    "text": "Flashfreezer υ37",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.skill.FLASHFREEZER.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.BARRAGE_OF_TECHNOLOGY.event.description": {
+    "text": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.BARRAGE_OF_TECHNOLOGY.event.name": {
+    "text": "Barrage of Technology (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.BARRAGE_OF_TECHNOLOGY.segment.0.name": {
+    "text": "Barrage of Technology (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.CRYOBLASTING_PISTOLIER_CRIT_DAMAGE.event.description": {
+    "text": "After Cryoblasting Pistolier (Crit Rate) reaches max stacks, Yvonne gains a Critical DMG buff for the remainder of the skill.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.CRYOBLASTING_PISTOLIER_CRIT_DAMAGE.event.name": {
+    "text": "Cryoblasting Pistolier (Crit Damage)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.CRYOBLASTING_PISTOLIER_CRIT_DAMAGE.segment.0.name": {
+    "text": "Cryoblasting Pistolier (Crit Damage)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.CRYOBLASTING_PISTOLIER_CRIT_RATE.event.description": {
+    "text": "Immediately deploys the support bot Tink-a-Bella and makes Yvonne the controlled operator.\nTemporarily enhances Yvonne's basic attack (BATK). Each enhanced BATK sequence performed grants a stack of Critical Rate buff. After reaching max stacks, Yvonne also gains a Critical DMG buff. When the skill is about to end, Yvonne's last enhanced BATK becomes an enhanced Final Strike that deals massive Cryo DMG.\nIf the enemy is Solidified, Yvonne performs an additional attack that deals Cryo DMG and then consumes the enemy's Solidification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.CRYOBLASTING_PISTOLIER_CRIT_RATE.event.name": {
+    "text": "Cryoblasting Pistolier (Crit Rate)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.CRYOBLASTING_PISTOLIER_CRIT_RATE.segment.0.name": {
+    "text": "Cryoblasting Pistolier (Crit Rate)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.EXPERT_MECHCRAFTER.event.description": {
+    "text": "During Cryoblasting Pistolier, ATK +10% and Critical DMG Dealt +30%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.EXPERT_MECHCRAFTER.event.name": {
+    "text": "Expert Mechcrafter",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.status.EXPERT_MECHCRAFTER.segment.0.name": {
+    "text": "Expert Mechcrafter",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.talent.BARRAGE_OF_TECHNOLOGY_TALENT.event.description": {
+    "text": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.talent.BARRAGE_OF_TECHNOLOGY_TALENT.event.name": {
+    "text": "Barrage of Technology (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.talent.FREEZING_POINT_TALENT.event.description": {
+    "text": "Against enemies with active Cryo Infliction, gains Critical DMG Dealt +{inflict_up:0%}. Effect is doubled against enemies with Solidification.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.talent.FREEZING_POINT_TALENT.event.name": {
+    "text": "Freezing Point (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.YVONNE.talent.FREEZING_POINT_TALENT.segment.0.name": {
+    "text": "Freezing Point (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

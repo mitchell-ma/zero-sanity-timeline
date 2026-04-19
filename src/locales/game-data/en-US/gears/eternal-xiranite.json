@@ -1,0 +1,50 @@
+{
+  "gear.ETERNAL_XIRANITE_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer applies Amp, Protected, Susceptibility, or Weakness, other teammates gain DMG Dealt +{dmg_up:0%} for {duration}s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.event.name": {
+    "text": "Eternal Xiranite",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.piece.ETERNAL_XIRANITE_ARMOR.event.name": {
+    "text": "Eternal Xiranite Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.piece.ETERNAL_XIRANITE_AUXILIARY_ARM.event.name": {
+    "text": "Eternal Xiranite Auxiliary Arm",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.piece.ETERNAL_XIRANITE_GLOVES.event.name": {
+    "text": "Eternal Xiranite Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.piece.ETERNAL_XIRANITE_GLOVES_T1.event.name": {
+    "text": "Eternal Xiranite Gloves T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.piece.ETERNAL_XIRANITE_POWER_CORE.event.name": {
+    "text": "Eternal Xiranite Power Core",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.piece.ETERNAL_XIRANITE_POWER_CORE_T1.event.name": {
+    "text": "Eternal Xiranite Power Core T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.segment.0.name": {
+    "text": "Eternal Xiranite",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.status.ETERNAL_XIRANITE.event.description": {
+    "text": "DMG Dealt +16% for 15s to other teammates.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.status.ETERNAL_XIRANITE.event.name": {
+    "text": "Eternal Xiranite",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.ETERNAL_XIRANITE_STAT.status.ETERNAL_XIRANITE.segment.0.name": {
+    "text": "Eternal Xiranite",
+    "dataStatus": "RECONCILED"
+  }
+}

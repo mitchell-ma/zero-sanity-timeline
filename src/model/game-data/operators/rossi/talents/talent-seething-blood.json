@@ -38,7 +38,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Seething Blood",
         "duration": {
           "value": {
             "verb": "IS",
@@ -248,7 +247,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Seething Blood (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
@@ -266,8 +264,7 @@
         "value": 99999
       },
       "interactionType": "RESET"
-    },
-    "description": "When Rossi's skill deals Critical DMG to a Razor Clawmarked enemy, triggers another hit dealing Heat DMG (ATK%) and restoring HP (INT%). If target is also Combusted, DMG and heal are 1.5x. Trigger interval: 1s (P3: 0.5s). P3: +8% ATK DMG, +INT x0.04 heal."
+    }
   },
   "metadata": {
     "originId": "ROSSI",

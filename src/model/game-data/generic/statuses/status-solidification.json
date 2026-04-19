@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "SOLIDIFICATION",
-    "name": "Solidification",
     "to": "ENEMY",
     "element": "CRYO",
     "duration": {
@@ -29,8 +28,7 @@
       "interactionType": "MERGE"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "REACTION",
-    "description": "Cryo arts reaction. Deals initial Cryo DMG on activation. Duration scales with status level (6/7/8/9s). Can be shattered for additional Cryo DMG."
+    "eventCategoryType": "REACTION"
   },
   "metadata": {
     "originId": "game",

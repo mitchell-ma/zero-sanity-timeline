@@ -162,7 +162,7 @@ export function EditableValue({
       <span
         className={spanClass}
         onClick={(e) => { e.stopPropagation(); setDraft(String(display)); }}
-        title="Click to edit"
+        title={t('customizer.field.editable')}
       >
         {fmt(display)}
       </span>
@@ -171,8 +171,8 @@ export function EditableValue({
           type="button"
           className="ops-reset-tab"
           onClick={handleReset}
-          title="Reset to default"
-          aria-label="Reset value"
+          title={t('customizer.btn.reset')}
+          aria-label={t('customizer.btn.resetAria')}
         >
           {'\u27F2'}
         </button>

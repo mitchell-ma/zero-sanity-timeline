@@ -1,0 +1,14 @@
+{
+  "consumable.GINSENG_MEAT_STEW.event.name": {
+    "text": "Ginseng Meat Stew",
+    "dataStatus": "RECONCILED"
+  },
+  "consumable.PERPLEXING_MEDICATION.event.name": {
+    "text": "Perplexing Medication",
+    "dataStatus": "RECONCILED"
+  },
+  "consumable.STEW_MEETING.event.name": {
+    "text": "Stew Meeting",
+    "dataStatus": "RECONCILED"
+  }
+}

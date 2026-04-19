@@ -145,8 +145,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Originium Crystals (T2)"
+        }
       },
       "clause": [
         {
@@ -186,7 +185,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Originium Crystals (T2)",
     "to": "ENEMY",
     "stacks": {
       "limit": {
@@ -196,8 +194,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Originium Crystals that temporarily seal the enemy. Applying Physical Status or Vulnerability shatters the crystals. Enemies with attached crystals suffer Physical DMG Taken +10%/+20%."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "SEALING_SEQUENCE",

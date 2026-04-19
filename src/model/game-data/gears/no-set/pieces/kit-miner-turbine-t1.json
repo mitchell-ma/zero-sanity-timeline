@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "MINER_TURBINE_T1",
-    "name": "Miner Turbine T1",
     "gearType": "KIT",
     "gearSet": "NONE"
   },

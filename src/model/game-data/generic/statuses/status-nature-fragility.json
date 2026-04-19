@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "NATURE_FRAGILITY",
-    "name": "Nature Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Nature Fragility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

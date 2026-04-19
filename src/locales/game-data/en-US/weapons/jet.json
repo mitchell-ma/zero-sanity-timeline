@@ -1,0 +1,34 @@
+{
+  "weapon.JET.event.name": {
+    "text": "JET",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.JET.segment.0.name": {
+    "text": "JET",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.JET.skill.SUPPRESSION_ASTROPHYSICS.event.description": {
+    "text": "Arts DMG Dealt +{spell_dmg_up:0.0%}. When the wielder casts a battle skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration:0}s. When the wielder casts a combo skill, Arts DMG Dealt +{spell_dmg_up3:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.JET.skill.SUPPRESSION_ASTROPHYSICS.event.name": {
+    "text": "Suppression: Astrophysics",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.JET.skill.SUPPRESSION_ASTROPHYSICS.segment.0.name": {
+    "text": "Suppression: Astrophysics",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.JET.status.JET_ASTROPHYSICS.event.description": {
+    "text": "Arts DMG Dealt +{spell_dmg_up:0.0%}. When the wielder casts a battle skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration:0}s. When the wielder casts a combo skill, Arts DMG Dealt +{spell_dmg_up3:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.JET.status.JET_ASTROPHYSICS.event.name": {
+    "text": "Astrophysics",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.JET.status.JET_ASTROPHYSICS.segment.0.name": {
+    "text": "Astrophysics",
+    "dataStatus": "RECONCILED"
+  }
+}

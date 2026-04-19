@@ -1,8 +1,8 @@
 {
   "properties": {
-    "enhancementTypes": ["DIVE"],
-    "name": "Jolting Arts (Dive)",
-    "description": "Basic attack performed in mid-air becomes a dive attack that deals Electric DMG to nearby enemies.",
+    "enhancementTypes": [
+      "DIVE"
+    ],
     "eventType": "SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",
@@ -17,21 +17,60 @@
     {
       "frames": [
         {
-          "metadata": { "eventComponentType": "FRAME" },
-          "properties": { "offset": { "value": 1, "unit": "SECOND" }, "element": "ELECTRIC", "frameTypes": ["DIVE"] },
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC",
+            "frameTypes": [
+              "DIVE"
+            ]
+          },
           "clause": [
             {
               "conditions": [],
               "effects": [
                 {
-                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
                   "with": {
                     "value": {
-                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
-                      "value": [0.8, 0.88, 0.96, 1.04, 1.12, 1.2, 1.28, 1.36, 1.44, 1.54, 1.66, 1.8],
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        0.8,
+                        0.88,
+                        0.96,
+                        1.04,
+                        1.12,
+                        1.2,
+                        1.28,
+                        1.36,
+                        1.44,
+                        1.54,
+                        1.66,
+                        1.8
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
-                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
                   }
                 }
               ]
@@ -41,7 +80,13 @@
         }
       ],
       "properties": {
-        "duration": { "value": { "verb": "IS", "value": 1 }, "unit": "SECOND" },
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        },
         "element": "ELECTRIC"
       }
     }

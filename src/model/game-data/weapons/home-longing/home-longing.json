@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Home Longing"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Home Longing",
     "id": "HOME_LONGING",
     "type": "HANDCANNON",
     "rarity": 6

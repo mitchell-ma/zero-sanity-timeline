@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Breath of Transformation",
-    "description": "When the controlled operator's Final Strike or Finisher hits an enemy with Electric Infliction, Zhuang Fangyi creates a Xiranblitz Array that attacks the enemy and deals Electric DMG. If the Array hits an enemy that has Electric Infliction stacks, consume the said Electric Infliction stacks, forcibly apply Electrification, and give Ultimate Energy based on the number of stacks consumed. If Electrification is forcibly applied to an enemy that already has Electrification, apply Status Level +1 to the enemy's Electrification.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
@@ -20,11 +18,20 @@
   },
   "segments": [
     {
-      "metadata": { "eventComponentType": "SEGMENT" },
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
       "properties": {
-        "segmentTypes": ["ANIMATION"],
-        "name": "Animation",
-        "duration": { "value": { "verb": "IS", "value": 0.5 }, "unit": "SECOND" },
+        "segmentTypes": [
+          "ANIMATION"
+        ],
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 0.5
+          },
+          "unit": "SECOND"
+        },
         "timeDependency": "REAL_TIME",
         "timeInteractionType": "TIME_STOP"
       },
@@ -32,60 +39,151 @@
       "clauseType": "ALL"
     },
     {
-      "metadata": { "eventComponentType": "SEGMENT" },
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
       "properties": {
-        "duration": { "value": { "verb": "IS", "value": 1 }, "unit": "SECOND" },
-        "element": "ELECTRIC",
-        "name": "Breath of Transformation"
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        },
+        "element": "ELECTRIC"
       },
       "frames": [
         {
-          "metadata": { "eventComponentType": "FRAME", "dataSources": ["WARFARIN"] },
-          "properties": { "offset": { "value": 0.5, "unit": "SECOND" }, "element": "ELECTRIC" },
+          "metadata": {
+            "eventComponentType": "FRAME",
+            "dataSources": [
+              "WARFARIN"
+            ]
+          },
+          "properties": {
+            "offset": {
+              "value": 0.5,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC"
+          },
           "clause": [
             {
               "conditions": [],
               "effects": [
                 {
-                  "verb": "DEAL", "object": "STAGGER", "to": "ENEMY",
-                  "with": { "value": { "verb": "IS", "value": 10 } }
-                },
-                {
-                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "verb": "DEAL",
+                  "object": "STAGGER",
+                  "to": "ENEMY",
                   "with": {
                     "value": {
-                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
-                      "value": [1.6, 1.76, 1.92, 2.08, 2.24, 2.4, 2.56, 2.72, 2.88, 3.08, 3.32, 3.6],
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
-                    },
-                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
-                  }
-                },
-                {
-                  "verb": "CONSUME", "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "ELECTRIC", "from": "ENEMY",
-                  "with": {
-                    "stacks": {
-                      "verb": "VARY_BY", "object": "INFLICTION_STACKS_CONSUMED",
-                      "value": [0, 1, 2, 3, 4, 5]
+                      "verb": "IS",
+                      "value": 10
                     }
                   }
                 },
                 {
-                  "verb": "APPLY", "object": "STATUS", "objectId": "REACTION", "objectQualifier": "ELECTRIFICATION", "to": "ENEMY",
-                  "with": { "isForced": { "verb": "IS", "value": 1 } }
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
+                  "with": {
+                    "value": {
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        1.6,
+                        1.76,
+                        1.92,
+                        2.08,
+                        2.24,
+                        2.4,
+                        2.56,
+                        2.72,
+                        2.88,
+                        3.08,
+                        3.32,
+                        3.6
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    },
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
+                  }
                 },
                 {
-                  "verb": "RECOVER", "object": "ULTIMATE_ENERGY", "toDeterminer": "THIS", "to": "OPERATOR",
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "ELECTRIC",
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": {
+                      "verb": "VARY_BY",
+                      "object": "INFLICTION_STACKS_CONSUMED",
+                      "value": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5
+                      ]
+                    }
+                  }
+                },
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "ELECTRIFICATION",
+                  "to": "ENEMY",
+                  "with": {
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
                   "with": {
                     "value": {
                       "operation": "ADD",
-                      "left": { "verb": "IS", "value": 10 },
+                      "left": {
+                        "verb": "IS",
+                        "value": 10
+                      },
                       "right": {
                         "operation": "MULT",
-                        "left": { "verb": "IS", "value": 10 },
+                        "left": {
+                          "verb": "IS",
+                          "value": 10
+                        },
                         "right": {
-                          "verb": "VARY_BY", "object": "INFLICTION_STACKS_CONSUMED",
-                          "value": [0, 1, 2, 3, 4, 5]
+                          "verb": "VARY_BY",
+                          "object": "INFLICTION_STACKS_CONSUMED",
+                          "value": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5
+                          ]
                         }
                       }
                     }
@@ -99,15 +197,36 @@
       ]
     },
     {
-      "metadata": { "eventComponentType": "SEGMENT" },
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
       "properties": {
-        "segmentTypes": ["COOLDOWN", "IMMEDIATE_COOLDOWN"],
-        "name": "Cooldown",
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
         "duration": {
           "value": {
-            "verb": "VARY_BY", "object": "SKILL_LEVEL",
-            "value": [18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 17],
-            "of": { "object": "OPERATOR", "determiner": "THIS" }
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              17
+            ],
+            "of": {
+              "object": "OPERATOR",
+              "determiner": "THIS"
+            }
           },
           "unit": "SECOND"
         },
@@ -121,25 +240,43 @@
     "dataStatus": "RECONCILED"
   },
   "activationWindow": {
-    "properties": { "maxSkills": 1 },
+    "properties": {
+      "maxSkills": 1
+    },
     "onTriggerClause": [
       {
         "conditions": [
           {
-            "subjectDeterminer": "ANY", "subject": "OPERATOR", "verb": "PERFORM", "object": "SKILL", "objectId": "FINAL_STRIKE"
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "SKILL",
+            "objectId": "FINAL_STRIKE"
           },
           {
-            "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "ELECTRIC"
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "ELECTRIC"
           }
         ]
       },
       {
         "conditions": [
           {
-            "subjectDeterminer": "ANY", "subject": "OPERATOR", "verb": "PERFORM", "object": "SKILL", "objectId": "FINISHER"
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "SKILL",
+            "objectId": "FINISHER"
           },
           {
-            "subject": "ENEMY", "verb": "HAVE", "object": "STATUS", "objectId": "INFLICTION", "objectQualifier": "ELECTRIC"
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "ELECTRIC"
           }
         ]
       }
@@ -147,7 +284,10 @@
     "segments": [
       {
         "properties": {
-          "duration": { "value": 6, "unit": "SECOND" }
+          "duration": {
+            "value": 6,
+            "unit": "SECOND"
+          }
         }
       }
     ]

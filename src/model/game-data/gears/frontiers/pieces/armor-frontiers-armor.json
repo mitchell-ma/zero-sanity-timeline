@@ -91,7 +91,6 @@
   ],
   "properties": {
     "id": "FRONTIERS_ARMOR",
-    "name": "Frontiers Armor",
     "gearType": "ARMOR",
     "gearSet": "FRONTIERS_STAT"
   },

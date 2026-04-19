@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "RIVER, TO ME!",
-    "description": "When applying Cryo Infliction or dealing Arts Burst DMG to an enemy.\nTangtang unleashes a powerful jet stream that penetrates all enemies in its path, deals Cryo DMG to them, and creates a Whirlpool.\nUp to 2 Whirlpools can exist in the battlefield at any time.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "CRYO",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -61,8 +58,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "CRYO",
-        "name": "RIVER, TO ME!"
+        "element": "CRYO"
       },
       "frames": [
         {
@@ -181,7 +177,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "operation": "ADD",

@@ -1,0 +1,178 @@
+{
+  "op.FLUORITE.event.name": {
+    "text": "Fluorite",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.1.event.description": {
+    "text": "Agility +{Agi:0}, Intellect +10.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.1.event.name": {
+    "text": "Ten-Finger Smith (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.2.event.description": {
+    "text": "Talent Unpredictable improved: Chance to ignore Arts DMG +10%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.2.event.name": {
+    "text": "Mind Reading Technique (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.3.event.description": {
+    "text": "Battle skill Tiny Surprise improved: After Improvised Explosive explodes, the slow effect is applied to all enemies hit and lasts 6s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.3.event.name": {
+    "text": "Triple Surprise (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.4.event.description": {
+    "text": "Ultimate Apex Prankster improved: Ultimate Energy cost -10%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.4.event.name": {
+    "text": "Prank Master (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.5.event.description": {
+    "text": "Combo skill Free Giveaway improved: Whenever Cryo Infliction or Nature Infliction is applied to the enemy, cooldown is shortened by 1s. Effect can only trigger once every 1s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.potential.5.event.name": {
+    "text": "Craver of Chaos (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.APEX_PRANKSTER.event.description": {
+    "text": "Fluorite quickly moves in an arc and rapidly fires at the target within the arc to deal 4 sequences of Nature DMG. If an Improvised Explosive has been stuck to the target, the skill detonates it immediately and increases the DMG and size of the explosion.\nIf the final DMG sequence hits a target with at least 2 stacks of Cryo Infliction or Nature Infliction, then apply the same Arts Infliction again.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.APEX_PRANKSTER.event.name": {
+    "text": "Apex Prankster",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.APEX_PRANKSTER.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.FREE_GIVEAWAY.event.description": {
+    "text": "When an enemy has 2 or more stacks of Cryo Infliction or Nature Infliction. Shoots the target enemy to trigger a special explosion that deals Nature DMG and applies another Arts Infliction of the element already on the enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.FREE_GIVEAWAY.event.name": {
+    "text": "Free Giveaway",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.FREE_GIVEAWAY.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.FREE_GIVEAWAY.segment.1.name": {
+    "text": "Free Giveaway",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.FREE_GIVEAWAY.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.SIGNATURE_GUN_KATA_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals {attack_poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.SIGNATURE_GUN_KATA_BATK.event.name": {
+    "text": "Signature Gun Kata",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.SIGNATURE_GUN_KATA_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.SIGNATURE_GUN_KATA_DIVE.event.name": {
+    "text": "Signature Gun Kata (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.SIGNATURE_GUN_KATA_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.SIGNATURE_GUN_KATA_FINISHER.event.name": {
+    "text": "Signature Gun Kata (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.TINY_SURPRISE.event.description": {
+    "text": "Kicks an Improvised Explosive that sticks to the target, applying Slow and exploding after a short duration. The explosion deals Nature DMG and Nature Infliction to enemies in the area of effect. Defeating the target also sets off the Improvised Explosive immediately.\nOnly 1 Improvised Explosive can be present in the battlefield.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.TINY_SURPRISE.event.name": {
+    "text": "Tiny Surprise",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.skill.TINY_SURPRISE.segment.0.name": {
+    "text": "Tiny Surprise",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.CRAVER_OF_CHAOS.event.description": {
+    "text": "P5: When any operator applies Cryo or Nature Infliction, Fluorite's Combo Skill cooldown is reduced by 1s. Can only trigger once per 1s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.CRAVER_OF_CHAOS.event.name": {
+    "text": "Craver of Chaos (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.CRAVER_OF_CHAOS.segment.0.name": {
+    "text": "Craver of Chaos (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.CRAVER_OF_CHAOS.segment.1.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.IMPROVISED_EXPLOSIVE.event.description": {
+    "text": "An Improvised Explosive stuck to the target. Slows the target and explodes after a short duration, dealing Nature DMG and applying Nature Infliction.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.IMPROVISED_EXPLOSIVE.event.name": {
+    "text": "Improvised Explosive",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.IMPROVISED_EXPLOSIVE.segment.0.name": {
+    "text": "Improvised Explosive",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.IMPROVISED_EXPLOSIVE_ULT.event.description": {
+    "text": "An Improvised Explosive detonated by Fluorite's ultimate. Deals increased Nature DMG and applies Nature Infliction immediately.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.IMPROVISED_EXPLOSIVE_ULT.event.name": {
+    "text": "Improvised Explosive (Detonated)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.status.IMPROVISED_EXPLOSIVE_ULT.segment.0.name": {
+    "text": "Improvised Explosive (Detonated)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.talent.LOVE_THE_STAB_AND_TWIST_TALENT.event.description": {
+    "text": "Fluorite gains DMG Dealt +{dmg_up:0%} against Slowed targets.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.talent.LOVE_THE_STAB_AND_TWIST_TALENT.event.name": {
+    "text": "Love the Stab and Twist (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.talent.LOVE_THE_STAB_AND_TWIST_TALENT.segment.0.name": {
+    "text": "Love the Stab and Twist (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.talent.UNPREDICTABLE_TALENT.event.description": {
+    "text": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.talent.UNPREDICTABLE_TALENT.event.name": {
+    "text": "Unpredictable (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.FLUORITE.talent.UNPREDICTABLE_TALENT.segment.0.name": {
+    "text": "Unpredictable (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

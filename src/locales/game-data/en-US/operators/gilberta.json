@@ -1,0 +1,142 @@
+{
+  "op.GILBERTA.event.name": {
+    "text": "Gilberta",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.1.event.description": {
+    "text": "Battle skill Arcane Staff: Gravity Mode improved: Effect radius +20%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.1.event.name": {
+    "text": "Above the Clouds (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.2.event.description": {
+    "text": "Ultimate Arcane Staff: Gravity Field improved: When an enemy is affected by the Anomalous Gravity Field of the ultimate, double the Arts Susceptibility increase per Vulnerability stack. When finalizing this effect, the target is treated as having 1 additional stack of Vulnerability (total stacks max out at 4).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.2.event.name": {
+    "text": "Wind Walker (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.3.event.description": {
+    "text": "Talent Messenger's Song improved: Ultimate Gain Efficiency +5%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.3.event.name": {
+    "text": "Quick, Gentle Steps (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.4.event.description": {
+    "text": "Ultimate Arcane Staff: Gravity Field improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.4.event.name": {
+    "text": "Dances with Clouds (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.5.event.description": {
+    "text": "Combo skill Arcane Staff: Matrix Displacement improved: Length of cooldown {coolDown:0}s; DMG multiplier is increased to 1.3 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.5.event.name": {
+    "text": "Special Mail (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.potential.5.segment.0.name": {
+    "text": "Special Mail (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.BEAM_COHESION_ARTS_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.BEAM_COHESION_ARTS_BATK.event.name": {
+    "text": "Arcane Staff: Beam Cohesion Arts",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.BEAM_COHESION_ARTS_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.BEAM_COHESION_ARTS_DIVE.event.name": {
+    "text": "Arcane Staff: Beam Cohesion Arts (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.BEAM_COHESION_ARTS_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.BEAM_COHESION_ARTS_FINISHER.event.name": {
+    "text": "Arcane Staff: Beam Cohesion Arts (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.GRAVITY_FIELD.event.description": {
+    "text": "Creates an Anomalous Gravity Field that instantly deals 1 hit of Nature DMG and applies Nature Infliction to enemies caught in the field. Targets in the Anomalous Gravity Field also suffer from Slow and Arts Susceptibility. The effect of Arts Susceptibility is further increased based on the number of active Vulnerability stacks on the target. \nIf a target in the field is Lifted, the Lifted status will persist until the field wears off.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.GRAVITY_FIELD.event.name": {
+    "text": "Arcane Staff: Gravity Field",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.GRAVITY_FIELD.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.GRAVITY_MODE.event.description": {
+    "text": "Initiates Arts channeling that creates a gravity well. The gravity well pulls in nearby enemies and deals Nature DMG to them. When channeling ends, the gravity well implodes to deal Nature DMG and Nature Infliction to enemies in the area of effect.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.GRAVITY_MODE.event.name": {
+    "text": "Arcane Staff: Gravity Mode",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.MATRIX_DISPLACEMENT.event.description": {
+    "text": "When an Arts Reaction is applied to an enemy. A quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.MATRIX_DISPLACEMENT.event.name": {
+    "text": "Arcane Staff: Matrix Displacement",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.MATRIX_DISPLACEMENT.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.MATRIX_DISPLACEMENT.segment.1.name": {
+    "text": "Arcane Staff: Matrix Displacement",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.skill.MATRIX_DISPLACEMENT.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.status.ANOMALOUS_GRAVITY_FIELD.event.description": {
+    "text": "Targets in the Anomalous Gravity Field suffer from Slow and Arts Susceptibility. The effect of Arts Susceptibility is further increased based on the number of active Vulnerability stacks on the target. If a target in the field is Lifted, the Lifted status will persist until the field wears off.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.status.ANOMALOUS_GRAVITY_FIELD.event.name": {
+    "text": "Anomalous Gravity Field",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.talent.LATE_REPLY_TALENT.event.description": {
+    "text": "Battle skill Arcane Staff: Gravity Mode and combo skill Arcane Staff: Matrix Displacement improved: Hitting at least 2 enemies with either the combo skill or the last sequence of the battle skill restores [108 + Intellect×0.90] HP to the controlled operator. If the controlled operator is already at max HP, then restore the HP of the teammate with lowest percentage HP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.talent.LATE_REPLY_TALENT.event.name": {
+    "text": "Late Reply (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.talent.MESSENGER_S_SONG_TALENT.event.description": {
+    "text": "When fighting in the battlefield, all allied guards, casters, and supporters gain Ultimate Gain Efficiency +{add:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.talent.MESSENGER_S_SONG_TALENT.event.name": {
+    "text": "Messenger's Song (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.GILBERTA.talent.MESSENGER_S_SONG_TALENT.segment.0.name": {
+    "text": "Messenger's Song (T1)",
+    "dataStatus": "RECONCILED"
+  }
+}

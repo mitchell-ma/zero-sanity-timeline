@@ -1,0 +1,10 @@
+{
+  "weapon.WAVE_TIDE.event.name": {
+    "text": "Wave Tide",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.WAVE_TIDE.segment.0.name": {
+    "text": "Wave Tide",
+    "dataStatus": "RECONCILED"
+  }
+}

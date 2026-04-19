@@ -77,8 +77,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Essence Disintegration (T1)"
+        }
       },
       "clause": [
         {
@@ -118,7 +117,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Essence Disintegration (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -136,8 +134,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

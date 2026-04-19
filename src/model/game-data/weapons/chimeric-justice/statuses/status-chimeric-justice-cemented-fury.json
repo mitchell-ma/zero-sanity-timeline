@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Cemented Fury"
+        }
       },
       "clause": [
         {
@@ -74,8 +73,6 @@
   ],
   "properties": {
     "id": "CHIMERIC_JUSTICE_CEMENTED_FURY",
-    "name": "Cemented Fury",
-    "description": "On applying Vulnerability to 0-stack enemy",
     "duration": {
       "value": {
         "verb": "IS",

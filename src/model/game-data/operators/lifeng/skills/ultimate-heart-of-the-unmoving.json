@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Heart of the Unmoving",
-    "description": "Unleashes an aspect that performs an Immovable Vajra Slam. The Slam deals Physical DMG and applies Knock Down to all enemies in a large area of effect (AOE), and pulls enemies towards the center of the AOE. After a while, the Slam unleashes one more hit that deals massive Physical DMG and applies another Knock Down to enemies still within its AOE.\nIf the skill consumes a Link, then it deals an additional hit of massive Physical DMG.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -81,7 +78,6 @@
           },
           "unit": "SECOND"
         },
-        "name": "Sequence 1",
         "element": "PHYSICAL"
       },
       "frames": [
@@ -181,7 +177,6 @@
           },
           "unit": "SECOND"
         },
-        "name": "Sequence 2",
         "element": "PHYSICAL"
       },
       "frames": [
@@ -289,7 +284,6 @@
           },
           "unit": "SECOND"
         },
-        "name": "Vajra Impact",
         "element": "PHYSICAL"
       },
       "frames": [

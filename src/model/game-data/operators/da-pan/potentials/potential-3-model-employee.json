@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "DA_PAN_POTENTIAL_3",
-    "name": "Model Employee (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Strength +{Str:0}, Physical DMG Dealt +{PhysicalDamageIncrease:0%}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "DA_PAN",

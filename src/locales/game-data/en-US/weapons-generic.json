@@ -1,0 +1,518 @@
+{
+  "weapon.GENERIC.skill.AGILITY_BOOST_L.event.description": {
+    "text": "Agility +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.AGILITY_BOOST_L.event.name": {
+    "text": "Agility Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.AGILITY_BOOST_L.segment.0.name": {
+    "text": "Agility Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.AGILITY_BOOST_M.event.description": {
+    "text": "Agility +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.AGILITY_BOOST_M.event.name": {
+    "text": "Agility Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.AGILITY_BOOST_M.segment.0.name": {
+    "text": "Agility Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.AGILITY_BOOST_S.event.description": {
+    "text": "Agility +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.AGILITY_BOOST_S.event.name": {
+    "text": "Agility Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.AGILITY_BOOST_S.segment.0.name": {
+    "text": "Agility Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_BOOST_L.event.description": {
+    "text": "Arts DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_BOOST_L.event.name": {
+    "text": "Arts Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_BOOST_L.segment.0.name": {
+    "text": "Arts Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_BOOST_M.event.description": {
+    "text": "Arts DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_BOOST_M.event.name": {
+    "text": "Arts Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_BOOST_M.segment.0.name": {
+    "text": "Arts Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_BOOST_S.event.description": {
+    "text": "Arts DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_BOOST_S.event.name": {
+    "text": "Arts Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_BOOST_S.segment.0.name": {
+    "text": "Arts Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_INTENSITY_BOOST_L.event.description": {
+    "text": "Arts Intensity +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_INTENSITY_BOOST_L.event.name": {
+    "text": "Arts Intensity Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_INTENSITY_BOOST_L.segment.0.name": {
+    "text": "Arts Intensity Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_INTENSITY_BOOST_M.event.description": {
+    "text": "Arts Intensity +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_INTENSITY_BOOST_M.event.name": {
+    "text": "Arts Intensity Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ARTS_INTENSITY_BOOST_M.segment.0.name": {
+    "text": "Arts Intensity Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ASSAULT_ARMAMENT_PREP.event.description": {
+    "text": "ATK +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ASSAULT_ARMAMENT_PREP.event.name": {
+    "text": "Assault: Armament Prep",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ASSAULT_ARMAMENT_PREP.segment.0.name": {
+    "text": "Assault: Armament Prep",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ATTACK_BOOST_L.event.description": {
+    "text": "Attack +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ATTACK_BOOST_L.event.name": {
+    "text": "Attack Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ATTACK_BOOST_L.segment.0.name": {
+    "text": "Attack Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ATTACK_BOOST_M.event.description": {
+    "text": "Attack +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ATTACK_BOOST_M.event.name": {
+    "text": "ATK Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ATTACK_BOOST_M.segment.0.name": {
+    "text": "ATK Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ATTACK_BOOST_S.event.description": {
+    "text": "Attack +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ATTACK_BOOST_S.event.name": {
+    "text": "ATK Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ATTACK_BOOST_S.segment.0.name": {
+    "text": "ATK Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.CRITICAL_RATE_BOOST_L.event.description": {
+    "text": "Critical Rate +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.CRITICAL_RATE_BOOST_L.event.name": {
+    "text": "Critical Rate Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.CRITICAL_RATE_BOOST_L.segment.0.name": {
+    "text": "Critical Rate Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.CRYO_DAMAGE_BOOST_L.event.description": {
+    "text": "Cryo DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.CRYO_DAMAGE_BOOST_L.event.name": {
+    "text": "Cryo DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.CRYO_DAMAGE_BOOST_L.segment.0.name": {
+    "text": "Cryo DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.CRYO_DAMAGE_BOOST_M.event.description": {
+    "text": "Cryo DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.CRYO_DAMAGE_BOOST_M.event.name": {
+    "text": "Cryo DMG Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.CRYO_DAMAGE_BOOST_M.segment.0.name": {
+    "text": "Cryo DMG Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ELECTRIC_DAMAGE_BOOST_L.event.description": {
+    "text": "Electric DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ELECTRIC_DAMAGE_BOOST_L.event.name": {
+    "text": "Electric DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ELECTRIC_DAMAGE_BOOST_L.segment.0.name": {
+    "text": "Electric DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ELECTRIC_DAMAGE_BOOST_M.event.description": {
+    "text": "Electric DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ELECTRIC_DAMAGE_BOOST_M.event.name": {
+    "text": "Electric DMG Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ELECTRIC_DAMAGE_BOOST_M.segment.0.name": {
+    "text": "Electric DMG Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HEAT_DAMAGE_BOOST_L.event.description": {
+    "text": "Heat DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HEAT_DAMAGE_BOOST_L.event.name": {
+    "text": "Heat DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HEAT_DAMAGE_BOOST_L.segment.0.name": {
+    "text": "Heat DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HEAT_DAMAGE_BOOST_M.event.description": {
+    "text": "Heat DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HEAT_DAMAGE_BOOST_M.event.name": {
+    "text": "Heat DMG Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HEAT_DAMAGE_BOOST_M.segment.0.name": {
+    "text": "Heat DMG Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HP_BOOST_L.event.description": {
+    "text": "Max HP +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HP_BOOST_L.event.name": {
+    "text": "HP Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HP_BOOST_L.segment.0.name": {
+    "text": "HP Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HP_BOOST_M.event.description": {
+    "text": "Max HP +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HP_BOOST_M.event.name": {
+    "text": "HP Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HP_BOOST_M.segment.0.name": {
+    "text": "HP Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HP_BOOST_S.event.description": {
+    "text": "Max HP +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HP_BOOST_S.event.name": {
+    "text": "HP Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.HP_BOOST_S.segment.0.name": {
+    "text": "HP Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INSPIRING_START_OF_A_SAGA.event.description": {
+    "text": "When the wielder's HP is above {hp_ratio_c:0%}, ATK +{atk_up:0.0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INSPIRING_START_OF_A_SAGA.event.name": {
+    "text": "Inspiring: Start of a Saga",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INTELLECT_BOOST_L.event.description": {
+    "text": "Intellect +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INTELLECT_BOOST_L.event.name": {
+    "text": "Intellect Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INTELLECT_BOOST_L.segment.0.name": {
+    "text": "Intellect Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INTELLECT_BOOST_M.event.description": {
+    "text": "Intellect +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INTELLECT_BOOST_M.event.name": {
+    "text": "Intellect Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INTELLECT_BOOST_M.segment.0.name": {
+    "text": "Intellect Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INTELLECT_BOOST_S.event.description": {
+    "text": "Intellect +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INTELLECT_BOOST_S.event.name": {
+    "text": "Intellect Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.INTELLECT_BOOST_S.segment.0.name": {
+    "text": "Intellect Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.MAIN_ATTRIBUTE_BOOST_L.event.description": {
+    "text": "Main attribute +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.MAIN_ATTRIBUTE_BOOST_L.event.name": {
+    "text": "Main Attribute Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.MAIN_ATTRIBUTE_BOOST_L.segment.0.name": {
+    "text": "Main Attribute Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.MAIN_ATTRIBUTE_BOOST_S.event.description": {
+    "text": "Main attribute +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.MAIN_ATTRIBUTE_BOOST_S.event.name": {
+    "text": "Main Attribute Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.MAIN_ATTRIBUTE_BOOST_S.segment.0.name": {
+    "text": "Main Attribute Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.NATURE_DAMAGE_BOOST_L.event.description": {
+    "text": "Nature DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.NATURE_DAMAGE_BOOST_L.event.name": {
+    "text": "Nature DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.NATURE_DAMAGE_BOOST_L.segment.0.name": {
+    "text": "Nature DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PHYSICAL_DAMAGE_BOOST_L.event.description": {
+    "text": "Physical DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PHYSICAL_DAMAGE_BOOST_L.event.name": {
+    "text": "Physical DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PHYSICAL_DAMAGE_BOOST_L.segment.0.name": {
+    "text": "Physical DMG Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PHYSICAL_DAMAGE_BOOST_M.event.description": {
+    "text": "Physical DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PHYSICAL_DAMAGE_BOOST_M.event.name": {
+    "text": "Physical DMG Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PHYSICAL_DAMAGE_BOOST_M.segment.0.name": {
+    "text": "Physical DMG Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PHYSICAL_DAMAGE_BOOST_S.event.description": {
+    "text": "Physical DMG Dealt +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PHYSICAL_DAMAGE_BOOST_S.event.name": {
+    "text": "Physical DMG Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PHYSICAL_DAMAGE_BOOST_S.segment.0.name": {
+    "text": "Physical DMG Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PURSUIT_UNENDING_CYCLE.event.description": {
+    "text": "When the wielder casts a combo skill, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.PURSUIT_UNENDING_CYCLE.event.name": {
+    "text": "Pursuit: Unending Cycle",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.STRENGTH_BOOST_L.event.description": {
+    "text": "Strength +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.STRENGTH_BOOST_L.event.name": {
+    "text": "Strength Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.STRENGTH_BOOST_L.segment.0.name": {
+    "text": "Strength Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.STRENGTH_BOOST_M.event.description": {
+    "text": "Strength +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.STRENGTH_BOOST_M.event.name": {
+    "text": "Strength Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.STRENGTH_BOOST_M.segment.0.name": {
+    "text": "Strength Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.STRENGTH_BOOST_S.event.description": {
+    "text": "Strength +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.STRENGTH_BOOST_S.event.name": {
+    "text": "Strength Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.STRENGTH_BOOST_S.segment.0.name": {
+    "text": "Strength Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.SUPPRESSION_EMERGENCY_BOOST.event.description": {
+    "text": "When the wielder's battle skill hits the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.SUPPRESSION_EMERGENCY_BOOST.event.name": {
+    "text": "Suppression: Emergency Boost",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.TREATMENT_EFFICIENCY_BOOST_L.event.description": {
+    "text": "Treatment Efficiency +.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.TREATMENT_EFFICIENCY_BOOST_L.event.name": {
+    "text": "Treatment Efficiency Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.TREATMENT_EFFICIENCY_BOOST_L.segment.0.name": {
+    "text": "Treatment Efficiency Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.TREATMENT_EFFICIENCY_BOOST_M.event.description": {
+    "text": "Treatment Efficiency +.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.TREATMENT_EFFICIENCY_BOOST_M.event.name": {
+    "text": "Treatment Efficiency Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.TREATMENT_EFFICIENCY_BOOST_M.segment.0.name": {
+    "text": "Treatment Efficiency Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ULTIMATE_GAIN_EFFICIENCY_BOOST_L.event.description": {
+    "text": "Ultimate Gain Efficiency +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ULTIMATE_GAIN_EFFICIENCY_BOOST_L.event.name": {
+    "text": "Ultimate Gain Efficiency Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ULTIMATE_GAIN_EFFICIENCY_BOOST_L.segment.0.name": {
+    "text": "Ultimate Gain Efficiency Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ULTIMATE_GAIN_EFFICIENCY_BOOST_M.event.description": {
+    "text": "Ultimate Gain Efficiency +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ULTIMATE_GAIN_EFFICIENCY_BOOST_M.event.name": {
+    "text": "Ultimate Gain Efficiency Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.ULTIMATE_GAIN_EFFICIENCY_BOOST_M.segment.0.name": {
+    "text": "Ultimate Gain Efficiency Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.WILL_BOOST_L.event.description": {
+    "text": "Will +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.WILL_BOOST_L.event.name": {
+    "text": "Will Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.WILL_BOOST_L.segment.0.name": {
+    "text": "Will Boost [L]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.WILL_BOOST_M.event.description": {
+    "text": "Will +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.WILL_BOOST_M.event.name": {
+    "text": "Will Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.WILL_BOOST_M.segment.0.name": {
+    "text": "Will Boost [M]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.WILL_BOOST_S.event.description": {
+    "text": "Will +",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.WILL_BOOST_S.event.name": {
+    "text": "Will Boost [S]",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.skill.WILL_BOOST_S.segment.0.name": {
+    "text": "Will Boost [S]",
+    "dataStatus": "RECONCILED"
+  }
+}

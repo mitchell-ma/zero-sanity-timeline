@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "EMBER_POTENTIAL_5",
-    "name": "The Steel Oath (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by 1.2; while this shield is active, the wielder gains ATK +10%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "EMBER",

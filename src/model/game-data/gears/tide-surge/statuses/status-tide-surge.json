@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Tide Surge"
+        }
       },
       "clause": [
         {
@@ -36,7 +35,6 @@
   ],
   "properties": {
     "id": "TIDE_SURGE",
-    "name": "Tide Surge",
     "duration": {
       "value": {
         "verb": "IS",
@@ -51,7 +49,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Arts DMG +35% for 15s after applying 2+ stacks of Arts Infliction. Cannot stack.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

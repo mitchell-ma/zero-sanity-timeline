@@ -33,14 +33,9 @@ for (const key of splashContext.keys()) {
   }
 }
 
-/** Look up splash art by operator display name. */
-function getSplashArt(operatorName: string): string | undefined {
-  const key = operatorName.replace(/ /g, '_').toLowerCase();
-  if (SPLASH_ART[key]) return SPLASH_ART[key];
-  for (const [assetKey, url] of Object.entries(SPLASH_ART)) {
-    if (assetKey.startsWith(key)) return url;
-  }
-  return undefined;
+/** Look up splash art by operator ID (hard-wired: `<id.toLowerCase()>_banner.webp`). */
+function getSplashArt(operatorId: string): string | undefined {
+  return SPLASH_ART[operatorId.toLowerCase()];
 }
 
 // ── Role display names ──────────────────────────────────────────────────────
@@ -87,7 +82,7 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   const color = ELEMENT_COLORS[elementType as ElementType] ?? '#888888';
 
   // Splash art: explicit field → asset auto-discovery
-  const splash = opJson.splashArt ?? getSplashArt(opJson.name as string);
+  const splash = opJson.splashArt ?? getSplashArt(operatorId);
 
   // Build skill type → base skill ID map from skillTypeMap
   const typeMap = getSkillTypeMap(operatorId);
@@ -205,6 +200,18 @@ function formatWarning(name: string, issues: string[], isBuiltIn: boolean): stri
 
 export const operatorWarnings: { id: string; name: string; message: string; isBuiltIn: boolean }[] = [];
 
+function clearOperatorWarning(id: string): void {
+  for (let i = operatorWarnings.length - 1; i >= 0; i--) {
+    if (operatorWarnings[i].id === id) operatorWarnings.splice(i, 1);
+  }
+}
+
+/** Look up a pending warning for a custom operator by id (case-insensitive). */
+export function getCustomOperatorWarning(customId: string): string | undefined {
+  const key = customId.toLowerCase();
+  return operatorWarnings.find((w) => !w.isBuiltIn && w.id.toLowerCase() === key)?.message;
+}
+
 // ── Build all operators ─────────────────────────────────────────────────────
 
 export const ALL_OPERATORS: ViewOperator[] = [];
@@ -242,6 +249,7 @@ export function registerCustomOperatorFromConfig(
   opJson: Record<string, unknown>,
 ): ViewOperator | null {
   const name = (opJson.name as string) ?? customId;
+  clearOperatorWarning(customId);
   const issues = validateOperatorJson(opJson, false);
   if (issues.length > 0) {
     const msg = formatWarning(name, issues, false);
@@ -265,6 +273,7 @@ export function registerCustomOperatorFromConfig(
 export function deregisterCustomOperatorById(operatorId: string): void {
   const idx = ALL_OPERATORS.findIndex((o) => o.id === operatorId);
   if (idx >= 0) ALL_OPERATORS.splice(idx, 1);
+  clearOperatorWarning(operatorId);
 }
 
 // ── Ultimate energy cost ─────────────────────────────────────────────────────

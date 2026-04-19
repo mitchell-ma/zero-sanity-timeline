@@ -1,0 +1,34 @@
+{
+  "weapon.GRAND_VISION.event.name": {
+    "text": "Grand Vision",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GRAND_VISION.segment.0.name": {
+    "text": "Grand Vision",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GRAND_VISION.skill.INFLICTION_LONG_TIME_WISH.event.description": {
+    "text": "Arts Intensity +{phy_spell_up:0}. When the wielder applies Originium Crystals or Solidification, during the next battle skill or ultimate cast within {duration:0}s, the wielder gains Physical DMG Dealt +{phy_dmg_up:0.0%}. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GRAND_VISION.skill.INFLICTION_LONG_TIME_WISH.event.name": {
+    "text": "Infliction: Long Time Wish",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GRAND_VISION.skill.INFLICTION_LONG_TIME_WISH.segment.0.name": {
+    "text": "Infliction: Long Time Wish",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GRAND_VISION.status.GRAND_VISION_LONG_TIME_WISH.event.description": {
+    "text": "Phys DMG bonus on next battle/ult skill",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GRAND_VISION.status.GRAND_VISION_LONG_TIME_WISH.event.name": {
+    "text": "Long Time Wish",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GRAND_VISION.status.GRAND_VISION_LONG_TIME_WISH.segment.0.name": {
+    "text": "Long Time Wish",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "LYNX_CONNECTOR_T2",
-    "name": "LYNX Connector T2",
     "gearType": "KIT",
     "gearSet": "LYNX_STAT"
   },

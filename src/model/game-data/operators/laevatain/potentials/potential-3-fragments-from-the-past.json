@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_3",
-    "name": "Fragments from the Past (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Smouldering Fire improved: Duration of the Combustion applied by the skill is increased by {duration-1:0%}. DMG of the Combustion applied by the skills is increased to 1.5 times the original."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "LAEVATAIN",

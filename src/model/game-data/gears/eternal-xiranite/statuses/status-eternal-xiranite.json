@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Eternal Xiranite"
+        }
       },
       "clause": [
         {
@@ -35,7 +34,6 @@
   ],
   "properties": {
     "id": "ETERNAL_XIRANITE",
-    "name": "Eternal Xiranite",
     "duration": {
       "value": {
         "verb": "IS",
@@ -50,7 +48,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "DMG Dealt +16% for 15s to other teammates.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

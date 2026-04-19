@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Lone Wolf (P1)"
+        }
       },
       "clause": [
         {
@@ -49,11 +48,9 @@
   ],
   "properties": {
     "id": "WULFGARD_P1_LONE_WOLF",
-    "name": "Lone Wolf (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Strength +{Str:0}, Agility +{Agi:0}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "WULFGARD",

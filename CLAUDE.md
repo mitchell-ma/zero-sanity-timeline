@@ -63,6 +63,13 @@ Rules:
 
 Game data:
 - **Terminology: "DSL" vs "JSON config".** The DSL is the grammar defined in `src/dsl/semantics.ts` — NounTypes, VerbTypes, AdjectiveTypes, ValueNode types, NOUN_QUALIFIER_MAPPING, NOUN_UNITS, etc. The JSON config files (`operators/*/skills/*.json`, `statuses/*.json`, `talents/*.json`) are data that conforms to the DSL grammar. When asked to "show the DSL", describe the grammar/schema. When asked to "show the config", show the raw JSON data.
+- **DSL grammar mappings (three-layer narrow).** Builder UIs and validators consume these top-down; do not hard-code any of them in views/controllers:
+  - `SUBJECT_VERB_MAPPING` — subject → valid condition verbs (A-B).
+  - `SUBJECT_VERB_OBJECT_MAPPING` — subject × verb → valid objects (A-B-C). Falls back to `VERB_OBJECTS[verb]` when unlisted.
+  - `OBJECT_ID_QUALIFIERS` — object × objectId → valid qualifiers. Canonical STATUS narrowing: `object: STATUS, objectId: {INFLICTION | REACTION | PHYSICAL | SUSCEPTIBILITY | <custom>}, objectQualifier: <variant>`.
+  - `VERB_TARGET_MAPPING` — effect verb → valid `to` targets.
+  - Helpers: `verbsForSubject`, `objectsForSubjectVerb`, `qualifiersForObjectId`, `targetsForVerb`. Full table lives in `operatorDataSpec.md` "DSL Grammar & Semantics".
+- **UE no-gain windows come from the `IGNORE ULTIMATE_ENERGY` clause effect only.** `SegmentType.ACTIVE` was retired — do not add it back. Segments with no UE gain must author an explicit `{verb: IGNORE, object: ULTIMATE_ENERGY, to: OPERATOR}` effect in their `clause`. Valid `SegmentType` values: `ANIMATION`, `STASIS`, `COOLDOWN`, `IMMEDIATE_COOLDOWN`.
 - All skill data (frames, multipliers, effects, properties, animation timings) lives in `src/model/game-data/operator-skills/*-skills.json`. Operator JSONs (`src/model/game-data/operators/*-operator.json`) store only operator-level data (stats, potentials, talents, metadata) — never skill frames or overrides.
 - When debugging missing/wrong skill data in the UI, always check the skills JSON first — that is the single source of truth. There is no override mechanism in operator JSONs.
 - When showing JSON configs to the user, always show the full raw JSON — never abbreviate or summarize into pseudo-JSON.

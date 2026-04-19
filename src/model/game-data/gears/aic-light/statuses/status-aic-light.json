@@ -8,8 +8,7 @@
             "value": 5
           },
           "unit": "SECOND"
-        },
-        "name": "AIC Light"
+        }
       },
       "clause": [
         {
@@ -35,7 +34,6 @@
   ],
   "properties": {
     "id": "AIC_LIGHT",
-    "name": "AIC Light",
     "duration": {
       "value": {
         "verb": "IS",
@@ -50,7 +48,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "ATK +20 for 5s after defeating an enemy.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

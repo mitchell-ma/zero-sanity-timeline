@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Wolven Fury",
-    "description": "Fire a rapid barrage of shots and unleashes the Wolven Fury to attack nearby enemies, dealing 5 hits of Heat DMG and forcibly applying Combustion.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "HEAT",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",

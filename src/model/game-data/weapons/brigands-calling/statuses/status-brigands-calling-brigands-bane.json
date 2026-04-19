@@ -8,8 +8,7 @@
             "value": 20
           },
           "unit": "SECOND"
-        },
-        "name": "Brigand's Bane"
+        }
       },
       "clause": [
         {
@@ -51,8 +50,6 @@
   ],
   "properties": {
     "id": "BRIGANDS_CALLING_BRIGANDS_BANE",
-    "name": "Brigand's Bane",
-    "description": "Cryo DMG Dealt bonus from Cryo Infliction application",
     "duration": {
       "value": {
         "verb": "IS",

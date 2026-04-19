@@ -1,0 +1,130 @@
+{
+  "op.CHEN_QIANYU.event.name": {
+    "text": "Chen Qianyu",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.2.event.description": {
+    "text": "Agility +15, Physical DMG Dealt +8%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.2.event.name": {
+    "text": "Heirloom Martial Arts (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.2.segment.0.name": {
+    "text": "Heirloom Martial Arts (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.3.event.description": {
+    "text": "Battle skill Ascending Strike, combo skill Soar to the Stars, and ultimate Blade Gale improved: DMG Multiplier is increased to 1.1 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.3.event.name": {
+    "text": "Dual-Wielding Swordmancer (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.4.event.description": {
+    "text": "Ultimate Blade Gale improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.4.event.name": {
+    "text": "Improvised Chi Xiao (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.5.event.description": {
+    "text": "Combo skill Soar to the Stars improved: Length of cooldown is now {coolDown:0}s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.potential.5.event.name": {
+    "text": "Bonded with the World (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.ASCENDING_STRIKE.event.description": {
+    "text": "Performs an uppercut slash at the target enemy, dealing Physical DMG and Lift.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.ASCENDING_STRIKE.event.name": {
+    "text": "Ascending Strike",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.BLADE_GALE.event.description": {
+    "text": "A 7-sequence slash attack that deals Physical DMG with each sequence to the target enemy. The final slash sequence deals even more DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.BLADE_GALE.event.name": {
+    "text": "Blade Gale",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.BLADE_GALE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOARING_BREAK_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOARING_BREAK_BATK.event.name": {
+    "text": "Soaring Break",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOARING_BREAK_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOARING_BREAK_DIVE.event.name": {
+    "text": "Soaring Break (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOARING_BREAK_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOARING_BREAK_FINISHER.event.name": {
+    "text": "Soaring Break (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOAR_TO_THE_STARS.event.description": {
+    "text": "When an enemy becomes Vulnerable. A slashing dash that passes through the target enemy and deals Physical DMG and Lift to all enemies along the way.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOAR_TO_THE_STARS.event.name": {
+    "text": "Soar to the Stars",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOAR_TO_THE_STARS.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOAR_TO_THE_STARS.segment.1.name": {
+    "text": "Soar to the Stars",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.skill.SOAR_TO_THE_STARS.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.talent.MOMENTUM_BREAKER_TALENT.event.description": {
+    "text": "Interrupting the enemy's charge up deals another 10 Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.talent.MOMENTUM_BREAKER_TALENT.event.name": {
+    "text": "Momentum Breaker (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.talent.MOMENTUM_BREAKER_TALENT.segment.0.name": {
+    "text": "Momentum Breaker",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.talent.SLASHING_EDGE.event.description": {
+    "text": "After hitting an enemy with skills, Chen gains ATK +4%/+8% (L1/L2) for 10s. This effect can reach 5 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.talent.SLASHING_EDGE.event.name": {
+    "text": "Slashing Edge (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.CHEN_QIANYU.talent.SLASHING_EDGE.segment.0.name": {
+    "text": "Slashing Edge (T1)",
+    "dataStatus": "RECONCILED"
+  }
+}

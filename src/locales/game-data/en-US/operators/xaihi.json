@@ -1,0 +1,158 @@
+{
+  "op.XAIHI.event.name": {
+    "text": "Xaihi",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.1.event.description": {
+    "text": "Arts Amp granted by the Auxiliary Crystal is increased by another 5%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.1.event.name": {
+    "text": "Agile Execution (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.2.event.description": {
+    "text": "Ultimate Stack Overflow improved: Ultimate Energy cost -10%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.2.event.name": {
+    "text": "Link Aggregation (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.3.event.description": {
+    "text": "Combo skill Stress Testing improved: When hitting the target, the hit chains 1 time to 1 additional target nearby.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.3.event.name": {
+    "text": "Mapping Node (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.4.event.description": {
+    "text": "Intellect +15, Treatment Efficiency +{HealOutputIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.4.event.name": {
+    "text": "Grayscale Release (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.4.segment.0.name": {
+    "text": "Grayscale Release (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.5.event.description": {
+    "text": "Ultimate Stack Overflow improved: Amp effect is increased to 1.1 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.potential.5.event.name": {
+    "text": "Controlled Recursion (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.COOLDOWN_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.COOLDOWN_BATK.event.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.COOLDOWN_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.COOLDOWN_DIVE.event.name": {
+    "text": "Cooldown (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.COOLDOWN_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.COOLDOWN_FINISHER.event.name": {
+    "text": "Cooldown (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.DISTRIBUTED_DOS.event.description": {
+    "text": "Summons an Auxiliary Crystal that orbits the controlled operator for a while. After the controlled operator performs a Final Strike on the enemy, the Auxiliary Crystal will restore the said operator's HP. This effect can trigger 2 times. The attribute of Will increases the amount of HP treatment. When the controlled operator is already at Max HP when triggering the HP restoration, grant the said operator a temporary Arts Amp as well. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.DISTRIBUTED_DOS.event.name": {
+    "text": "Distributed DoS",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STACK_OVERFLOW.event.description": {
+    "text": "Applies temporary Cryo Amp and Nature Amp to the entire team. The attribute of Intellect increases the Amp effect.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STACK_OVERFLOW.event.name": {
+    "text": "Stack Overflow",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STACK_OVERFLOW.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STRESS_TESTING.event.description": {
+    "text": "When the Auxiliary Crystal uses up its HP treatments. Quickly charges up the Auxiliary Crystal and launches it at the enemy to deal Cryo DMG and Cryo Infliction.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STRESS_TESTING.event.name": {
+    "text": "Stress Testing",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STRESS_TESTING.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STRESS_TESTING.segment.1.name": {
+    "text": "Stress Testing",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.skill.STRESS_TESTING.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.status.AUXILIARY_CRYSTAL.event.description": {
+    "text": "Summons an Auxiliary Crystal that orbits the controlled operator for a while. After the controlled operator performs a Final Strike on the enemy, the Auxiliary Crystal will restore the said operator's HP. This effect can trigger 2 times. The attribute of Will increases the amount of HP treatment. When the controlled operator is already at Max HP when triggering the HP restoration, grant the said operator a temporary Arts Amp as well. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.status.AUXILIARY_CRYSTAL.event.name": {
+    "text": "Auxiliary Crystal",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.status.DISTRIBUTED_DOS_AMP.event.description": {
+    "text": "When the controlled operator is already at Max HP when triggering the Auxiliary Crystal HP restoration, grants a temporary Arts Amp.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.status.DISTRIBUTED_DOS_AMP.event.name": {
+    "text": "Distributed DoS (Amp)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.status.DISTRIBUTED_DOS_AMP.segment.0.name": {
+    "text": "Distributed DoS (Amp)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.status.EXECUTE_PROCESS.event.description": {
+    "text": "Cryo DMG Taken debuff (Cryo Fragility) applied by Stress Testing.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.status.EXECUTE_PROCESS.event.name": {
+    "text": "Execute Process (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.talent.EXECUTE_PROCESS_TALENT.event.description": {
+    "text": "Combo skill Stress Testing improved: Hitting an enemy with Cryo Infliction or Solidification also causes the enemy to suffer Cryo DMG Taken +10% for 5s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.talent.EXECUTE_PROCESS_TALENT.event.name": {
+    "text": "Execute Process (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.talent.FREEZE_PROTOCOL_TALENT.event.description": {
+    "text": "Ultimate Stack Overflow improved: The ultimate also dispels Cryo Infliction and Solidification from the entire team.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.XAIHI.talent.FREEZE_PROTOCOL_TALENT.event.name": {
+    "text": "Freeze Protocol (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

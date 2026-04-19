@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "CRYO_AMP",
-    "name": "Cryo Amp",
     "to": "TEAM",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Cryo Amp applied to the team.",
     "duration": {
       "value": {
         "verb": "IS",

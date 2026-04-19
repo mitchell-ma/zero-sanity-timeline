@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "WULFGARD_P3_HUNTING_HOUR",
-    "name": "Hunting Hour (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "While Scorching Fangs is active, triggering the battle skill's additional effects immediately resets the Scorching Fangs duration and grants other teammates Scorching Fangs with 50% of the base effects."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "WULFGARD",

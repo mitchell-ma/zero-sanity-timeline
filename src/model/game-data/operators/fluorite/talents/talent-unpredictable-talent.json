@@ -56,8 +56,7 @@
             "value": 10
           },
           "unit": "SECOND"
-        },
-        "name": "Unpredictable (T2)"
+        }
       },
       "clause": [
         {
@@ -97,7 +96,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Unpredictable (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -115,8 +113,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "FLUORITE",

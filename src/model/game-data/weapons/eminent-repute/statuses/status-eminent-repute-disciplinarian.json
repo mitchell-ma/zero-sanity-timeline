@@ -8,8 +8,7 @@
             "value": 20
           },
           "unit": "SECOND"
-        },
-        "name": "Disciplinarian"
+        }
       },
       "clause": [
         {
@@ -48,8 +47,6 @@
   ],
   "properties": {
     "id": "EMINENT_REPUTE_DISCIPLINARIAN",
-    "name": "Disciplinarian",
-    "description": "ATK bonus scales with consumed stacks; team gets half",
     "duration": {
       "value": {
         "verb": "IS",

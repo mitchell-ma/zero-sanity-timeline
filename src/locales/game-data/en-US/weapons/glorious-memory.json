@@ -1,0 +1,34 @@
+{
+  "weapon.GLORIOUS_MEMORY.event.name": {
+    "text": "Glorious Memory",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GLORIOUS_MEMORY.segment.0.name": {
+    "text": "Glorious Memory",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GLORIOUS_MEMORY.skill.TWILIGHT_LINGERING_GLOW.event.description": {
+    "text": "ATK +{atk_up:0.0%}. When the wielder's skill applies Vulnerability, during the next ultimate cast within {duration:0}s, the wielder gains DMG Dealt +{dmg_up:0.0%}. Max stacks: {max_stack:0}. Duration of each stack is counted separately. Effect is only triggered once every 0.5s.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GLORIOUS_MEMORY.skill.TWILIGHT_LINGERING_GLOW.event.name": {
+    "text": "Twilight: Lingering Glow",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GLORIOUS_MEMORY.skill.TWILIGHT_LINGERING_GLOW.segment.0.name": {
+    "text": "Twilight: Lingering Glow",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GLORIOUS_MEMORY.status.GLORIOUS_MEMORY_LINGERING_GLOW.event.description": {
+    "text": "DMG Dealt bonus during next ultimate cast",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GLORIOUS_MEMORY.status.GLORIOUS_MEMORY_LINGERING_GLOW.event.name": {
+    "text": "Lingering Glow",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GLORIOUS_MEMORY.status.GLORIOUS_MEMORY_LINGERING_GLOW.segment.0.name": {
+    "text": "Lingering Glow",
+    "dataStatus": "RECONCILED"
+  }
+}

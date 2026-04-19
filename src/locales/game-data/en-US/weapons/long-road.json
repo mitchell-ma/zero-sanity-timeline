@@ -1,0 +1,10 @@
+{
+  "weapon.LONG_ROAD.event.name": {
+    "text": "Long Road",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.LONG_ROAD.segment.0.name": {
+    "text": "Long Road",
+    "dataStatus": "RECONCILED"
+  }
+}

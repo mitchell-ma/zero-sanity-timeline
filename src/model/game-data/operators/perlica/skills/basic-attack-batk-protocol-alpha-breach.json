@@ -543,8 +543,6 @@
     }
   ],
   "properties": {
-    "name": "Protocol α: Breach",
-    "description": "An attack with up to 4 sequences that deals Electric DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
     "eventType": "SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",

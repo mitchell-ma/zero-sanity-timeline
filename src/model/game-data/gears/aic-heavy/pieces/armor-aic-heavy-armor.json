@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "AIC_HEAVY_ARMOR",
-    "name": "AIC Heavy Armor",
     "gearType": "ARMOR",
     "gearSet": "AIC_HEAVY_STAT"
   },

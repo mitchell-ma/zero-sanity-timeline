@@ -1,0 +1,46 @@
+{
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.event.name": {
+    "text": "Dreams of the Starry Beach",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.segment.0.name": {
+    "text": "Dreams of the Starry Beach",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.skill.INFLICTION_TIDAL_MURMURS.event.description": {
+    "text": "Secondary attribute +{second_attr_up:0.0%}. After the wielder consumes Corrosion, target enemy suffers Arts DMG Taken +{spell_dmg_taken_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.skill.INFLICTION_TIDAL_MURMURS.event.name": {
+    "text": "Infliction: Tidal Murmurs",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.skill.INFLICTION_TIDAL_MURMURS.segment.0.name": {
+    "text": "Infliction: Tidal Murmurs",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.status.DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS.event.description": {
+    "text": "Secondary attribute bonus",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.status.DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS.event.name": {
+    "text": "Tidal Murmurs",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.status.DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS.segment.0.name": {
+    "text": "Tidal Murmurs",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.status.DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS_ENEMY.event.description": {
+    "text": "Enemy Arts DMG Taken (Fragility)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.status.DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS_ENEMY.event.name": {
+    "text": "Tidal Murmurs (Enemy)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DREAMS_OF_THE_STARRY_BEACH.status.DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS_ENEMY.segment.0.name": {
+    "text": "Tidal Murmurs (Enemy)",
+    "dataStatus": "RECONCILED"
+  }
+}

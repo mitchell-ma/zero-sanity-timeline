@@ -1,0 +1,46 @@
+{
+  "weapon.THERMITE_CUTTER.event.name": {
+    "text": "Thermite Cutter",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.segment.0.name": {
+    "text": "Thermite Cutter",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.skill.FLOW_THERMAL_RELEASE.event.description": {
+    "text": "ATK +{atk_up:0.0%}. After the wielder's skill recovers SP or grants a Link state, the entire team gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.skill.FLOW_THERMAL_RELEASE.event.name": {
+    "text": "Flow: Thermal Release",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.skill.FLOW_THERMAL_RELEASE.segment.0.name": {
+    "text": "Flow: Thermal Release",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.status.THERMITE_CUTTER_THERMAL_RELEASE.event.description": {
+    "text": "ATK +{atk_up:0.0%}. After the wielder's skill recovers SP or grants a Link state, the entire team gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.status.THERMITE_CUTTER_THERMAL_RELEASE.event.name": {
+    "text": "Thermal Release",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.status.THERMITE_CUTTER_THERMAL_RELEASE.segment.0.name": {
+    "text": "Thermal Release",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.status.THERMITE_CUTTER_THERMAL_RELEASE_TEAM.event.description": {
+    "text": "ATK +{atk_up:0.0%}. After the wielder's skill recovers SP or grants a Link state, the entire team gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.status.THERMITE_CUTTER_THERMAL_RELEASE_TEAM.event.name": {
+    "text": "Thermal Release (Team)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THERMITE_CUTTER.status.THERMITE_CUTTER_THERMAL_RELEASE_TEAM.segment.0.name": {
+    "text": "Thermal Release (Team)",
+    "dataStatus": "RECONCILED"
+  }
+}

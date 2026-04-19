@@ -1,0 +1,46 @@
+{
+  "weapon.DETONATION_UNIT.event.name": {
+    "text": "Detonation Unit",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.segment.0.name": {
+    "text": "Detonation Unit",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.skill.DETONATE_IMPOSING_CHAMPION.event.description": {
+    "text": "Secondary Attribute +{second_attr_up:0.0%}. When the wielder applies an Arts Burst, target enemy suffers Arts DMG Taken +{spell_damage_taken_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.skill.DETONATE_IMPOSING_CHAMPION.event.name": {
+    "text": "Detonate: Imposing Champion",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.skill.DETONATE_IMPOSING_CHAMPION.segment.0.name": {
+    "text": "Detonate: Imposing Champion",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.status.DETONATION_UNIT_IMPOSING_CHAMPION.event.description": {
+    "text": "Secondary attribute bonus",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.status.DETONATION_UNIT_IMPOSING_CHAMPION.event.name": {
+    "text": "Imposing Champion",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.status.DETONATION_UNIT_IMPOSING_CHAMPION.segment.0.name": {
+    "text": "Imposing Champion",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.status.DETONATION_UNIT_IMPOSING_CHAMPION_ENEMY.event.description": {
+    "text": "Enemy Arts DMG Taken (Fragility)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.status.DETONATION_UNIT_IMPOSING_CHAMPION_ENEMY.event.name": {
+    "text": "Imposing Champion (Enemy)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DETONATION_UNIT.status.DETONATION_UNIT_IMPOSING_CHAMPION_ENEMY.segment.0.name": {
+    "text": "Imposing Champion (Enemy)",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ANTAL_POTENTIAL_2",
-    "name": "Improved Automation (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Overclocked Moment improved: Ultimate Energy cost -10%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ANTAL",

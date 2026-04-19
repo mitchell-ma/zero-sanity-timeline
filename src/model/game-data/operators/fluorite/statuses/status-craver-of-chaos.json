@@ -77,7 +77,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Craver of Chaos (P5)",
         "duration": {
           "value": {
             "verb": "IS",
@@ -133,7 +132,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "IS",
@@ -147,7 +145,6 @@
   ],
   "properties": {
     "id": "CRAVER_OF_CHAOS",
-    "name": "Craver of Chaos (P5)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -165,8 +162,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL",
-    "description": "P5: When any operator applies Cryo or Nature Infliction, Fluorite's Combo Skill cooldown is reduced by 1s. Can only trigger once per 1s."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "FLUORITE",

@@ -3,8 +3,6 @@
     "dependencyTypes": [
       "PREVIOUS_FRAME"
     ],
-    "name": "Smouldering Fire",
-    "description": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG. Hitting the enemy grants 1 stack of Melting Flame. \nIf Laevatain already has  stack(s) of Melting Flame when casting the skill, then consume all the stacks and perform 1 additional attack that deals Heat DMG and forcibly trigger temporary Combustion to all enemies in a large area.\nWhen the additional attack hits the enemy, restore additional Ultimate Energy.\nBattle skill effects are enhanced while Laevatain's ultimate is active.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",

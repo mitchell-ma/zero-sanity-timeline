@@ -565,3 +565,18 @@ Ardelia Talent 1 (Friendly Presence): battle skill creates Shadows of Mr. Dolly 
 
 ### General
 - [ ] Yvonne empowered BA: non-standard Warfarin IDs (ult_attack1_1 etc.), stagger 20 vs 17
+
+## FR locale: reconcile game-specific terms against Warfarin's fr data
+The current `src/locales/fr-FR.json` was translated from English by the model ("best-effort"), not from an authoritative source. UI chrome (Settings, buttons, modal labels) should be fine, but game-specific terminology is guess-translated and likely diverges from Endfield's official French wording.
+- [ ] Fetch Warfarin's `fr` locale bundle (skills, statuses, talents, operators, stats, gear, consumables)
+- [ ] Cross-reference these en-US → fr-FR keys against Warfarin's official strings and overwrite where they differ:
+  - `element.*` (Heat, Cryo, Nature, Electric, Physical)
+  - `status.*` / `statusCategory.*` / `reaction.*` / `physicalStatus.*` / `infliction.*` (Combustion, Solidification, Corrosion, Electrification, Lift, Knock Down, Crush, Breach, Shatter, Vulnerable, Susceptibility, Fragility, Focus, etc.)
+  - `skill.type.*` and `skill.DASH/FINISHER/DIVE/CONTROL`
+  - `stat.*` — especially ATK/DEF/HP abbreviations (current uses ATQ/DÉF/PV; verify official form)
+  - `dsl.verb.*`, `dsl.object.*`, `dsl.objectQualifier.*`, `dsl.target.*`, `dsl.determiner.*`, `dsl.cardinality.*`
+  - `consumable.*` / `tactical.*` item display names
+  - `column.*` channel labels (Scorching Fangs, Scorching Heart, Messenger's Song, Wildland Trekker, etc.)
+  - Any per-operator/weapon/gear strings once `gameDataLocale` is wired for fr
+- [ ] Decide on abbreviation conventions (SP→PC? HP→PV? ATK→ATQ?) based on what Endfield uses in-game FR
+- [ ] Audit for terms kept in English as loan words (Finisher, Stagger, Combo, Burst) — confirm they stay English in the official FR client or translate them

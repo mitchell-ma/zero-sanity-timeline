@@ -8,8 +8,7 @@
             "value": 10
           },
           "unit": "SECOND"
-        },
-        "name": "May the Willing Bite"
+        }
       },
       "clause": [
         {
@@ -36,7 +35,6 @@
   ],
   "properties": {
     "id": "MAY_THE_WILLING_BITE",
-    "name": "May the Willing Bite",
     "to": "TEAM",
     "stacks": {
       "limit": {
@@ -53,8 +51,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL",
-    "description": "After Alesh catches a Rare Fin via Auger Angling, the entire team gains ATK +15% for 10s. Does not stack."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ALESH",

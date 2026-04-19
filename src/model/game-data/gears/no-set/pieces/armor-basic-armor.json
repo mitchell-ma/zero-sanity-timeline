@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "BASIC_ARMOR",
-    "name": "Basic Armor",
     "gearType": "ARMOR",
     "gearSet": "NONE"
   },

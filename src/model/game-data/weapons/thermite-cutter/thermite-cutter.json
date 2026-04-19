@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Thermite Cutter"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Thermite Cutter",
     "id": "THERMITE_CUTTER",
     "type": "SWORD",
     "rarity": 6

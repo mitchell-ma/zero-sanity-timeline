@@ -1,0 +1,34 @@
+{
+  "weapon.UMBRAL_TORCH.event.name": {
+    "text": "Umbral Torch",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.UMBRAL_TORCH.segment.0.name": {
+    "text": "Umbral Torch",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.UMBRAL_TORCH.skill.INFLICTION_COVETOUS_BUILDUP.event.description": {
+    "text": "ATK +{atk_up:0.0%}. Whenever Combustion or Corrosion is applied to an enemy, the wielder gains Heat and Nature DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.UMBRAL_TORCH.skill.INFLICTION_COVETOUS_BUILDUP.event.name": {
+    "text": "Infliction: Covetous Buildup",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.UMBRAL_TORCH.skill.INFLICTION_COVETOUS_BUILDUP.segment.0.name": {
+    "text": "Infliction: Covetous Buildup",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.UMBRAL_TORCH.status.UMBRAL_TORCH_COVETOUS_BUILDUP.event.description": {
+    "text": "ATK +{atk_up:0.0%}. Whenever Combustion or Corrosion is applied to an enemy, the wielder gains Heat and Nature DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.UMBRAL_TORCH.status.UMBRAL_TORCH_COVETOUS_BUILDUP.event.name": {
+    "text": "Covetous Buildup",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.UMBRAL_TORCH.status.UMBRAL_TORCH_COVETOUS_BUILDUP.segment.0.name": {
+    "text": "Covetous Buildup",
+    "dataStatus": "RECONCILED"
+  }
+}

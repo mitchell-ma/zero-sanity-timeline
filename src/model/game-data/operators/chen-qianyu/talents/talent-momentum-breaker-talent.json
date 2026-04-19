@@ -106,7 +106,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Momentum Breaker",
         "duration": {
           "value": {
             "verb": "IS",
@@ -167,7 +166,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Momentum Breaker (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
@@ -185,8 +183,7 @@
         "value": 1
       },
       "interactionType": "NONE"
-    },
-    "description": "Interrupting the enemy's charge up deals another 10 Stagger."
+    }
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

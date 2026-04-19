@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Cryoblasting Pistolier (Crit Damage)"
+        }
       },
       "clause": [
         {
@@ -36,7 +35,6 @@
   ],
   "properties": {
     "id": "CRYOBLASTING_PISTOLIER_CRIT_DAMAGE",
-    "name": "Cryoblasting Pistolier (Crit Damage)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "element": "CRYO",
@@ -55,8 +53,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "After Cryoblasting Pistolier (Crit Rate) reaches max stacks, Yvonne gains a Critical DMG buff for the remainder of the skill."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "CRYOBLASTING_PISTOLIER",

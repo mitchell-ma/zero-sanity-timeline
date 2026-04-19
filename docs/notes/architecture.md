@@ -50,7 +50,7 @@ TimelineEvent
 ```
 
 - **Event**: One cast of a skill. Has a start frame and required segments array.
-- **Segment**: A phase within an event. Has a duration, optional segment type (ANIMATION, ACTIVE, COOLDOWN, etc.), and contains zero or more frames.
+- **Segment**: A phase within an event. Has a duration, an optional segment type (ANIMATION, STASIS, COOLDOWN, IMMEDIATE_COOLDOWN), and zero or more frames. A segment's active-window/no-UE-gain semantics are authored as an `IGNORE ULTIMATE_ENERGY` clause effect — there is no `ACTIVE` segment type.
 - **Frame**: A single damage tick within a segment. Has an offset from segment start, damage multiplier, and optional effects (inflictions, status applications, reactions, clause predicates).
 
 ### Segment Properties
@@ -61,7 +61,7 @@ TimelineEvent
 | `offset` | `properties.offset` | Explicit offset from event start (defaults to end of previous segment) |
 | `name` | `properties.name` | Display label ("1", "2", "Cooldown", "Corrosion II") |
 | `timeDependency` | `properties.timeDependency` | GAME_TIME (affected by time-stop) or REAL_TIME (unaffected) |
-| `segmentType` | `metadata.segmentType` | Phase type: ANIMATION, ACTIVE, COOLDOWN, STASIS, NORMAL, INPUT_DELAY |
+| `segmentType` | `metadata.segmentType` | Phase type: ANIMATION, STASIS, COOLDOWN, IMMEDIATE_COOLDOWN (post-animation active windows are untyped) |
 | `dataSources` | `metadata.dataSources` | Origin of this data (e.g. END_AXIS) |
 
 Unknown/domain-specific fields (e.g. susceptibility, statusLabel) go in the `unknown` catch-all.

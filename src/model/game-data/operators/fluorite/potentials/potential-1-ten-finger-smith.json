@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "FLUORITE_POTENTIAL_1",
-    "name": "Ten-Finger Smith (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Agility +{Agi:0}, Intellect +10."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "FLUORITE",

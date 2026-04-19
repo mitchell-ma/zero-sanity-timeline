@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "AKEKURI_POTENTIAL_4",
-    "name": "Super Perfect Status (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate SQUAD! ON ME! improved: Ultimate Energy cost -{1-costValue:0%}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "AKEKURI",

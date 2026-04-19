@@ -8,8 +8,7 @@
             "value": 20
           },
           "unit": "SECOND"
-        },
-        "name": "Lands of Yore"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
   ],
   "properties": {
     "id": "ANCIENT_CANAL_LANDS_OF_YORE",
-    "name": "Lands of Yore",
-    "description": "Phys DMG bonus scales per consumed stack",
     "duration": {
       "value": {
         "verb": "IS",

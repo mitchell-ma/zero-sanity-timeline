@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Lone Barge"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Lone Barge",
     "id": "LONE_BARGE",
     "type": "ARTS_UNIT",
     "rarity": 6

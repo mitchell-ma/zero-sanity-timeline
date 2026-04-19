@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Burst of Passion",
-    "description": "A frontal slash that deals Heat DMG and applies Heat Infliction.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",

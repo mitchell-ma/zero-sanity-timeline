@@ -91,7 +91,6 @@
   ],
   "properties": {
     "id": "MI_SECURITY_GLOVES_T1",
-    "name": "MI Security Gloves T1",
     "gearType": "GLOVES",
     "gearSet": "MI_SECURITY_STAT"
   },

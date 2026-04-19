@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Finishing Call"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Finishing Call",
     "id": "FINISHING_CALL",
     "type": "GREAT_SWORD",
     "rarity": 5

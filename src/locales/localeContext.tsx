@@ -6,18 +6,23 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { loadLocaleData, getCurrentLocale, t } from './locale';
+import { loadLocaleData, loadLocaleById, getCurrentLocale, t } from './locale';
+// Side-effect import: loads per-operator / weapon / gear locale bundles into
+// the locale registry at app startup. Must precede any render.
+import './gameDataLocale';
 
 interface LocaleContextValue {
   locale: string;
   t: typeof t;
   setLocale: (locale: string, data: Record<string, string>) => void;
+  setLocaleById: (locale: string) => void;
 }
 
 const LocaleContext = createContext<LocaleContextValue>({
   locale: getCurrentLocale(),
   t,
   setLocale: () => {},
+  setLocaleById: () => {},
 });
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
@@ -28,7 +33,15 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     setLocaleState(newLocale);
   }, []);
 
-  const value = useMemo(() => ({ locale, t, setLocale }), [locale, setLocale]);
+  const setLocaleById = useCallback((newLocale: string) => {
+    const { locale: resolved } = loadLocaleById(newLocale);
+    setLocaleState(resolved);
+  }, []);
+
+  const value = useMemo(
+    () => ({ locale, t, setLocale, setLocaleById }),
+    [locale, setLocale, setLocaleById],
+  );
 
   return (
     <LocaleContext.Provider value={value}>

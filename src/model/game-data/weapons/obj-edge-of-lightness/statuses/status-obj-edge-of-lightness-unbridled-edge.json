@@ -8,8 +8,7 @@
             "value": 20
           },
           "unit": "SECOND"
-        },
-        "name": "Unbridled Edge"
+        }
       },
       "clause": [
         {
@@ -80,7 +79,6 @@
   ],
   "properties": {
     "id": "OBJ_EDGE_OF_LIGHTNESS_UNBRIDLED_EDGE",
-    "name": "Unbridled Edge",
     "duration": {
       "value": {
         "verb": "IS",
@@ -98,8 +96,7 @@
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "Secondary Attribute +{second_attr_up:0.0%}. After the wielder's skill recovers SP, the entire team gains Heat DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "OBJ_EDGE_OF_LIGHTNESS",

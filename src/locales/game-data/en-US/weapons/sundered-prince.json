@@ -1,0 +1,30 @@
+{
+  "weapon.SUNDERED_PRINCE.event.name": {
+    "text": "Sundered Prince",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERED_PRINCE.segment.0.name": {
+    "text": "Sundered Prince",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERED_PRINCE.skill.CRUSHER_PRINCELY_DETERRENCE.event.description": {
+    "text": "When the wielder performs a Final Strike on the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. If the wielder is also the controlled operator, double the ATK increase gained and buff the Final Strike so that it deals Stagger +{poise_up:0.0%} to the enemy. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERED_PRINCE.skill.CRUSHER_PRINCELY_DETERRENCE.event.name": {
+    "text": "Crusher: Princely Deterrence",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERED_PRINCE.status.SUNDERED_PRINCE_PRINCELY_DETERRENCE.event.description": {
+    "text": "ATK doubled when controlled (+20-56%)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERED_PRINCE.status.SUNDERED_PRINCE_PRINCELY_DETERRENCE.event.name": {
+    "text": "Princely Deterrence",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.SUNDERED_PRINCE.status.SUNDERED_PRINCE_PRINCELY_DETERRENCE.segment.0.name": {
+    "text": "Princely Deterrence",
+    "dataStatus": "RECONCILED"
+  }
+}

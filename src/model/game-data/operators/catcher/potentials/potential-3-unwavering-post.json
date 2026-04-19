@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "CATCHER_POTENTIAL_3",
-    "name": "Unwavering Post (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Combo skill Timely Suppression improved: Shield duration +5s."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "CATCHER",

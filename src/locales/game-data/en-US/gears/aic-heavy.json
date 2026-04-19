@@ -1,0 +1,42 @@
+{
+  "gear.AIC_HEAVY_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's HP +500. After the wearer defeats an enemy, the wearer restores 100 HP. Effect trigger cooldown: 5s.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_HEAVY_STAT.event.name": {
+    "text": "AIC Heavy",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_HEAVY_STAT.piece.AIC_ALLOY_PLATE.event.name": {
+    "text": "AIC Alloy Plate",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_HEAVY_STAT.piece.AIC_GAUNTLETS.event.name": {
+    "text": "AIC Gauntlets",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_HEAVY_STAT.piece.AIC_HEAVY_ARMOR.event.name": {
+    "text": "AIC Heavy Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_HEAVY_STAT.piece.AIC_HEAVY_PLATE.event.name": {
+    "text": "AIC Heavy Plate",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_HEAVY_STAT.segment.0.name": {
+    "text": "AIC Heavy",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_HEAVY_STAT.status.AIC_HEAVY.event.description": {
+    "text": "Restores 100 HP on defeating an enemy. 5s cooldown.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_HEAVY_STAT.status.AIC_HEAVY.event.name": {
+    "text": "AIC Heavy",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.AIC_HEAVY_STAT.status.AIC_HEAVY.segment.0.name": {
+    "text": "AIC Heavy",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -31,8 +31,7 @@
             "value": 7
           },
           "unit": "SECOND"
-        },
-        "name": "Pay the Ferric Price (T2)"
+        }
       },
       "clause": [
         {
@@ -71,7 +70,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Pay the Ferric Price (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -89,8 +87,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "When Ember receives DMG from the enemy, she gains ATK +{attack:0%} for {duration:0}s. This effect can reach 3 stacks."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "EMBER",

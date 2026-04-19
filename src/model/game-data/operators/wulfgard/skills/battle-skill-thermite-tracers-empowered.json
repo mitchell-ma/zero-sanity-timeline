@@ -30,8 +30,7 @@
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
-    "id": "THERMITE_TRACERS_EMPOWERED",
-    "name": "Thermite Tracers (Empowered)"
+    "id": "THERMITE_TRACERS_EMPOWERED"
   },
   "segments": [
     {

@@ -5,7 +5,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Waterspout (Ult)",
         "duration": {
           "value": {
             "verb": "IS",
@@ -426,7 +425,6 @@
   ],
   "properties": {
     "id": "WATERSPOUT_ULT",
-    "name": "Waterspout (Ult)",
     "to": "ENEMY",
     "stacks": {
       "limit": {
@@ -443,8 +441,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "A Waterspout created by DA CHIEF SEES YOU! via Riot Bringer talent. Has the same effects as those created by the battle skill and gains additional DMG Dealt bonus from Talent 2 (+40%/+60%) and Potential 5 (+80%)."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "TANGTANG",

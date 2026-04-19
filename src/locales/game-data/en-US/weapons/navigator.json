@@ -1,0 +1,34 @@
+{
+  "weapon.NAVIGATOR.event.name": {
+    "text": "Navigator",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.NAVIGATOR.segment.0.name": {
+    "text": "Navigator",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.NAVIGATOR.skill.INFLICTION_LONE_AND_DISTANT_SAIL.event.description": {
+    "text": "Critical Rate +{crit_up:0.0%}. When Solidification or Corrosion is applied to enemies, the wielder gains Cryo DMG Dealt and Nature DMG Dealt +{dmg_up:0.0%}, and Critical Rate +{crit_up2:0.0%} for {duration:0}s. If this effect is triggered by the wielder, double the increase gained. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.NAVIGATOR.skill.INFLICTION_LONE_AND_DISTANT_SAIL.event.name": {
+    "text": "Infliction: Lone and Distant Sail",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.NAVIGATOR.skill.INFLICTION_LONE_AND_DISTANT_SAIL.segment.0.name": {
+    "text": "Infliction: Lone and Distant Sail",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.NAVIGATOR.status.NAVIGATOR_LONE_SAIL.event.description": {
+    "text": "Cryo+Nature DMG Dealt and Critical Rate from Solidification/Corrosion. Doubled if triggered by wielder.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.NAVIGATOR.status.NAVIGATOR_LONE_SAIL.event.name": {
+    "text": "Lone and Distant Sail",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.NAVIGATOR.status.NAVIGATOR_LONE_SAIL.segment.0.name": {
+    "text": "Lone and Distant Sail",
+    "dataStatus": "RECONCILED"
+  }
+}

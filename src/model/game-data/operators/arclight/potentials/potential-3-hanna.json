@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ARCLIGHT_POTENTIAL_3",
-    "name": "\"Hanna\" (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Wildland Trekker improved: DMG Boost effect increased to 1.3 times the original."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ARCLIGHT",

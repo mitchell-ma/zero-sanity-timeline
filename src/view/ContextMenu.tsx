@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ContextMenuItem, ContextMenuItemOverride, ContextMenuParameterSubmenu } from "../consts/viewTypes";
 import { ContextMenuAxisKind, StepperActionIcon } from "../consts/enums";
+import { t } from '../locales/locale';
 
 function StepperActionIconGlyph({ icon }: { icon: StepperActionIcon }) {
   switch (icon) {
@@ -201,15 +202,15 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
                   <button
                     className="context-menu-stepper-btn"
                     onClick={(e) => { e.stopPropagation(); stepper.onPrev(); forceRender((n) => n + 1); }}
-                    title="Previous"
-                    aria-label="Previous"
+                    title={t('common.previous')}
+                    aria-label={t('common.previous')}
                   >{'\u2039'}</button>
                   <div className="context-menu-stepper-value">{stepper.valueLabel}</div>
                   <button
                     className="context-menu-stepper-btn"
                     onClick={(e) => { e.stopPropagation(); stepper.onNext(); forceRender((n) => n + 1); }}
-                    title="Next"
-                    aria-label="Next"
+                    title={t('common.next')}
+                    aria-label={t('common.next')}
                   >{'\u203a'}</button>
                   {inlineAction && (
                     <button

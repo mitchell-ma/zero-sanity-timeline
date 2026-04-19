@@ -57,8 +57,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Infliction: Tidal Murmurs"
+        }
       },
       "clause": [
         {
@@ -98,8 +97,6 @@
     }
   ],
   "properties": {
-    "name": "Infliction: Tidal Murmurs",
-    "description": "Secondary attribute +{second_attr_up:0.0%}. After the wielder consumes Corrosion, target enemy suffers Arts DMG Taken +{spell_dmg_taken_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
     "id": "INFLICTION_TIDAL_MURMURS",
     "eventCategoryType": "WEAPON_STAT"
   },

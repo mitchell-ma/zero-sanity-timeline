@@ -1,0 +1,34 @@
+{
+  "weapon.THUNDERBERGE.event.name": {
+    "text": "Thunderberge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THUNDERBERGE.segment.0.name": {
+    "text": "Thunderberge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THUNDERBERGE.skill.MEDICANT_EYE_OF_TALOS.event.description": {
+    "text": "Shield applied +{shield_up:0.0%}. After the wielder's combo skill provides HP treatment, the controlled operator gains an additional [{hp_ratio:0.0%}×Wielder's Max HP] Shield for {duration:0}s. Effect only triggers once every {cd:0}s.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THUNDERBERGE.skill.MEDICANT_EYE_OF_TALOS.event.name": {
+    "text": "Medicant: Eye of Talos",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THUNDERBERGE.skill.MEDICANT_EYE_OF_TALOS.segment.0.name": {
+    "text": "Medicant: Eye of Talos",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THUNDERBERGE.status.THUNDERBERGE_EYE_OF_TALOS.event.description": {
+    "text": "Shield from combo HP treatment; 15s CD",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THUNDERBERGE.status.THUNDERBERGE_EYE_OF_TALOS.event.name": {
+    "text": "Eye of Talos",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.THUNDERBERGE.status.THUNDERBERGE_EYE_OF_TALOS.segment.0.name": {
+    "text": "Eye of Talos",
+    "dataStatus": "RECONCILED"
+  }
+}

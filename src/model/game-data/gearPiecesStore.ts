@@ -188,10 +188,9 @@ for (const key of gearIconContext.keys()) {
   }
 }
 
-function resolveGearIcon(name: string): string | undefined {
-  const key = name.replace(/ /g, '_').toLowerCase();
-  if (GEAR_ICONS[key]) return GEAR_ICONS[key];
-  return undefined;
+/** Hard-wired ID → asset: `<id.toLowerCase()>.(png|webp)`. */
+function resolveGearIcon(pieceId: string): string | undefined {
+  return GEAR_ICONS[pieceId.toLowerCase()];
 }
 
 // ── Loader ──────────────────────────────────────────────────────────────────
@@ -211,7 +210,7 @@ for (const key of gearPiecesContext.keys()) {
   const raw = gearPiecesContext(key) as Record<string, unknown>;
   const piece = GearPiece.deserialize(raw, key);
   if (piece.id) {
-    piece.icon = resolveGearIcon(piece.name);
+    piece.icon = resolveGearIcon(piece.id);
     gearPieceCache.set(piece.id, piece);
     gearNameIndex.set(piece.name, piece.id);
     const list = gearSetIndex.get(piece.gearSet) ?? [];
@@ -275,7 +274,7 @@ export function getGearPiecesByType(pieceType: string): readonly GearPiece[] {
 /** Register a custom gear piece (overlay — takes priority over built-in). */
 export function registerCustomGearPiece(json: Record<string, unknown>, icon?: string): GearPiece {
   const piece = GearPiece.deserialize(json, 'custom');
-  piece.icon = icon ?? resolveGearIcon(piece.name);
+  piece.icon = icon ?? resolveGearIcon(piece.id);
   customGearPieceCache.set(piece.id, piece);
   gearNameIndex.set(piece.name, piece.id);
   return piece;

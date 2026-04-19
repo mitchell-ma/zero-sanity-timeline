@@ -1,6 +1,6 @@
-import { ThemeType, NumberFormatType, InteractionModeType, PerformanceMode } from '../consts/enums';
+import { ThemeType, NumberFormatType, InteractionModeType } from '../consts/enums';
 import type { GlobalSettings } from '../consts/settings';
-import { t } from '../locales/locale';
+import { t, AVAILABLE_LOCALES } from '../locales/locale';
 
 interface SettingsModalProps {
   open: boolean;
@@ -65,9 +65,10 @@ export default function SettingsModal({ open, onClose, settings, onUpdate }: Set
               className="settings-select"
               value={settings.locale}
               onChange={(e) => onUpdate('locale', e.target.value)}
-              disabled
             >
-              <option value="en-US">English (US)</option>
+              {AVAILABLE_LOCALES.map(({ id, label }) => (
+                <option key={id} value={id}>{label}</option>
+              ))}
             </select>
           </div>
 
@@ -119,31 +120,6 @@ export default function SettingsModal({ open, onClose, settings, onUpdate }: Set
                 onClick={() => onUpdate('debugMode', true)}
               >
                 {t('settings.debugMode.on')}
-              </button>
-            </div>
-          </div>
-
-          {/* Performance Mode */}
-          <div className="settings-row">
-            <span className="settings-label">Performance</span>
-            <div className="settings-toggle-group">
-              <button
-                className={`settings-toggle-btn${settings.performanceMode === PerformanceMode.HIGH ? ' active' : ''}`}
-                onClick={() => onUpdate('performanceMode', PerformanceMode.HIGH)}
-              >
-                High
-              </button>
-              <button
-                className={`settings-toggle-btn${settings.performanceMode === PerformanceMode.BALANCED ? ' active' : ''}`}
-                onClick={() => onUpdate('performanceMode', PerformanceMode.BALANCED)}
-              >
-                Balanced
-              </button>
-              <button
-                className={`settings-toggle-btn${settings.performanceMode === PerformanceMode.LOW ? ' active' : ''}`}
-                onClick={() => onUpdate('performanceMode', PerformanceMode.LOW)}
-              >
-                Low
               </button>
             </div>
           </div>

@@ -1,0 +1,70 @@
+{
+  "gear.HOT_WORK_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Arts Intensity +{phy_spell_up:0}. After the wearer applies Combustion, the wearer gains Heat DMG +{fire_dmg_up:0%} for {duration}s. After the wearer applies Corrosion, the wearer gains Nature DMG +{nature_dmg_up:0%} for {duration2}s. The aforementioned effects cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.event.name": {
+    "text": "Hot Work",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.piece.HOT_WORK_EXOSKELETON.event.name": {
+    "text": "Hot Work Exoskeleton",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.piece.HOT_WORK_EXO_RIG.event.name": {
+    "text": "Hot Work Exo-Rig",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.piece.HOT_WORK_GAUNTLETS.event.name": {
+    "text": "Hot Work Gauntlets",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.piece.HOT_WORK_GAUNTLETS_T1.event.name": {
+    "text": "Hot Work Gauntlets T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.piece.HOT_WORK_GLOVES.event.name": {
+    "text": "Hot Work Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.piece.HOT_WORK_POWER_BANK.event.name": {
+    "text": "Hot Work Power Bank",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.piece.HOT_WORK_POWER_CARTRIDGE.event.name": {
+    "text": "Hot Work Power Cartridge",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.piece.HOT_WORK_PYROMETER.event.name": {
+    "text": "Hot Work Pyrometer",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.segment.0.name": {
+    "text": "Hot Work",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.status.HOT_WORK_HEAT.event.description": {
+    "text": "Heat DMG +50% for 10s after applying Combustion. Cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.status.HOT_WORK_HEAT.event.name": {
+    "text": "Hot Work (Heat)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.status.HOT_WORK_HEAT.segment.0.name": {
+    "text": "Hot Work (Heat)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.status.HOT_WORK_NATURE.event.description": {
+    "text": "Nature DMG +50% for 10s after applying Corrosion. Cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.status.HOT_WORK_NATURE.event.name": {
+    "text": "Hot Work (Nature)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.HOT_WORK_STAT.status.HOT_WORK_NATURE.segment.0.name": {
+    "text": "Hot Work (Nature)",
+    "dataStatus": "RECONCILED"
+  }
+}

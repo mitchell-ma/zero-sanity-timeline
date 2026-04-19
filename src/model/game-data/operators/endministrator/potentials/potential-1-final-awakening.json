@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ENDMINISTRATOR_POTENTIAL_1",
-    "name": "Final Awakening (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Constructive Sequence improved: Consuming Originium Crystals returns 50 SP."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

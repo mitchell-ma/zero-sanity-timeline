@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ESTELLA_POTENTIAL_1",
-    "name": "Habitual Delay (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Combo skill Distortion improved: Physical Susceptibility duration +3s."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ESTELLA",

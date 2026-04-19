@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "STEEL_OATH_DECISIVE_ASSAULT",
-    "name": "Steel Oath (Decisive Assault)",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -11,8 +10,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "All 4 Shieldguards initiate a Decisive Assault, dealing massive Physical DMG and recovering plenty of SP."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "segments": [
     {

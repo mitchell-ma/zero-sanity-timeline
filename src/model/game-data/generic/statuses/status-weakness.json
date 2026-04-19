@@ -8,8 +8,7 @@
             "value": 5
           },
           "unit": "SECOND"
-        },
-        "name": "Weakness"
+        }
       },
       "clause": [
         {
@@ -28,7 +27,6 @@
   ],
   "properties": {
     "id": "WEAKNESS",
-    "name": "Weakness",
     "to": "ENEMY",
     "stacks": {
       "limit": {
@@ -39,7 +37,6 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Reduces the affected target's DMG dealt.",
     "duration": {
       "value": {
         "verb": "IS",

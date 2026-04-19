@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "AKEKURI_POTENTIAL_3",
-    "name": "Committed Team Player (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate SQUAD! ON ME! improved: While ultimate is active, entire team gains ATK +10%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "AKEKURI",

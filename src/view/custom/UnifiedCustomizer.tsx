@@ -64,6 +64,7 @@ import {
 import type { CustomStatusEventDef } from '../../model/custom/customStatusEventTypes';
 import { t } from '../../locales/locale';
 import UnifiedCustomizerRail from './UnifiedCustomizerRail';
+import WarningModal from '../WarningModal';
 import WeaponSection from './sections/WeaponSection';
 import GearSetSection from './sections/GearSetSection';
 import OperatorSection from './sections/OperatorSection';
@@ -190,6 +191,7 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
   }, [onContentChanged]);
 
   const [modalEditOpen, setModalEditOpen] = useState(!!initial);
+  const [warningItem, setWarningItem] = useState<{ name: string; message: string } | null>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
 
   const handleExport = useCallback(() => {
@@ -442,17 +444,17 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
         <div className="uc-list-header">
           <span className="uc-list-title">{CATEGORY_TITLES[entityType]}</span>
           <div className="uc-list-actions">
-            <button className="btn-add-sm" onClick={() => importFileRef.current?.click()} title="Import from ZIP">
+            <button className="btn-add-sm" onClick={() => importFileRef.current?.click()} title={t('customizer.btn.importZip')}>
               <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
                 <path d="M8 1a.5.5 0 01.354.146l3.5 3.5a.5.5 0 01-.708.708L8.5 2.707V10.5a.5.5 0 01-1 0V2.707L4.854 5.354a.5.5 0 11-.708-.708l3.5-3.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
               </svg>
             </button>
-            <button className="btn-add-sm" onClick={handleExport} title="Export all custom content">
+            <button className="btn-add-sm" onClick={handleExport} title={t('customizer.btn.exportAll')}>
               <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
                 <path d="M8 1a.5.5 0 01.5.5v7.793l2.646-2.647a.5.5 0 01.708.708l-3.5 3.5a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L7.5 9.293V1.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
               </svg>
             </button>
-            <button className="btn-add-sm" onClick={handleNewItem} title="New custom item">+</button>
+            <button className="btn-add-sm" onClick={handleNewItem} title={t('customizer.btn.newItem')}>+</button>
           </div>
           <input
             ref={importFileRef}
@@ -475,12 +477,26 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
               {customItems.map((item) => (
                 <button
                   key={item.id}
-                  className={`uc-list-item${selectedItem?.id === item.id && selectedItem?.source === item.source ? ' uc-list-item--active' : ''}`}
+                  className={`uc-list-item${selectedItem?.id === item.id && selectedItem?.source === item.source ? ' uc-list-item--active' : ''}${item.warning ? ' uc-list-item--warning' : ''}`}
                   onClick={() => handleSelectItem(item)}
                   onContextMenu={(e) => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, item }); }}
                 >
                   {item.color && <span className="uc-list-dot" style={{ background: item.color }} />}
                   <span className="uc-list-item-name">{item.name}</span>
+                  {item.warning && (
+                    <span
+                      className="uc-list-item-warning"
+                      role="button"
+                      aria-label="Show load warning"
+                      title={t('customizer.warning.loadFailed')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setWarningItem({ name: item.name, message: item.warning! });
+                      }}
+                    >
+                      !
+                    </span>
+                  )}
                   <span className="uc-list-item-meta">{item.meta}</span>
                 </button>
               ))}
@@ -565,6 +581,15 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
           </div>
         )}
       </div>
+
+      {warningItem && (
+        <WarningModal
+          title={`Load Warning · ${warningItem.name}`}
+          intro="This custom item has missing or invalid data. Edit it to fill in the missing fields, or delete and re-create it."
+          message={warningItem.message}
+          onClose={() => setWarningItem(null)}
+        />
+      )}
     </div>
   );
 }
@@ -737,12 +762,12 @@ function CustomOperatorView({ data }: { data: CustomOperator }) {
         <Field label="Weapons" value={data.weaponTypes.map((w) => w.replace(/_/g, ' ')).join(', ')} />
         <Field label="Rarity" value={starStr(data.operatorRarity)} />
       </div>
-      <GSection title="Base Stats (Lv1)">
+      <GSection title={t('customizer.section.baseStatsLv1')}>
         <div className="ev-field-grid">
           {Object.entries(data.baseStats.lv1).map(([k, v]) => <Field key={k} label={k.replace(/_/g, ' ')} value={String(v)} />)}
         </div>
       </GSection>
-      <GSection title="Base Stats (Lv90)">
+      <GSection title={t('customizer.section.baseStatsLv90')}>
         <div className="ev-field-grid">
           {Object.entries(data.baseStats.lv90).map(([k, v]) => <Field key={k} label={k.replace(/_/g, ' ')} value={String(v)} />)}
         </div>

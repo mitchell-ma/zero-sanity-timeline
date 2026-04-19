@@ -8,8 +8,7 @@
             "value": 25
           },
           "unit": "SECOND"
-        },
-        "name": "Tidal Murmurs (Enemy)"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
   ],
   "properties": {
     "id": "DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS_ENEMY",
-    "name": "Tidal Murmurs (Enemy)",
-    "description": "Enemy Arts DMG Taken (Fragility)",
     "duration": {
       "value": {
         "verb": "IS",

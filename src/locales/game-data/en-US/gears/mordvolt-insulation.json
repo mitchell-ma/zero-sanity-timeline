@@ -1,0 +1,66 @@
+{
+  "gear.MORDVOLT_INSULATION_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Intellect +50. When the wearer's HP exceeds 80%, the wearer's Arts DMG increases by 20%.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.event.name": {
+    "text": "Mordvolt Insulation",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_BATTERY.event.name": {
+    "text": "Mordvolt Insulation Battery",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_BATTERY_T1.event.name": {
+    "text": "Mordvolt Insulation Battery T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_GLOVES.event.name": {
+    "text": "Mordvolt Insulation Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_GLOVES_T1.event.name": {
+    "text": "Mordvolt Insulation Gloves T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_VEST.event.name": {
+    "text": "Mordvolt Insulation Vest",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_VEST_T1.event.name": {
+    "text": "Mordvolt Insulation Vest T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_VEST_T2.event.name": {
+    "text": "Mordvolt Insulation Vest T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_WRENCH.event.name": {
+    "text": "Mordvolt Insulation Wrench",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_WRENCH_T1.event.name": {
+    "text": "Mordvolt Insulation Wrench T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.piece.MORDVOLT_INSULATION_WRENCH_T2.event.name": {
+    "text": "Mordvolt Insulation Wrench T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.segment.0.name": {
+    "text": "Mordvolt Insulation",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.status.MORDVOLT_INSULATION.event.description": {
+    "text": "Arts DMG +20% when HP above 80%.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.status.MORDVOLT_INSULATION.event.name": {
+    "text": "Mordvolt Insulation",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_INSULATION_STAT.status.MORDVOLT_INSULATION.segment.0.name": {
+    "text": "Mordvolt Insulation",
+    "dataStatus": "RECONCILED"
+  }
+}

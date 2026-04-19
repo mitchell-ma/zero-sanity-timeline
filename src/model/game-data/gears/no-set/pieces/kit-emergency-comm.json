@@ -44,7 +44,6 @@
   ],
   "properties": {
     "id": "EMERGENCY_COMM",
-    "name": "Emergency Comm",
     "gearType": "KIT",
     "gearSet": "NONE"
   },

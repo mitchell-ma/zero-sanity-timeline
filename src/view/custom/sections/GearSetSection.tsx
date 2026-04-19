@@ -8,6 +8,7 @@ import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
 import type { Interaction } from '../../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from '../InteractionBuilder';
+import { t } from '../../../locales/locale';
 
 const GEAR_CATEGORIES = Object.values(GearCategory);
 
@@ -193,7 +194,7 @@ export default function GearSetSection({ data, onChange, originalId }: Props) {
 
   return (
     <>
-      <CollapsibleSection title="Identity">
+      <CollapsibleSection title={t('customizer.section.identity')}>
         <div className="wizard-section">
           <IdField value={data.id} onChange={(id) => update({ id })} originalId={originalId} />
           <label className="wz-field">
@@ -214,7 +215,7 @@ export default function GearSetSection({ data, onChange, originalId }: Props) {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Pieces">
+      <CollapsibleSection title={t('customizer.section.pieces')}>
         <div className="wizard-section">
           {data.pieces.map((piece, i) => (
             <PieceEditor
@@ -231,7 +232,7 @@ export default function GearSetSection({ data, onChange, originalId }: Props) {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Set Effect">
+      <CollapsibleSection title={t('customizer.section.setEffect')}>
         <div className="wizard-section">
           <label className={`wz-radio${data.setEffect ? ' active' : ''}`} style={{ width: 'fit-content' }}>
             <input type="checkbox" style={{ display: 'none' }} checked={!!data.setEffect} onChange={toggleSetEffect} />

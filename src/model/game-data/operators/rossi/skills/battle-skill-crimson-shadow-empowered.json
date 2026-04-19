@@ -15,8 +15,6 @@
     "enhancementTypes": [
       "EMPOWERED"
     ],
-    "name": "Crimson Shadow (Empowered)",
-    "description": "Charges to the target to deal Physical DMG and apply Lift. If the target already has Vulnerability stack(s), the skill also unleashes a Wolven Ambrage that charges at the target to deal Heat DMG.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
@@ -41,7 +39,6 @@
         ]
       },
       "properties": {
-        "name": "Crimson Shadow",
         "duration": {
           "value": {
             "verb": "IS",
@@ -372,7 +369,6 @@
         ]
       },
       "properties": {
-        "name": "Wolven Ambrage",
         "duration": {
           "value": {
             "verb": "IS",

@@ -1,0 +1,186 @@
+{
+  "op.EMBER.event.name": {
+    "text": "Ember",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.1.event.description": {
+    "text": "Talent Inflamed for the Assault improved: Protection effect +20%; hitting an enemy extends the duration by 1.5s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.1.event.name": {
+    "text": "Nomadic Fort (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.2.event.description": {
+    "text": "Strength +{Str:0}, Will +{Will:0}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.2.event.name": {
+    "text": "Steel-Hardened Veteran (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.3.event.description": {
+    "text": "Combo skill Frontline Support improved: Restores the HP of another teammate with the lowest percentage HP at 50% of the base effect.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.3.event.name": {
+    "text": "Indomitable Front (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.4.event.description": {
+    "text": "Ultimate Re-Ignited Oath improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.4.event.name": {
+    "text": "Undying Embers (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.5.event.description": {
+    "text": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by 1.2; while this shield is active, the wielder gains ATK +10%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.potential.5.event.name": {
+    "text": "The Steel Oath (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FORWARD_MARCH.event.description": {
+    "text": "A leap followed by a heavy slam that deals Heat DMG, Knock Down, and Stagger to all enemies in a fan-shaped area.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FORWARD_MARCH.event.name": {
+    "text": "Forward March",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FORWARD_MARCH.segment.0.name": {
+    "text": "Forward March",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FORWARD_MARCH_EMPOWERED.event.description": {
+    "text": "A leap followed by a heavy slam that deals Heat DMG, Knock Down, and Stagger to all enemies in a fan-shaped area. Ember took DMG from enemies during casting, so the slam deals more Stagger when it hits.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FORWARD_MARCH_EMPOWERED.event.name": {
+    "text": "Forward March (Empowered)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FORWARD_MARCH_EMPOWERED.segment.0.name": {
+    "text": "Forward March",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FRONTLINE_SUPPORT.event.description": {
+    "text": "When the controlled operator is attacked. Leaps at the target enemy and unleashes a heavy slam that deals Physical DMG and Knock Down while giving HP treatment to the controlled operator. The attribute of Will increases the amount of HP treatment.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FRONTLINE_SUPPORT.event.name": {
+    "text": "Frontline Support",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FRONTLINE_SUPPORT.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FRONTLINE_SUPPORT.segment.1.name": {
+    "text": "Frontline Support",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.FRONTLINE_SUPPORT.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.RE_IGNITED_OATH.event.description": {
+    "text": "Slams the ground to deal Heat DMG to nearby enemies, while granting every teammate a Shield based on Ember's Max HP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.RE_IGNITED_OATH.event.name": {
+    "text": "Re-Ignited Oath",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.RE_IGNITED_OATH.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.RE_IGNITED_OATH.segment.1.name": {
+    "text": "Re-Ignited Oath",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.SWORD_ART_OF_ASSAULT_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.SWORD_ART_OF_ASSAULT_BATK.event.name": {
+    "text": "Sword Art of Assault",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.SWORD_ART_OF_ASSAULT_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.SWORD_ART_OF_ASSAULT_DIVE.event.name": {
+    "text": "Sword Art of Assault (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.SWORD_ART_OF_ASSAULT_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.skill.SWORD_ART_OF_ASSAULT_FINISHER.event.name": {
+    "text": "Sword Art of Assault (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.status.INFLAMED_FOR_THE_ASSAULT.event.description": {
+    "text": "When casting the battle skill Forward March and the combo skill Frontline Support, Ember gains 50% Protection and is less likely to be interrupted.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.status.INFLAMED_FOR_THE_ASSAULT.event.name": {
+    "text": "Inflamed for the Assault (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.status.INFLAMED_FOR_THE_ASSAULT.segment.0.name": {
+    "text": "Inflamed for the Assault (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.status.THE_STEEL_OATH.event.description": {
+    "text": "Grants every teammate a Shield based on 18%-25% of Ember's Max HP for 10s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.status.THE_STEEL_OATH.event.name": {
+    "text": "The Steel Oath",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.status.THE_STEEL_OATH.segment.0.name": {
+    "text": "The Steel Oath",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.status.THE_STEEL_OATH_EMPOWERED.event.description": {
+    "text": "Ultimate Re-Ignited Oath improved: Shield effect is multiplied by 1.2; while this shield is active, the wielder gains ATK +10%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.status.THE_STEEL_OATH_EMPOWERED.event.name": {
+    "text": "The Steel Oath (Empowered)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.status.THE_STEEL_OATH_EMPOWERED.segment.0.name": {
+    "text": "The Steel Oath (Empowered)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.talent.INFLAMED_FOR_THE_ASSAULT_TALENT.event.description": {
+    "text": "When casting the battle skill Forward March and the combo skill Frontline Support, Ember gains 50% Protection and is less likely to be interrupted.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.talent.INFLAMED_FOR_THE_ASSAULT_TALENT.event.name": {
+    "text": "Inflamed for the Assault (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.talent.PAY_THE_FERRIC_PRICE.event.description": {
+    "text": "When Ember receives DMG from the enemy, she gains ATK +{attack:0%} for {duration:0}s. This effect can reach 3 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.talent.PAY_THE_FERRIC_PRICE.event.name": {
+    "text": "Pay the Ferric Price (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.EMBER.talent.PAY_THE_FERRIC_PRICE.segment.0.name": {
+    "text": "Pay the Ferric Price (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

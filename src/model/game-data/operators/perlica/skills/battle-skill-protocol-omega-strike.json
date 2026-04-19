@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Protocol \u03c9: Strike",
-    "description": "Unleashes a bolt of electro-magnetic energy that deals Electric DMG and Electric Infliction to enemies in a small area.",
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "ELECTRIC",

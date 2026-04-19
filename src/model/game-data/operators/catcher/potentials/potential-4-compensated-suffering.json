@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "CATCHER_POTENTIAL_4",
-    "name": "Compensated Suffering (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Textbook Assault improved: Ultimate Energy cost -{1-costValue:0%}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "CATCHER",

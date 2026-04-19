@@ -39,7 +39,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Commiseration (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "stacks": {
@@ -57,8 +56,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "When triggering Shatter, the next battle skill Onomatopoeia cast returns 7.5 SP. This effect cannot stack."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "ESTELLA",

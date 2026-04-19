@@ -91,7 +91,6 @@
   ],
   "properties": {
     "id": "THERTECH_ANALYSIS_BAND",
-    "name": "\u00c6thertech Analysis Band",
     "gearType": "KIT",
     "gearSet": "AETHERTECH_STAT"
   },

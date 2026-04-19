@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "NATURE_AMP",
-    "name": "Nature Amp",
     "to": "TEAM",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Nature Amp applied to the team.",
     "duration": {
       "value": {
         "verb": "IS",

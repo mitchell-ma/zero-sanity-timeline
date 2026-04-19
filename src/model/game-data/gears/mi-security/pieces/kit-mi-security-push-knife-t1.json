@@ -91,7 +91,6 @@
   ],
   "properties": {
     "id": "MI_SECURITY_PUSH_KNIFE_T1",
-    "name": "MI Security Push Knife T1",
     "gearType": "KIT",
     "gearSet": "MI_SECURITY_STAT"
   },

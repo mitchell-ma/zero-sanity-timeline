@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Stress Testing",
-    "description": "When the Auxiliary Crystal uses up its HP treatments. Quickly charges up the Auxiliary Crystal and launches it at the enemy to deal Cryo DMG and Cryo Infliction.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "CRYO",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -61,8 +58,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "CRYO",
-        "name": "Stress Testing"
+        "element": "CRYO"
       },
       "frames": [
         {
@@ -191,7 +187,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

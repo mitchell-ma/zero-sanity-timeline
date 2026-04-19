@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "YVONNE_POTENTIAL_3",
-    "name": "Tink-a-Power (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Freezing Point improved: Against enemies with Cryo Infliction, Critical DMG Dealt +10%; this effect is also doubled against enemies with Solidification."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "YVONNE",

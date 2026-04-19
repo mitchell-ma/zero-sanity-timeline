@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "XAIHI_POTENTIAL_2",
-    "name": "Link Aggregation (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Stack Overflow improved: Ultimate Energy cost -10%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "XAIHI",

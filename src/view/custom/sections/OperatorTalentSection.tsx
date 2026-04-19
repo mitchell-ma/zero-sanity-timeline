@@ -7,6 +7,7 @@ import type { CustomStatusEventDef } from '../../../model/custom/customStatusEve
 import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
 import StatusEventFields from './StatusEventFields';
+import { t } from '../../../locales/locale';
 
 interface Props {
   data: CustomOperatorTalent;
@@ -34,7 +35,7 @@ export default function OperatorTalentSection({ data, onChange, originalId }: Pr
 
   return (
     <>
-      <CollapsibleSection title="Identity">
+      <CollapsibleSection title={t('customizer.section.identity')}>
         <div className="wizard-section">
           <IdField value={data.id} onChange={(id) => update({ id })} originalId={originalId} />
           <label className="wz-field">
@@ -43,7 +44,7 @@ export default function OperatorTalentSection({ data, onChange, originalId }: Pr
           </label>
           <label className="wz-field">
             <span>Operator ID (optional)</span>
-            <input type="text" value={data.operatorId ?? ''} onChange={(e) => update({ operatorId: e.target.value || undefined })} placeholder="Link to an operator" />
+            <input type="text" value={data.operatorId ?? ''} onChange={(e) => update({ operatorId: e.target.value || undefined })} placeholder={t('customizer.placeholder.linkOperator')} />
           </label>
           <div className="wz-field-row">
             <label className="wz-field">
@@ -58,7 +59,7 @@ export default function OperatorTalentSection({ data, onChange, originalId }: Pr
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Status Events">
+      <CollapsibleSection title={t('customizer.section.statusEvents')}>
         <div className="wizard-section">
           {data.statusEvents.map((se, i) => (
             <StatusEventFields

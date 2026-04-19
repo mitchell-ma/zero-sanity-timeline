@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Astrophysics"
+        }
       },
       "clause": [
         {
@@ -49,7 +48,6 @@
   ],
   "properties": {
     "id": "JET_ASTROPHYSICS",
-    "name": "Astrophysics",
     "duration": {
       "value": {
         "verb": "IS",
@@ -67,8 +65,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. When the wielder casts a battle skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration:0}s. When the wielder casts a combo skill, Arts DMG Dealt +{spell_dmg_up3:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "JET",

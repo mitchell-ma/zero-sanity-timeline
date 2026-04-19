@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Bonus Spec Training (P2)"
+        }
       },
       "clause": [
         {
@@ -49,11 +48,9 @@
   ],
   "properties": {
     "id": "CATCHER_POTENTIAL_2",
-    "name": "Bonus Spec Training (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "DEF +{Def:0}, Will +{Will:0}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "CATCHER",

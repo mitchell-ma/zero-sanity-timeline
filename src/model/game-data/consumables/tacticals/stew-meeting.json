@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "STEW_MEETING",
-    "name": "Stew Meeting",
     "rarity": 2,
     "usageLimit": {
       "verb": "IS",

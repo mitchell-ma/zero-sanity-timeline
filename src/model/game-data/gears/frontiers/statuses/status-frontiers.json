@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Frontiers"
+        }
       },
       "clause": [
         {
@@ -34,7 +33,6 @@
   ],
   "properties": {
     "id": "FRONTIERS",
-    "name": "Frontiers",
     "duration": {
       "value": {
         "verb": "IS",
@@ -49,7 +47,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Team DMG +16%",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

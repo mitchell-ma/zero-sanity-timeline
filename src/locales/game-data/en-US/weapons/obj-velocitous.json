@@ -1,0 +1,34 @@
+{
+  "weapon.OBJ_VELOCITOUS.event.name": {
+    "text": "OBJ Velocitous",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_VELOCITOUS.segment.0.name": {
+    "text": "OBJ Velocitous",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_VELOCITOUS.skill.DETONATE_RAPID_STRIKE.event.description": {
+    "text": "ATK +{atk_up:0.0%}. After the wielder consumes an Arts Infliction, the wielder gains Nature DMG Dealt +[{nature_dmg_up_mult:0.0%}×Stacks Consumed] for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_VELOCITOUS.skill.DETONATE_RAPID_STRIKE.event.name": {
+    "text": "Detonate: Rapid Strike",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_VELOCITOUS.skill.DETONATE_RAPID_STRIKE.segment.0.name": {
+    "text": "Detonate: Rapid Strike",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_VELOCITOUS.status.OBJ_VELOCITOUS_RAPID_STRIKE.event.description": {
+    "text": "Nature DMG Dealt bonus per stack consumed from Arts Infliction",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_VELOCITOUS.status.OBJ_VELOCITOUS_RAPID_STRIKE.event.name": {
+    "text": "Rapid Strike",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_VELOCITOUS.status.OBJ_VELOCITOUS_RAPID_STRIKE.segment.0.name": {
+    "text": "Rapid Strike",
+    "dataStatus": "RECONCILED"
+  }
+}

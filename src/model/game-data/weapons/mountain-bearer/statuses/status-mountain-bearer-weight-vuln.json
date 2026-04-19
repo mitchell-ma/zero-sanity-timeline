@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Weight of Mountain (Vulnerability)"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
   ],
   "properties": {
     "id": "MOUNTAIN_BEARER_WEIGHT_VULN",
-    "name": "Weight of Mountain (Vulnerability)",
-    "description": "All Attributes bonus from Vulnerability application",
     "duration": {
       "value": {
         "verb": "IS",

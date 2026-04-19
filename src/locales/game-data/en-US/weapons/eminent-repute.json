@@ -1,0 +1,34 @@
+{
+  "weapon.EMINENT_REPUTE.event.name": {
+    "text": "Eminent Repute",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.EMINENT_REPUTE.segment.0.name": {
+    "text": "Eminent Repute",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.EMINENT_REPUTE.skill.BRUTALITY_DISCIPLINARIAN.event.description": {
+    "text": "ATK +{atk_up:0.0%}. After the wielder consumes Vulnerability stack(s), the wielder gains ATK +[{atk_up_add:0.0%} + {atk_up_mult:0.0%}×Stacks Consumed] while other operators in the team gain half of this buff for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.EMINENT_REPUTE.skill.BRUTALITY_DISCIPLINARIAN.event.name": {
+    "text": "Brutality: Disciplinarian",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.EMINENT_REPUTE.skill.BRUTALITY_DISCIPLINARIAN.segment.0.name": {
+    "text": "Brutality: Disciplinarian",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.EMINENT_REPUTE.status.EMINENT_REPUTE_DISCIPLINARIAN.event.description": {
+    "text": "ATK bonus scales with consumed stacks; team gets half",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.EMINENT_REPUTE.status.EMINENT_REPUTE_DISCIPLINARIAN.event.name": {
+    "text": "Disciplinarian",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.EMINENT_REPUTE.status.EMINENT_REPUTE_DISCIPLINARIAN.segment.0.name": {
+    "text": "Disciplinarian",
+    "dataStatus": "RECONCILED"
+  }
+}

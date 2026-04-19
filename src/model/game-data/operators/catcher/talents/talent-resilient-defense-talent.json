@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Resilient Defense (T1)"
+        }
       },
       "clause": [
         {
@@ -59,12 +58,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Resilient Defense (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "For every 10 Will, DEF +1.2."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "CATCHER",

@@ -7,6 +7,7 @@ import { ElementType } from '../../consts/enums';
 import type { CustomSegmentDef, CustomFrameDef } from '../../model/custom/customOperatorTypes';
 import type { Interaction } from '../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
+import { t } from '../../locales/locale';
 
 interface SegmentFrameEditorProps {
   segments: CustomSegmentDef[];
@@ -32,11 +33,11 @@ export default function SegmentFrameEditor({ segments, onChange }: SegmentFrameE
     <div className="segment-frame-editor">
       <div className="wz-subsection-header">
         <span>Segments</span>
-        <button className="btn-add-sm" onClick={addSegment} title="Add segment">+</button>
+        <button className="btn-add-sm" onClick={addSegment} title={t('customizer.btn.addSegment')}>+</button>
       </div>
 
       {segments.length === 0 && (
-        <div className="clause-empty">No segments — duration-only block</div>
+        <div className="clause-empty">{t('customizer.empty.noSegments')}</div>
       )}
 
       {segments.map((seg, si) => (
@@ -166,11 +167,11 @@ function SegmentEditor({ index, segment, onChange, onRemove }: {
           <div className="wz-subsection">
             <div className="wz-subsection-header">
               <span>Frames</span>
-              <button className="btn-add-sm" onClick={addFrame} title="Add frame">+</button>
+              <button className="btn-add-sm" onClick={addFrame} title={t('customizer.btn.addFrame')}>+</button>
             </div>
 
             {(segment.frames ?? []).length === 0 && (
-              <div className="clause-empty">No frames</div>
+              <div className="clause-empty">{t('customizer.empty.noFrames')}</div>
             )}
 
             {(segment.frames ?? []).map((frame, fi) => (
@@ -218,7 +219,7 @@ function FrameEditor({ index, frame, onChange, onRemove }: {
             min={0}
             value={frame.offsetSeconds}
             onChange={(e) => update({ offsetSeconds: Number(e.target.value) })}
-            title="Offset (seconds)"
+            title={t('customizer.field.offsetSeconds')}
           />
         </label>
         <span className="ib-label">s offset</span>

@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "LIFENG_POTENTIAL_4",
-    "name": "Brief Instant (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Heart of the Unmoving improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "LIFENG",

@@ -1,0 +1,34 @@
+{
+  "weapon.OBJ_HEAVY_BURDEN.event.name": {
+    "text": "OBJ Heavy Burden",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_HEAVY_BURDEN.segment.0.name": {
+    "text": "OBJ Heavy Burden",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_HEAVY_BURDEN.skill.EFFICACY_TENACIOUS_WILL.event.description": {
+    "text": "Secondary Attribute +{second_attr_up:0.0%}. When the wielder applies Knocked Down or Weakened, the wielder gains DEF +{def_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_HEAVY_BURDEN.skill.EFFICACY_TENACIOUS_WILL.event.name": {
+    "text": "Efficacy: Tenacious Will",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_HEAVY_BURDEN.skill.EFFICACY_TENACIOUS_WILL.segment.0.name": {
+    "text": "Efficacy: Tenacious Will",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_HEAVY_BURDEN.status.OBJ_HEAVY_BURDEN_TENACIOUS_WILL.event.description": {
+    "text": "Secondary Attribute +{second_attr_up:0.0%}. When the wielder applies Knocked Down or Weakened, the wielder gains DEF +{def_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_HEAVY_BURDEN.status.OBJ_HEAVY_BURDEN_TENACIOUS_WILL.event.name": {
+    "text": "Tenacious Will",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OBJ_HEAVY_BURDEN.status.OBJ_HEAVY_BURDEN_TENACIOUS_WILL.segment.0.name": {
+    "text": "Tenacious Will",
+    "dataStatus": "RECONCILED"
+  }
+}

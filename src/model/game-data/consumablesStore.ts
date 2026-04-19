@@ -269,9 +269,9 @@ for (const key of consumableIconContext.keys()) {
   }
 }
 
-function resolveConsumableIcon(name: string): string | undefined {
-  const key = name.replace(/ /g, '_').toLowerCase();
-  return CONSUMABLE_ICONS[key];
+/** Hard-wired ID → asset: `<id.toLowerCase()>.(png|webp)`. */
+function resolveConsumableIcon(consumableId: string): string | undefined {
+  return CONSUMABLE_ICONS[consumableId.toLowerCase()];
 }
 
 // ── Loader ──────────────────────────────────────────────────────────────────
@@ -284,7 +284,7 @@ for (const key of consumableContext.keys()) {
   const json = consumableContext(key) as Record<string, unknown>;
   const consumable = ConsumableData.deserialize(json, key);
   if (consumable.id) {
-    consumable.icon = resolveConsumableIcon(consumable.name);
+    consumable.icon = resolveConsumableIcon(consumable.id);
     consumableCache.set(consumable.id, consumable);
     consumableNameIndex.set(consumable.name, consumable.id);
   }
@@ -298,7 +298,7 @@ for (const key of tacticalContext.keys()) {
   const json = tacticalContext(key) as Record<string, unknown>;
   const tactical = TacticalData.deserialize(json, key);
   if (tactical.id) {
-    tactical.icon = resolveConsumableIcon(tactical.name);
+    tactical.icon = resolveConsumableIcon(tactical.id);
     tacticalCache.set(tactical.id, tactical);
     tacticalNameIndex.set(tactical.name, tactical.id);
   }

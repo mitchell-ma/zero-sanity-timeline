@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Weight of Mountain (Susceptibility)"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
   ],
   "properties": {
     "id": "MOUNTAIN_BEARER_WEIGHT_SUSC",
-    "name": "Weight of Mountain (Susceptibility)",
-    "description": "All Attributes bonus from Physical Susceptibility application",
     "duration": {
       "value": {
         "verb": "IS",

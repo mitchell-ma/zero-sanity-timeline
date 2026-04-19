@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "AIC_GAUNTLETS",
-    "name": "AIC Gauntlets",
     "gearType": "GLOVES",
     "gearSet": "AIC_HEAVY_STAT"
   },

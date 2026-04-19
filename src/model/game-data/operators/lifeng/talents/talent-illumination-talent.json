@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Illumination (T1)"
+        }
       },
       "clause": [
         {
@@ -92,12 +91,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Illumination (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Every point of Intellect and Will further grants ATK +{atk_up:0.00%}."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "LIFENG",

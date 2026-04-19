@@ -367,7 +367,7 @@ export default function StatisticsSourcePickerModal({
         <header className="export-modal-header">
           <div className="export-modal-title-row">
             <h2 className="export-modal-title">{t('statistics.picker.title')}</h2>
-            <button className="export-modal-close" onClick={onClose} aria-label="Close">&times;</button>
+            <button className="export-modal-close" onClick={onClose} aria-label={t('common.close')}>&times;</button>
           </div>
           <p className="export-modal-subtitle">{t('statistics.picker.subtitle')}</p>
         </header>
@@ -384,7 +384,7 @@ export default function StatisticsSourcePickerModal({
             onChange={(e) => setQuery(e.target.value)}
           />
           {query && (
-            <button className="export-search-clear" onClick={() => setQuery('')} aria-label="Clear filter">&times;</button>
+            <button className="export-search-clear" onClick={() => setQuery('')} aria-label={t('common.clearFilter')}>&times;</button>
           )}
         </div>
 

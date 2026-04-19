@@ -1,0 +1,50 @@
+{
+  "gear.CATASTROPHE_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Ultimate Gain Efficiency +{ultimate_gain_up:0%}. The wearer casts a battle skill, the action returns {atb_recover:0} SP. This effect only triggers 1 time per battle.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.event.name": {
+    "text": "Catastrophe",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.piece.CATASTROPHE_FILTER.event.name": {
+    "text": "Catastrophe Filter",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.piece.CATASTROPHE_GAUZE_CARTRIDGE.event.name": {
+    "text": "Catastrophe Gauze Cartridge",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.piece.CATASTROPHE_GAUZE_CARTRIDGE_T1.event.name": {
+    "text": "Catastrophe Gauze Cartridge T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.piece.CATASTROPHE_GLOVES.event.name": {
+    "text": "Catastrophe Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.piece.CATASTROPHE_HEAVY_ARMOR.event.name": {
+    "text": "Catastrophe Heavy Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.piece.CATASTROPHE_HEAVY_ARMOR_T1.event.name": {
+    "text": "Catastrophe Heavy Armor T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.segment.0.name": {
+    "text": "Catastrophe",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.status.CATASTROPHE.event.description": {
+    "text": "Returns +50 SP on battle skill cast. Once per battle.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.status.CATASTROPHE.event.name": {
+    "text": "Catastrophe",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.CATASTROPHE_STAT.status.CATASTROPHE.segment.0.name": {
+    "text": "Catastrophe",
+    "dataStatus": "RECONCILED"
+  }
+}

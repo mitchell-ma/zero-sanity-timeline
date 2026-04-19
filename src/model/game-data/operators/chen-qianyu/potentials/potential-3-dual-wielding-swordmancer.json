@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "CHEN_QIANYU_POTENTIAL_3",
-    "name": "Dual-Wielding Swordmancer (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Ascending Strike, combo skill Soar to the Stars, and ultimate Blade Gale improved: DMG Multiplier is increased to 1.1 times the original."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

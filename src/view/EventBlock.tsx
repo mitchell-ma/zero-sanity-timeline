@@ -10,6 +10,7 @@ import type { EventLayout } from '../controller/timeline/timelineLayout';
 // validateSegmentContiguity removed — no longer needed in render path
 import { VERTICAL_AXIS, segmentRadius, type AxisMap } from '../utils/axisMap';
 import { VerbType, NounType, AdjectiveType } from '../dsl/semantics';
+import { t } from '../locales/locale';
 
 /** Warning icon with a fixed-position tooltip that escapes scroll overflow. */
 const WarningIcon = React.memo(function WarningIcon({ messages }: { messages: string[] }) {
@@ -287,7 +288,7 @@ function EventBlock({
   axis = VERTICAL_AXIS,
 }: EventBlockProps) {
   const { uid, startFrame, segments } = event;
-  const displayLabel = isAutoFinisher ? 'Finisher' : label;
+  const displayLabel = isAutoFinisher ? t('skill.FINISHER') : label;
 
   /** Resolve visual crit state for a frame based on runtime crit mode. */
   const isFrameVisualCrit = (f: EventFrameMarker): boolean => {

@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "EXECUTE_PROCESS",
-    "name": "Execute Process (T1)",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -18,8 +17,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
-    "description": "Cryo DMG Taken debuff (Cryo Fragility) applied by Stress Testing."
+    "eventCategoryType": "STATUS"
   },
   "metadata": {
     "originId": "EXECUTE_PROCESS_TALENT",

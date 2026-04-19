@@ -30,8 +30,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Infliction: Road Home for All Life"
+        }
       },
       "clause": [
         {
@@ -71,8 +70,6 @@
     }
   ],
   "properties": {
-    "name": "Infliction: Road Home for All Life",
-    "description": "Critical Rate +{crit_up:0.0%}. When the wielder applies an Arts Reaction, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
     "id": "INFLICTION_ROAD_HOME_FOR_ALL_LIFE",
     "eventCategoryType": "WEAPON_STAT"
   },

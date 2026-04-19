@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ELECTRIC_SUSCEPTIBILITY",
-    "name": "Electric Susceptibility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Electric Susceptibility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

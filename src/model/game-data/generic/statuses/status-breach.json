@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "BREACH",
-    "name": "Breach",
     "to": "ENEMY",
     "element": "PHYSICAL",
     "duration": {
@@ -29,8 +28,7 @@
       "interactionType": "MERGE"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "PHYSICAL_STATUS",
-    "description": "Physical status. Increases Physical DMG taken by the enemy. Duration and effect scale with status level from consumed Vulnerable stacks (11%/14%/17%/20% increased Physical DMG taken, 12/18/24/30s)."
+    "eventCategoryType": "PHYSICAL_STATUS"
   },
   "metadata": {
     "originId": "game",

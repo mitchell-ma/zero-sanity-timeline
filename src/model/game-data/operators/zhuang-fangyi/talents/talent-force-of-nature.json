@@ -30,8 +30,7 @@
             "value": 5
           },
           "unit": "SECOND"
-        },
-        "name": "Force of Nature (T1)"
+        }
       },
       "clause": [
         {
@@ -72,7 +71,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Force of Nature (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -91,8 +89,7 @@
     },
     "element": "ELECTRIC",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Battle skill Mantra of Sundering improved: Casting the battle skill grants Zhuang Fangyi 9%/18% (L1/L2) Electric Amp for 5s. Scoring hits with the battle skill's Thunder Strike increases this effect by +1%/+2% per hit. Every casting of the battle skill resets this Electric Amp effect."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",

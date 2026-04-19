@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ROSSI_P4_INNOCENT_WISH",
-    "name": "Innocent Wish (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate \"Razorclaw\" Ambuscade improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ROSSI",

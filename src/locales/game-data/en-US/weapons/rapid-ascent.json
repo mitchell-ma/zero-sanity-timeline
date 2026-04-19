@@ -1,0 +1,22 @@
+{
+  "weapon.RAPID_ASCENT.event.name": {
+    "text": "Rapid Ascent",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RAPID_ASCENT.segment.0.name": {
+    "text": "Rapid Ascent",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RAPID_ASCENT.skill.TWILIGHT_AZURE_CLOUDS.event.description": {
+    "text": "Battle skills and ultimates gain Physical DMG Dealt +{phy_dmg_up:0.0%}. Against Staggered enemies, battle skills and ultimates also gain DMG Dealt +{dmg_up:0.0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RAPID_ASCENT.skill.TWILIGHT_AZURE_CLOUDS.event.name": {
+    "text": "Twilight: Azure Clouds",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.RAPID_ASCENT.skill.TWILIGHT_AZURE_CLOUDS.segment.0.name": {
+    "text": "Twilight: Azure Clouds",
+    "dataStatus": "RECONCILED"
+  }
+}

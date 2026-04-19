@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Exploding Blitz",
-    "description": "Performs a short forward dash while wreathed in arcs of electricity to deal Electric DMG and apply Electric Infliction to all enemies in the path. The lingering arcs explode after a short while, dealing another hit of Electric DMG. If the enemy has active Electric Infliction, consume the Electric Infliction and forcibly apply Electrification.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -81,8 +78,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "ELECTRIC",
-        "name": "Exploding Blitz"
+        "element": "ELECTRIC"
       },
       "frames": [
         {
@@ -255,8 +251,7 @@
             "value": 1.4300000000000002
           },
           "unit": "SECOND"
-        },
-        "name": "Arc Explosion"
+        }
       },
       "frames": [
         {

@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "SWORDMANCER_NAV_BEACON",
-    "name": "Swordmancer NAV Beacon",
     "gearType": "KIT",
     "gearSet": "SWORDMANCER_STAT"
   },

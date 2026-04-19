@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "CORROSION",
-    "name": "Corrosion",
     "to": "ENEMY",
     "element": "NATURE",
     "duration": {
@@ -23,8 +22,7 @@
       "interactionType": "MERGE"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "REACTION",
-    "description": "Nature arts reaction. Deals initial Nature DMG on activation. Reduces enemy DEF over 10 seconds, scaling with status level."
+    "eventCategoryType": "REACTION"
   },
   "metadata": {
     "originId": "game",

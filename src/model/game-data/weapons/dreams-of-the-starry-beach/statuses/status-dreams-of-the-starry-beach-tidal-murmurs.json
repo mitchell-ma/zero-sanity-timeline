@@ -8,8 +8,7 @@
             "value": 25
           },
           "unit": "SECOND"
-        },
-        "name": "Tidal Murmurs"
+        }
       },
       "clause": [
         {
@@ -48,8 +47,6 @@
   ],
   "properties": {
     "id": "DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS",
-    "name": "Tidal Murmurs",
-    "description": "Secondary attribute bonus",
     "duration": {
       "value": {
         "verb": "IS",

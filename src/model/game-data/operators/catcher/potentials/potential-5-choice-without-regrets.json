@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "CATCHER_POTENTIAL_5",
-    "name": "Choice Without Regrets (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Rigid Interdiction improved: Hitting an enemy while the shield is active returns 10 SP."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "CATCHER",

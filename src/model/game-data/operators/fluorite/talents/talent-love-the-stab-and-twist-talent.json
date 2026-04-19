@@ -47,8 +47,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Love the Stab and Twist (T1)"
+        }
       },
       "clause": [
         {
@@ -88,7 +87,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Love the Stab and Twist (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -106,8 +104,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Fluorite gains DMG Dealt +{dmg_up:0%} against Slowed targets."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "FLUORITE",

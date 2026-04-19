@@ -1,0 +1,34 @@
+{
+  "weapon.CHIVALRIC_VIRTUES.event.name": {
+    "text": "Chivalric Virtues",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIVALRIC_VIRTUES.segment.0.name": {
+    "text": "Chivalric Virtues",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIVALRIC_VIRTUES.skill.MEDICANT_BLIGHT_FERVOR.event.description": {
+    "text": "Treatment Efficiency +{heal_up:0.0%}. After the wielder's skill provides HP treatment, the entire team gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIVALRIC_VIRTUES.skill.MEDICANT_BLIGHT_FERVOR.event.name": {
+    "text": "Medicant: Blight Fervor",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIVALRIC_VIRTUES.skill.MEDICANT_BLIGHT_FERVOR.segment.0.name": {
+    "text": "Medicant: Blight Fervor",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIVALRIC_VIRTUES.status.CHIVALRIC_VIRTUES_BLIGHT_FERVOR.event.description": {
+    "text": "Treatment Efficiency +{heal_up:0.0%}. After the wielder's skill provides HP treatment, the entire team gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIVALRIC_VIRTUES.status.CHIVALRIC_VIRTUES_BLIGHT_FERVOR.event.name": {
+    "text": "Blight Fervor",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CHIVALRIC_VIRTUES.status.CHIVALRIC_VIRTUES_BLIGHT_FERVOR.segment.0.name": {
+    "text": "Blight Fervor",
+    "dataStatus": "RECONCILED"
+  }
+}

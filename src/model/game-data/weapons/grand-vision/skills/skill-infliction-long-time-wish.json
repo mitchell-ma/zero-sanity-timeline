@@ -28,8 +28,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Infliction: Long Time Wish"
+        }
       },
       "clause": [
         {
@@ -69,8 +68,6 @@
     }
   ],
   "properties": {
-    "name": "Infliction: Long Time Wish",
-    "description": "Arts Intensity +{phy_spell_up:0}. When the wielder applies Originium Crystals or Solidification, during the next battle skill or ultimate cast within {duration:0}s, the wielder gains Physical DMG Dealt +{phy_dmg_up:0.0%}. Effects of the same name cannot stack.",
     "id": "INFLICTION_LONG_TIME_WISH",
     "eventCategoryType": "WEAPON_STAT"
   },

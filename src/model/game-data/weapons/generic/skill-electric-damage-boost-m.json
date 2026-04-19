@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Electric DMG Boost [M]"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
     }
   ],
   "properties": {
-    "name": "Electric DMG Boost [M]",
-    "description": "Electric DMG Dealt +",
     "id": "ELECTRIC_DAMAGE_BOOST_M"
   },
   "metadata": {

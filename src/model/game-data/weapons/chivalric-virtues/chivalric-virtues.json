@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Chivalric Virtues"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Chivalric Virtues",
     "id": "CHIVALRIC_VIRTUES",
     "type": "ARTS_UNIT",
     "rarity": 6

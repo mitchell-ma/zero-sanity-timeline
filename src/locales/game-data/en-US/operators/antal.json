@@ -1,0 +1,170 @@
+{
+  "op.ANTAL.event.name": {
+    "text": "Antal",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.1.event.description": {
+    "text": "Ultimate Overclocked Moment improved: Electric Amp and Heat Amp effects are increased to 1.1 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.1.event.name": {
+    "text": "Arts Talent (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.2.event.description": {
+    "text": "Ultimate Overclocked Moment improved: Ultimate Energy cost -10%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.2.event.name": {
+    "text": "Improved Automation (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.3.event.description": {
+    "text": "When an enemy with an active Focus debuff is defeated, return 15 SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.3.event.name": {
+    "text": "Applied Originium Theory (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.4.event.description": {
+    "text": "Intellect +10, Max HP +{MaxHp:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.4.event.name": {
+    "text": "Granny's Reminder (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.4.segment.0.name": {
+    "text": "Granny's Reminder (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.5.event.description": {
+    "text": "Applying Focus on the same target for 20s increases Electric Susceptibility and Heat Susceptibility effects by 4%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.potential.5.event.name": {
+    "text": "High Specs Tech Tester (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EMP_TEST_SITE.event.description": {
+    "text": "When an enemy with active Focus suffers a Physical Status or Arts Infliction. Triggers 1 energy explosion on the enemy that deals Electric DMG and applies another stack of the same Physical Status or Arts Infliction.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EMP_TEST_SITE.event.name": {
+    "text": "EMP Test Site",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EMP_TEST_SITE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EMP_TEST_SITE.segment.1.name": {
+    "text": "EMP Test Site",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EMP_TEST_SITE.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EXCHANGE_CURRENT_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Electric DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EXCHANGE_CURRENT_BATK.event.name": {
+    "text": "Exchange Current",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EXCHANGE_CURRENT_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Electric DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EXCHANGE_CURRENT_DIVE.event.name": {
+    "text": "Exchange Current (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EXCHANGE_CURRENT_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Electric DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.EXCHANGE_CURRENT_FINISHER.event.name": {
+    "text": "Exchange Current (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.OVERCLOCKED_MOMENT.event.description": {
+    "text": "Applies temporary Electric Amp and Heat Amp to the entire team.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.OVERCLOCKED_MOMENT.event.name": {
+    "text": "Overclocked Moment",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.OVERCLOCKED_MOMENT.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.OVERCLOCKED_MOMENT.segment.1.name": {
+    "text": "Overclocked Moment",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.SPECIFIED_RESEARCH_SUBJECT.event.description": {
+    "text": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.skill.SPECIFIED_RESEARCH_SUBJECT.event.name": {
+    "text": "Specified Research Subject",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.status.FOCUS.event.description": {
+    "text": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time. At P5, the last 40s of Focus applies a stronger Susceptibility effect (Empowered Focus).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.status.FOCUS.event.name": {
+    "text": "Focus",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.status.FOCUS.segment.0.name": {
+    "text": "Focus",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.status.FOCUS.segment.1.name": {
+    "text": "Empowered Focus",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.status.IMPROVISER.event.description": {
+    "text": "After an Amped teammate's skill deals DMG, Antal restores the said teammate's HP by [108 + Strength×0.9]. This HP restoring effect triggers 1 time every 30s for each operator.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.status.IMPROVISER.event.name": {
+    "text": "IMPROVISER (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.status.IMPROVISER.segment.1.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.status.OVERCLOCKED_MOMENT_AMP.event.description": {
+    "text": "Applies temporary Electric Amp and Heat Amp to the entire team.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.status.OVERCLOCKED_MOMENT_AMP.event.name": {
+    "text": "Overclocked Moment (Amp)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.talent.IMPROVISER_TALENT.event.description": {
+    "text": "After an Amped teammate's skill deals DMG, Antal restores the said teammate's HP by [108 + Strength×0.9]. This HP restoring effect triggers 1 time every 30s for each operator.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.talent.IMPROVISER_TALENT.event.name": {
+    "text": "IMPROVISER (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.talent.SUBCONSCIOUS_ACT_TALENT.event.description": {
+    "text": "Gains 30% chance of Physical DMG immunity and restores HP of self by [45 + Strength×0.38].",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ANTAL.talent.SUBCONSCIOUS_ACT_TALENT.event.name": {
+    "text": "Subconscious Act (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

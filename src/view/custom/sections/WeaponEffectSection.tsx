@@ -7,6 +7,7 @@ import type { CustomStatusEventDef } from '../../../model/custom/customStatusEve
 import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
 import StatusEventFields from './StatusEventFields';
+import { t } from '../../../locales/locale';
 
 interface Props {
   data: CustomWeaponEffect;
@@ -34,7 +35,7 @@ export default function WeaponEffectSection({ data, onChange, originalId }: Prop
 
   return (
     <>
-      <CollapsibleSection title="Identity">
+      <CollapsibleSection title={t('customizer.section.identity')}>
         <div className="wizard-section">
           <IdField value={data.id} onChange={(id) => update({ id })} originalId={originalId} />
           <label className="wz-field">
@@ -43,12 +44,12 @@ export default function WeaponEffectSection({ data, onChange, originalId }: Prop
           </label>
           <label className="wz-field">
             <span>Weapon ID (optional)</span>
-            <input type="text" value={data.weaponId ?? ''} onChange={(e) => update({ weaponId: e.target.value || undefined })} placeholder="Link to a weapon" />
+            <input type="text" value={data.weaponId ?? ''} onChange={(e) => update({ weaponId: e.target.value || undefined })} placeholder={t('customizer.placeholder.linkWeapon')} />
           </label>
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Status Events">
+      <CollapsibleSection title={t('customizer.section.statusEvents')}>
         <div className="wizard-section">
           {data.statusEvents.map((se, i) => (
             <StatusEventFields

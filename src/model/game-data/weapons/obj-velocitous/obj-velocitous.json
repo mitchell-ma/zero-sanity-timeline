@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "OBJ Velocitous"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "OBJ Velocitous",
     "id": "OBJ_VELOCITOUS",
     "type": "HANDCANNON",
     "rarity": 5

@@ -1,0 +1,34 @@
+{
+  "weapon.HOME_LONGING.event.name": {
+    "text": "Home Longing",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.HOME_LONGING.segment.0.name": {
+    "text": "Home Longing",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.HOME_LONGING.skill.SUPPRESSION_OLDEN_MOON.event.description": {
+    "text": "ATK +{atk_up:0.0%}. For {duration:0}s after the wielder casts a combo skill, the wielder's next battle skill gains Cryo and Nature DMG Dealt +{dmg_up:0.0%}. Max stacks: {max_stack:0}. Duration of each stack is counted separately.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.HOME_LONGING.skill.SUPPRESSION_OLDEN_MOON.event.name": {
+    "text": "Suppression: Olden Moon",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.HOME_LONGING.skill.SUPPRESSION_OLDEN_MOON.segment.0.name": {
+    "text": "Suppression: Olden Moon",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.HOME_LONGING.status.HOME_LONGING_OLDEN_MOON.event.description": {
+    "text": "Cryo and Nature DMG Dealt bonus on next battle skill after combo",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.HOME_LONGING.status.HOME_LONGING_OLDEN_MOON.event.name": {
+    "text": "Olden Moon",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.HOME_LONGING.status.HOME_LONGING_OLDEN_MOON.segment.0.name": {
+    "text": "Olden Moon",
+    "dataStatus": "RECONCILED"
+  }
+}

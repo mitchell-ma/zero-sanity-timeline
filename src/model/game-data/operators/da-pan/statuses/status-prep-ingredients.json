@@ -55,7 +55,6 @@
   ],
   "properties": {
     "id": "PREP_INGREDIENTS",
-    "name": "Prep Ingredients",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -111,8 +110,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "When Prep Ingredients is active, hitting an enemy with combo skills immediately shortens cooldown by 40% and consumes 1 stack of Prep Ingredients."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "SALTY_OR_MILD_TALENT",

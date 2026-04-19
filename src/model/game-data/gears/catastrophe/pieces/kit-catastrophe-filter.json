@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "CATASTROPHE_FILTER",
-    "name": "Catastrophe Filter",
     "gearType": "KIT",
     "gearSet": "CATASTROPHE_STAT"
   },

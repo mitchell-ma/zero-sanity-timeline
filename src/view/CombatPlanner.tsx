@@ -99,7 +99,7 @@ interface CombatPlannerProps {
   orientation?: Orientation;
   onToggleOrientation?: () => void;
   onToggleSkill: (slotId: string, skillType: string) => void;
-  onAddEvent: (ownerEntityId: string, columnId: string, atFrame: number, defaultSkill: object | null) => void;
+  onAddEvent: (ownerEntityId: string, columnId: string, atFrame: number, defaultSkill: object | null, strictOverride?: boolean) => void;
   onMoveEvent: (id: string, newStartFrame: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => void;
   onMoveEvents?: (ids: string[], delta: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => void;
   onContextMenu: (state: ContextMenuState | null) => void;
@@ -1692,7 +1692,10 @@ export default React.memo(function CombatPlanner({
   }, [selectedIds, selectedFrames, onSelectedFramesChange, dupMode, dupValid, dupOffset, onDuplicateEvents, isHorizontal]);
 
   // ─── Map controller menu items (actionId) to view callbacks ─────────────────
-  const resolveMenuItemAction = useCallback((item: import('../consts/viewTypes').ContextMenuItem): import('../consts/viewTypes').ContextMenuItem => {
+  const resolveMenuItemAction = useCallback((
+    item: import('../consts/viewTypes').ContextMenuItem,
+    strictOverride?: boolean,
+  ): import('../consts/viewTypes').ContextMenuItem => {
     if (item.separator || item.header || item.action) return item;
     const { actionId, actionPayload, ...rest } = item;
     // Resolve inline buttons recursively
@@ -1700,7 +1703,7 @@ export default React.memo(function CombatPlanner({
       if (btn.action || !btn.actionId) return btn;
       if (btn.actionId === 'addEvent') {
         const p = btn.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: object | null };
-        return { ...btn, action: () => onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill) };
+        return { ...btn, action: () => onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, p.defaultSkill, strictOverride) };
       }
       return btn;
     });
@@ -1720,7 +1723,7 @@ export default React.memo(function CombatPlanner({
             if (override?.statusLevel != null && withParams) {
               const segments = injectStatusLevelIntoSegments(withParams.segments, override.statusLevel);
               const skill = segments ? { ...withParams, segments } : withParams;
-              onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, skill);
+              onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, skill, strictOverride);
               return;
             }
             // Stacks → place N events at the same frame. The engine + presentation
@@ -1728,7 +1731,7 @@ export default React.memo(function CombatPlanner({
             // cap is enforced inside handleAddEvent so extras beyond the limit drop.
             const stacks = override?.stacks ?? 1;
             for (let i = 0; i < stacks; i++) {
-              onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, withParams);
+              onAddEvent(p.ownerEntityId, p.columnId, p.atFrame, withParams, strictOverride);
             }
           },
         };
@@ -1780,6 +1783,12 @@ export default React.memo(function CombatPlanner({
     });
     if (!items) return;
 
+    // When Ctrl flipped the menu mode, force handleAddEvent to use that same
+    // mode — otherwise strict checks silently drop the click.
+    const strictOverride = effectiveMode !== interactionMode
+      ? effectiveMode === InteractionModeType.STRICT
+      : undefined;
+
     // Check if click landed on an event — add Remove Event option
     const eventEl = (e.target as HTMLElement | undefined)?.closest?.('[data-event-uid]');
     const clickedEventUid = eventEl?.getAttribute('data-event-uid') ?? null;
@@ -1790,7 +1799,7 @@ export default React.memo(function CombatPlanner({
 
     onContextMenu({
       x: e.clientX, y: e.clientY,
-      items: [...items.map(resolveMenuItemAction), ...removeItems],
+      items: [...items.map((item) => resolveMenuItemAction(item, strictOverride)), ...removeItems],
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onContextMenu, events, columnPositions, resourceGraphs, onSelectedFramesChange, dupMode, slots, interactionMode, timeStopRegions, staggerBreaks, alwaysAvailableComboSlots, resolveMenuItemAction, axis, isHorizontal, onRemoveEvent]);
@@ -1917,7 +1926,7 @@ export default React.memo(function CombatPlanner({
           interactionMode,
         });
         if (colMenu) {
-          const addItems = colMenu.filter(i => i.actionId === 'addEvent').map(resolveMenuItemAction);
+          const addItems = colMenu.filter(i => i.actionId === 'addEvent').map((i) => resolveMenuItemAction(i));
           if (addItems.length > 0) {
             items.push({ separator: true });
             items.push(...addItems);
@@ -1942,7 +1951,7 @@ export default React.memo(function CombatPlanner({
           interactionMode,
         });
         if (colMenu) {
-          const addItems = colMenu.filter(i => i.actionId === 'addEvent').map(resolveMenuItemAction);
+          const addItems = colMenu.filter(i => i.actionId === 'addEvent').map((i) => resolveMenuItemAction(i));
           if (addItems.length > 0) {
             onContextMenu({ x: e.clientX, y: e.clientY, items: addItems });
           }

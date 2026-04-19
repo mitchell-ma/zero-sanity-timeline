@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Tenacious Will"
+        }
       },
       "clause": [
         {
@@ -48,7 +47,6 @@
   ],
   "properties": {
     "id": "OBJ_HEAVY_BURDEN_TENACIOUS_WILL",
-    "name": "Tenacious Will",
     "duration": {
       "value": {
         "verb": "IS",
@@ -66,8 +64,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "Secondary Attribute +{second_attr_up:0.0%}. When the wielder applies Knocked Down or Weakened, the wielder gains DEF +{def_up:0.0%} for {duration:0}s. Effects of the same name cannot stack."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "OBJ_HEAVY_BURDEN",

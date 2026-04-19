@@ -8,8 +8,7 @@
             "value": 0
           },
           "unit": "SECOND"
-        },
-        "name": "Type 50 Yinglung"
+        }
       },
       "clause": [
         {
@@ -39,7 +38,6 @@
   ],
   "properties": {
     "id": "TYPE_50_YINGLUNG",
-    "name": "Type 50 Yinglung",
     "duration": {
       "value": {
         "verb": "IS",
@@ -54,7 +52,6 @@
       },
       "interactionType": "NONE"
     },
-    "description": "Consumed on next combo skill cast",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

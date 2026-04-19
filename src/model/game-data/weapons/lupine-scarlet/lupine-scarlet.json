@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Lupine Scarlet"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Lupine Scarlet",
     "id": "LUPINE_SCARLET",
     "type": "SWORD",
     "rarity": 6

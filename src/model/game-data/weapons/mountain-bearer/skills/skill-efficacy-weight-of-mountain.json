@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Efficacy: Weight of Mountain"
+        }
       },
       "clause": [
         {
@@ -49,8 +48,6 @@
     }
   ],
   "properties": {
-    "name": "Efficacy: Weight of Mountain",
-    "description": "Against Vulnerable enemies, the wielder gains DMG Dealt +{dmg_up:0.0%}. When the wielder's battle skill applies Vulnerability, the wielder gains All Attributes +{all_attr_up:0.0%} for {duration:0}s. When the wielder's battle skill applies Physical Susceptibility, the wielder gains All Attributes +{all_attr_up2:0.0%} for {duration:0}s. The two effects apply separately and do not stack with themselves.",
     "id": "EFFICACY_WEIGHT_OF_MOUNTAIN",
     "eventCategoryType": "WEAPON_STAT"
   },

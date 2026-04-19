@@ -1,0 +1,34 @@
+{
+  "weapon.OPUS_ETCH_FIGURE.event.name": {
+    "text": "Opus: Etch Figure",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OPUS_ETCH_FIGURE.segment.0.name": {
+    "text": "Opus: Etch Figure",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OPUS_ETCH_FIGURE.skill.SUPPRESSION_TILLITE_ETCHINGS.event.description": {
+    "text": "ATK +{atk_up:0.0%}. When the wielder's battle skill applies Nature Infliction, other operators in the team gain Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. For every enemy suffering from Nature Infliction applied by the said battle skill, other operators in the team gain bonus Arts DMG Dealt +{spell_dmg_up2:0.0%}, up to a max of +{spell_dmg_up2*max_stack:0.0%}. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OPUS_ETCH_FIGURE.skill.SUPPRESSION_TILLITE_ETCHINGS.event.name": {
+    "text": "Suppression: Tillite Etchings",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OPUS_ETCH_FIGURE.skill.SUPPRESSION_TILLITE_ETCHINGS.segment.0.name": {
+    "text": "Suppression: Tillite Etchings",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OPUS_ETCH_FIGURE.status.OPUS_ETCH_FIGURE_TILLITE_ETCHINGS.event.description": {
+    "text": "Arts DMG Dealt bonus for teammates from Nature Infliction. Per-enemy stacking bonus up to 3.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OPUS_ETCH_FIGURE.status.OPUS_ETCH_FIGURE_TILLITE_ETCHINGS.event.name": {
+    "text": "Tillite Etchings",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.OPUS_ETCH_FIGURE.status.OPUS_ETCH_FIGURE_TILLITE_ETCHINGS.segment.0.name": {
+    "text": "Tillite Etchings",
+    "dataStatus": "RECONCILED"
+  }
+}

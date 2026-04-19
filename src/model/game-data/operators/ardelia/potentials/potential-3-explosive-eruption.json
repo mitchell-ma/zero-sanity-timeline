@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ARDELIA_POTENTIAL_3",
-    "name": "Explosive Eruption (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Wooly Party improved: Duration +1s; chance to create Shadow of Mr. Dolly is increased to 1.2 times the original."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ARDELIA",

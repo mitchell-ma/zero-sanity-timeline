@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Aburrey's Legacy (Combo Skill)"
+        }
       },
       "clause": [
         {
@@ -35,7 +34,6 @@
   ],
   "properties": {
     "id": "ABURREY_LEGACY_COMBO_SKILL",
-    "name": "Aburrey's Legacy (Combo Skill)",
     "duration": {
       "value": {
         "verb": "IS",
@@ -50,7 +48,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "ATK +5% for 15s. Refreshes on combo skill cast.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

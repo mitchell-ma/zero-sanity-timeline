@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "WULFGARD_P4_WILL_OF_THE_PACK",
-    "name": "Will of the Pack (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Wolven Fury improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "WULFGARD",

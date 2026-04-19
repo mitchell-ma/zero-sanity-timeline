@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "DA_PAN_POTENTIAL_2",
-    "name": "Harmonized Flavors (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Salty or Mild improved: Prep Ingredients buff duration +10s, max stacks +1."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "DA_PAN",

@@ -30,6 +30,7 @@ import { getCustomOperatorTalents, createCustomOperatorTalent, getDefaultCustomO
 import SkillSection from './SkillSection';
 import OperatorStatusSection from './OperatorStatusSection';
 import OperatorTalentSection from './OperatorTalentSection';
+import { t } from '../../../locales/locale';
 
 const CLASS_TYPES = Object.values(OperatorClassType);
 const ELEMENT_TYPES = Object.values(ElementType).filter((e) => e !== ElementType.NONE && e !== ElementType.ARTS);
@@ -131,7 +132,7 @@ function StatGrid({ stats, onChange, title }: {
     <div className="ops-stat-block">
       <div className="ops-stat-header">
         <span>{title}</span>
-        <button className="ops-btn-micro" onClick={() => onChange({ ...stats, '': 0 })} title="Add stat">+</button>
+        <button className="ops-btn-micro" onClick={() => onChange({ ...stats, '': 0 })} title={t('customizer.btn.addStat')}>+</button>
       </div>
       <div className="ops-stat-grid ops-stat-grid--aligned">
         {entries.map(([key, val], i) => {
@@ -202,7 +203,7 @@ function EditableEntityCard({ name, meta, isOpen, onToggle, onUnlink, children }
         <button
           className="ops-btn-micro ops-btn-micro--dim"
           onClick={(e) => { e.stopPropagation(); onUnlink(); }}
-          title="Unlink"
+          title={t('customizer.btn.unlink')}
         >&times;</button>
       </div>
       {isOpen && (
@@ -265,7 +266,7 @@ function PotentialRow({ pot, onChange, onRemove }: {
         className="ops-potential-desc"
         type="text"
         value={pot.description}
-        placeholder="Effect description"
+        placeholder={t('customizer.placeholder.effectDescription')}
         onChange={(e) => onChange({ ...pot, description: e.target.value })}
       />
       <input
@@ -442,7 +443,7 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
           <IdField value={data.id} onChange={(id) => update({ id })} originalId={originalId} fieldClassName="ops-field ops-field--inline" />
           <label className="ops-field ops-field--inline">
             <span className="ops-field-label">Name</span>
-            <input type="text" value={data.name} onChange={(e) => update({ name: e.target.value })} placeholder="Operator name" />
+            <input type="text" value={data.name} onChange={(e) => update({ name: e.target.value })} placeholder={t('customizer.placeholder.operatorName')} />
           </label>
           <div className="ops-field ops-field--inline">
             <span className="ops-field-label">Rarity</span>
@@ -554,7 +555,7 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
               <div className="ops-combo-trigger-block">
                 <div className="ops-sub-header">
                   <span className="ops-sub-label">Combo Trigger</span>
-                  <button className="ops-btn-micro" onClick={addTriggerCondition} title="Add condition">+</button>
+                  <button className="ops-btn-micro" onClick={addTriggerCondition} title={t('customizer.btn.addConditionSimple')}>+</button>
                 </div>
                 {data.combo.onTriggerClause.map((pred, i) => (
                   <div key={i} className="ops-trigger-row">
@@ -773,7 +774,7 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
               items={availableTalents}
               onLink={handleLinkTalent}
               onCreate={handleNewTalent}
-              placeholder="Link talent..."
+              placeholder={t('customizer.placeholder.linkTalent')}
             />
           </>
         )}
@@ -839,7 +840,7 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
               items={availableStatuses}
               onLink={handleLinkStatus}
               onCreate={handleNewStatus}
-              placeholder="Link status..."
+              placeholder={t('customizer.placeholder.linkStatus')}
             />
           </>
         )}

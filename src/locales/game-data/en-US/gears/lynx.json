@@ -1,0 +1,62 @@
+{
+  "gear.LYNX_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's HP Treatment Efficiency +{heal_up:0%}. After the wearer gives HP treatment to an allied target, that target also gains {1-dmg_taken_down:0%} DMG Reduction against all types of DMG for {duration}s. If the said treatment exceeds the target's Max HP, the target gains {1-dmg_taken_down2:0%} DMG Reduction against all types of DMG. The aforementioned effects cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.event.name": {
+    "text": "LYNX",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.piece.LYNX_AEGIS_INJECTOR.event.name": {
+    "text": "LYNX Aegis Injector",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.piece.LYNX_CONNECTOR.event.name": {
+    "text": "LYNX Connector",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.piece.LYNX_CONNECTOR_T1.event.name": {
+    "text": "LYNX Connector T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.piece.LYNX_CONNECTOR_T2.event.name": {
+    "text": "LYNX Connector T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.piece.LYNX_CUIRASS.event.name": {
+    "text": "LYNX Cuirass",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.piece.LYNX_GAUNTLETS.event.name": {
+    "text": "LYNX Gauntlets",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.piece.LYNX_GLOVES.event.name": {
+    "text": "LYNX Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.piece.LYNX_HEAVY_ARMOR.event.name": {
+    "text": "LYNX Heavy Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.piece.LYNX_SLAB.event.name": {
+    "text": "LYNX Slab",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.segment.0.name": {
+    "text": "LYNX",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.status.LYNX.event.description": {
+    "text": "30% if treatment exceeds max HP",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.status.LYNX.event.name": {
+    "text": "LYNX",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.LYNX_STAT.status.LYNX.segment.0.name": {
+    "text": "LYNX",
+    "dataStatus": "RECONCILED"
+  }
+}

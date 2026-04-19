@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "One Monster Catch!",
-    "description": "Alesh hooks a fin of unbelievable size and slams it to deal Cryo DMG and apply Cryo Infliction to enemies in a large area of effect in front of him. He recovers some SP on hit, with additional SP gained for each target defeated.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "CRYO",
@@ -27,7 +25,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",

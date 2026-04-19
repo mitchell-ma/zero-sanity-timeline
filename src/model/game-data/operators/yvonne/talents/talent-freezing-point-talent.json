@@ -116,8 +116,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Freezing Point (T2)"
+        }
       },
       "clause": [
         {
@@ -238,7 +237,6 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Freezing Point (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -256,8 +254,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Against enemies with active Cryo Infliction, gains Critical DMG Dealt +{inflict_up:0%}. Effect is doubled against enemies with Solidification."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "YVONNE",

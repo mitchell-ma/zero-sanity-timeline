@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "MORDVOLT_RESISTANT_WRENCH",
-    "name": "Mordvolt Resistant Wrench",
     "gearType": "KIT",
     "gearSet": "MORDVOLT_RESISTANT_STAT"
   },

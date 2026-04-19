@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ESTELLA_POTENTIAL_3",
-    "name": "Delayed Work (P3)",
     "level": 3,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Onomatopoeia improved: Freezing sound wave range +50% and DMG Dealt +40% to the first enemy hit."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ESTELLA",

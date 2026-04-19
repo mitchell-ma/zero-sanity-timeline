@@ -24,6 +24,7 @@ import { resolveEffectStat } from '../../model/enums/stats';
 import type { Clause } from '../../dsl/semantics';
 import type { MultiplierEntry } from './damageBreakdownController';
 import type { StatSourceEntry } from '../calculation/loadoutAggregator';
+import { t } from '../../locales/locale';
 
 // ── Stat display helpers (shared with view) ─────────────────────────────────
 
@@ -101,45 +102,45 @@ export function buildLoadoutBreakdownEntries(agg: AggregatedStats): MultiplierEn
 
   // HP
   const hpChildren: MultiplierEntry[] = [
-    makeEntry('Base HP', formatFlat(agg.operatorBaseHp)),
+    makeEntry(t('breakdown.label.baseHp'), formatFlat(agg.operatorBaseHp)),
   ];
   if (agg.hpFromStrength > 0) {
     hpChildren.push(makeEntry('STR', `+${formatFlat(agg.hpFromStrength)}`));
   }
   if (agg.hpBonus !== 0) {
-    hpChildren.push(makeEntry('HP%', `${formatStatValue(StatType.HP_BONUS, agg.hpBonus)} → ${formatFlat(agg.hpPercentageBonus)}`,
+    hpChildren.push(makeEntry(t('breakdown.label.hpPct'), `${formatStatValue(StatType.HP_BONUS, agg.hpBonus)} → ${formatFlat(agg.hpPercentageBonus)}`,
       '', buildSourceChildren(StatType.HP_BONUS, agg.statSources[StatType.HP_BONUS])));
   }
   if (agg.flatHpBonuses !== 0) {
-    hpChildren.push(makeEntry('Flat HP', `+${formatFlat(agg.flatHpBonuses)}`));
+    hpChildren.push(makeEntry(t('breakdown.label.flatHp'), `+${formatFlat(agg.flatHpBonuses)}`));
   }
-  entries.push(makeEntry('HP', formatFlat(agg.effectiveHp), '', hpChildren));
+  entries.push(makeEntry(t('breakdown.label.hp'), formatFlat(agg.effectiveHp), '', hpChildren));
 
   // ATK
   const baseAtkChildren: MultiplierEntry[] = [
-    makeEntry('Operator', formatFlat(agg.operatorBaseAttack)),
-    makeEntry('Weapon', formatFlat(agg.weaponBaseAttack)),
+    makeEntry(t('breakdown.source.operator'), formatFlat(agg.operatorBaseAttack)),
+    makeEntry(t('breakdown.source.weapon'), formatFlat(agg.weaponBaseAttack)),
   ];
   const atkBonusChildren = buildSourceChildren(StatType.ATTACK_BONUS, agg.statSources[StatType.ATTACK_BONUS]);
   const mainAttrLabel = STAT_LABELS[agg.mainAttributeType] ?? String(agg.mainAttributeType);
   const secAttrLabel = STAT_LABELS[agg.secondaryAttributeType] ?? String(agg.secondaryAttributeType);
   const atkChildren: MultiplierEntry[] = [
-    makeEntry('Base ATK', formatFlat(agg.baseAttack), '', baseAtkChildren),
-    makeEntry('ATK%', `${formatStatValue(StatType.ATTACK_BONUS, agg.atkBonus)} → ${formatFlat(agg.atkPercentageBonus)}`, '', atkBonusChildren),
-    ...(agg.flatAttackBonuses > 0 ? [makeEntry('Flat ATK', `+${formatFlat(agg.flatAttackBonuses)}`)] : []),
-    makeEntry('Attribute Bonus', formatPct(agg.displayMainAttributeBonus + agg.displaySecondaryAttributeBonus), '', [
-      makeEntry(`${mainAttrLabel} (Main)`, formatPct(agg.displayMainAttributeBonus)),
-      makeEntry(`${secAttrLabel} (Secondary)`, formatPct(agg.displaySecondaryAttributeBonus)),
+    makeEntry(t('breakdown.label.baseAtk'), formatFlat(agg.baseAttack), '', baseAtkChildren),
+    makeEntry(t('breakdown.label.atkPct'), `${formatStatValue(StatType.ATTACK_BONUS, agg.atkBonus)} → ${formatFlat(agg.atkPercentageBonus)}`, '', atkBonusChildren),
+    ...(agg.flatAttackBonuses > 0 ? [makeEntry(t('breakdown.label.flatAtk'), `+${formatFlat(agg.flatAttackBonuses)}`)] : []),
+    makeEntry(t('breakdown.label.attributeBonus'), formatPct(agg.displayMainAttributeBonus + agg.displaySecondaryAttributeBonus), '', [
+      makeEntry(t('breakdown.label.main', { label: mainAttrLabel }), formatPct(agg.displayMainAttributeBonus)),
+      makeEntry(t('breakdown.label.secondary', { label: secAttrLabel }), formatPct(agg.displaySecondaryAttributeBonus)),
     ]),
   ];
-  entries.push(makeEntry('ATK', formatFlat(agg.effectiveAttack), '', atkChildren));
+  entries.push(makeEntry(t('breakdown.label.atk'), formatFlat(agg.effectiveAttack), '', atkChildren));
 
   // DEF
   if (agg.totalDefense > 0) {
     const defSources = buildSourceChildren(StatType.BASE_DEFENSE, agg.statSources[StatType.BASE_DEFENSE]);
-    entries.push(makeEntry('Defense', formatFlat(agg.totalDefense), '', defSources));
+    entries.push(makeEntry(t('breakdown.label.defense'), formatFlat(agg.totalDefense), '', defSources));
   } else {
-    entries.push(makeEntry('Defense', '—'));
+    entries.push(makeEntry(t('breakdown.label.defense'), '—'));
   }
 
   return entries;

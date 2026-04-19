@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "GILBERTA_POTENTIAL_1",
-    "name": "Above the Clouds (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Arcane Staff: Gravity Mode improved: Effect radius +20%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "GILBERTA",

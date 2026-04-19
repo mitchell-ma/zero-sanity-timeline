@@ -1,0 +1,58 @@
+{
+  "gear.PULSER_LABS_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Arts Intensity +{phy_spell_up:0}. After the wearer applies Electrification, the wearer gains Electric DMG +{pulse_dmg_up:0%} for {duration}s. After the wearer applies Solidification, the wearer gains Cryo DMG +{cryst_dmg_up:0%} for {duration2}s. The aforementioned effects cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.event.name": {
+    "text": "Pulser Labs",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.piece.PULSER_LABS_CALIBRATOR.event.name": {
+    "text": "Pulser Labs Calibrator",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.piece.PULSER_LABS_DISRUPTOR_SUIT.event.name": {
+    "text": "Pulser Labs Disruptor Suit",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.piece.PULSER_LABS_GLOVES.event.name": {
+    "text": "Pulser Labs Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.piece.PULSER_LABS_INVASION_CORE.event.name": {
+    "text": "Pulser Labs Invasion Core",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.piece.PULSER_LABS_PROBE.event.name": {
+    "text": "Pulser Labs Probe",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.segment.0.name": {
+    "text": "Pulser Labs",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.status.PULSER_LABS_CRYO.event.description": {
+    "text": "Cryo DMG +50% for 10s after applying Solidification. Cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.status.PULSER_LABS_CRYO.event.name": {
+    "text": "Pulser Labs (Cryo)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.status.PULSER_LABS_CRYO.segment.0.name": {
+    "text": "Pulser Labs (Cryo)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.status.PULSER_LABS_ELECTRIC.event.description": {
+    "text": "Electric DMG +50% for 10s after applying Electrification. Cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.status.PULSER_LABS_ELECTRIC.event.name": {
+    "text": "Pulser Labs (Electric)",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.PULSER_LABS_STAT.status.PULSER_LABS_ELECTRIC.segment.0.name": {
+    "text": "Pulser Labs (Electric)",
+    "dataStatus": "RECONCILED"
+  }
+}

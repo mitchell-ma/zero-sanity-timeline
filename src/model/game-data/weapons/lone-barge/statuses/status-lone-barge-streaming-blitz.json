@@ -8,8 +8,7 @@
             "value": 20
           },
           "unit": "SECOND"
-        },
-        "name": "Streaming Blitz"
+        }
       },
       "clause": [
         {
@@ -51,7 +50,6 @@
   ],
   "properties": {
     "id": "LONE_BARGE_SUPPRESSION_STREAMING_BLITZ",
-    "name": "Streaming Blitz",
     "duration": {
       "value": {
         "verb": "IS",
@@ -69,8 +67,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "Battle Skill Electric DMG Dealt +{pulse_dmg_up2:0.0%} per stack for 20s after battle skill consumes Arts Reaction. Max {max_stack:0} stacks, per-stack duration."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "LONE_BARGE",

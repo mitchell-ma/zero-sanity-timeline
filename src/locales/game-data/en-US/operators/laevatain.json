@@ -1,0 +1,174 @@
+{
+  "op.LAEVATAIN.event.name": {
+    "text": "Laevatain",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.1.event.description": {
+    "text": "Battle skill Smouldering Fire improved: Additional attack multiplier is increased to 1.2 times the original, and scoring a hit returns 20 SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.1.event.name": {
+    "text": "Heart of Melting Flame (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.2.event.description": {
+    "text": "Intellect +20, Basic Attack DMG Dealt +15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.2.event.name": {
+    "text": "Pursuit of Memories (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.2.segment.0.name": {
+    "text": "Pursuit of Memories (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.3.event.description": {
+    "text": "Battle skill Smouldering Fire improved: Duration of the Combustion applied by the skill is increased by {duration-1:0%}. DMG of the Combustion applied by the skills is increased to 1.5 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.3.event.name": {
+    "text": "Fragments from the Past (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.4.event.description": {
+    "text": "Ultimate Twilight improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.4.event.name": {
+    "text": "Ice Cream Furnace (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.5.event.description": {
+    "text": "Ultimate Twilight improved: Enhanced basic attack DMG multiplier is increased to 1.2 times the original; during the ultimate, every enemy defeated by Laevatain extends ultimate duration by +1s (max: +7s).",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.5.event.name": {
+    "text": "Proof of Existence (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.potential.5.segment.0.name": {
+    "text": "Proof of Existence (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.FLAMING_CINDERS_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.FLAMING_CINDERS_BATK.event.name": {
+    "text": "Flaming Cinders",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.FLAMING_CINDERS_BATK_ENHANCED.event.name": {
+    "text": "Flaming Cinders (Enhanced)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.FLAMING_CINDERS_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.FLAMING_CINDERS_DIVE.event.name": {
+    "text": "Flaming Cinders (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.FLAMING_CINDERS_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.FLAMING_CINDERS_FINISHER.event.name": {
+    "text": "Flaming Cinders (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SEETHE.event.description": {
+    "text": "When an enemy suffers Combustion or Corrosion. Fire erupts beneath the feet of any enemy with Combustion or Corrosion, dealing Heat DMG to them. If the skill hits the enemy, Laevatain gains 1 stack of Melting Flame and further gains Ultimate Energy per enemy hit.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SEETHE.event.name": {
+    "text": "Seethe",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SEETHE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SEETHE.segment.1.name": {
+    "text": "Seethe",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SEETHE.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SMOULDERING_FIRE.event.description": {
+    "text": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG. Hitting the enemy grants 1 stack of Melting Flame. \nIf Laevatain already has  stack(s) of Melting Flame when casting the skill, then consume all the stacks and perform 1 additional attack that deals Heat DMG and forcibly trigger temporary Combustion to all enemies in a large area.\nWhen the additional attack hits the enemy, restore additional Ultimate Energy.\nBattle skill effects are enhanced while Laevatain's ultimate is active.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SMOULDERING_FIRE.event.name": {
+    "text": "Smouldering Fire",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SMOULDERING_FIRE_EMPOWERED.event.name": {
+    "text": "Smouldering Fire (Empowered)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SMOULDERING_FIRE_ENHANCED.event.name": {
+    "text": "Smouldering Fire (Enhanced)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.SMOULDERING_FIRE_ENHANCED_EMPOWERED.event.name": {
+    "text": "Smouldering Fire (Enhanced + Empowered)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.TWILIGHT.event.description": {
+    "text": "Laevatain summons her Sviga Lævi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga Lævi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.TWILIGHT.event.name": {
+    "text": "Twilight",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.TWILIGHT.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.skill.TWILIGHT.segment.1.name": {
+    "text": "Twilight",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.status.MELTING_FLAME.event.description": {
+    "text": "After the controlled operator's Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack of Heat Infliction absorbed gives Laevatain 1 stack of Melting Flame (max stacks: 4). After reaching 4 stacks, DMG dealt by Laevatain ignores 15 Heat Resistance of the enemy for 20s. Laevatain also absorbs Heat Infliction from enemies defeated nearby.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.status.MELTING_FLAME.event.name": {
+    "text": "Melting Flame",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.status.SCORCHING_HEART.event.description": {
+    "text": "After the controlled operator's Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack of Heat Infliction absorbed gives Laevatain 1 stack of Melting Flame (max stacks: 4). After reaching 4 stacks, DMG dealt by Laevatain ignores 15 Heat Resistance of the enemy for 20s. Laevatain also absorbs Heat Infliction from enemies defeated nearby.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.status.SCORCHING_HEART.event.name": {
+    "text": "Scorching Heart",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.status.SCORCHING_HEART.segment.0.name": {
+    "text": "Scorching Heart",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.talent.RE_IGNITION_TALENT.event.description": {
+    "text": "When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. This effect triggers once every 120s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.talent.RE_IGNITION_TALENT.event.name": {
+    "text": "Re-Ignition (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.talent.SCORCHING_HEART_TALENT.event.description": {
+    "text": "After the controlled operator's Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack of Heat Infliction absorbed gives Laevatain 1 stack of Melting Flame (max stacks: 4). After reaching 4 stacks, DMG dealt by Laevatain ignores 15 Heat Resistance of the enemy for 20s. Laevatain also absorbs Heat Infliction from enemies defeated nearby.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAEVATAIN.talent.SCORCHING_HEART_TALENT.event.name": {
+    "text": "Scorching Heart (T1)",
+    "dataStatus": "RECONCILED"
+  }
+}

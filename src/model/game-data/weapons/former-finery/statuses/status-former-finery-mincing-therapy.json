@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Mincing Therapy"
+        }
       },
       "clause": [
         {
@@ -48,8 +47,6 @@
   ],
   "properties": {
     "id": "FORMER_FINERY_MINCING_THERAPY",
-    "name": "Mincing Therapy",
-    "description": "Heal protected operator; 15s CD",
     "duration": {
       "value": {
         "verb": "IS",

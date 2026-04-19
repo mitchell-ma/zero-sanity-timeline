@@ -1,0 +1,150 @@
+{
+  "op.DA_PAN.event.name": {
+    "text": "Da Pan",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.1.event.description": {
+    "text": "Ultimate CHOP 'N DUNK! improved: If the ultimate defeats at least one enemy, Da Pan deals +30% Physical DMG for 15s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.1.event.name": {
+    "text": "Fine Cooking (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.2.event.description": {
+    "text": "Talent Salty or Mild improved: Prep Ingredients buff duration +10s, max stacks +1.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.2.event.name": {
+    "text": "Harmonized Flavors (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.3.event.description": {
+    "text": "Strength +{Str:0}, Physical DMG Dealt +{PhysicalDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.3.event.name": {
+    "text": "Model Employee (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.4.event.description": {
+    "text": "Ultimate CHOP 'N DUNK! improved: Ultimate Energy cost -{1-costValue:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.4.event.name": {
+    "text": "Special Blend (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.5.event.description": {
+    "text": "Battle skill FLIP DA WOK! improved: If the skill hits only one enemy, apply 1 more stack of Vulnerability on the target. Effect only triggers once every 45s.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.potential.5.event.name": {
+    "text": "Fire it Up (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.CHOP_N_DUNK.event.description": {
+    "text": "Da Pan slams the chopping board to forcibly Lift all enemies in the area of effect in front of him. This is followed by a 6-sequence flurry of slashes that deals Physical DMG. The final step is to bash every enemy to the ground to forcibly Knock Down and deal massive Physical DMG to them.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.CHOP_N_DUNK.event.name": {
+    "text": "CHOP 'N DUNK!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.CHOP_N_DUNK.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.FLIP_DA_WOK.event.description": {
+    "text": "Takes out a wok, quickly charges it up, and performs a powerful wok flip that deals Physical DMG and Lift to the enemy.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.FLIP_DA_WOK.event.name": {
+    "text": "FLIP DA WOK!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.MORE_SPICE.event.description": {
+    "text": "When an enemy reaches 4 stacks of Vulnerability. Swings the wok at the enemy to deal massive Physical DMG and Crush. This Crush also deals more DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.MORE_SPICE.event.name": {
+    "text": "MORE SPICE!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.MORE_SPICE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.MORE_SPICE.segment.1.name": {
+    "text": "MORE SPICE!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.MORE_SPICE.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.ROLLING_CUT_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.ROLLING_CUT_BATK.event.name": {
+    "text": "ROLLING CUT!",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.ROLLING_CUT_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.ROLLING_CUT_DIVE.event.name": {
+    "text": "ROLLING CUT! (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.ROLLING_CUT_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.skill.ROLLING_CUT_FINISHER.event.name": {
+    "text": "ROLLING CUT! (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.status.FINE_COOKING_POTENTIAL.event.description": {
+    "text": "Ultimate CHOP 'N DUNK! improved: If the ultimate defeats at least one enemy, Da Pan deals + Physical DMG for s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.status.FINE_COOKING_POTENTIAL.event.name": {
+    "text": "Fine Cooking",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.status.FINE_COOKING_POTENTIAL.segment.0.name": {
+    "text": "Fine Cooking",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.status.PREP_INGREDIENTS.event.description": {
+    "text": "When Prep Ingredients is active, hitting an enemy with combo skills immediately shortens cooldown by 40% and consumes 1 stack of Prep Ingredients.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.status.PREP_INGREDIENTS.event.name": {
+    "text": "Prep Ingredients",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.talent.REDUCE_AND_THICKEN_TALENT.event.description": {
+    "text": "After consuming 1 Vulnerability stack, Da Pan gains Physical DMG Dealt +4% for 10s. This effect can reach 4 stacks.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.talent.REDUCE_AND_THICKEN_TALENT.event.name": {
+    "text": "Reduce and Thicken (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.talent.REDUCE_AND_THICKEN_TALENT.segment.0.name": {
+    "text": "Reduce and Thicken (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.talent.SALTY_OR_MILD_TALENT.event.description": {
+    "text": "Ultimate CHOP 'N DUNK! improved: For every enemy hit by the final sequence of the ultimate, gains 1 stack of Prep Ingredients for 20s (max stacks: 2). When Prep Ingredients is active, hitting an enemy with combo skills immediately shortens cooldown by 40% and consumes 1 stack of Prep Ingredients.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.DA_PAN.talent.SALTY_OR_MILD_TALENT.event.name": {
+    "text": "Salty or Mild (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

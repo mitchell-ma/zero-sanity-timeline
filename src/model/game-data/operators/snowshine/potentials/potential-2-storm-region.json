@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "SNOWSHINE_POTENTIAL_2",
-    "name": "Storm Region (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Frigid Snowfield improved: Effect radius +20%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "SNOWSHINE",

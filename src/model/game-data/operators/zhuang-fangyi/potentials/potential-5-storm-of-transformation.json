@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ZHUANG_FANGYI_POTENTIAL_5",
-    "name": "Storm of Transformation (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Smiting Tempest improved: During the Empyrean of Truth transformation, DMG Dealt by Zhuang Fangyi ignores 15 of the enemy's Electric Resistance."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",

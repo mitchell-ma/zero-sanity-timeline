@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ARDELIA_POTENTIAL_1",
-    "name": "Dolly Paradise (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Dolly Rush improved: Consuming Corrosion now applies Physical Susceptibility and Arts Susceptibility with effects +8%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ARDELIA",

@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Code of Restraint (T2)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 5/10 SP."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "WULFGARD",

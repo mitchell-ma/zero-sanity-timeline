@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ENDMINISTRATOR_POTENTIAL_2",
-    "name": "Reflection of Authority (P2)",
     "level": 2,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Talent Essence Disintegration improved: When the Endministrator gains the ATK buff, other allied operators gain half of this ATK buff."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

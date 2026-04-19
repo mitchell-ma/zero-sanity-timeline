@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Heat DMG Boost [M]"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
     }
   ],
   "properties": {
-    "name": "Heat DMG Boost [M]",
-    "description": "Heat DMG Dealt +",
     "id": "HEAT_DAMAGE_BOOST_M"
   },
   "metadata": {

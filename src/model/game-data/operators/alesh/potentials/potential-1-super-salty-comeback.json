@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ALESH_POTENTIAL_1",
-    "name": "Super Salty Comeback (P1)",
     "level": 1,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Battle skill Unconventional Lure improved: SP Recovery grants an additional 10 SP."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "ALESH",

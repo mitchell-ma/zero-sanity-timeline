@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "White Night Nova"
+        }
       },
       "clause": [
         {
@@ -75,7 +74,6 @@
   ],
   "properties": {
     "id": "WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA",
-    "name": "White Night Nova",
     "duration": {
       "value": {
         "verb": "IS",
@@ -93,8 +91,7 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "WEAPON",
-    "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. After the wielder applies Combustion or Electrification, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} and Arts Intensity +{phy_spell_up:0} for {duration:0}s. Effects of the same name cannot stack."
+    "eventCategoryType": "WEAPON"
   },
   "metadata": {
     "originId": "WHITE_NIGHT_NOVA",

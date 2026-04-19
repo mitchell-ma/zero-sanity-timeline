@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "HEAT_FRAGILITY",
-    "name": "Heat Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Heat Fragility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

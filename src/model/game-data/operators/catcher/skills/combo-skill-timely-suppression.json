@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Timely Suppression",
-    "description": "When an enemy starts charging up a skill, or when the controlled operator is attacked and falls below {trigger_hp_ratio:0%} HP. A powerful downward punch that deals Physical DMG to the enemy, while granting shields to self and another teammate (controlled operator prioritized). DEF can further increase Shield points.",
     "eventType": "SKILL",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -61,8 +58,7 @@
           },
           "unit": "SECOND"
         },
-        "element": "PHYSICAL",
-        "name": "Timely Suppression"
+        "element": "PHYSICAL"
       },
       "frames": [
         {
@@ -303,7 +299,6 @@
           "COOLDOWN",
           "IMMEDIATE_COOLDOWN"
         ],
-        "name": "Cooldown",
         "duration": {
           "value": {
             "verb": "VARY_BY",

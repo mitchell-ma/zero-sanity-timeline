@@ -31,8 +31,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Efficacy: Overlapping Flickers"
+        }
       },
       "clause": [
         {
@@ -72,8 +71,6 @@
     }
   ],
   "properties": {
-    "name": "Efficacy: Overlapping Flickers",
-    "description": "ATK +{atk_up:0.0%}. When the wielder gains Electric Amp, the wielder also gains Electric DMG Dealt +{pulse_dmg_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. This effect only triggers once every 0.1s.",
     "id": "FLICKERS_IN_THE_MIST_EFFICACY_OVERLAPPING_FLICKERS_STAT",
     "eventCategoryType": "WEAPON_STAT"
   },

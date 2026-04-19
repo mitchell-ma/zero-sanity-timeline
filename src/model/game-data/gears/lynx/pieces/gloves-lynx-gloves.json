@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "LYNX_GLOVES",
-    "name": "LYNX Gloves",
     "gearType": "GLOVES",
     "gearSet": "LYNX_STAT"
   },

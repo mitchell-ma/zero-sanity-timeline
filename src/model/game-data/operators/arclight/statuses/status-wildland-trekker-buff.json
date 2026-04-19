@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Wildland Trekker (Buff)"
+        }
       },
       "clause": [
         {
@@ -76,7 +75,6 @@
   ],
   "properties": {
     "id": "WILDLAND_TREKKER_BUFF",
-    "name": "Wildland Trekker (Buff)",
     "to": "TEAM",
     "element": "ELECTRIC",
     "stacks": {
@@ -94,8 +92,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "Team buff from Wildland Trekker: Electric DMG Dealt +0.05% per point of Arclight's Intellect (+0.08% at T2, \u00d71.3 at P3). Duration 15s, does not stack."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "ARCLIGHT",

@@ -1,0 +1,154 @@
+{
+  "op.ENDMINISTRATOR.event.name": {
+    "text": "Endministrator",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.1.event.description": {
+    "text": "Battle skill Constructive Sequence improved: Consuming Originium Crystals returns 50 SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.1.event.name": {
+    "text": "Final Awakening (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.2.event.description": {
+    "text": "Talent Essence Disintegration improved: When the Endministrator gains the ATK buff, other allied operators gain half of this ATK buff.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.2.event.name": {
+    "text": "Reflection of Authority (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.3.event.description": {
+    "text": "???",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.3.event.name": {
+    "text": "??? (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.4.event.description": {
+    "text": "???",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.4.event.name": {
+    "text": "??? (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.5.event.description": {
+    "text": "???",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.potential.5.event.name": {
+    "text": "??? (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.BOMBARDMENT_SEQUENCE.event.description": {
+    "text": "Bombards the ground with Originium Arts, dealing massive Physical DMG to all enemies within a fan-shaped area. If the enemy has Originium Crystals on them, this skill consumes the Originium Crystals and deals one more hit of Physical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.BOMBARDMENT_SEQUENCE.event.name": {
+    "text": "Bombardment Sequence",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.BOMBARDMENT_SEQUENCE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.CONSTRUCTIVE_SEQUENCE.event.description": {
+    "text": "A forceful burst of Originium Crystals that attacks enemies within the area of effect. Deals Physical DMG and applies Crush.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.CONSTRUCTIVE_SEQUENCE.event.name": {
+    "text": "Constructive Sequence",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.DESTRUCTIVE_SEQUENCE_BATK.event.description": {
+    "text": "An attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.DESTRUCTIVE_SEQUENCE_BATK.event.name": {
+    "text": "Destructive Sequence",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.DESTRUCTIVE_SEQUENCE_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.DESTRUCTIVE_SEQUENCE_DIVE.event.name": {
+    "text": "Destructive Sequence (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.DESTRUCTIVE_SEQUENCE_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.DESTRUCTIVE_SEQUENCE_FINISHER.event.name": {
+    "text": "Destructive Sequence (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.SEALING_SEQUENCE.event.description": {
+    "text": "When another operator in the team deals DMG with combo skills. Rushes to the enemy's side to deal Physical DMG and attach Originium Crystals that temporarily seal them. Applying Physical Status or Vulnerability to the sealed enemy consumes the Originium Crystals and deals additional Physical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.SEALING_SEQUENCE.event.name": {
+    "text": "Sealing Sequence",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.SEALING_SEQUENCE.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.SEALING_SEQUENCE.segment.1.name": {
+    "text": "Sealing Sequence",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.skill.SEALING_SEQUENCE.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.status.ESSENCE_DISINTEGRATION_MINOR.event.description": {
+    "text": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.status.ESSENCE_DISINTEGRATION_MINOR.event.name": {
+    "text": "Essence Disintegration (Minor) (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.status.ESSENCE_DISINTEGRATION_MINOR.segment.0.name": {
+    "text": "Essence Disintegration (Minor) (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.status.ORIGINIUM_CRYSTALS_SHATTER.event.description": {
+    "text": "Shattering Originium Crystals deals additional Physical DMG.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.status.ORIGINIUM_CRYSTALS_SHATTER.event.name": {
+    "text": "Originium Crystals Shatter",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.talent.ESSENCE_DISINTEGRATION_TALENT.event.description": {
+    "text": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.talent.ESSENCE_DISINTEGRATION_TALENT.event.name": {
+    "text": "Essence Disintegration (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.talent.ESSENCE_DISINTEGRATION_TALENT.segment.0.name": {
+    "text": "Essence Disintegration (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.talent.ORIGINIUM_CRYSTAL.event.description": {
+    "text": "Originium Crystals that temporarily seal the enemy. Applying Physical Status or Vulnerability shatters the crystals. Enemies with attached crystals suffer Physical DMG Taken +10%/+20%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.talent.ORIGINIUM_CRYSTAL.event.name": {
+    "text": "Originium Crystals (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.ENDMINISTRATOR.talent.ORIGINIUM_CRYSTAL.segment.0.name": {
+    "text": "Originium Crystals (T2)",
+    "dataStatus": "RECONCILED"
+  }
+}

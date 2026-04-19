@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "YVONNE_POTENTIAL_5",
-    "name": "Expert Mechcrafter (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Cryoblasting Pistolier improved: During the ultimate, ATK +10% and Critical DMG Dealt +30%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "YVONNE",

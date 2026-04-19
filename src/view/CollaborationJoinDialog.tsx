@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { t } from '../locales/locale';
 
 interface CollaborationJoinDialogProps {
   open: boolean;
@@ -66,7 +67,7 @@ export default function CollaborationJoinDialog({
               className="app-bar-loadout-input"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Player"
+              placeholder={t('collab.join.placeholder.player')}
               onKeyDown={(e) => { if (e.key === 'Enter' && canJoin) handleJoin(); }}
             />
           </label>

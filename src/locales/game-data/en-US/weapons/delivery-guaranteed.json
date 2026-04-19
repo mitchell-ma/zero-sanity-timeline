@@ -1,0 +1,34 @@
+{
+  "weapon.DELIVERY_GUARANTEED.event.name": {
+    "text": "Delivery Guaranteed",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DELIVERY_GUARANTEED.segment.0.name": {
+    "text": "Delivery Guaranteed",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DELIVERY_GUARANTEED.skill.PURSUIT_DUTY_FULFILLED.event.description": {
+    "text": "Nature DMG Dealt +{nature_dmg_up:0.0%}. After the wielder's combo skill applies Lifted, the team gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. For every enemy Lifted, the team gains bonus Arts DMG Dealt +{spell_dmg_up2:0.0%}, up to a max of +{spell_dmg_up2*max_stack:0.0%}. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DELIVERY_GUARANTEED.skill.PURSUIT_DUTY_FULFILLED.event.name": {
+    "text": "Pursuit: Duty Fulfilled",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DELIVERY_GUARANTEED.skill.PURSUIT_DUTY_FULFILLED.segment.0.name": {
+    "text": "Pursuit: Duty Fulfilled",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DELIVERY_GUARANTEED.status.DELIVERY_GUARANTEED_DUTY_FULFILLED.event.description": {
+    "text": "Nature DMG Dealt +{nature_dmg_up:0.0%}. After the wielder's combo skill applies Lifted, the team gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. For every enemy Lifted, the team gains bonus Arts DMG Dealt +{spell_dmg_up2:0.0%}, up to a max of +{spell_dmg_up2*max_stack:0.0%}. Effects of the same name cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DELIVERY_GUARANTEED.status.DELIVERY_GUARANTEED_DUTY_FULFILLED.event.name": {
+    "text": "Duty Fulfilled",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.DELIVERY_GUARANTEED.status.DELIVERY_GUARANTEED_DUTY_FULFILLED.segment.0.name": {
+    "text": "Duty Fulfilled",
+    "dataStatus": "RECONCILED"
+  }
+}

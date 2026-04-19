@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "ELECTRIC_FRAGILITY",
-    "name": "Electric Fragility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Electric Fragility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

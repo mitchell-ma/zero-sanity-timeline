@@ -8,8 +8,7 @@
             "value": 3.425
           },
           "unit": "SECOND"
-        },
-        "name": "Committed Team Player"
+        }
       },
       "clause": [
         {
@@ -36,7 +35,6 @@
   ],
   "properties": {
     "id": "AKEKURI_P3_COMMITTED_TEAM_PLAYER",
-    "name": "Committed Team Player",
     "to": "TEAM",
     "duration": {
       "value": {
@@ -53,8 +51,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate SQUAD! ON ME! improved: While ultimate is active, entire team gains ATK +10%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "AKEKURI",

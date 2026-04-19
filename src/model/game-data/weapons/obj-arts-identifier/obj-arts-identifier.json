@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "OBJ Arts Identifier"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "OBJ Arts Identifier",
     "id": "OBJ_ARTS_IDENTIFIER",
     "type": "ARTS_UNIT",
     "rarity": 5

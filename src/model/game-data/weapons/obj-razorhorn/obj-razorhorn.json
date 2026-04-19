@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "OBJ Razorhorn"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "OBJ Razorhorn",
     "id": "OBJ_RAZORHORN",
     "type": "POLEARM",
     "rarity": 5

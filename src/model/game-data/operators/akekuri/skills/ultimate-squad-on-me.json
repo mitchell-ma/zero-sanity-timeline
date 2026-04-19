@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "SQUAD! ON ME!",
-    "description": "Enters a channeling state and fires 3 Rallying Flares. Each firing recovers some SP.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "id": "SQUAD_ON_ME"
@@ -15,7 +13,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -76,8 +73,7 @@
             "value": 3.425
           },
           "unit": "SECOND"
-        },
-        "name": "SQUAD! ON ME!"
+        }
       },
       "frames": [
         {

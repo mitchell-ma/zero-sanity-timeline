@@ -3,8 +3,6 @@
     "enhancementTypes": [
       "DIVE"
     ],
-    "name": "Hypothermic Assault (Dive)",
-    "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
     "eventType": "SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",

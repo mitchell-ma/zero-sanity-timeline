@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Physical DMG Boost [S]"
+        }
       },
       "clause": [
         {
@@ -50,8 +49,6 @@
     }
   ],
   "properties": {
-    "name": "Physical DMG Boost [S]",
-    "description": "Physical DMG Dealt +",
     "id": "PHYSICAL_DAMAGE_BOOST_S"
   },
   "metadata": {

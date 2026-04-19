@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "ARMORED_MSGR_GYRO",
-    "name": "Armored MSGR Gyro",
     "gearType": "KIT",
     "gearSet": "ARMORED_MSGR_STAT"
   },

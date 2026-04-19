@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Mr. Dolly Shadow",
-    "description": "When the controlled operator touches a Shadow of Mr. Dolly, Ardelia restores that operator's HP. If the controlled operator is at max HP, heals the teammate with lowest percentage HP instead.",
     "eventType": "SKILL",
     "eventCategoryType": "ACTION",
     "id": "MR_DOLLY_SHADOW"
@@ -18,8 +16,7 @@
             "value": 2
           },
           "unit": "SECOND"
-        },
-        "name": "Mr. Dolly Shadow"
+        }
       },
       "frames": [
         {

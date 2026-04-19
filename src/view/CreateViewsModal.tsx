@@ -89,7 +89,7 @@ export default function CreateViewsModal({
       <div className="views-modal" onClick={(e) => e.stopPropagation()}>
         <div className="devlog-header">
           <span className="devlog-title">{t('views.modal.title')}</span>
-          <button className="devlog-close" onClick={onClose} aria-label="close">{'\u00D7'}</button>
+          <button className="devlog-close" onClick={onClose} aria-label={t('common.close')}>{'\u00D7'}</button>
         </div>
 
         <div className="views-modal-subtitle">{t('views.modal.subtitle')}</div>

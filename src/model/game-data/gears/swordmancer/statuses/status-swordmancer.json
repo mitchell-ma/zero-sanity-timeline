@@ -8,8 +8,7 @@
             "value": 0
           },
           "unit": "SECOND"
-        },
-        "name": "Swordmancer"
+        }
       },
       "clause": [
         {
@@ -48,8 +47,6 @@
   ],
   "properties": {
     "id": "SWORDMANCER",
-    "name": "Swordmancer",
-    "description": "Deals 250% ATK Physical DMG + 10 Stagger. 15s cooldown.",
     "duration": {
       "value": {
         "verb": "IS",

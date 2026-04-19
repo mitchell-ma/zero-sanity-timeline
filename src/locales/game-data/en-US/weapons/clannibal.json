@@ -1,0 +1,46 @@
+{
+  "weapon.CLANNIBAL.event.name": {
+    "text": "Clannibal",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.segment.0.name": {
+    "text": "Clannibal",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.skill.INFLICTION_VICIOUS_PURGE.event.description": {
+    "text": "Arts DMG +{spell_dmg_up:0.0%}. After the wielder consumes an Arts Reaction, target enemy suffers Arts DMG Taken +{dmg_taken_up:0.0%} (for the specified element) for {duration:0}s. Each effect applies separately and does not stack with itself. Effect only triggers once every {cd:0}s.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.skill.INFLICTION_VICIOUS_PURGE.event.name": {
+    "text": "Infliction: Vicious Purge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.skill.INFLICTION_VICIOUS_PURGE.segment.0.name": {
+    "text": "Infliction: Vicious Purge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.status.CLANNIBAL_VICIOUS_PURGE.event.description": {
+    "text": "Arts DMG +{spell_dmg_up:0.0%}. After the wielder consumes an Arts Reaction, target enemy suffers Arts DMG Taken +{dmg_taken_up:0.0%} (for the specified element) for {duration:0}s. Each effect applies separately and does not stack with itself. Effect only triggers once every {cd:0}s.",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.status.CLANNIBAL_VICIOUS_PURGE.event.name": {
+    "text": "Vicious Purge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.status.CLANNIBAL_VICIOUS_PURGE.segment.0.name": {
+    "text": "Vicious Purge",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.status.CLANNIBAL_VICIOUS_PURGE_ENEMY.event.description": {
+    "text": "Enemy Arts DMG Taken (Fragility)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.status.CLANNIBAL_VICIOUS_PURGE_ENEMY.event.name": {
+    "text": "Vicious Purge (Enemy)",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.CLANNIBAL.status.CLANNIBAL_VICIOUS_PURGE_ENEMY.segment.0.name": {
+    "text": "Vicious Purge (Enemy)",
+    "dataStatus": "RECONCILED"
+  }
+}

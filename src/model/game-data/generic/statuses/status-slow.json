@@ -8,8 +8,7 @@
             "value": 2
           },
           "unit": "SECOND"
-        },
-        "name": "Slow"
+        }
       },
       "clause": [
         {
@@ -35,7 +34,6 @@
   ],
   "properties": {
     "id": "SLOW",
-    "name": "Slow",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -52,8 +50,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "STATUS",
-    "description": "Reduces movement speed."
+    "eventCategoryType": "STATUS"
   },
   "metadata": {
     "originId": "generic",

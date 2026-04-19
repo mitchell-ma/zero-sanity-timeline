@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "SWORDMANCER_LIGHT_ARMOR",
-    "name": "Swordmancer Light Armor",
     "gearType": "ARMOR",
     "gearSet": "SWORDMANCER_STAT"
   },

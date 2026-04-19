@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "SNOW_ZONE",
-    "name": "Snow Zone",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -19,8 +18,7 @@
     },
     "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "element": "CRYO",
-    "description": "A freezing zone created by Frigid Snowfield. Deals Cryo DMG over time (10 ticks at 0.5s intervals over 5s) and forcibly applies Solidification to enemies caught within. At P3+ the Solidification lasts 2s longer than the zone itself."
+    "element": "CRYO"
   },
   "metadata": {
     "originId": "SNOWSHINE",
@@ -32,7 +30,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "Snow Zone",
         "duration": {
           "value": {
             "verb": "IS",

@@ -8,8 +8,7 @@
             "value": 10
           },
           "unit": "SECOND"
-        },
-        "name": "Pulser Labs (Cryo)"
+        }
       },
       "clause": [
         {
@@ -36,7 +35,6 @@
   ],
   "properties": {
     "id": "PULSER_LABS_CRYO",
-    "name": "Pulser Labs (Cryo)",
     "duration": {
       "value": {
         "verb": "IS",
@@ -51,7 +49,6 @@
       },
       "interactionType": "RESET"
     },
-    "description": "Cryo DMG +50% for 10s after applying Solidification. Cannot stack.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

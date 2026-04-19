@@ -8,8 +8,7 @@
             "value": 7
           },
           "unit": "SECOND"
-        },
-        "name": "Expert Mechcrafter"
+        }
       },
       "clause": [
         {
@@ -49,7 +48,6 @@
   ],
   "properties": {
     "id": "EXPERT_MECHCRAFTER",
-    "name": "Expert Mechcrafter",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
@@ -60,8 +58,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "During Cryoblasting Pistolier, ATK +10% and Critical DMG Dealt +30%."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "YVONNE",

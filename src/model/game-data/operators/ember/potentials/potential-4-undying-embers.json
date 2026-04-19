@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "EMBER_POTENTIAL_4",
-    "name": "Undying Embers (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Re-Ignited Oath improved: Ultimate Energy cost -15%."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "EMBER",

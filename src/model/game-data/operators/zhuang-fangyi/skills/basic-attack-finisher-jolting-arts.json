@@ -1,8 +1,8 @@
 {
   "properties": {
-    "enhancementTypes": ["FINISHER"],
-    "name": "Jolting Arts (Finisher)",
-    "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Electric DMG and recovers some SP.",
+    "enhancementTypes": [
+      "FINISHER"
+    ],
     "eventType": "SKILL",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
@@ -17,21 +17,60 @@
     {
       "frames": [
         {
-          "metadata": { "eventComponentType": "FRAME" },
-          "properties": { "offset": { "value": 1.5, "unit": "SECOND" }, "element": "ELECTRIC", "frameTypes": ["FINISHER"] },
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 1.5,
+              "unit": "SECOND"
+            },
+            "element": "ELECTRIC",
+            "frameTypes": [
+              "FINISHER"
+            ]
+          },
           "clause": [
             {
               "conditions": [],
               "effects": [
                 {
-                  "verb": "DEAL", "objectQualifier": "ELECTRIC", "object": "DAMAGE", "to": "ENEMY",
+                  "verb": "DEAL",
+                  "objectQualifier": "ELECTRIC",
+                  "object": "DAMAGE",
+                  "to": "ENEMY",
                   "with": {
                     "value": {
-                      "verb": "VARY_BY", "object": "SKILL_LEVEL",
-                      "value": [4, 4.4, 4.8, 5.2, 5.6, 6, 6.4, 6.8, 7.2, 7.7, 8.3, 9],
-                      "of": { "object": "OPERATOR", "determiner": "THIS" }
+                      "verb": "VARY_BY",
+                      "object": "SKILL_LEVEL",
+                      "value": [
+                        4,
+                        4.4,
+                        4.8,
+                        5.2,
+                        5.6,
+                        6,
+                        6.4,
+                        6.8,
+                        7.2,
+                        7.7,
+                        8.3,
+                        9
+                      ],
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
                     },
-                    "mainStat": { "verb": "IS", "object": "STAT", "objectId": "ATTACK", "of": { "object": "OPERATOR", "determiner": "THIS" } }
+                    "mainStat": {
+                      "verb": "IS",
+                      "object": "STAT",
+                      "objectId": "ATTACK",
+                      "of": {
+                        "object": "OPERATOR",
+                        "determiner": "THIS"
+                      }
+                    }
                   }
                 }
               ]
@@ -41,7 +80,13 @@
         }
       ],
       "properties": {
-        "duration": { "value": { "verb": "IS", "value": 1.5 }, "unit": "SECOND" },
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1.5
+          },
+          "unit": "SECOND"
+        },
         "element": "ELECTRIC"
       }
     }

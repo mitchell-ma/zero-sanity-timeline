@@ -1,0 +1,58 @@
+{
+  "gear.MORDVOLT_RESISTANT_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Will +50. When the wearer's HP drops below 50%, the wearer's Treatment Effect increases by 30%.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.event.name": {
+    "text": "Mordvolt Resistant",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.piece.MORDVOLT_RESISTANT_BATTERY.event.name": {
+    "text": "Mordvolt Resistant Battery",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.piece.MORDVOLT_RESISTANT_BATTERY_T1.event.name": {
+    "text": "Mordvolt Resistant Battery T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.piece.MORDVOLT_RESISTANT_GLOVES.event.name": {
+    "text": "Mordvolt Resistant Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.piece.MORDVOLT_RESISTANT_GLOVES_T1.event.name": {
+    "text": "Mordvolt Resistant Gloves T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.piece.MORDVOLT_RESISTANT_VEST.event.name": {
+    "text": "Mordvolt Resistant Vest",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.piece.MORDVOLT_RESISTANT_VEST_T1.event.name": {
+    "text": "Mordvolt Resistant Vest T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.piece.MORDVOLT_RESISTANT_WRENCH.event.name": {
+    "text": "Mordvolt Resistant Wrench",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.piece.MORDVOLT_RESISTANT_WRENCH_T1.event.name": {
+    "text": "Mordvolt Resistant Wrench T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.segment.0.name": {
+    "text": "Mordvolt Resistant",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.status.MORDVOLT_RESISTANT.event.description": {
+    "text": "Treatment Effect +30% when HP below 50%.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.status.MORDVOLT_RESISTANT.event.name": {
+    "text": "Mordvolt Resistant",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.MORDVOLT_RESISTANT_STAT.status.MORDVOLT_RESISTANT.segment.0.name": {
+    "text": "Mordvolt Resistant",
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -21,6 +21,8 @@ export interface ContentBrowserItem {
   icon?: string;
   meta: string;
   color?: string;
+  /** Validation/load warning for this item; when set the customizer flags it. */
+  warning?: string;
 }
 
 export interface ContentSelection {

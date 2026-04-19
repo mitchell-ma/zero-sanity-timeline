@@ -1,0 +1,70 @@
+{
+  "gear.TYPE_50_YINGLUNG_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's ATK +{atk_up:0%}. When any operator in the team casts a battle skill, the wearer gains 1 stack of Yinglung's Edge that gives DMG +{dmg_up:0%} to the wearer's next combo skill. Yinglung's Edge can stack {max_stack:0} time(s).",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.event.name": {
+    "text": "Type 50 Yinglung",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_GLOVES.event.name": {
+    "text": "Type 50 Yinglung Gloves",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_GLOVES_T1.event.name": {
+    "text": "Type 50 Yinglung Gloves T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_HEAVY_ARMOR.event.name": {
+    "text": "Type 50 Yinglung Heavy Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_HEAVY_ARMOR_T1.event.name": {
+    "text": "Type 50 Yinglung Heavy Armor T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_HEAVY_ARMOR_T2.event.name": {
+    "text": "Type 50 Yinglung Heavy Armor T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_KNIFE.event.name": {
+    "text": "Type 50 Yinglung Knife",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_KNIFE_T1.event.name": {
+    "text": "Type 50 Yinglung Knife T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_LIGHT_ARMOR.event.name": {
+    "text": "Type 50 Yinglung Light Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_RADAR.event.name": {
+    "text": "Type 50 Yinglung Radar",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_RADAR_T1.event.name": {
+    "text": "Type 50 Yinglung Radar T1",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.piece.TYPE_50_YINGLUNG_RADAR_T2.event.name": {
+    "text": "Type 50 Yinglung Radar T2",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.segment.0.name": {
+    "text": "Type 50 Yinglung",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.status.TYPE_50_YINGLUNG.event.description": {
+    "text": "Consumed on next combo skill cast",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.status.TYPE_50_YINGLUNG.event.name": {
+    "text": "Type 50 Yinglung",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TYPE_50_YINGLUNG_STAT.status.TYPE_50_YINGLUNG.segment.0.name": {
+    "text": "Type 50 Yinglung",
+    "dataStatus": "RECONCILED"
+  }
+}

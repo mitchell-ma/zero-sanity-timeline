@@ -29,8 +29,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Detonate: Seeker of the Esoteric"
+        }
       },
       "clause": [
         {
@@ -70,8 +69,6 @@
     }
   ],
   "properties": {
-    "name": "Detonate: Seeker of the Esoteric",
-    "description": "Main Attribute +{primary_attr_up:0.0%}. When the wielder applies an Arts Burst, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
     "id": "DETONATE_SEEKER_OF_THE_ESOTERIC",
     "eventCategoryType": "WEAPON_STAT"
   },

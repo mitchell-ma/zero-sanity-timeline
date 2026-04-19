@@ -68,7 +68,6 @@
   ],
   "properties": {
     "id": "AIC_LIGHT_PLATE",
-    "name": "AIC Light Plate",
     "gearType": "KIT",
     "gearSet": "AIC_LIGHT_STAT"
   },

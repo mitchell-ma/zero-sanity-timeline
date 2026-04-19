@@ -7,6 +7,7 @@ import type { CustomStatusEventDef } from '../../../model/custom/customStatusEve
 import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
 import StatusEventFields from './StatusEventFields';
+import { t } from '../../../locales/locale';
 
 interface Props {
   data: CustomGearEffect;
@@ -73,7 +74,7 @@ export default function GearEffectSection({ data, onChange, originalId }: Props)
 
   return (
     <>
-      <CollapsibleSection title="Identity">
+      <CollapsibleSection title={t('customizer.section.identity')}>
         <div className="wizard-section">
           <IdField value={data.id} onChange={(id) => update({ id })} originalId={originalId} />
           <label className="wz-field">
@@ -82,18 +83,18 @@ export default function GearEffectSection({ data, onChange, originalId }: Props)
           </label>
           <label className="wz-field">
             <span>Gear Set ID (optional)</span>
-            <input type="text" value={data.gearSetId ?? ''} onChange={(e) => update({ gearSetId: e.target.value || undefined })} placeholder="Link to a gear set" />
+            <input type="text" value={data.gearSetId ?? ''} onChange={(e) => update({ gearSetId: e.target.value || undefined })} placeholder={t('customizer.placeholder.linkGear')} />
           </label>
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Passive Stats">
+      <CollapsibleSection title={t('customizer.section.passiveStats')}>
         <div className="wizard-section">
           <PassiveStatsEditor stats={data.passiveStats ?? {}} onChange={(s) => update({ passiveStats: s })} />
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Status Events">
+      <CollapsibleSection title={t('customizer.section.statusEvents')}>
         <div className="wizard-section">
           {data.statusEvents.map((se, i) => (
             <StatusEventFields

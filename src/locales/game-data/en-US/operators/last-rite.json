@@ -1,0 +1,170 @@
+{
+  "op.LAST_RITE.event.name": {
+    "text": "Last Rite",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.1.event.description": {
+    "text": "When the controlled operator with Hypothermic Perfusion performs a Final Strike that hits the enemy, it deals another 20% DMG and 5 Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.1.event.name": {
+    "text": "Undertaker's Gift (P1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.2.event.description": {
+    "text": "Strength +{Str:0}, Cryo DMG Dealt +{CrystDamageIncrease:0%}.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.2.event.name": {
+    "text": "Absolute Zero Armament (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.2.segment.0.name": {
+    "text": "Absolute Zero Armament (P2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.3.event.description": {
+    "text": "Combo skill Winter's Devourer and ultimate Vigil Services improved: DMG multiplier increased to 1.15 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.3.event.name": {
+    "text": "Overlord of Winter (P3)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.4.event.description": {
+    "text": "Ultimate Vigil Services improved: Ultimate Energy cost -15%.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.4.event.name": {
+    "text": "Sincere Wake (P4)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.5.event.description": {
+    "text": "Battle skill Esoteric Legacy of Seš'qa improved: Amount of SP returned is increased by another 5; Mirage Additional ATK Multiplier is increased to 1.2 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.potential.5.event.name": {
+    "text": "Winter is Returning (P5)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.DANCE_OF_RIME_BATK.event.description": {
+    "text": "An attack with up to 4 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals {poise:0} Stagger.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.DANCE_OF_RIME_BATK.event.name": {
+    "text": "Dance of Rime",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.DANCE_OF_RIME_DIVE.event.description": {
+    "text": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.DANCE_OF_RIME_DIVE.event.name": {
+    "text": "Dance of Rime (Dive)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.DANCE_OF_RIME_FINISHER.event.description": {
+    "text": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.DANCE_OF_RIME_FINISHER.event.name": {
+    "text": "Dance of Rime (Finisher)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.ESOTERIC_LEGACY.event.description": {
+    "text": "Performs a Hypothermic Perfusion on the controlled operator's weapon and returns some SP. \nThe next Final Strike performed by the currently controlled operator within a certain duration creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction. \nWhen the controlled operator is Last Rite herself, casting this battle skill does not reset her basic attack sequence.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.ESOTERIC_LEGACY.event.name": {
+    "text": "Esoteric Legacy of Seš'qa",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.VIGIL_SERVICES.event.description": {
+    "text": "Last Rite encases herself in frost armor, creates an ice scythe to perform 3 slashes, and gains immunity to all damages while this state is active. \nEach slash deals massive Cryo DMG. \nLast Rite can only gain Ultimate Energy from her own battle skills and combo skills.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.VIGIL_SERVICES.event.name": {
+    "text": "Vigil Services",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.VIGIL_SERVICES.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.WINTERS_DEVOURER.event.description": {
+    "text": "When an enemy has {count:0} or more Cryo Infliction stacks. Encases the target enemy in icicles and shatters them to consume all Cryo Infliction stacks of the said enemy. The number of Cryo Infliction stacks consumed determines the amount of Cryo DMG dealt to the said enemy and Ultimate Energy gained by Last Rite.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.WINTERS_DEVOURER.event.name": {
+    "text": "Winter's Devourer",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.WINTERS_DEVOURER.segment.0.name": {
+    "text": "Animation",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.WINTERS_DEVOURER.segment.1.name": {
+    "text": "Winter's Devourer",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.skill.WINTERS_DEVOURER.segment.2.name": {
+    "text": "Cooldown",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.status.HYPOTHERMIC_PERFUSION.event.description": {
+    "text": "The next Final Strike performed by the currently controlled operator within 15s creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.status.HYPOTHERMIC_PERFUSION.event.name": {
+    "text": "Hypothermic Perfusion",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.status.HYPOTHERMIC_PERFUSION.segment.0.name": {
+    "text": "Hypothermic Perfusion",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.status.HYPOTHERMIC_PERFUSION_MIRAGE.event.description": {
+    "text": "Last Rite's Mirage unleashes an additional attack at the target. Deals Cryo DMG and applies Cryo Infliction.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.status.HYPOTHERMIC_PERFUSION_MIRAGE.event.name": {
+    "text": "Hypothermic Perfusion (Mirage)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.status.HYPOTHERMIC_PERFUSION_MIRAGE.segment.0.name": {
+    "text": "Hypothermic Perfusion (Mirage)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.status.VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT.event.description": {
+    "text": "Last Rite can only gain Ultimate Energy from her own battle skills and combo skills.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.status.VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT.event.name": {
+    "text": "Vigil Services (Ultimate Energy Lockout)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.status.VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT.segment.0.name": {
+    "text": "Vigil Services (Ultimate Energy Lockout)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.talent.CRYOGENIC_EMBRITTLEMENT_TALENT.event.description": {
+    "text": "Ultimate Vigil Services improved: When the ultimate deals DMG to an enemy with Cryo Susceptibility, the effect of that Cryo Susceptibility is 1.2 times the original.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.talent.CRYOGENIC_EMBRITTLEMENT_TALENT.event.name": {
+    "text": "Cryogenic Embrittlement (T2)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.talent.HYPOTHERMIA_TALENT.event.description": {
+    "text": "After Last Rite consumes any Arts Infliction, she applies Cryo Susceptibility to the target with the effect of [Number of Arts Infliction stacks consumed × 4%] for 15s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.talent.HYPOTHERMIA_TALENT.event.name": {
+    "text": "Hypothermia (T1)",
+    "dataStatus": "RECONCILED"
+  },
+  "op.LAST_RITE.talent.HYPOTHERMIA_TALENT.segment.0.name": {
+    "text": "Hypothermia",
+    "dataStatus": "RECONCILED"
+  }
+}

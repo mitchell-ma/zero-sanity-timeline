@@ -1,0 +1,42 @@
+{
+  "gear.TIDE_SURGE_STAT.event.description": {
+    "text": "3-piece set effect: Wearer's Skill DMG Dealt +{skill_dmg_up:0%}. After the wearer applies {stack_cond} or more stacks of Arts Infliction on the enemy, the wearer gains Arts DMG Dealt +{spell_dmg_up:0%} for {duration}s. This effect cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TIDE_SURGE_STAT.event.name": {
+    "text": "Tide Surge",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TIDE_SURGE_STAT.piece.HANGING_RIVER_O2_TUBE.event.name": {
+    "text": "Hanging River O2 Tube",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TIDE_SURGE_STAT.piece.TIDE_FALL_LIGHT_ARMOR.event.name": {
+    "text": "Tide Fall Light Armor",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TIDE_SURGE_STAT.piece.TIDE_SURGE_GAUNTLETS.event.name": {
+    "text": "Tide Surge Gauntlets",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TIDE_SURGE_STAT.piece.TURBID_CUTTING_TORCH.event.name": {
+    "text": "Turbid Cutting Torch",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TIDE_SURGE_STAT.segment.0.name": {
+    "text": "Tide Surge",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TIDE_SURGE_STAT.status.TIDE_SURGE.event.description": {
+    "text": "Arts DMG +35% for 15s after applying 2+ stacks of Arts Infliction. Cannot stack.",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TIDE_SURGE_STAT.status.TIDE_SURGE.event.name": {
+    "text": "Tide Surge",
+    "dataStatus": "RECONCILED"
+  },
+  "gear.TIDE_SURGE_STAT.status.TIDE_SURGE.segment.0.name": {
+    "text": "Tide Surge",
+    "dataStatus": "RECONCILED"
+  }
+}

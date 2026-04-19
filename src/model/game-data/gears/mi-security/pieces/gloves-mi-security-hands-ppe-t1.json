@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "MI_SECURITY_HANDS_PPE_T1",
-    "name": "MI Security Hands PPE T1",
     "gearType": "GLOVES",
     "gearSet": "MI_SECURITY_STAT"
   },

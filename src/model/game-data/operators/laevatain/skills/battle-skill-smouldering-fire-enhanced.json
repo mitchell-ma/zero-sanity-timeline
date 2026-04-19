@@ -24,8 +24,7 @@
     "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
-    "id": "SMOULDERING_FIRE_ENHANCED",
-    "name": "Smouldering Fire (Enhanced)"
+    "id": "SMOULDERING_FIRE_ENHANCED"
   },
   "metadata": {
     "originId": "LAEVATAIN",

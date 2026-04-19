@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "SWORDMANCER_HEAVY_ARMOR",
-    "name": "Swordmancer Heavy Armor",
     "gearType": "ARMOR",
     "gearSet": "SWORDMANCER_STAT"
   },

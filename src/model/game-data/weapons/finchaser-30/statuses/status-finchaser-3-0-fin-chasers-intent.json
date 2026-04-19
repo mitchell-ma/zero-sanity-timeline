@@ -8,8 +8,7 @@
             "value": 15
           },
           "unit": "SECOND"
-        },
-        "name": "Fin Chaser's Intent"
+        }
       },
       "clause": [
         {
@@ -48,8 +47,6 @@
   ],
   "properties": {
     "id": "FINCHASER_3_0_FIN_CHASERS_INTENT",
-    "name": "Fin Chaser's Intent",
-    "description": "Cryo DMG Taken increase from Solidification",
     "duration": {
       "value": {
         "verb": "IS",

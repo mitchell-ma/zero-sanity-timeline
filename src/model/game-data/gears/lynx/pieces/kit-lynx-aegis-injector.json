@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "LYNX_AEGIS_INJECTOR",
-    "name": "LYNX Aegis Injector",
     "gearType": "KIT",
     "gearSet": "LYNX_STAT"
   },

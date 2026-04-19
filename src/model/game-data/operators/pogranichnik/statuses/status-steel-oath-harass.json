@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "STEEL_OATH_HARASS",
-    "name": "Steel Oath (Harass)",
     "to": "ENEMY",
     "duration": {
       "value": {
@@ -11,8 +10,7 @@
       "unit": "SECOND"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "A Shieldguard harasses the enemy, dealing Physical DMG and recovering SP."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "segments": [
     {

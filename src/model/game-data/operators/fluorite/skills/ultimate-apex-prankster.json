@@ -1,7 +1,5 @@
 {
   "properties": {
-    "name": "Apex Prankster",
-    "description": "Fluorite quickly moves in an arc and rapidly fires at the target within the arc to deal 4 sequences of Nature DMG. If an Improvised Explosive has been stuck to the target, the skill detonates it immediately and increases the DMG and size of the explosion.\nIf the final DMG sequence hits a target with at least 2 stacks of Cryo Infliction or Nature Infliction, then apply the same Arts Infliction again.",
     "eventType": "SKILL",
     "eventCategoryType": "ULTIMATE",
     "element": "NATURE",
@@ -16,7 +14,6 @@
         "segmentTypes": [
           "ANIMATION"
         ],
-        "name": "Animation",
         "duration": {
           "value": {
             "verb": "IS",
@@ -421,7 +418,8 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "CRYO",
-                  "object": "STATUS", "objectId": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {
@@ -456,7 +454,8 @@
                 {
                   "verb": "APPLY",
                   "objectQualifier": "NATURE",
-                  "object": "STATUS", "objectId": "INFLICTION",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
                   "to": "ENEMY",
                   "with": {
                     "stacks": {

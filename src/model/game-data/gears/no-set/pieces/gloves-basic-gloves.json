@@ -90,7 +90,6 @@
   ],
   "properties": {
     "id": "BASIC_GLOVES",
-    "name": "Basic Gloves",
     "gearType": "GLOVES",
     "gearSet": "NONE"
   },

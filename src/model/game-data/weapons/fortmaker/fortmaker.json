@@ -13,8 +13,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Fortmaker"
+        }
       },
       "clause": [
         {
@@ -135,7 +134,6 @@
     }
   ],
   "properties": {
-    "name": "Fortmaker",
     "id": "FORTMAKER",
     "type": "SWORD",
     "rarity": 5

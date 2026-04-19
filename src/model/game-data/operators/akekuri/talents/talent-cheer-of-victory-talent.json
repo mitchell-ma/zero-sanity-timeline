@@ -5,12 +5,10 @@
       "verb": "IS",
       "value": 2
     },
-    "name": "Cheer of Victory (T1)",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "eventType": "STATUS",
-    "eventCategoryType": "TALENT",
-    "description": "Combo skill Flash and Dash improved: For every 10 points of Intellect, SP Recovery +{sp_rate:0%} (max: {sp_cap:0%})."
+    "eventCategoryType": "TALENT"
   },
   "metadata": {
     "originId": "AKEKURI",

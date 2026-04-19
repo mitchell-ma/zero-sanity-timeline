@@ -8,8 +8,7 @@
             "value": 2
           },
           "unit": "SECOND"
-        },
-        "name": "AIC Heavy"
+        }
       },
       "clause": [
         {
@@ -34,7 +33,6 @@
   ],
   "properties": {
     "id": "AIC_HEAVY",
-    "name": "AIC Heavy",
     "duration": {
       "value": {
         "verb": "IS",
@@ -50,7 +48,6 @@
       "interactionType": "RESET"
     },
     "cooldownSeconds": 5,
-    "description": "Restores 100 HP on defeating an enemy. 5s cooldown.",
     "eventType": "STATUS",
     "eventCategoryType": "GEAR"
   },

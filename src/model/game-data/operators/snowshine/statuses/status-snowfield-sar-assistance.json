@@ -1,7 +1,6 @@
 {
   "properties": {
     "id": "SNOWFIELD_SAR_ASSISTANCE",
-    "name": "Snowfield SAR Assistance",
     "to": "OPERATOR",
     "toDeterminer": "ALL",
     "duration": {
@@ -19,8 +18,7 @@
       "interactionType": "RESET"
     },
     "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS",
-    "description": "Snowfield SAR Assistant: instant HP recovery followed by continuous HP recovery ticks over 3 seconds. Heal formula scales with source operator's Will; Polar Survival (T1) multiplies the total by 1 + 15% / 25%."
+    "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {
     "originId": "SNOWSHINE",
@@ -32,7 +30,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "name": "SAR Assistance",
         "duration": {
           "value": {
             "verb": "IS",

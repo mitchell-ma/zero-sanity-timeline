@@ -67,7 +67,6 @@
   ],
   "properties": {
     "id": "MORDVOLT_INSULATION_BATTERY",
-    "name": "Mordvolt Insulation Battery",
     "gearType": "KIT",
     "gearSet": "MORDVOLT_INSULATION_STAT"
   },

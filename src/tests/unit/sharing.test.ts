@@ -73,6 +73,7 @@ jest.mock('../../controller/operators/operatorRegistry', () => ({
     { id: 'ARDELIA', name: 'Ardelia', rarity: 6, maxTalentOneLevel: 3, maxTalentTwoLevel: 3 },
   ],
   operatorWarnings: () => [],
+  getCustomOperatorWarning: () => undefined,
 }));
 
 jest.mock('../../utils/loadoutRegistry', () => ({

@@ -8,8 +8,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Proof of Existence (P5)"
+        }
       },
       "clause": [
         {
@@ -30,11 +29,9 @@
   ],
   "properties": {
     "id": "LAEVATAIN_POTENTIAL_5",
-    "name": "Proof of Existence (P5)",
     "level": 5,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate Twilight improved: Enhanced basic attack DMG multiplier is increased to 1.2 times the original; during the ultimate, every enemy defeated by Laevatain extends ultimate duration by +1s (max: +7s)."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "LAEVATAIN",

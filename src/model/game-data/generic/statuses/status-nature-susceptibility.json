@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "NATURE_SUSCEPTIBILITY",
-    "name": "Nature Susceptibility",
     "to": "ENEMY",
     "eventType": "STATUS",
     "eventCategoryType": "STATUS",
-    "description": "Nature Susceptibility applied to enemy.",
     "duration": {
       "value": {
         "verb": "IS",

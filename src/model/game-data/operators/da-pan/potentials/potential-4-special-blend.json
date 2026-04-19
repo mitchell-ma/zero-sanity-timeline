@@ -1,11 +1,9 @@
 {
   "properties": {
     "id": "DA_PAN_POTENTIAL_4",
-    "name": "Special Blend (P4)",
     "level": 4,
     "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL",
-    "description": "Ultimate CHOP 'N DUNK! improved: Ultimate Energy cost -{1-costValue:0%}."
+    "eventCategoryType": "POTENTIAL"
   },
   "metadata": {
     "originId": "DA_PAN",

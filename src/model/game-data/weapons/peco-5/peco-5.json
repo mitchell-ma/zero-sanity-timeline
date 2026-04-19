@@ -12,8 +12,7 @@
             "value": 99999
           },
           "unit": "SECOND"
-        },
-        "name": "Peco 5"
+        }
       },
       "clause": [
         {
@@ -134,7 +133,6 @@
     }
   ],
   "properties": {
-    "name": "Peco 5",
     "id": "PECO_5",
     "type": "HANDCANNON",
     "rarity": 3

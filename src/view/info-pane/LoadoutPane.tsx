@@ -255,7 +255,7 @@ function OperatorSelector({ operators, currentOperator, onSelect }: {
             <input
               className="loadout-op-filter-input"
               type="text"
-              placeholder="Filter Operators..."
+              placeholder={t('loadoutPane.filter.operators')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
@@ -387,7 +387,7 @@ function ItemSelector({ entries, selectedId, onSelect, placeholder }: {
   return (
     <div ref={triggerRef} className="loadout-item-selector-wrap">
       <div className="loadout-item-trigger" onClick={handleOpen}>
-        <span className="loadout-item-trigger-name" style={!selected ? { color: 'var(--text-muted)' } : undefined}>{selected?.name ?? 'None'}</span>
+        <span className="loadout-item-trigger-name" style={!selected ? { color: 'var(--text-muted)' } : undefined}>{selected?.name ?? t('loadoutPane.none')}</span>
         {selected?.icon && (
           <div className="loadout-item-icon-wrap">
             <img className="loadout-item-trigger-icon" src={selected.icon} alt={selected.name} />
@@ -400,7 +400,7 @@ function ItemSelector({ entries, selectedId, onSelect, placeholder }: {
             <input
               className="loadout-op-filter-input"
               type="text"
-              placeholder={`Filter ${placeholder}...`}
+              placeholder={t('loadoutPane.filterItem', { item: placeholder })}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
@@ -425,7 +425,7 @@ function ItemSelector({ entries, selectedId, onSelect, placeholder }: {
               className={`loadout-item-option${selectedId === null ? ' loadout-item-option--selected' : ''}`}
               onClick={() => pick(null)}
             >
-              <span className="loadout-item-option-name" style={{ color: 'var(--text-muted)' }}>None</span>
+              <span className="loadout-item-option-name" style={{ color: 'var(--text-muted)' }}>{t('loadoutPane.none')}</span>
             </div>
             {filtered.map((entry) => (
               <div
@@ -515,14 +515,14 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           <div className="edit-panel-skill-name">{operator.name}</div>
           <div className="edit-panel-op-name" style={{ color: operator.color }}>
             {operator.role}
-            <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>· LOADOUT</span>
+            <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>{t('loadoutPane.subtitle.loadout')}</span>
           </div>
         </div>
       </div>
 
       <div className="edit-panel-body">
         <div className="edit-panel-section">
-          <span className="edit-section-label">Operator</span>
+          <span className="edit-section-label">{t('dsl.subject.OPERATOR')}</span>
           {allOperators && onSelectOperator && (
             <OperatorSelector
               operators={allOperators}
@@ -530,8 +530,8 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
               onSelect={onSelectOperator}
             />
           )}
-          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Operator Level</span>} value={stats.operator.level} min={1} max={90} holdSnaps={[1, 10, 20, 30, 40, 50, 60, 70, 80, 90]} showMinMax onChange={setOperator('level')} />
-          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Potential</span>} value={stats.operator.potential} min={0} max={5} showMinMax onChange={setOperator('potential')} />
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{t('loadoutPane.label.operatorLevel')}</span>} value={stats.operator.level} min={1} max={90} holdSnaps={[1, 10, 20, 30, 40, 50, 60, 70, 80, 90]} showMinMax onChange={setOperator('level')} />
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{t('loadoutPane.label.potential')}</span>} value={stats.operator.potential} min={0} max={5} showMinMax onChange={setOperator('potential')} />
           {verbose >= InfoLevel.DETAILED &&operator.potentialDescriptions && stats.operator.potential > 0 && operator.potentialDescriptions.slice(0, stats.operator.potential).map((desc, i) => (
             <div key={i} style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px' }}>
               <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginRight: 4 }}>P{i + 1}</span>
@@ -541,18 +541,18 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
         </div>
 
         <div className="edit-panel-section">
-          <span className="edit-section-label">Talents</span>
-          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Attribute Increase</span>} value={stats.operator.attributeIncreaseLevel} min={0} max={operator.maxAttributeIncreaseLevel} showMinMax onChange={setOperator('attributeIncreaseLevel')} />
+          <span className="edit-section-label">{t('loadoutPane.section.talents')}</span>
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{t('loadoutPane.label.attributeIncrease')}</span>} value={stats.operator.attributeIncreaseLevel} min={0} max={operator.maxAttributeIncreaseLevel} showMinMax onChange={setOperator('attributeIncreaseLevel')} />
           {verbose >= InfoLevel.DETAILED &&stats.operator.attributeIncreaseLevel > 0 && (
             <>
               <div style={{ fontSize: DESC_FONT_SIZE, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', padding: '2px 6px 0' }}>{operator.attributeIncreaseName}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 13, lineHeight: 1.4, padding: '2px 6px 4px' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>{getStatLabel(operator.attributeIncreaseAttribute as StatType)}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>+{[0, 10, 15, 15, 20][stats.operator.attributeIncreaseLevel]} <span style={{ color: 'var(--text-muted)' }}>(+{[0, 10, 25, 40, 60][stats.operator.attributeIncreaseLevel]} total)</span></span>
+                <span style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>+{[0, 10, 15, 15, 20][stats.operator.attributeIncreaseLevel]} <span style={{ color: 'var(--text-muted)' }}>(+{[0, 10, 25, 40, 60][stats.operator.attributeIncreaseLevel]} {t('loadoutPane.label.totalSuffix')})</span></span>
               </div>
             </>
           )}
-          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Talent 1</span>} value={stats.operator.talentOneLevel} min={0} max={operator.maxTalentOneLevel} showMinMax onChange={setOperator('talentOneLevel')} />
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{t('loadoutPane.label.talent', { n: 1 })}</span>} value={stats.operator.talentOneLevel} min={0} max={operator.maxTalentOneLevel} showMinMax onChange={setOperator('talentOneLevel')} />
           {verbose >= InfoLevel.DETAILED &&stats.operator.talentOneLevel > 0 && operator.talentDescriptions?.[1]?.length && (
             <>
               <div style={{ fontSize: DESC_FONT_SIZE, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', padding: '2px 6px 0' }}>{operator.talentOneName}</div>
@@ -561,7 +561,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
               </div>
             </>
           )}
-          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Talent 2</span>} value={stats.operator.talentTwoLevel} min={0} max={operator.maxTalentTwoLevel} showMinMax onChange={setOperator('talentTwoLevel')} />
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{t('loadoutPane.label.talent', { n: 2 })}</span>} value={stats.operator.talentTwoLevel} min={0} max={operator.maxTalentTwoLevel} showMinMax onChange={setOperator('talentTwoLevel')} />
           {verbose >= InfoLevel.DETAILED &&stats.operator.talentTwoLevel > 0 && operator.talentDescriptions?.[2]?.length && (
             <>
               <div style={{ fontSize: DESC_FONT_SIZE, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', padding: '2px 6px 0' }}>{operator.talentTwoName}</div>
@@ -573,11 +573,11 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
         </div>
 
         <div className="edit-panel-section">
-          <span className="edit-section-label">Skills</span>
+          <span className="edit-section-label">{t('loadoutPane.section.skills')}</span>
           {([NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE] as const).map((skillType) => {
             const skill = operator.skills[skillType];
             const levelKey = ({ [NounType.BASIC_ATTACK]: 'basicAttackLevel', [NounType.BATTLE]: 'battleSkillLevel', [NounType.COMBO]: 'comboSkillLevel', [NounType.ULTIMATE]: 'ultimateLevel' } as const)[skillType];
-            const labelText = ({ [NounType.BASIC_ATTACK]: 'Basic Attack', [NounType.BATTLE]: 'Battle Skill', [NounType.COMBO]: 'Combo Skill', [NounType.ULTIMATE]: 'Ultimate Skill' })[skillType];
+            const labelText = ({ [NounType.BASIC_ATTACK]: t('loadoutPane.skill.basicAttack'), [NounType.BATTLE]: t('loadoutPane.skill.battleSkill'), [NounType.COMBO]: t('loadoutPane.skill.comboSkill'), [NounType.ULTIMATE]: t('loadoutPane.skill.ultimateSkill') })[skillType];
             return (
               <React.Fragment key={skillType}>
                 <StatField
@@ -600,22 +600,22 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
         </div>
 
         <div className="edit-panel-section">
-          <span className="edit-section-label">Weapon</span>
+          <span className="edit-section-label">{t('loadoutPane.section.weapon')}</span>
           {onLoadoutChange && (
             <ItemSelector
               entries={compatibleWeapons}
               selectedId={loadout.weaponId}
               onSelect={(id) => setLoadoutField('weaponId', id)}
-              placeholder="Weapon"
+              placeholder={t('loadoutPane.placeholder.weapon')}
             />
           )}
           {weaponData && (
             <>
-            <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Weapon Level</span>} value={stats.weapon.level} min={1} max={90} holdSnaps={[1, 10, 20, 30, 40, 50, 60, 70, 80, 90]} showMinMax onChange={setWeapon('level')} />
+            <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{t('loadoutPane.label.weaponLevel')}</span>} value={stats.weapon.level} min={1} max={90} holdSnaps={[1, 10, 20, 30, 40, 50, 60, 70, 80, 90]} showMinMax onChange={setWeapon('level')} />
             {weaponData.skills.map((sk) => (
               <StatField
                 key={`skill-${sk.index}`}
-                label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Skill {sk.index + 1} ({sk.name})</span>}
+                label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{t('loadoutPane.skillWithName', { n: sk.index + 1, name: sk.name })}</span>}
                 value={[stats.weapon.skill1Level, stats.weapon.skill2Level, stats.weapon.skill3Level][sk.index]}
                 min={1} max={9}
                 holdSnaps={[1, 3, 6, 9]}
@@ -624,25 +624,25 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
               />
             ))}
             <div style={{ ...statRowStyle, marginTop: 4 }}>
-              <span style={statLabelStyle}>ATK (Base)</span>
+              <span style={statLabelStyle}>{t('stat.BASE_ATTACK')}</span>
               <span style={statValueStyle}>{formatFlat(weaponData.baseAtk)}</span>
             </div>
             {weaponData.statContributions.map((c) => (
               <div key={`stat-${c.skillIndex}`} style={statRowStyle}>
-                <span style={statLabelStyle}>Skill {c.skillIndex + 1}: {getStatLabel(c.stat as StatType)}</span>
+                <span style={statLabelStyle}>{t('loadoutPane.skillLabel', { n: c.skillIndex + 1 })}: {getStatLabel(c.stat as StatType)}</span>
                 <span style={statValueStyle}>{formatStatValue(c.stat, c.value)}</span>
               </div>
             ))}
             {weaponData.passiveStats.map((p) => (
               <div key={`stat-${p.skillIndex}-${p.stat}`} style={statRowStyle}>
-                <span style={statLabelStyle}>Skill {p.skillIndex + 1}: {getStatLabel(p.stat as StatType)}</span>
+                <span style={statLabelStyle}>{t('loadoutPane.skillLabel', { n: p.skillIndex + 1 })}: {getStatLabel(p.stat as StatType)}</span>
                 <span style={statValueStyle}>{formatStatValue(p.stat, p.value)}</span>
               </div>
             ))}
             {weaponData.effects.map((eff, ei) => (
               <React.Fragment key={`eff-${ei}`}>
                 <div style={{ ...statRowStyle, marginTop: ei === 0 ? 4 : 8 }}>
-                  <span style={statLabelStyle}>Skill 3: {eff.label}</span>
+                  <span style={statLabelStyle}>{t('loadoutPane.skillLabel', { n: 3 })}: {eff.label}</span>
                 </div>
                 {verbose >= InfoLevel.DETAILED &&eff.description && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: 2, marginTop: -1 }}>
@@ -651,7 +651,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 )}
                 {eff.secondaryAttrBonus && (
                   <div style={statRowStyle}>
-                    <span style={statLabelStyle}>Secondary Attr% ({getStatLabel(eff.secondaryAttrBonus.label as StatType)}%)</span>
+                    <span style={statLabelStyle}>{t('loadoutPane.secondaryAttrPct', { label: getStatLabel(eff.secondaryAttrBonus.label as StatType) })}</span>
                     <span style={statValueStyle}>{formatPct(eff.secondaryAttrBonus.value)}</span>
                   </div>
                 )}
@@ -676,11 +676,11 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
         </div>
 
         <div className="edit-panel-section">
-          <span className="edit-section-label">Gear</span>
+          <span className="edit-section-label">{t('loadoutPane.section.gear')}</span>
           {gearData?.setActive && gearData.setName && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
-                Set: {gearData.setName}
+                {t('loadoutPane.label.set')}: {gearData.setName}
               </div>
               {verbose >= InfoLevel.DETAILED && gearData.setDescription && (
                 <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.4 }}>
@@ -690,10 +690,10 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             </div>
           )}
           {([
-            { gearCategory: GearCategory.ARMOR, loadoutKey: 'armorId' as const, ranksKey: 'armorRanks' as const, label: 'Armor' },
-            { gearCategory: GearCategory.GLOVES, loadoutKey: 'glovesId' as const, ranksKey: 'glovesRanks' as const, label: 'Gloves' },
-            { gearCategory: GearCategory.KIT, loadoutKey: 'kit1Id' as const, ranksKey: 'kit1Ranks' as const, label: 'Kit 1' },
-            { gearCategory: GearCategory.KIT, loadoutKey: 'kit2Id' as const, ranksKey: 'kit2Ranks' as const, label: 'Kit 2' },
+            { gearCategory: GearCategory.ARMOR, loadoutKey: 'armorId' as const, ranksKey: 'armorRanks' as const, label: t('loadoutPane.gear.armor') },
+            { gearCategory: GearCategory.GLOVES, loadoutKey: 'glovesId' as const, ranksKey: 'glovesRanks' as const, label: t('loadoutPane.gear.gloves') },
+            { gearCategory: GearCategory.KIT, loadoutKey: 'kit1Id' as const, ranksKey: 'kit1Ranks' as const, label: t('loadoutPane.gear.kit1') },
+            { gearCategory: GearCategory.KIT, loadoutKey: 'kit2Id' as const, ranksKey: 'kit2Ranks' as const, label: t('loadoutPane.gear.kit2') },
           ] as const).map(({ gearCategory, loadoutKey, ranksKey, label }, i) => {
             const piece = gearData?.pieces.find((p) => p.ranksKey === ranksKey);
             const gearEntries: SelectorEntry[] = getGearPiecesByType(gearCategory).map((gp) => ({
@@ -748,7 +748,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             <span className="edit-section-label">Gear Bonus</span>
             {gearBonus.totalDefense > 0 && (
               <div style={statRowStyle}>
-                <span style={statLabelStyle}>DEF</span>
+                <span style={statLabelStyle}>{t('stat.BASE_DEFENSE')}</span>
                 <span style={statValueStyle}>{gearBonus.totalDefense.toFixed(0)}</span>
               </div>
             )}
@@ -762,26 +762,26 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
         )}
 
         <div className="edit-panel-section">
-          <span className="edit-section-label">Consumable</span>
+          <span className="edit-section-label">{t('loadoutPane.section.consumable')}</span>
           {onLoadoutChange && (
             <ItemSelector
               entries={getAllConsumables()}
               selectedId={loadout.consumableId}
               onSelect={(id) => setLoadoutField('consumableId', id)}
-              placeholder="Consumable"
+              placeholder={t('loadoutPane.placeholder.consumable')}
             />
           )}
           {foodName && !onLoadoutChange && <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{foodName}</div>}
         </div>
 
         <div className="edit-panel-section">
-          <span className="edit-section-label">Tactical</span>
+          <span className="edit-section-label">{t('loadoutPane.section.tactical')}</span>
           {onLoadoutChange && (
             <ItemSelector
               entries={getAllTacticals()}
               selectedId={loadout.tacticalId}
               onSelect={(id) => setLoadoutField('tacticalId', id)}
-              placeholder="Tactical"
+              placeholder={t('loadoutPane.placeholder.tactical')}
             />
           )}
           {tactical && (
@@ -819,7 +819,7 @@ function AggregatedStatsSection({ operatorId, loadout, stats, color, verbose }: 
   return (
     <>
       <div className="edit-panel-section">
-        <span className="edit-section-label">Main Stats</span>
+        <span className="edit-section-label">{t('loadoutPane.section.mainStats')}</span>
         <div className="dmg-tree">
           {mainEntries.map((entry) => (
             <TopEntry key={entry.label} entry={showBreakdowns ? entry : { ...entry, subEntries: undefined }} />
@@ -828,7 +828,7 @@ function AggregatedStatsSection({ operatorId, loadout, stats, color, verbose }: 
       </div>
 
       <div className="edit-panel-section">
-        <span className="edit-section-label">Attributes</span>
+        <span className="edit-section-label">{t('loadoutPane.section.attributes')}</span>
         <div className="dmg-tree">
           {data.attributes.map((a) => (
             <StatWithSources
@@ -842,7 +842,7 @@ function AggregatedStatsSection({ operatorId, loadout, stats, color, verbose }: 
       </div>
 
       <div className="edit-panel-section">
-        <span className="edit-section-label">Other Stats</span>
+        <span className="edit-section-label">{t('loadoutPane.section.otherStats')}</span>
         <div className="dmg-tree">
           {data.otherStats.map((s) => (
             <StatWithSources
@@ -958,7 +958,7 @@ function GearPieceDetailCard({ pieceId }: { pieceId: string | null }) {
       <div className="ops-skill-card-header" onClick={() => setIsOpen(prev => !prev)}>
         <div className="ops-skill-card-header-content">
           <div className="ops-skill-card-title-row">
-            <span className="ops-skill-card-name">Details</span>
+            <span className="ops-skill-card-name">{t('loadoutPane.skill.details')}</span>
             <span className="ops-skill-card-chevron">{isOpen ? '\u25B4' : '\u25BE'}</span>
           </div>
         </div>
