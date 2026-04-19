@@ -945,7 +945,7 @@ export default React.memo(function CombatSheet({
         >
           {rowLayout.length === 0 ? (
             <div className="dmg-body-empty">
-              Add events to the timeline to see damage calculations
+              {t('sheet.empty.addEvents')}
             </div>
           ) : (
             rowLayout.map(({ row, top }) => {

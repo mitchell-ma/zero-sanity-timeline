@@ -22,31 +22,23 @@ export function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path
 }
 
 /**
- * IDs whose canonical in-game display is the same all-caps token as the id —
- * stylized brand/codename writing rather than a placeholder copied from `id`.
- * These are exempted from the `id !== name` check in `checkIdAndName`.
- */
-const ID_NAME_EQUALITY_EXCEPTIONS = new Set<string>(['JET', 'LYNX', 'NONE']);
-
-/**
- * Validate the `id` and `name` pair on a properties-style block. `id` is the
- * SCREAMING_SNAKE_CASE programmatic identifier; `name` is the human-readable
- * display string ("Slashing Edge (T1)"). They must both be strings AND must
- * differ — when they match, `name` is almost certainly a placeholder copied
- * from `id` instead of a properly cased display string. Stylized all-caps
- * names (e.g. JET, LYNX) are allowlisted via ID_NAME_EQUALITY_EXCEPTIONS.
+ * Validate the `id` on a properties-style block. `id` is the
+ * SCREAMING_SNAKE_CASE programmatic identifier and is required.
+ *
+ * Display names (`name`, `description`) no longer live on game-data JSON —
+ * they are stored in per-area bundles under `src/locales/game-data/<locale>/`
+ * and looked up via `resolveEventName(LocaleKey.*, ...)`. A stray `name`
+ * field on a game-data JSON is a migration leftover and is reported so the
+ * extractor can be re-run.
  */
 export function checkIdAndName(obj: Record<string, unknown>, path: string): string[] {
   const errors: string[] = [];
   if (typeof obj.id !== 'string') errors.push(`${path}.id: must be a string`);
-  if (typeof obj.name !== 'string') errors.push(`${path}.name: must be a string`);
-  if (
-    typeof obj.id === 'string'
-    && typeof obj.name === 'string'
-    && obj.id === obj.name
-    && !ID_NAME_EQUALITY_EXCEPTIONS.has(obj.id)
-  ) {
-    errors.push(`${path}.name: "${obj.name}" — name must be a human-readable display string, not a copy of id`);
+  if ('name' in obj) {
+    errors.push(`${path}.name: game-data JSON must not carry "name" — strings live in src/locales/game-data/<locale>/ and are resolved via LocaleKey. Re-run scripts/extract_locale_strings.py.`);
+  }
+  if ('description' in obj) {
+    errors.push(`${path}.description: game-data JSON must not carry "description" — strings live in src/locales/game-data/<locale>/. Re-run scripts/extract_locale_strings.py.`);
   }
   return errors;
 }
