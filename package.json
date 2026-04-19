@@ -21,6 +21,7 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "npm run build && wrangler deploy",
+    "deploy:prod": "npm run build && wrangler deploy --env production",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "jest",

@@ -34,14 +34,16 @@ Naming convention:
 Commands:
 - `npm start` — start localhost dev server (CRA only; no Worker/API routes)
 - `npm run preview` — build + run the Cloudflare Worker locally at http://localhost:8787 (reads `.dev.vars` for secrets)
-- `npm run deploy` — build and deploy to Cloudflare Workers (`wrangler deploy`)
-- `npx wrangler tail` — stream live logs from the deployed Worker
-- `npx wrangler secret list` / `npx wrangler secret put <NAME>` — manage Worker secrets
+- `npm run deploy` — build and deploy the **preview** Worker (`wrangler deploy` — worker name `zero-sanity-timeline-preview`)
+- `npm run deploy:prod` — build and deploy the **production** Worker (`wrangler deploy --env production` — worker name `zero-sanity-timeline`)
+- `npx wrangler tail` / `npx wrangler tail --env production` — stream live logs from preview / prod Worker
+- `npx wrangler secret list` / `npx wrangler secret put <NAME>` — manage preview secrets; append `--env production` for prod (secrets are per-environment, do NOT inherit from top level)
 - `npx eslint src/` — run linter
 
 Deployment:
 - Runtime is a Cloudflare Worker (`worker/index.ts`) that serves the built SPA from the `ASSETS` binding and handles `POST /api/feedback` (Resend) and `GET /api/turn-credentials` (Cloudflare Realtime TURN).
-- Required secrets (set via `npx wrangler secret put <NAME>`): `RESEND_API_KEY`, `FEEDBACK_TO_EMAIL`, `FEEDBACK_FROM_EMAIL`, `CF_TURN_KEY_ID`, `CF_TURN_API_TOKEN`. See README.md for the full table + per-secret source.
+- Two environments in `wrangler.jsonc`: top-level is **preview** (`zero-sanity-timeline-preview`), `env.production` is **prod** (`zero-sanity-timeline`). `main` branch deploys preview; `prod` branch deploys production. The only branch divergence should be intentional — both branches share the same `wrangler.jsonc`.
+- Required secrets (for BOTH environments — set once without `--env` for preview, then once with `--env production` for prod): `RESEND_API_KEY`, `FEEDBACK_TO_EMAIL`, `FEEDBACK_FROM_EMAIL`, `CF_TURN_KEY_ID`, `CF_TURN_API_TOKEN`. See README.md for the full table + per-secret source.
 - Local API testing uses a gitignored `.dev.vars` file at repo root with the same `KEY=value` pairs.
 
 Rules:
