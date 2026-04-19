@@ -37,15 +37,20 @@ export const PEERJS_SERIALIZATION = 'raw' as const;
  * mutually unresolvable.
  *
  * TURN creds are issued on demand by our Worker (`/api/turn-credentials`),
- * which proxies Cloudflare's Realtime TURN API. Creds are short-lived;
- * we cache in memory until near expiry. Users who prefer to bring their
- * own TURN can set `zst-turn-config` in localStorage, shape
- * `{urls, username, credential}` (or an array of such).
+ * which proxies Cloudflare's Realtime TURN API. The response is a single
+ * server object whose `urls` array already bundles one STUN + three TURN
+ * transports (udp / tcp / tls-tcp) — about 4 URIs total. That's at the
+ * top of what WebRTC wants (>4 and ICE gathering slows down), so we do
+ * NOT append our own STUN servers on top of it.
+ *
+ * Creds are short-lived; we cache in memory until near expiry. Users who
+ * prefer to bring their own TURN can set `zst-turn-config` in localStorage,
+ * shape `{urls, username, credential}` (or an array of such).
  */
-const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
+// Used ONLY when the CF TURN fetch returns nothing — a minimal fallback so
+// ICE gathering still has at least one STUN candidate source.
+const FALLBACK_STUN_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun.cloudflare.com:3478' },
 ];
 
 const TURN_CONFIG_LS_KEY = 'zst-turn-config';
@@ -113,8 +118,12 @@ async function fetchTurnServers(): Promise<RTCIceServer[]> {
 }
 
 export async function loadIceServers(): Promise<RTCIceServer[]> {
-  const [turnServers] = await Promise.all([fetchTurnServers()]);
-  return [...DEFAULT_ICE_SERVERS, ...turnServers, ...readLocalStorageOverrides()];
+  const turnServers = await fetchTurnServers();
+  const overrides = readLocalStorageOverrides();
+  // CF's bundle already includes a STUN entry, so skip the Google fallback
+  // when it's available. Keeps the total URI count ≤4 (plus any overrides).
+  const base = turnServers.length > 0 ? turnServers : FALLBACK_STUN_SERVERS;
+  return [...base, ...overrides];
 }
 
 export interface PeerInfo {
