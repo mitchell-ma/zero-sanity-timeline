@@ -431,7 +431,7 @@ function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
       for (const seg of ev.segments) {
         if (seg.frames) {
           for (const frame of seg.frames) {
-            if (hasSkillPointClause(frame.clauses)) {
+            if (hasSkillPointClause(frame.clause)) {
               const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
               if (!checkSecondary(ctx, triggerFrame, ev.ownerEntityId)) continue;
               matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
@@ -605,7 +605,7 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
         for (const frame of seg.frames) {
           // Filter by damage element when qualifier is an element (CRYO, HEAT, etc.)
           if (qualifier) {
-            const dealInfo = findDealDamageInClauses(frame.clauses);
+            const dealInfo = findDealDamageInClauses(frame.clause);
             if (dealInfo?.element && dealInfo.element !== qualifier) continue;
           }
           const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;

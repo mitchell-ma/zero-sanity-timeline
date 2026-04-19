@@ -85,7 +85,7 @@ describe('Enemy Action — Event Pipeline', () => {
     expect(events).toHaveLength(1);
     const frame = events[0].segments[0]?.frames?.[0];
     expect(frame).toBeDefined();
-    const dealInfo = findDealDamageInClauses(frame!.clauses);
+    const dealInfo = findDealDamageInClauses(frame!.clause);
     expect(dealInfo).toBeDefined();
     expect(dealInfo!.element).toBeDefined();
   });

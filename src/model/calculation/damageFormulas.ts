@@ -356,17 +356,17 @@ export function getCorrosionInitialMultiplier(stacks: StatusLevel): number {
 
 /**
  * Corrosion resistance reduction table by stacks.
- * Returns { initial, max } reduction values (flat, not percentage).
+ * Values are decimal multipliers (0.036 = 3.6% reduction).
  *
- * Stacks   |  1       |  2       |  3      |  4
- * Initial  |  3.6     |  4.8     |  6      |  7.2
- * Maximum  | 12       | 16       | 20      | 24
+ * Stacks   |  1       |  2       |  3       |  4
+ * Initial  |  0.036   |  0.048   |  0.06    |  0.072
+ * Maximum  |  0.12    |  0.16    |  0.20    |  0.24
  */
 const CORROSION_REDUCTION: Record<StatusLevel, { initial: number; max: number }> = {
-  1: { initial: 3.6, max: 12 },
-  2: { initial: 4.8, max: 16 },
-  3: { initial: 6, max: 20 },
-  4: { initial: 7.2, max: 24 },
+  1: { initial: 0.036, max: 0.12 },
+  2: { initial: 0.048, max: 0.16 },
+  3: { initial: 0.06, max: 0.20 },
+  4: { initial: 0.072, max: 0.24 },
 };
 
 /**
@@ -378,6 +378,13 @@ export function getCorrosionBaseReduction(stacks: StatusLevel, elapsedSeconds: n
   if (elapsedSeconds >= 10) return max;
   if (elapsedSeconds <= 0) return initial;
   return initial + (max - initial) * (elapsedSeconds / 10);
+}
+
+/** Initial / max reduction values for a corrosion stack count.
+ *  Exposed so consumers (e.g. merge-floor offset math) can compute the
+ *  equivalent ramp time for a given reduction value. */
+export function getCorrosionReductionRange(stacks: StatusLevel): { initial: number; max: number } {
+  return CORROSION_REDUCTION[stacks];
 }
 
 /**
@@ -405,14 +412,15 @@ export function getCorrosionReduction(
 // ── Scorching Heart (Ignored Resistance) ────────────────────────────────────
 
 /**
- * Heat Resistance points ignored by Laevatain's Scorching Heart talent.
- * E0 (talent 0–1): 10, E1 (talent 2): 15, E3 (talent 3): 20.
+ * Heat Resistance ignored by Laevatain's Scorching Heart talent.
+ * Decimal multiplier (0.10 = 10% ignored).
+ * E0 (talent 0–1): 0.10, E1 (talent 2): 0.15, E3 (talent 3): 0.20.
  */
 const SCORCHING_HEART_IGNORED: Record<TalentLevel, number> = {
-  0: 10,
-  1: 10,
-  2: 15,
-  3: 20,
+  0: 0.10,
+  1: 0.10,
+  2: 0.15,
+  3: 0.20,
 };
 
 export function getScorchingHeartIgnoredResistance(talentLevel: TalentLevel): number {

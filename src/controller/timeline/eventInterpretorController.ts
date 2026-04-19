@@ -76,7 +76,7 @@ import { STATE_TO_COLUMN } from './triggerIndex';
 import { DerivedEventController } from './derivedEventController';
 import type { QueueFrame } from './eventQueueTypes';
 import type { LoadoutProperties } from '../../view/InformationPane';
-import type { FrameClausePredicate, FrameClauseEffect } from '../../model/event-frames/skillEventFrame';
+import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
 
 const STATUS_LABELS: Record<string, string> = getAllStatusLabels();
 const SKILL_COLUMN_SET: ReadonlySet<string> = new Set(SKILL_COLUMN_ORDER);
@@ -419,35 +419,31 @@ function bakeStaggerVaryByOnSegments(
     if (!seg.frames || seg.frames.length === 0) return seg;
     let segModified = false;
     const newFrames = seg.frames.map((f): EventFrameMarker => {
-      if (!f.clauses || f.clauses.length === 0) return f;
+      if (!f.clause || f.clause.length === 0) return f;
       let frameModified = false;
-      const newClauses = f.clauses.map((clause): FrameClausePredicate => {
+      const newClauses = f.clause.map((clause): FrameClausePredicate => {
         if (!clause.effects) return clause;
         let clauseModified = false;
-        const newEffects = clause.effects.map((eff): FrameClauseEffect => {
-          const dsl = eff.dslEffect;
-          if (!dsl || dsl.verb !== VerbType.DEAL || dsl.object !== NounType.STAGGER) return eff;
+        const newEffects = clause.effects.map((dsl): Effect => {
+          if (dsl.verb !== VerbType.DEAL || dsl.object !== NounType.STAGGER) return dsl;
           const v = (dsl.with as { value?: ValueNode } | undefined)?.value;
-          if (!v || !isValueVariable(v) || !Array.isArray(v.value)) return eff;
+          if (!v || !isValueVariable(v) || !Array.isArray(v.value)) return dsl;
           let index: number | undefined;
           if (v.object === NounType.TALENT_LEVEL) index = talentLevel;
           else if (v.object === NounType.POTENTIAL) index = potential;
-          if (index == null) return eff;
+          if (index == null) return dsl;
           const clamped = Math.max(0, Math.min(index, v.value.length - 1));
           const resolved = v.value[clamped] ?? 0;
           clauseModified = true;
           return {
-            ...eff,
-            dslEffect: {
-              ...dsl,
-              with: { ...dsl.with, value: { verb: VerbType.IS, value: resolved } },
-            },
+            ...dsl,
+            with: { ...dsl.with, value: { verb: VerbType.IS, value: resolved } },
           };
         });
         if (clauseModified) { frameModified = true; return { ...clause, effects: newEffects }; }
         return clause;
       });
-      if (frameModified) { segModified = true; return { ...f, clauses: newClauses }; }
+      if (frameModified) { segModified = true; return { ...f, clause: newClauses }; }
       return f;
     });
     return segModified ? { ...seg, frames: newFrames } : seg;
@@ -702,18 +698,16 @@ export class EventInterpretorController {
     let mutated = false;
     const out: FrameClausePredicate[] = clauses.map((pred) => {
       let effectsMutated = false;
-      const nextEffects: FrameClauseEffect[] = pred.effects.map((fe) => {
-        const eff = fe.dslEffect;
-        if (!eff || eff.verb !== VerbType.APPLY) return fe;
-        if (eff.with?.duration != null) return fe;
+      const nextEffects: Effect[] = pred.effects.map((eff) => {
+        if (eff.verb !== VerbType.APPLY) return eff;
+        if (eff.with?.duration != null) return eff;
         const resolvedCol = resolveEffectColumnId(eff.object, eff.objectId, eff.objectQualifier);
-        if (resolvedCol !== wrapperColumnId) return fe;
+        if (resolvedCol !== wrapperColumnId) return eff;
         effectsMutated = true;
-        const patched: Effect = {
+        return {
           ...eff,
           with: { ...(eff.with ?? {}), duration: durationNode },
         };
-        return { ...fe, dslEffect: patched };
       });
       if (!effectsMutated) return pred;
       mutated = true;
@@ -824,9 +818,7 @@ export class EventInterpretorController {
       : clauses;
     let executedCount = 0;
     for (const pred of accepted) {
-      for (const ef of pred.effects) {
-        if (!ef.dslEffect) continue;
-        const dsl = ef.dslEffect;
+      for (const dsl of pred.effects) {
 
         // Frame-scoped APPLY STAT — track deltas so they reverse after
         // the snapshot pass. Only enabled for the ON_FRAME hook; skill
@@ -892,7 +884,36 @@ export class EventInterpretorController {
     this.triggerUsageCount.clear();
     this._statReversals = undefined;
     this._lifecycleStatTotals = undefined;
+    // Register the clamp callback so columns (e.g. ReactionColumn on merge)
+    // can fire orphan APPLY STAT reversals scheduled past the clamp frame.
+    controller.setStatReversalClamper(this.clampStatReversalsForColumn.bind(this));
     this.applyOptions(options);
+  }
+
+  /**
+   * Fire (and remove) every pending APPLY STAT reversal whose
+   * sourceColumnId+entityId matches and whose scheduled frame is past
+   * `clampFrame`. Called by columns when an event is clamped (e.g.
+   * corrosion merge): the clamped event's already-fired segment APPLYs
+   * scheduled their reverses at the original (pre-clamp) parentSegmentEndFrame
+   * and would otherwise leave stat contributions hanging until the original
+   * end frame, double-stacking with the merged event's APPLYs.
+   */
+  public clampStatReversalsForColumn(columnId: string, ownerEntityId: string, clampFrame: number): void {
+    if (!this._statReversals?.length || !this.controller.hasStatAccumulator()) return;
+    let i = 0;
+    while (i < this._statReversals.length) {
+      const r = this._statReversals[i];
+      if (r.sourceColumnId === columnId && r.entityId === ownerEntityId && r.frame > clampFrame) {
+        this.controller.applyStatDelta(r.entityId, { [r.stat]: r.value });
+        this.controller.popStatSource(r.entityId, r.stat);
+        // Swap-remove from pending.
+        this._statReversals[i] = this._statReversals[this._statReversals.length - 1];
+        this._statReversals.length--;
+      } else {
+        i++;
+      }
+    }
   }
 
   /**
@@ -2390,8 +2411,9 @@ export class EventInterpretorController {
             properties: { duration: effectiveDuration, name: label },
             frames: [{
               offsetFrame: 0,
+              properties: { offset: { value: 0, unit: UnitType.SECOND } },
               damageElement: ElementType.PHYSICAL,
-              clauses: [buildDealDamageClause({
+              clause: [buildDealDamageClause({
                 multiplier: LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER,
                 element: ElementType.PHYSICAL,
                 mainStat: 'ATTACK' as DamageScalingStatType,
@@ -2479,8 +2501,9 @@ export class EventInterpretorController {
             properties: { duration: effectiveDuration, name: STATUS_LABELS[PhysicalStatusType.CRUSH] },
             frames: [{
               offsetFrame: 0,
+              properties: { offset: { value: 0, unit: UnitType.SECOND } },
               damageElement: ElementType.PHYSICAL,
-              clauses: [buildDealDamageClause({ multiplier: damageMultiplier, element: ElementType.PHYSICAL })],
+              clause: [buildDealDamageClause({ multiplier: damageMultiplier, element: ElementType.PHYSICAL })],
             }],
           }],
         },
@@ -2563,8 +2586,9 @@ export class EventInterpretorController {
             properties: { duration: durationFrames, name: STATUS_LABELS[PhysicalStatusType.BREACH] },
             frames: [{
               offsetFrame: 0,
+              properties: { offset: { value: 0, unit: UnitType.SECOND } },
               damageElement: ElementType.PHYSICAL,
-              clauses: [buildDealDamageClause({ multiplier: damageMultiplier, element: ElementType.PHYSICAL })],
+              clause: [buildDealDamageClause({ multiplier: damageMultiplier, element: ElementType.PHYSICAL })],
             }],
           }],
         },
@@ -2628,8 +2652,9 @@ export class EventInterpretorController {
         properties: { duration: dur, name: resolveEventLabel(shatter) },
         frames: [{
           offsetFrame: 0,
+          properties: { offset: { value: 0, unit: UnitType.SECOND } },
           damageElement: ElementType.PHYSICAL,
-          clauses: [buildDealDamageClause({ multiplier: shatterMultiplier, element: ElementType.PHYSICAL })],
+          clause: [buildDealDamageClause({ multiplier: shatterMultiplier, element: ElementType.PHYSICAL })],
         }],
       }];
     }
@@ -2935,7 +2960,7 @@ export class EventInterpretorController {
     }
 
     // ── 3. Clause loop — all effects through interpret() ─────────────
-    if (frame.clauses) {
+    if (frame.clause) {
       // Compute segment end frame for EXTEND UNTIL END OF SEGMENT
       const parentEventEnd = event.startFrame + eventDuration(event);
       let parentSegEnd = parentEventEnd;
@@ -2973,7 +2998,7 @@ export class EventInterpretorController {
         && !SKILL_COLUMN_SET.has(event.columnId);
       // Pre-resolve the CHANCE pin from the override store (same as isCrit pin
       // at line ~2700). doChance reads ctx.chancePin directly — no UID lookup.
-      const resolvedChancePin = hasChanceClause(frame.clauses)
+      const resolvedChancePin = hasChanceClause(frame.clause)
         ? this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isChance
         : undefined;
       const interpretCtx: InterpretContext = {
@@ -2986,7 +3011,12 @@ export class EventInterpretorController {
         potential: pot,
         parentEventEndFrame: parentEventEnd,
         parentSegmentEndFrame: parentSegEnd,
-        sourceFrameKey: hasDealDamageClause(frame.clauses)
+        // Carry the parent status's column id so any APPLY STAT in this
+        // frame's clause tags its scheduled reversal with the column —
+        // lets ReactionColumn / RESET-status clamps target reversals owned
+        // by THIS column when an event gets clamped (corrosion merge).
+        ...(entry.statusId ? { parentStatusId: entry.statusId } : {}),
+        sourceFrameKey: hasDealDamageClause(frame.clause)
           ? `${event.uid}:${si}:${fi}` : undefined,
         ...(resolvedChancePin != null ? { chancePin: resolvedChancePin } : {}),
         ...(hasSuppliedParams ? { suppliedParameters: resolvedParams } : {}),
@@ -3016,21 +3046,30 @@ export class EventInterpretorController {
       // through the standard `with.*` override channel — no flag, no implicit
       // parent lookback at read time.
       const dispatchClauses = !SKILL_COLUMN_SET.has(event.columnId)
-        ? this.injectWrapperDuration(frame.clauses, event.columnId, parentSegEnd, absFrame)
-        : frame.clauses;
+        ? this.injectWrapperDuration(frame.clause, event.columnId, parentSegEnd, absFrame)
+        : frame.clause;
       // For wrapper events whose owner is the target (e.g. enemy-owned
       // freeform VULNERABLE authored by an operator), the actor slot is
       // the source operator's slot, not the owner — reactive triggers
       // with `THIS OPERATOR` subject filters must match against the actor.
+      // Segment-clause dispatches reuse this PROCESS_FRAME path but must
+      // skip frame-scoped APPLY STAT reversal (doApply already schedules a
+      // long-lived reversal at parentSegmentEndFrame) and reactive triggers
+      // (those belong to author-frame hooks). See QueueFrame.isSegmentClauseDispatch.
+      const isSegPassive = entry.isSegmentClauseDispatch === true;
       const { anyMatched, acceptedClauses } = this.dispatchClauseFrame(
         dispatchClauses, frame.clauseType, interpretCtx, condCtx,
         event.ownerEntityId, event.id, newEntries,
-        { fireReactiveTriggers: true, trackStatReversals: true, actorSlotId: routed.sourceSlotId },
+        {
+          fireReactiveTriggers: !isSegPassive,
+          trackStatReversals: !isSegPassive,
+          actorSlotId: routed.sourceSlotId,
+        },
       );
       // Narrow frame clauses to only matched predicates so the damage table
       // builder sees the correct multiplier (e.g. HP-gated NOT clauses).
-      if (acceptedClauses !== frame.clauses && acceptedClauses !== dispatchClauses) {
-        (frame as { clauses: readonly FrameClausePredicate[] }).clauses = acceptedClauses;
+      if (acceptedClauses !== frame.clause && acceptedClauses !== dispatchClauses) {
+        (frame as { clause: readonly FrameClausePredicate[] }).clause = acceptedClauses;
       }
       // If no clause matched, mark frame as skipped so the damage table builder skips it
       if (!anyMatched) {
@@ -3040,7 +3079,7 @@ export class EventInterpretorController {
 
 
     // ── 3c. Snapshot stat deltas for damage frames (captures runtime APPLY STAT effects)
-    if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clauses) && !frame.frameSkipped) {
+    if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clause) && !frame.frameSkipped) {
       const frameKey = `${event.uid}:${si}:${fi}`;
       this.controller.snapshotStatDeltas(frameKey, event.ownerEntityId);
       // Also snapshot source operator's slot deltas when the owner differs (e.g. team-owned
@@ -3069,7 +3108,7 @@ export class EventInterpretorController {
     }
 
     // ── 3d. Crit resolution for damage frames (stat accumulator + trigger emission)
-    if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clauses)) {
+    if (this.controller.hasStatAccumulator() && hasDealDamageClause(frame.clause)) {
       const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
       if (!isDot) {
         const pin = this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isCritical;
@@ -3090,7 +3129,7 @@ export class EventInterpretorController {
         }
         // Populate frame.isChance from the override store (same pattern as isCrit).
         // Only written when the frame carries a CHANCE compound.
-        if (hasChanceClause(frame.clauses)) {
+        if (hasChanceClause(frame.clause)) {
           const chancePin = this.overrides?.[buildOverrideKey(event)]?.segments?.[si]?.frames?.[fi]?.isChance;
           // Same pattern as isCrit: explicit pin always persists (settable in
           // any mode). Mode only provides the default for unpinned frames.
@@ -3123,7 +3162,7 @@ export class EventInterpretorController {
     // run doDeal to apply damage to every operator slot. NOTE: this does NOT
     // call checkReactiveTriggers — the dsl loop above already fired it.
     if (event.ownerEntityId === ENEMY_ID && event.columnId === ENEMY_ACTION_COLUMN_ID) {
-      const dealInfo = findDealDamageInClauses(frame.clauses);
+      const dealInfo = findDealDamageInClauses(frame.clause);
       if (dealInfo) {
         const dealCtx: InterpretContext = {
           frame: absFrame,
@@ -3156,7 +3195,7 @@ export class EventInterpretorController {
 
     // Propagate source frame key to all outgoing trigger entries so trigger-chain
     // statuses inherit the originating damage frame's identity.
-    const sourceFrameKey = hasDealDamageClause(frame.clauses)
+    const sourceFrameKey = hasDealDamageClause(frame.clause)
       ? `${event.uid}:${si}:${fi}` : undefined;
     if (sourceFrameKey) {
       for (const ne of newEntries) ne.sourceFrameKey = sourceFrameKey;
@@ -3391,7 +3430,9 @@ export class EventInterpretorController {
             qf.sourceEvent = statusEv;
             qf.segmentIndex = si;
             qf.frameIndex = -1;
-            qf.frameMarker = { offsetFrame: 0, clauses: parsedSegClauses, clauseType: defSegClauseType } as unknown as EventFrameMarker;
+            qf.frameMarker = { offsetFrame: 0, properties: { offset: { value: 0, unit: UnitType.SECOND } }, clause: parsedSegClauses, clauseType: defSegClauseType } as unknown as EventFrameMarker;
+            // Segment-passive dispatch — see QueueFrame.isSegmentClauseDispatch.
+            qf.isSegmentClauseDispatch = true;
             this.pendingExitFrames.push(qf);
           }
         }
@@ -3451,7 +3492,7 @@ export class EventInterpretorController {
             ...(statusEv.consumedStacks != null ? { consumedStacks: statusEv.consumedStacks } : {}),
             ...(statusEv.triggerEntityId != null ? { triggerEntityId: statusEv.triggerEntityId } : {}),
           };
-          if (fm.clauses) {
+          if (fm.clause) {
             const condCtx: ConditionContext = {
               events: this.getAllEvents(),
               frame: absFrame,
@@ -3465,7 +3506,7 @@ export class EventInterpretorController {
             // frame-scoped stat reversals (status-clause stat tracking is
             // separate and runs above against statusDef.clause).
             this.dispatchClauseFrame(
-              fm.clauses, fm.clauseType, frameCtx, condCtx,
+              fm.clause, fm.clauseType, frameCtx, condCtx,
               statusEv.ownerEntityId, statusEv.id, this._processFrameOut,
               { fireReactiveTriggers: false, trackStatReversals: false },
             );
@@ -3475,7 +3516,7 @@ export class EventInterpretorController {
             // before DEAL DAMAGE in the same 0s frame (e.g. Razor Clawmark's
             // PHYSICAL_FRAGILITY + PHYSICAL DEAL DAMAGE) would silently
             // show 0 contribution to the first tick.
-            if (this.controller.hasStatAccumulator() && hasDealDamageClause(fm.clauses)) {
+            if (this.controller.hasStatAccumulator() && hasDealDamageClause(fm.clause)) {
               const frameKey = `${statusEv.uid}:${si}:${fi}`;
               this.controller.snapshotStatDeltas(frameKey, statusEv.ownerEntityId);
               // Also snapshot source operator's slot deltas when the owner differs (e.g. team-owned

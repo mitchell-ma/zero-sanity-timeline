@@ -238,9 +238,28 @@ export function exportMultiLoadoutBundle(
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'endfield-timeline.json';
+  a.download = buildBundleFilename(selectedArr, tree);
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function buildBundleFilename(selectedLoadoutIds: string[], tree: LoadoutTree): string {
+  const ts = formatLocalTimestamp(new Date());
+  if (selectedLoadoutIds.length === 1) {
+    const node = tree.nodes.find((n) => n.id === selectedLoadoutIds[0]);
+    if (node) return `${sanitizeFilename(node.name)}-${ts}.json`;
+  }
+  return `zero-sanity-simulations-${ts}.json`;
+}
+
+function sanitizeFilename(name: string): string {
+  const cleaned = name.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, ' ').trim();
+  return cleaned || 'loadout';
+}
+
+function formatLocalTimestamp(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`;
 }
 
 export function validateMultiLoadoutBundle(raw: unknown): BundleLoadResult {

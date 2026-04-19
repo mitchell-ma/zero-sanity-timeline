@@ -12,10 +12,10 @@ import { useCombatState } from './useCombatState';
 import type { Orientation } from '../utils/axisMap';
 import { LoadoutProperties } from '../view/InformationPane';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
-import { ALL_OPERATORS, getUltimateEnergyCost } from '../controller/operators/operatorRegistry';
+import { ALL_OPERATORS, getUltimateEnergyCost, getUltimateEnergyCostForPotential } from '../controller/operators/operatorRegistry';
 import { hasDealDamageClause } from '../controller/timeline/clauseQueries';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
-import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
+import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, Column, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
 import { processCombatSimulation, getLastStatAccumulator } from '../controller/timeline/eventQueueController';
@@ -37,8 +37,9 @@ import {
   serializeSheet,
   clearLocalStorage,
   importMultiLoadoutFile,
+  exportMultiLoadoutBundle,
 } from '../utils/sheetStorage';
-import { decodeEmbed, getEmbedParams } from '../utils/embedCodec';
+import { decodeEmbed, getEmbedParams, buildShareUrl, detectCustomContent } from '../utils/embedCodec';
 import {
   SLOT_IDS,
   INITIAL_OPERATORS,
@@ -63,7 +64,18 @@ import {
   renameNode,
   uniqueName,
   mergeBundle,
+  setLoadoutViews,
+  clearLoadoutViews,
+  resolveSourceLoadoutId,
+  isReadOnlyNode,
+  type ViewSelections,
 } from '../utils/loadoutStorage';
+import { generateViewPermutations, type ViewSlotContext } from '../utils/viewPermutations';
+import { computeAllValidations } from '../controller/timeline/eventValidationController';
+import { validateResources } from '../controller/timeline/eventValidator';
+import { getWeapon } from '../controller/gameDataStore';
+import { ViewVariableType } from '../consts/enums';
+import type { SheetData } from '../utils/sheetStorage';
 import { useTreeHistory } from '../utils/useTreeHistory';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useCombatLoadout } from './useCombatLoadout';
@@ -83,7 +95,7 @@ import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyCo
 import { StatType, DamageType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType, ColumnType, LoadoutNodeType } from '../consts/enums';
 import { buildOverrideKey } from '../controller/overrideController';
 import type { MoveContext } from '../controller/combatStateController';
-import { setRuntimeCritMode } from '../controller/combatStateController';
+import { setRuntimeCritMode, bumpCritModeGeneration } from '../controller/combatStateController';
 import { applyEventOverrides, applyJsonOverrides } from '../controller/timeline/overrideApplicator';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
 import { COMBO_WINDOW_COLUMN_ID, ultimateGraphKey } from '../model/channels';
@@ -131,6 +143,77 @@ function initLoadouts() {
 }
 
 const initialLoadouts = initLoadouts();
+
+/**
+ * Apply a per-slot view override on top of a parent loadout's SheetData.
+ * Pins potential and weapon skill 3 level on `loadoutProperties` AND recomputes
+ * the per-slot ultimate-energy `resourceConfigs.max`, since the cost is
+ * potential-dependent and is otherwise frozen at the parent's value.
+ */
+function applyViewOverride(parent: SheetData, override: import('../utils/loadoutStorage').ViewOverride): SheetData {
+  const nextLoadoutProperties = { ...parent.loadoutProperties };
+  const nextResourceConfigs = { ...(parent.resourceConfigs ?? {}) };
+
+  for (const [slotId, slotOverride] of Object.entries(override)) {
+    const baseProps = nextLoadoutProperties[slotId] ?? INITIAL_LOADOUT_PROPERTIES[slotId];
+    if (!baseProps) continue;
+    const operatorPotential = slotOverride[ViewVariableType.OPERATOR_POTENTIAL];
+    const weaponSkill3Level = slotOverride[ViewVariableType.WEAPON_SKILL_3_LEVEL];
+    nextLoadoutProperties[slotId] = {
+      ...baseProps,
+      operator: {
+        ...baseProps.operator,
+        ...(operatorPotential !== undefined ? { potential: operatorPotential } : {}),
+      },
+      weapon: {
+        ...baseProps.weapon,
+        ...(weaponSkill3Level !== undefined ? { skill3Level: weaponSkill3Level } : {}),
+      },
+    };
+
+    // Recompute ultimate energy cost (graph max) when potential changes.
+    if (operatorPotential !== undefined) {
+      const slotIdx = SLOT_IDS.indexOf(slotId);
+      const opId = slotIdx >= 0 ? parent.operatorIds[slotIdx] : null;
+      if (opId) {
+        const newCost = getUltimateEnergyCostForPotential(opId, operatorPotential as 0 | 1 | 2 | 3 | 4 | 5)
+          ?? getUltimateEnergyCost(opId);
+        if (newCost > 0) {
+          const ultKey = `${slotId}-${NounType.ULTIMATE}`;
+          const existing = nextResourceConfigs[ultKey];
+          nextResourceConfigs[ultKey] = existing
+            ? { ...existing, max: newCost, startValue: Math.min(existing.startValue, newCost) }
+            : { startValue: newCost, max: newCost, regenPerSecond: 0 };
+        }
+      }
+    }
+  }
+
+  return { ...parent, loadoutProperties: nextLoadoutProperties, resourceConfigs: nextResourceConfigs };
+}
+
+/** Build per-slot view context (operator name + weapon skill3 availability + current pinned values) from a SheetData. */
+function buildSlotContexts(data: SheetData): ViewSlotContext[] {
+  const ctxs: ViewSlotContext[] = [];
+  for (let i = 0; i < SLOT_IDS.length; i++) {
+    const slotId = SLOT_IDS[i];
+    const operatorId = data.operatorIds[i];
+    const operator = operatorId ? ALL_OPERATORS.find((op) => op.id === operatorId) : null;
+    const weaponId = data.loadouts[slotId]?.weaponId;
+    const weapon = weaponId ? getWeapon(weaponId) : null;
+    const props = data.loadoutProperties?.[slotId];
+    const currentPotential = props?.operator.potential ?? (operator && operator.rarity >= 6 ? 0 : 5);
+    const currentSkill3Level = props?.weapon.skill3Level ?? 9;
+    ctxs.push({
+      slotId,
+      operatorName: operator?.name ?? '',
+      hasWeaponSkill3: !!weapon && weapon.skills.length >= 3,
+      currentPotential,
+      currentSkill3Level,
+    });
+  }
+  return ctxs;
+}
 
 // ── Master hook ──────────────────────────────────────────────────────────────
 
@@ -265,6 +348,7 @@ export function useApp() {
   const handleSelectEventIdsConsumed = useCallback(() => setSelectEventIds(undefined), []);
   const [exportModalOpen,  setExportModalOpen]  = useState(false);
   const [saveFlash,        setSaveFlash]        = useState(false);
+  const [urlCopiedFlash,   setUrlCopiedFlash]   = useState(false);
   const [confirmClearLoadout, setConfirmClearLoadout] = useState(false);
   const [confirmClearAll,  setConfirmClearAll]  = useState(false);
   useEffect(() => {
@@ -276,6 +360,7 @@ export function useApp() {
 
   const interactionModeRef = useRef(InteractionModeType.STRICT);
   interactionModeRef.current = interactionMode;
+  const isViewActiveRef = useRef(false);
   const slotOperatorMapRef = useRef<Record<string, string>>({});
   useEffect(() => {
     try { localStorage.setItem('zst-interaction-mode', interactionMode); } catch { /* ignore */ }
@@ -819,15 +904,88 @@ export function useApp() {
     );
   }, [operators, enemy, enemyStats, events, loadouts, loadoutProperties, visibleSkills, resourceConfigs, overrides]);
 
-  useAutoSave(buildSheetData);
+  // Derived: is the active loadout a read-only view permutation?
+  const activeNode = useMemo(
+    () => (activeLoadoutId ? loadoutTree.nodes.find((n) => n.id === activeLoadoutId) ?? null : null),
+    [activeLoadoutId, loadoutTree],
+  );
+  const isViewActive = isReadOnlyNode(activeNode);
+  isViewActiveRef.current = isViewActive;
+
+  // Eager validation for view loadouts under the *currently scoped parent*
+  // (the active LOADOUT, or the parent of the active LOADOUT_VIEW). For each
+  // sibling view, we approximate validation by reusing the parent's processed
+  // events + non-resource validation maps and swapping the per-slot ultimate
+  // energy max with the view's potential-derived cost — the only validator
+  // affected by view overrides in practice.
+  const [viewWarningMap, setViewWarningMap] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (!activeLoadoutId) return;
+    const node = loadoutTree.nodes.find((n) => n.id === activeLoadoutId);
+    const parentLoadoutId = node?.type === LoadoutNodeType.LOADOUT
+      ? node.id
+      : node?.type === LoadoutNodeType.LOADOUT_VIEW ? node.viewParentId : undefined;
+    if (!parentLoadoutId) return;
+
+    const views = loadoutTree.nodes.filter(
+      (n) => n.parentId === parentLoadoutId && n.type === LoadoutNodeType.LOADOUT_VIEW,
+    );
+    if (views.length === 0) return;
+
+    const parentValidations = computeAllValidations(allProcessedEvents, slots, resourceGraphs, staggerBreaks, null);
+    let parentNonResourceInvalid = false;
+    for (const [k, m] of Object.entries(parentValidations.maps)) {
+      if (k === 'resource') continue;
+      if (m.size > 0) { parentNonResourceInvalid = true; break; }
+    }
+
+    const updates: Record<string, boolean> = {};
+    for (const view of views) {
+      if (parentNonResourceInvalid) { updates[view.id] = true; continue; }
+
+      // Build per-slot adjusted ULT graph from view override
+      const adjustedGraphs = new Map(resourceGraphs);
+      if (view.viewOverride) {
+        for (const [slotId, slotOverride] of Object.entries(view.viewOverride)) {
+          const newPotential = slotOverride[ViewVariableType.OPERATOR_POTENTIAL];
+          if (newPotential === undefined) continue;
+          const slotIdx = SLOT_IDS.indexOf(slotId);
+          const opId = slotIdx >= 0 ? operators[slotIdx]?.id : null;
+          if (!opId) continue;
+          const newCost = getUltimateEnergyCostForPotential(opId, newPotential as 0 | 1 | 2 | 3 | 4 | 5)
+            ?? getUltimateEnergyCost(opId);
+          const ultKey = `${slotId}-${NounType.ULTIMATE}`;
+          const baseGraph = resourceGraphs.get(ultKey);
+          if (baseGraph && newCost > 0) {
+            adjustedGraphs.set(ultKey, { ...baseGraph, max: newCost });
+          }
+        }
+      }
+
+      const viewResources = validateResources(allProcessedEvents, adjustedGraphs, slots);
+      updates[view.id] = viewResources.size > 0;
+    }
+
+    setViewWarningMap((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const [id, v] of Object.entries(updates)) {
+        if (next[id] !== v) { next[id] = v; changed = true; }
+      }
+      return changed ? next : prev;
+    });
+  }, [activeLoadoutId, loadoutTree, allProcessedEvents, slots, resourceGraphs, staggerBreaks, operators]);
+
+  useAutoSave(buildSheetData, isViewActive);
 
   useEffect(() => {
     if (!activeLoadoutId || isCommunityLoadoutId(activeLoadoutId)) return;
+    if (isViewActive) return; // never persist derived view sheets
     const timer = setTimeout(() => {
       saveLoadoutData(activeLoadoutId, buildSheetData());
     }, 600);
     return () => clearTimeout(timer);
-  }, [buildSheetData, activeLoadoutId]);
+  }, [buildSheetData, activeLoadoutId, isViewActive]);
 
   // ─── Scroll sync ─────────────────────────────────────────────────────────
   const handleDmgScrollRef = useCallback((el: HTMLDivElement | null) => {
@@ -1049,6 +1207,7 @@ export function useApp() {
     atFrame: number,
     defaultSkill: { id?: string; name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceEntityId?: string; sourceSkillId?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown>; segmentOrigin?: number[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>; parameterValues?: Record<string, number>; statusLevel?: number } | null,
   ) => {
+    if (isViewActiveRef.current) return; // view loadouts are read-only
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerEntityId}:${columnId}`)) return;
     // Resolve sourceEntityId from slot → operator id before allocation so the
@@ -1098,6 +1257,7 @@ export function useApp() {
   }, []);
 
   const handleUpdateEvent = useCallback((id: string, updates: Partial<TimelineEvent>) => {
+    if (isViewActiveRef.current) return;
     const isStrict = interactionModeRef.current === InteractionModeType.STRICT;
     const processed = isStrict ? processedEventsRef.current : null;
     setCombatState((prev) => ctrl.updateEvent(prev, id, updates, { isStrict, processed }));
@@ -1106,6 +1266,7 @@ export function useApp() {
 
 
   const handleMoveEvent = useCallback((id: string, newStartFrame: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => {
+    if (isViewActiveRef.current) return;
     const isStrict = strictOverride ?? interactionModeRef.current === InteractionModeType.STRICT;
     const processed = isStrict ? processedEventsRef.current : null;
     const moveCtx: MoveContext = { isStrict, processed, overlapExemptIds };
@@ -1115,6 +1276,7 @@ export function useApp() {
 
   const handleMoveEvents = useCallback((ids: string[], delta: number, overlapExemptIds?: Set<string>, strictOverride?: boolean) => {
     if (delta === 0) return;
+    if (isViewActiveRef.current) return;
     const isStrict = strictOverride ?? interactionModeRef.current === InteractionModeType.STRICT;
     const processed = isStrict ? processedEventsRef.current : null;
     const moveCtx: MoveContext = { isStrict, processed, overlapExemptIds };
@@ -1123,12 +1285,14 @@ export function useApp() {
   }, [validEvents, ctrl, setCombatState]);
 
   const handleRemoveEvent = useCallback((id: string) => {
+    if (isViewActiveRef.current) return;
     setCombatState((prev) => ctrl.removeEvent(prev, id, validEvents));
     setEditingEventId((cur) => (cur === id ? null : cur));
     setContextMenu(null);
   }, [validEvents, ctrl, setCombatState]);
 
   const handleRemoveEvents = useCallback((ids: string[]) => {
+    if (isViewActiveRef.current) return;
     const idSet = new Set(ids);
     setCombatState((prev) => ctrl.removeEvents(prev, ids, validEvents));
     setEditingEventId((cur) => (cur && idSet.has(cur) ? null : cur));
@@ -1136,6 +1300,7 @@ export function useApp() {
   }, [validEvents, ctrl, setCombatState]);
 
   const handleDuplicateEvents = useCallback((sourceEvents: TimelineEvent[], frameOffset: number): string[] => {
+    if (isViewActiveRef.current) return [];
     const newUids: string[] = [];
     const clones: TimelineEvent[] = [];
     for (const src of sourceEvents) {
@@ -1236,7 +1401,7 @@ export function useApp() {
         if (!seg.frames) continue;
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const frame = seg.frames[fi];
-          if (!hasDealDamageClause(frame.clauses)) continue;
+          if (!hasDealDamageClause(frame.clause)) continue;
           if (frame.damageType === DamageType.DAMAGE_OVER_TIME) continue;
           const isCrit = Math.random() < critRate;
           (isCrit ? critTargets : noCritTargets).push({ target: ev, segmentIndex: si, frameIndex: fi });
@@ -1253,6 +1418,9 @@ export function useApp() {
       if (noCritTargets.length > 0) state = ctrl.setCritPins(state, noCritTargets, false);
       return state;
     });
+    // Bump the crit generation so downstream memoized caches (PixiJS canvas,
+    // EventBlock memo) invalidate and repaint diamonds with the new pins.
+    bumpCritModeGeneration();
   }, [ctrl, setCombatState]);
 
   const handleAddSegment = useCallback((eventUid: string, segmentLabel: string) => {
@@ -1325,18 +1493,22 @@ export function useApp() {
 
   // ─── Loadout & operator handlers ─────────────────────────────────────────
   const handleLoadoutChange = useCallback((slotId: string, loadout: OperatorLoadoutState) => {
+    if (isViewActiveRef.current) return;
     setCombatState((prev) => ctrl.setLoadout(prev, slotId, loadout));
   }, [ctrl, setCombatState]);
 
   const handleStatsChange = useCallback((slotId: string, stats: LoadoutProperties) => {
+    if (isViewActiveRef.current) return;
     setCombatState((prev) => ctrl.updateLoadoutProperties(prev, slotId, stats, SLOT_IDS));
   }, [ctrl, setCombatState]);
 
   const handleSwapOperator = useCallback((slotId: string, newOperatorId: string | null) => {
+    if (isViewActiveRef.current) return;
     setCombatState((prev) => ctrl.swapOperator(prev, slotId, newOperatorId, SLOT_IDS));
   }, [ctrl, setCombatState]);
 
   const handleSwapEnemy = useCallback((enemyId: string) => {
+    if (isViewActiveRef.current) return;
     const found = ALL_ENEMIES.find((e) => e.id === enemyId);
     if (found) {
       setCombatState((prev) => ctrl.setEnemy(prev, found, getDefaultEnemyStats(found.id)));
@@ -1344,10 +1516,12 @@ export function useApp() {
   }, [ctrl, setCombatState]);
 
   const handleEnemyStatsChange = useCallback((stats: EnemyStats) => {
+    if (isViewActiveRef.current) return;
     setCombatState((prev) => ctrl.setEnemyStats(prev, stats));
   }, [ctrl, setCombatState]);
 
   const handleResourceConfigChange = useCallback((colKey: string, config: ResourceConfig) => {
+    if (isViewActiveRef.current) return;
     if (colKey === staggerKey) {
       setCombatState((prev) => ctrl.setEnemyStats(prev, {
         ...prev.enemyStats,
@@ -1482,9 +1656,24 @@ export function useApp() {
   const handleSelectLoadout = useCallback((id: string) => {
     if (id === activeLoadoutId) return;
     if (activeLoadoutId && !isCommunityLoadoutId(activeLoadoutId)) {
-      saveLoadoutData(activeLoadoutId, buildSheetData());
+      // Skip save when leaving a view-loadout — view sheets are derived, not editable.
+      const activeNode = loadoutTree.nodes.find((n) => n.id === activeLoadoutId);
+      if (!isReadOnlyNode(activeNode)) {
+        saveLoadoutData(activeLoadoutId, buildSheetData());
+      }
     }
-    const data = loadLoadoutData(id);
+    // View-loadouts derive from their parent + an override; load the parent's sheet
+    // and apply the per-slot pinned values before resolving.
+    const targetNode = loadoutTree.nodes.find((n) => n.id === id);
+    let data: SheetData | null;
+    if (targetNode && isReadOnlyNode(targetNode) && targetNode.viewParentId) {
+      const parentData = loadLoadoutData(targetNode.viewParentId);
+      data = parentData && targetNode.viewOverride
+        ? applyViewOverride(parentData, targetNode.viewOverride)
+        : parentData;
+    } else {
+      data = loadLoadoutData(id);
+    }
     if (data) {
       const resolved = applySheetData(data);
       resetCombatState({
@@ -1518,7 +1707,7 @@ export function useApp() {
     setContextMenu(null);
     setActiveLoadoutId(id);
     saveActiveLoadoutId(id);
-  }, [activeLoadoutId, buildSheetData, resetCombatState]);
+  }, [activeLoadoutId, buildSheetData, resetCombatState, loadoutTree]);
 
   const handleDeleteLoadout = useCallback((loadoutIds: string[], _nodeId: string) => {
     for (const sid of loadoutIds) {
@@ -1571,6 +1760,49 @@ export function useApp() {
     }
   }, [activeLoadoutId, loadoutTree, handleSelectLoadout, resetLoadoutTree, resetCombatState]);
 
+  // ─── View permutations ───────────────────────────────────────────────────
+
+  /**
+   * Build the per-slot context (operator name + skill3 availability) for a
+   * loadout that we're about to permute. The source loadout may be the
+   * currently active one (use live state) or a different loadout (load from disk).
+   */
+  const getViewSlotContexts = useCallback((parentLoadoutId: string): ViewSlotContext[] | null => {
+    const useLive = parentLoadoutId === activeLoadoutId;
+    const data = useLive ? buildSheetData() : loadLoadoutData(parentLoadoutId);
+    if (!data) return null;
+    return buildSlotContexts(data);
+  }, [activeLoadoutId, buildSheetData]);
+
+  const handleCreateLoadoutViews = useCallback((parentLoadoutId: string, selections: ViewSelections) => {
+    // Resolve the source LOADOUT — if user invoked from a child view, use its parent.
+    const sourceId = resolveSourceLoadoutId(loadoutTree, parentLoadoutId);
+    if (!sourceId) return;
+    // Persist any in-flight edits to the source before computing slot contexts
+    if (sourceId === activeLoadoutId && !isViewActive) {
+      saveLoadoutData(sourceId, buildSheetData());
+    }
+    const sourceData = sourceId === activeLoadoutId ? buildSheetData() : loadLoadoutData(sourceId);
+    if (!sourceData) return;
+    const slotContexts = buildSlotContexts(sourceData);
+    const views = generateViewPermutations(selections, slotContexts);
+    const { tree: nextTree } = setLoadoutViews(loadoutTree, sourceId, selections, views);
+    setLoadoutTree(nextTree);
+    saveLoadoutTree(nextTree);
+  }, [loadoutTree, activeLoadoutId, isViewActive, buildSheetData, setLoadoutTree]);
+
+  const handleClearLoadoutViews = useCallback((parentLoadoutId: string) => {
+    const sourceId = resolveSourceLoadoutId(loadoutTree, parentLoadoutId);
+    if (!sourceId) return;
+    const { tree: nextTree, removedIds } = clearLoadoutViews(loadoutTree, sourceId);
+    setLoadoutTree(nextTree);
+    saveLoadoutTree(nextTree);
+    // If active is one of the removed views, switch to the parent loadout
+    if (activeLoadoutId && removedIds.includes(activeLoadoutId)) {
+      handleSelectLoadout(sourceId);
+    }
+  }, [loadoutTree, activeLoadoutId, handleSelectLoadout, setLoadoutTree]);
+
   const handleLoadCommunityLoadout = useCallback((communityId: string) => {
     if (communityId === activeLoadoutId) return;
     const sheetData = generateCommunityLoadout(communityId);
@@ -1605,6 +1837,43 @@ export function useApp() {
     }
     setExportModalOpen(true);
   }, [activeLoadoutId, buildSheetData]);
+
+  const handleDownloadLoadout = useCallback((loadoutId: string) => {
+    if (activeLoadoutId === loadoutId && !isCommunityLoadoutId(loadoutId)) {
+      saveLoadoutData(loadoutId, buildSheetData());
+    }
+    exportMultiLoadoutBundle(loadoutTree, new Set([loadoutId]), (id) => loadLoadoutData(id));
+  }, [activeLoadoutId, buildSheetData, loadoutTree]);
+
+  const handleShareLoadout = useCallback(async (loadoutId: string): Promise<boolean> => {
+    const node = loadoutTree.nodes.find((n) => n.id === loadoutId);
+    const name = node?.name ?? 'Shared Loadout';
+    let sheetData;
+    let shareColumns: Column[];
+    if (activeLoadoutId === loadoutId) {
+      sheetData = buildSheetData();
+      shareColumns = columns;
+    } else {
+      const stored = loadLoadoutData(loadoutId);
+      if (!stored) {
+        setWarningMessage('Loadout data not found');
+        return false;
+      }
+      sheetData = stored;
+      shareColumns = [];
+    }
+    const warning = detectCustomContent(sheetData);
+    if (warning) setWarningMessage(warning);
+    try {
+      const url = await buildShareUrl(sheetData, shareColumns, name);
+      await navigator.clipboard.writeText(url);
+      setUrlCopiedFlash(true);
+      setTimeout(() => setUrlCopiedFlash(false), 700);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [activeLoadoutId, buildSheetData, columns, loadoutTree]);
 
   const handleImport = useCallback(async () => {
     const result = await importMultiLoadoutFile();
@@ -1824,11 +2093,14 @@ export function useApp() {
     scrollSynced, showRealTime, splitPct, interactionMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
     loadoutRowHeight, headerRowHeight, selectEventIds,
     settings, settingsOpen,
-    devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
+    devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash, urlCopiedFlash,
 
     // Loadout tree
     loadoutTree, activeLoadoutId, sidebarCollapsed,
-    readOnly: isCommunityLoadoutId(activeLoadoutId),
+    readOnly: isCommunityLoadoutId(activeLoadoutId) || isViewActive,
+    isViewActive,
+    getViewSlotContexts,
+    viewWarningMap,
 
     // Refs
     appBodyRef, sidebarRef,
@@ -1848,7 +2120,9 @@ export function useApp() {
     // Loadout tree handlers
     handleLoadoutTreeChange, handleNewLoadout, handleDuplicateLoadout, handleSelectLoadout, handleDeleteLoadout,
     handleLoadCommunityLoadout,
+    handleCreateLoadoutViews, handleClearLoadoutViews,
     handleExport, handleImport, handleClearLoadout, handleClearAll, handleRenameActiveLoadout,
+    handleDownloadLoadout, handleShareLoadout,
     handleToggleSidebar,
 
     // UI handlers

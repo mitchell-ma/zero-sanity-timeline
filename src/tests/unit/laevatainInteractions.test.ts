@@ -217,8 +217,8 @@ describe('B2. Melting Flame Consumption', () => {
     const sequences = getSequences('SMOULDERING_FIRE_EMPOWERED');
     const frames = sequences[0].getFrames();
     const lastFrame = frames[frames.length - 1];
-    const consumeEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.CONSUME && e.dslEffect?.object === NounType.STATUS);
-    expect(consumeEffect?.dslEffect?.objectId).toBe('MELTING_FLAME');
+    const consumeEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.verb === VerbType.CONSUME && e.object === NounType.STATUS);
+    expect(consumeEffect?.objectId).toBe('MELTING_FLAME');
   });
 
   test('B2.3: Full pipeline with empowered BS consumes MF and re-accumulates', () => {
@@ -251,9 +251,9 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     // Single-segment skill — get all frames
     const frames = sequences[0].getFrames();
     const lastFrame = frames[frames.length - 1];
-    const reactionEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.REACTION);
+    const reactionEffect = lastFrame.getClauses().flatMap(c => c.effects).find(e => e.verb === VerbType.APPLY && e.objectId === NounType.REACTION);
     expect(reactionEffect).toBeDefined();
-    const q = Array.isArray(reactionEffect!.dslEffect!.objectQualifier) ? reactionEffect!.dslEffect!.objectQualifier[0] : reactionEffect!.dslEffect!.objectQualifier;
+    const q = Array.isArray(reactionEffect!.objectQualifier) ? reactionEffect!.objectQualifier[0] : reactionEffect!.objectQualifier;
     expect(q).toBe(StatusType.COMBUSTION);
   });
 
@@ -261,7 +261,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     const sequences = getSequences('BATTLE');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.REACTION)).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.verb === VerbType.APPLY && e.objectId === NounType.REACTION)).toBeUndefined();
       }
     }
   });
@@ -360,9 +360,9 @@ describe('E. Ultimate & Enhanced Variants', () => {
     expect(frames.length).toBeGreaterThan(0);
 
     const frame = frames[0];
-    const inflEffect = frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.INFLICTION);
+    const inflEffect = frame.getClauses().flatMap(c => c.effects).find(e => e.verb === VerbType.APPLY && e.objectId === NounType.INFLICTION);
     expect(inflEffect).toBeDefined();
-    const qual = Array.isArray(inflEffect!.dslEffect!.objectQualifier) ? inflEffect!.dslEffect!.objectQualifier[0] : inflEffect!.dslEffect!.objectQualifier;
+    const qual = Array.isArray(inflEffect!.objectQualifier) ? inflEffect!.objectQualifier[0] : inflEffect!.objectQualifier;
     expect(qual).toBe(AdjectiveType.HEAT);
   });
 
@@ -370,7 +370,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
     const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.INFLICTION)).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.verb === VerbType.APPLY && e.objectId === NounType.INFLICTION)).toBeUndefined();
       }
     }
   });
@@ -408,10 +408,9 @@ describe('E. Ultimate & Enhanced Variants', () => {
     // Second frame (index 1) is a damage frame — it should not have a RECOVER
     // ULTIMATE_ENERGY clause effect.
     const clauses = allFrames[1].getClauses();
-    const hasUeRecover = clauses.some(p => p.effects.some(e => {
-      const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
-      return dsl?.verb === VerbType.RECOVER && dsl?.object === NounType.ULTIMATE_ENERGY;
-    }));
+    const hasUeRecover = clauses.some(p => p.effects.some(dsl =>
+      dsl?.verb === VerbType.RECOVER && dsl?.object === NounType.ULTIMATE_ENERGY,
+    ));
     expect(hasUeRecover).toBe(false);
   });
 });

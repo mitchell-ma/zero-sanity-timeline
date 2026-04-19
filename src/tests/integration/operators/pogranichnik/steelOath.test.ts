@@ -294,7 +294,7 @@ describe('Combo skill consumes Steel Oath stacks', () => {
     const seg = harassEvents[0].segments[0];
     expect(seg.frames).toBeDefined();
     expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
-    const harassDamage = findDealDamageInClauses(seg.frames![0].clauses);
+    const harassDamage = findDealDamageInClauses(seg.frames![0].clause);
     expect(harassDamage).toBeDefined();
     expect(harassDamage!.values.length).toBeGreaterThan(0);
 
@@ -358,10 +358,10 @@ describe('All stacks consumed → Harass and Decisive Assault mix', () => {
       const seg = ev.segments[0];
       expect(seg.frames).toBeDefined();
       expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
-      expect(findDealDamageInClauses(seg.frames![0].clauses)).toBeDefined();
+      expect(findDealDamageInClauses(seg.frames![0].clause)).toBeDefined();
     }
     // Decisive Assault should also have stagger
-    expect(findStaggerInClauses(assaultEvents[0].segments[0].frames![0].clauses)!).toBeGreaterThan(0);
+    expect(findStaggerInClauses(assaultEvents[0].segments[0].frames![0].clause)!).toBeGreaterThan(0);
   });
 });
 
@@ -437,7 +437,7 @@ describe('Chen Qianyu BS consumes Steel Oath → 4 Harass + 1 Decisive Assault',
       const seg = ev.segments[0];
       expect(seg.frames).toBeDefined();
       expect(seg.frames!.length).toBeGreaterThanOrEqual(1);
-      expect(findDealDamageInClauses(seg.frames![0].clauses)).toBeDefined();
+      expect(findDealDamageInClauses(seg.frames![0].clause)).toBeDefined();
     }
 
     // FIRST_MATCH: each trigger produces exactly one sub-status, never both

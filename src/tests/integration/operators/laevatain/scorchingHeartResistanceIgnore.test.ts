@@ -64,9 +64,10 @@ describe('Scorching Heart — APPLY HEAT RESISTANCE_IGNORE STAT migration', () =
     // Self-targeted: no enemy redirect.
     expect(effect.toDeterminer).toBe('THIS');
 
-    // Value carries the L1/L2/L3 ignore amounts (10 / 15 / 20).
+    // Value carries the L1/L2/L3 ignore amounts as decimal multipliers
+    // (0.10 / 0.15 / 0.20 = 10% / 15% / 20%).
     expect(effect.with.value.verb).toBe(VerbType.VARY_BY);
-    expect(effect.with.value.value).toEqual([10, 15, 20]);
+    expect(effect.with.value.value).toEqual([0.10, 0.15, 0.20]);
   });
 
   it('Scorching Heart event reaches accumulator: HEAT_RESISTANCE_IGNORE flattens correctly via DSL resolver', () => {

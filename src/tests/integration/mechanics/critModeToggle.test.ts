@@ -99,7 +99,7 @@ describe('Crit Mode Toggle — damage calculation per mode', () => {
       for (const seg of ev.segments) {
         if (!seg.frames) continue;
         for (const f of seg.frames) {
-          if (!hasDealDamageClause(f.clauses)) continue;
+          if (!hasDealDamageClause(f.clause)) continue;
           expect(f.isCrit).toBe(false);
         }
       }
@@ -131,7 +131,7 @@ describe('Crit Mode Toggle — damage calculation per mode', () => {
         const seg = ev.segments[si];
         if (!seg.frames) continue;
         for (let fi = 0; fi < seg.frames.length; fi++) {
-          if (!hasDealDamageClause(seg.frames[fi].clauses)) continue;
+          if (!hasDealDamageClause(seg.frames[fi].clause)) continue;
           // Alternate true/false so we exercise both pin values
           damageFrames.push({ eventUid: ev.uid, segmentIndex: si, frameIndex: fi, value: damageFrames.length % 2 === 0 });
           if (damageFrames.length >= 4) break;

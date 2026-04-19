@@ -108,23 +108,18 @@ export function injectStatusLevelIntoSegments(
   return segments.map((seg) => {
     if (!seg.frames) return seg;
     const frames = seg.frames.map((f) => {
-      if (!f.clauses) return f;
-      const clauses: FrameClausePredicate[] = f.clauses.map((clause) => {
-        const effects = clause.effects.map((eff) => {
-          if (eff.type !== 'dsl') return eff;
-          const dsl = eff.dslEffect;
-          if (!dsl || dsl.verb !== VerbType.APPLY || dsl.objectId !== NounType.REACTION) return eff;
+      if (!f.clause) return f;
+      const clauses: FrameClausePredicate[] = f.clause.map((clause) => {
+        const effects = clause.effects.map((dsl) => {
+          if (dsl.verb !== VerbType.APPLY || dsl.objectId !== NounType.REACTION) return dsl;
           return {
-            ...eff,
-            dslEffect: {
-              ...dsl,
-              with: { ...(dsl.with ?? {}), statusLevel: { verb: VerbType.IS, value: level } },
-            } as Effect,
-          };
+            ...dsl,
+            with: { ...(dsl.with ?? {}), statusLevel: { verb: VerbType.IS, value: level } },
+          } as Effect;
         });
         return { ...clause, effects };
       });
-      return { ...f, clauses };
+      return { ...f, clause: clauses };
     });
     return { ...seg, frames };
   });

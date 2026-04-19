@@ -3,14 +3,17 @@
  */
 
 /**
- * Corrosion → ARTS_RESISTANCE_REDUCTION via per-segment APPLY clauses.
+ * Corrosion → ARTS_RESISTANCE_REDUCTION + PHYSICAL_RESISTANCE_REDUCTION via
+ * per-segment APPLY clauses. Together ARTS (umbrella over HEAT/CRYO/NATURE/
+ * ELECTRIC) + PHYSICAL cover every damage type — Corrosion reduces resistance
+ * for all incoming damage without needing per-element entries.
  *
  * Pins the engine unification — Corrosion no longer uses a closed-form
  * `getCorrosionResistanceReduction` read in the damage formula; instead each
- * of its 1-second ramp segments carries an
- * `APPLY ARTS RESISTANCE_REDUCTION STAT to ENEMY` clause that flows through
- * the normal `runStatusCreationLifecycle` segment-clause dispatch and writes
- * to the enemy stat accumulator for the segment's lifetime.
+ * of its 1-second ramp segments carries two
+ * `APPLY <ARTS|PHYSICAL> RESISTANCE_REDUCTION STAT to ENEMY` effects that flow
+ * through the normal `runStatusCreationLifecycle` segment-clause dispatch and
+ * write to the enemy stat accumulator for the segment's lifetime.
  *
  * Also pins segment structure: 15s Corrosion = 9 ramp ticks + 1 final hold
  * segment, named "Corrosion <statusLevelRoman>" then sequential "II", "III", …
@@ -44,7 +47,7 @@ function placeFreeformCorrosion(view: ReturnType<typeof renderHook<ReturnType<ty
   });
 }
 
-describe('Corrosion — per-segment APPLY ARTS_RESISTANCE_REDUCTION', () => {
+describe('Corrosion — per-segment APPLY ARTS + PHYSICAL RESISTANCE_REDUCTION', () => {
   it('produces 9 ramp ticks + 1 final hold segment (10 total) for 15s corrosion', () => {
     const view = renderHook(() => useApp());
     placeFreeformCorrosion(view, 1 * FPS);
@@ -62,7 +65,7 @@ describe('Corrosion — per-segment APPLY ARTS_RESISTANCE_REDUCTION', () => {
     expect(corrosion!.segments[9].properties.duration).toBe(6 * FPS);
   });
 
-  it('each segment carries APPLY ARTS RESISTANCE_REDUCTION STAT to ENEMY clause', () => {
+  it('each segment carries APPLY RESISTANCE_REDUCTION effects for both ARTS and PHYSICAL', () => {
     const view = renderHook(() => useApp());
     placeFreeformCorrosion(view, 1 * FPS);
 
@@ -76,20 +79,23 @@ describe('Corrosion — per-segment APPLY ARTS_RESISTANCE_REDUCTION', () => {
       expect(seg.clause).toHaveLength(1);
       const predicate = seg.clause![0];
       expect(predicate.conditions).toHaveLength(0);
-      expect(predicate.effects).toHaveLength(1);
+      expect(predicate.effects).toHaveLength(2);
 
-      const effect = predicate.effects[0];
-      expect(effect.verb).toBe(VerbType.APPLY);
-      expect(effect.object).toBe(NounType.STAT);
-      expect(effect.objectId).toBe(NounType.RESISTANCE_REDUCTION);
-      expect(effect.objectQualifier).toBe(AdjectiveType.ARTS);
-      expect(effect.to).toBe(NounType.ENEMY);
+      const qualifiers = predicate.effects.map(e => e.objectQualifier).sort();
+      expect(qualifiers).toEqual([AdjectiveType.ARTS, AdjectiveType.PHYSICAL].sort());
 
-      // Each segment's clause carries a positive, non-zero reduction value.
-      const withNode = effect.with as { value: { verb: string; value: number } } | undefined;
-      expect(withNode).toBeDefined();
-      expect(withNode!.value.verb).toBe(VerbType.IS);
-      expect(withNode!.value.value).toBeGreaterThan(0);
+      for (const effect of predicate.effects) {
+        expect(effect.verb).toBe(VerbType.APPLY);
+        expect(effect.object).toBe(NounType.STAT);
+        expect(effect.objectId).toBe(NounType.RESISTANCE_REDUCTION);
+        expect(effect.to).toBe(NounType.ENEMY);
+
+        // Each effect's clause carries a positive, non-zero reduction value.
+        const withNode = effect.with as { value: { verb: string; value: number } } | undefined;
+        expect(withNode).toBeDefined();
+        expect(withNode!.value.verb).toBe(VerbType.IS);
+        expect(withNode!.value.value).toBeGreaterThan(0);
+      }
     }
   });
 
@@ -102,6 +108,8 @@ describe('Corrosion — per-segment APPLY ARTS_RESISTANCE_REDUCTION', () => {
     );
     expect(corrosion).toBeDefined();
 
+    // ARTS and PHYSICAL effects share the same reduction value per segment;
+    // sample the first effect.
     const values = corrosion!.segments.map(seg => {
       const effect = seg.clause![0].effects[0];
       const withNode = effect.with as { value: { value: number } };
@@ -112,11 +120,11 @@ describe('Corrosion — per-segment APPLY ARTS_RESISTANCE_REDUCTION', () => {
     for (let i = 1; i < 9; i++) {
       expect(values[i]).toBeGreaterThan(values[i - 1]);
     }
-    // Final hold value equals the max reduction for status level 1: 12.0.
-    expect(values[9]).toBe(12);
+    // Final hold value equals the max reduction for status level 1 (decimal): 0.12.
+    expect(values[9]).toBeCloseTo(0.12, 5);
   });
 
-  it('segment names follow skill-card convention — "Corrosion <level>" then sequential roman', () => {
+  it('segment names follow skill-card convention — "Corrosion <level>" then sequential 1-based indices', () => {
     const view = renderHook(() => useApp());
     placeFreeformCorrosion(view, 1 * FPS);
 
@@ -125,11 +133,12 @@ describe('Corrosion — per-segment APPLY ARTS_RESISTANCE_REDUCTION', () => {
     );
     expect(corrosion).toBeDefined();
 
+    // Roman numerals are reserved for StatusLevel display only.
     expect(corrosion!.segments[0].properties.name).toBe('Corrosion I');
-    expect(corrosion!.segments[1].properties.name).toBe('II');
-    expect(corrosion!.segments[2].properties.name).toBe('III');
-    expect(corrosion!.segments[8].properties.name).toBe('IX');
-    expect(corrosion!.segments[9].properties.name).toBe('X');
+    expect(corrosion!.segments[1].properties.name).toBe('2');
+    expect(corrosion!.segments[2].properties.name).toBe('3');
+    expect(corrosion!.segments[8].properties.name).toBe('9');
+    expect(corrosion!.segments[9].properties.name).toBe('10');
   });
 
 });

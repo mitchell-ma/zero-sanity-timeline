@@ -3,6 +3,7 @@ import { StatType, ELEMENT_COLORS, ElementType } from "../consts/enums";
 import { getModelEnemy } from "../controller/calculation/enemyRegistry";
 import { BossEnemy } from "../model/enemies/bossEnemy";
 import { INFLICTION_COLUMNS } from "../model/channels";
+import { t } from "../locales/locale";
 
 // ─── Enemy sprite imports ──────────────────────────────────────────────────
 import rhodagnSprite from "../assets/enemies/rhodagn_the_bonekrushing_fist_sprite.png";
@@ -65,10 +66,10 @@ import roadPlundererSprite from "../assets/enemies/road_plunderer_sprite.png";
 
 // ─── Default statuses (infliction columns on the timeline) ─────────────────
 const DEFAULT_STATUSES = [
-  { id: INFLICTION_COLUMNS.HEAT,     label: 'HEAT',     color: ELEMENT_COLORS[ElementType.HEAT] },
-  { id: INFLICTION_COLUMNS.NATURE,   label: 'NATURE',   color: ELEMENT_COLORS[ElementType.NATURE] },
-  { id: INFLICTION_COLUMNS.ELECTRIC, label: 'ELECTRIC', color: ELEMENT_COLORS[ElementType.ELECTRIC] },
-  { id: INFLICTION_COLUMNS.CRYO,     label: 'CRYO',     color: ELEMENT_COLORS[ElementType.CRYO] },
+  { id: INFLICTION_COLUMNS.HEAT,     label: t('infliction.heat'),     color: ELEMENT_COLORS[ElementType.HEAT] },
+  { id: INFLICTION_COLUMNS.NATURE,   label: t('infliction.nature'),   color: ELEMENT_COLORS[ElementType.NATURE] },
+  { id: INFLICTION_COLUMNS.ELECTRIC, label: t('infliction.electric'), color: ELEMENT_COLORS[ElementType.ELECTRIC] },
+  { id: INFLICTION_COLUMNS.CRYO,     label: t('infliction.cryo'),     color: ELEMENT_COLORS[ElementType.CRYO] },
 ];
 
 function e(id: string, name: string, tier: string, sprite?: string): Enemy {

@@ -37,7 +37,7 @@ function attachPerfectDodgeSpClause(segments: EventSegmentData[]): EventSegmentD
   const seg0 = out[0];
   const frames = seg0.frames ? [...seg0.frames] : [{ offsetFrame: 0 }];
   const f0 = frames[0];
-  frames[0] = { ...f0, clauses: [...(f0.clauses ?? []), clause] };
+  frames[0] = { ...f0, clause: [...(f0.clause ?? []), clause] };
   out[0] = { ...seg0, frames };
   return out;
 }
@@ -532,32 +532,31 @@ export function validateUpdate(
             // a frame loses FINAL_STRIKE, strip any SP clause it carries.
             const types = clamped.frameTypes ?? [EventFrameType.NORMAL];
             if (types.includes(EventFrameType.FINAL_STRIKE)) {
-              const hasSp = hasSkillPointClause(clamped.clauses);
+              const hasSp = hasSkillPointClause(clamped.clause);
               if (!hasSp && clamped.templateFinalStrikeSP) {
-                clamped.clauses = [
-                  ...(clamped.clauses ?? []),
+                clamped.clause = [
+                  ...(clamped.clause ?? []),
                   buildSkillPointRecoveryClause(clamped.templateFinalStrikeSP),
                 ];
               }
-              const hasStagger = hasStaggerClause(clamped.clauses);
+              const hasStagger = hasStaggerClause(clamped.clause);
               if (!hasStagger && clamped.templateFinalStrikeStagger) {
-                clamped.clauses = [
-                  ...(clamped.clauses ?? []),
+                clamped.clause = [
+                  ...(clamped.clause ?? []),
                   buildDealStaggerClause(clamped.templateFinalStrikeStagger),
                 ];
               }
             } else if (!types.includes(EventFrameType.NORMAL)) {
-              if (hasSkillPointClause(clamped.clauses)) {
-                clamped.clauses = (clamped.clauses ?? []).map(p => ({
+              if (hasSkillPointClause(clamped.clause)) {
+                clamped.clause = (clamped.clause ?? []).map(p => ({
                   ...p,
-                  effects: p.effects.filter(e => {
-                    const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
-                    return !(dsl && (dsl.verb === VerbType.RECOVER || dsl.verb === VerbType.RETURN) && dsl.object === NounType.SKILL_POINT);
-                  }),
+                  effects: p.effects.filter(dsl =>
+                    !((dsl.verb === VerbType.RECOVER || dsl.verb === VerbType.RETURN) && dsl.object === NounType.SKILL_POINT),
+                  ),
                 })).filter(p => p.effects.length > 0);
               }
-              if (hasStaggerClause(clamped.clauses)) {
-                clamped.clauses = stripStaggerClauses(clamped.clauses);
+              if (hasStaggerClause(clamped.clause)) {
+                clamped.clause = stripStaggerClauses(clamped.clause);
               }
             }
             return clamped;

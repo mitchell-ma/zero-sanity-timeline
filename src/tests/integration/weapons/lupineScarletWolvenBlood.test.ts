@@ -281,7 +281,7 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     const maxEvents = findWolvenBloodMaxEvents(result.current);
     expect(maxEvents.length).toBeGreaterThanOrEqual(1);
 
-    // View: Wolven Blood Max should NOT have a roman numeral stack label
+    // View: Wolven Blood Max should NOT have a stack-count suffix label
     const statusCol = findStatusColumn(result.current, SLOT_ROSSI);
     expect(statusCol).toBeDefined();
     const viewModels = computeTimelinePresentation(result.current.allProcessedEvents, result.current.columns);
@@ -291,12 +291,12 @@ describe('C. Max stacks triggers Wolven Blood Max', () => {
     const maxInView = vm!.events.filter(ev => ev.name === WOLVEN_BLOOD_MAX_ID);
     expect(maxInView.length).toBeGreaterThanOrEqual(1);
 
-    // Status override label should be just the base name — no "I", "II", etc.
+    // Status override label should be just the base name — no "1", "2", etc.
     for (const ev of maxInView) {
       const override = vm!.statusOverrides.get(ev.uid);
       if (!override) continue;
-      // Label should not end with a roman numeral (I, II, III, IV, etc.)
-      expect(override.label).not.toMatch(/\s[IVX]+$/);
+      // Label should not end with a trailing stack count
+      expect(override.label).not.toMatch(/\s\d+$/);
     }
   });
 

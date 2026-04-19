@@ -8,7 +8,7 @@
  * - Create / edit / delete custom items inline
  * - Associate leaf entities (skills, effects) with operators
  */
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect, useLayoutEffect } from 'react';
 import { ContentCategory } from '../../consts/contentBrowserTypes';
 import type { ContentBrowserItem } from '../../consts/contentBrowserTypes';
 import { getAllContentItems } from '../../controller/custom/contentCatalogController';
@@ -160,6 +160,7 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
 
   // Context menu state
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; item: ContentBrowserItem } | null>(null);
+  const [ctxPos, setCtxPos] = useState<{ left: number; top: number } | null>(null);
   const ctxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -169,6 +170,18 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
     };
     document.addEventListener('mousedown', dismiss);
     return () => document.removeEventListener('mousedown', dismiss);
+  }, [ctxMenu]);
+
+  useLayoutEffect(() => {
+    if (!ctxMenu) { setCtxPos(null); return; }
+    const el = ctxRef.current;
+    if (!el) return;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const margin = 8;
+    const left = Math.max(margin, Math.min(ctxMenu.x, window.innerWidth - w - margin));
+    const top = Math.max(margin, Math.min(ctxMenu.y, window.innerHeight - h - margin));
+    setCtxPos({ left, top });
   }, [ctxMenu]);
 
   const bumpLocal = useCallback(() => {
@@ -429,8 +442,16 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
         <div className="uc-list-header">
           <span className="uc-list-title">{CATEGORY_TITLES[entityType]}</span>
           <div className="uc-list-actions">
-            <button className="btn-add-sm" onClick={() => importFileRef.current?.click()} title="Import from ZIP">&#x2B73;</button>
-            <button className="btn-add-sm" onClick={handleExport} title="Export all custom content">&#x2B71;</button>
+            <button className="btn-add-sm" onClick={() => importFileRef.current?.click()} title="Import from ZIP">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M8 1a.5.5 0 01.354.146l3.5 3.5a.5.5 0 01-.708.708L8.5 2.707V10.5a.5.5 0 01-1 0V2.707L4.854 5.354a.5.5 0 11-.708-.708l3.5-3.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
+              </svg>
+            </button>
+            <button className="btn-add-sm" onClick={handleExport} title="Export all custom content">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M8 1a.5.5 0 01.5.5v7.793l2.646-2.647a.5.5 0 01.708.708l-3.5 3.5a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L7.5 9.293V1.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
+              </svg>
+            </button>
             <button className="btn-add-sm" onClick={handleNewItem} title="New custom item">+</button>
           </div>
           <input
@@ -493,7 +514,11 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
         <div
           ref={ctxRef}
           className="uc-ctx-menu"
-          style={{ top: ctxMenu.y, left: ctxMenu.x }}
+          style={{
+            top: ctxPos?.top ?? ctxMenu.y,
+            left: ctxPos?.left ?? ctxMenu.x,
+            visibility: ctxPos ? 'visible' : 'hidden',
+          }}
         >
           {ctxMenu.item.source === 'custom' && (
             <>

@@ -601,10 +601,18 @@ export default React.memo(function CombatPlanner({
     if (enemyMenuOpen) { setEnemyMenuOpen(false); return; }
     if (enemyNameRef.current) {
       const rect = enemyNameRef.current.getBoundingClientRect();
-      setEnemyMenuPos(isHorizontal
+      // .lo-dropdown-menu max-height is 22.5rem (360px); clamp against viewport
+      // so the menu never falls off the bottom/right edge when the trigger is
+      // near a screen edge.
+      const estH = 360;
+      const estW = 320;
+      const preferred = isHorizontal
         ? { top: rect.top, left: rect.right + 2 }
-        : { top: rect.bottom + 2, left: rect.left },
-      );
+        : { top: rect.bottom + 2, left: rect.left };
+      setEnemyMenuPos({
+        top: Math.max(8, Math.min(preferred.top, window.innerHeight - estH - 8)),
+        left: Math.max(8, Math.min(preferred.left, window.innerWidth - estW - 8)),
+      });
     }
     setEnemySearch('');
     setEnemyActiveTiers(new Set(ENEMY_TIERS));
@@ -1999,7 +2007,7 @@ export default React.memo(function CombatPlanner({
       const frame = ev?.segments[sf.segmentIndex]?.frames?.[sf.frameIndex];
       if (!frame) return false;
       if (frame.damageType === DamageType.DAMAGE_OVER_TIME) return false;
-      return hasDealDamageClause(frame.clauses);
+      return hasDealDamageClause(frame.clause);
     });
 
     // Resolve crit state for toggle: mixed/no-crit → crit, all crit → no-crit
@@ -2036,7 +2044,7 @@ export default React.memo(function CombatPlanner({
     const chanceFrames = targetFrames.filter((sf) => {
       const ev = events.find((ev) => ev.uid === sf.eventUid);
       const frame = ev?.segments[sf.segmentIndex]?.frames?.[sf.frameIndex];
-      return frame ? hasChanceClause(frame.clauses) : false;
+      return frame ? hasChanceClause(frame.clause) : false;
     });
     if (onSetChancePins && chanceFrames.length > 0) {
       const resolveChance = (sf: import('../consts/viewTypes').SelectedFrame) => {

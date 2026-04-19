@@ -54,7 +54,7 @@ export class SkillSegmentBuilder {
         if (f.getDuplicateTriggerSource()) marker.duplicateTriggerSource = true;
         const clauses = f.getClauses();
         if (clauses.length > 0) {
-          marker.clauses = clauses;
+          marker.clause = clauses;
           const ct = f.getClauseType();
           if (ct) marker.clauseType = ct;
         }
@@ -77,7 +77,7 @@ export class SkillSegmentBuilder {
         const finalFrame = frames[frames.length - 1];
         if (finalFrame.frameTypes?.includes(EventFrameType.FINAL_STRIKE)) {
           finalFrame.templateFinalStrikeSP = allSequenceTotalSP;
-          finalFrame.templateFinalStrikeStagger = findStaggerInClauses(finalFrame.clauses) ?? 0;
+          finalFrame.templateFinalStrikeStagger = findStaggerInClauses(finalFrame.clause) ?? 0;
         }
       }
 

@@ -121,15 +121,18 @@ function EventPane({
     if ((data.segments as unknown[] | undefined)?.length) return data;
     const runtimeSegs = (processedEvent?.segments?.length ? processedEvent.segments : event.segments) ?? [];
     if (runtimeSegs.length === 0) return data;
+    // Runtime segments/frames from buildReactionSegment & buildCorrosionSegments
+    // are already JSON-shape compatible (properties.offset, clause). The only
+    // conversion left is segment duration: runtime uses frames, JSON uses
+    // `{ value: seconds, unit: SECOND }`.
     return {
       ...data,
       segments: runtimeSegs.map((seg) => ({
+        ...seg,
         properties: {
-          ...(seg.properties.name != null ? { name: seg.properties.name } : {}),
+          ...seg.properties,
           duration: { value: seg.properties.duration / FPS, unit: UnitType.SECOND },
         },
-        ...(seg.clause ? { clause: seg.clause } : {}),
-        ...(seg.frames ? { frames: seg.frames } : {}),
       })),
     };
   }, [event.name, event.segments, processedEvent, verbose, skillCardData]);
@@ -902,15 +905,15 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
                             </div>
                           )}
                           {(() => {
-                            const sp = findSkillPointRecoveryInClauses(dFrame.clauses);
+                            const sp = findSkillPointRecoveryInClauses(dFrame.clause);
                             return sp != null ? <div>sp: {sp}</div> : null;
                           })()}
                           {(() => {
-                            const stag = findStaggerInClauses(dFrame.clauses);
+                            const stag = findStaggerInClauses(dFrame.clause);
                             return stag != null ? <div>stagger: {stag}</div> : null;
                           })()}
                           {(() => {
-                            const gauge = findUltimateEnergyGainInClauses(dFrame.clauses);
+                            const gauge = findUltimateEnergyGainInClauses(dFrame.clause);
                             return gauge != null ? <div>gauge: {gauge}</div> : null;
                           })()}
                           {dFrame.isCrit != null && <div>isCrit: {String(dFrame.isCrit)}</div>}

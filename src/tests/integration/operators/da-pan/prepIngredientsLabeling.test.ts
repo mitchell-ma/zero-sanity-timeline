@@ -84,15 +84,15 @@ function getPrepLabels(app: AppResult): { startFrame: number; consumed: boolean;
 }
 
 describe('Da Pan — Prep Ingredients label invariance', () => {
-  it('two ults → I, II (no consume yet)', () => {
+  it('two ults → 1, 2 (no consume yet)', () => {
     const { result } = setup();
     setTalent2(result, 2);
     placeUlt(result, 2);
     placeUlt(result, 8);
 
     const labels = getPrepLabels(result.current).map((p) => p.label);
-    expect(labels[0]).toMatch(/\bI$/);
-    expect(labels[1]).toMatch(/\bII$/);
+    expect(labels[0]).toMatch(/\s1$/);
+    expect(labels[1]).toMatch(/\s2$/);
   });
 
   it('two ults + CS consume → historical stacks keep their apply-time labels; leftover labelled by current pool', () => {
@@ -102,23 +102,23 @@ describe('Da Pan — Prep Ingredients label invariance', () => {
     placeUlt(result, 2);
     placeUlt(result, 8);
     const beforeConsume = getPrepLabels(result.current);
-    expect(beforeConsume[0].label).toMatch(/\bI$/);
-    expect(beforeConsume[1].label).toMatch(/\bII$/);
+    expect(beforeConsume[0].label).toMatch(/\s1$/);
+    expect(beforeConsume[1].label).toMatch(/\s2$/);
 
     placeCS(result, 14);
 
     // Engine "absorb-and-reapply" CONSUME pattern marks both prior stacks
     // CONSUMED and emits a fresh leftover event. Verify labels by start
-    // frame so the historical "I"/"II" stay stable while the leftover
+    // frame so the historical "1"/"2" stay stable while the leftover
     // re-labels by current pool.
     const after = getPrepLabels(result.current);
     const a = after.find((p) => p.startFrame === beforeConsume[0].startFrame);
     const b = after.find((p) => p.startFrame === beforeConsume[1].startFrame);
-    expect(a?.label).toMatch(/\bI$/);
-    expect(b?.label).toMatch(/\bII$/);
+    expect(a?.label).toMatch(/\s1$/);
+    expect(b?.label).toMatch(/\s2$/);
     // Leftover (alive) event should be labelled by the new pool size (1).
     const leftover = after.find((p) => !p.consumed);
-    expect(leftover?.label).toMatch(/\bI$/);
+    expect(leftover?.label).toMatch(/\s1$/);
   });
 
   it('three ults across multiple consumes → labels stay stable', () => {
@@ -132,9 +132,9 @@ describe('Da Pan — Prep Ingredients label invariance', () => {
 
     const all = getPrepLabels(result.current);
     // Earliest two events were CONSUMED (their historical apply-time
-    // positions = 1 and 2): "I", "II".
+    // positions = 1 and 2): "1", "2".
     const consumed = all.filter((p) => p.consumed).sort((a, b) => a.startFrame - b.startFrame);
-    expect(consumed[0]?.label).toMatch(/\bI$/);
-    expect(consumed[1]?.label).toMatch(/\bII$/);
+    expect(consumed[0]?.label).toMatch(/\s1$/);
+    expect(consumed[1]?.label).toMatch(/\s2$/);
   });
 });

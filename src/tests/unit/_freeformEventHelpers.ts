@@ -38,9 +38,9 @@ export function applyFrame(opts: ApplyFrameOptions) {
   };
   return {
     offsetFrame: 0,
-    clauses: [{
+    clause: [{
       conditions: [],
-      effects: [{ type: 'dsl' as const, dslEffect: effect as Effect }],
+      effects: [effect as Effect],
     }],
   };
 }

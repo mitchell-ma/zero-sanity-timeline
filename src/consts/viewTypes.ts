@@ -80,7 +80,20 @@ export interface Enemy {
 export interface EventFrameMarker {
   /** Optional name for this frame. */
   name?: string;
-  /** Frame offset from the start of the parent segment (base/raw value). */
+  /** Authored frame properties — mirrors the JSON shape (offset in seconds,
+   *  element, dependencyTypes, frameTypes). Populated by runtime builders
+   *  alongside `offsetFrame` so view-layer renderers can read one shape
+   *  regardless of whether a frame was JSON-authored or runtime-built. */
+  properties?: {
+    offset?: { value: number; unit: string };
+    element?: string;
+    dependencyTypes?: string[];
+    frameTypes?: string[];
+  };
+  /** Frame offset from the start of the parent segment (base/raw value, in frames).
+   *  Derived convenience: `offsetFrame === properties.offset.value * FPS` for
+   *  runtime-built frames. Engine code uses this directly to avoid repeated
+   *  seconds → frames conversion. */
   offsetFrame: number;
   /** Derived frame offset accounting for time-stop extension within the segment (set by processCombatSimulation). */
   derivedOffsetFrame?: number;
@@ -94,8 +107,10 @@ export interface EventFrameMarker {
   statusLabel?: string;
   /** Whether this frame re-applies the trigger source (infliction or physical status) that caused the combo. */
   duplicateTriggerSource?: boolean;
-  /** DSL v2 clause predicates (conditional + unconditional effect groups). */
-  clauses?: readonly FrameClausePredicate[];
+  /** DSL v2 clause predicates (conditional + unconditional effect groups).
+   *  Singular name matches the JSON shape (`frame.clause`) — one array of
+   *  predicates, not a plural of arrays. */
+  clause?: readonly FrameClausePredicate[];
   /** Clause evaluation mode: 'FIRST_MATCH' stops after first matching conditional; default 'ALL'. */
   clauseType?: string;
   /** True when all conditional clauses were evaluated and none matched (frame produced no effects). */
@@ -330,6 +345,31 @@ export interface ContextMenuItemOverride {
   statusLevel?: number;
 }
 
+/** Optional trailing action button rendered alongside the stepper.
+ *  Used for value-scoped secondary actions (e.g. rerolling Manual crit pins).
+ *  When `inline` is false (default) the button appears after the next arrow
+ *  as an icon-only cell. When true it renders as a full-width row below
+ *  the stepper with icon + label. */
+export interface ContextMenuStepperAction {
+  icon: import('./enums').StepperActionIcon;
+  onClick: () => void;
+  title?: string;
+  label?: string;
+  inline?: boolean;
+}
+
+/** Discrete-value stepper control. Renders as `< label >` for cycling
+ *  through a fixed set of enum values (e.g. FoldMode, CritMode). The current
+ *  value's display label goes in the middle; prev/next callbacks cycle it.
+ *  An optional `action` adds a trailing icon button tied to the current value. */
+export interface ContextMenuStepperControl {
+  /** Current value's display label, shown between the arrows. */
+  valueLabel: string;
+  onPrev: () => void;
+  onNext: () => void;
+  action?: ContextMenuStepperAction;
+}
+
 export interface ContextMenuItem {
   label?: string;
   /** Optional override argument lets the view inject current parameter selections
@@ -342,6 +382,9 @@ export interface ContextMenuItem {
   separator?: boolean;
   /** Non-interactive section header label. */
   header?: boolean;
+  /** Discrete-value cycler. When set, the item renders as a stepper row —
+   *  prev/next arrows flanking the current value label. No other interactions. */
+  stepper?: ContextMenuStepperControl;
   /** Action identifier for controller-built menus (view maps to callback). */
   actionId?: string;
   /** Payload for the action (e.g. event creation params). */

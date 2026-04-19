@@ -301,10 +301,10 @@ describe('D. Fervent Morale max stacks via basic attacks', () => {
     const labels = statusVM!.events
       .filter(ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG)
       .map(ev => statusVM!.statusOverrides.get(ev.uid)?.label);
-    expect(labels.some(l => l?.endsWith(' V'))).toBe(true);
+    expect(labels.some(l => l?.endsWith(' 5'))).toBe(true);
   });
 
-  it('D6: POG at P5 — ult + 3 combos → Fervent Morale labels reach IV (cross-apply via Tactical Instruction T2)', () => {
+  it('D6: POG at P5 — ult + 3 combos → Fervent Morale labels reach 4 (cross-apply via Tactical Instruction T2)', () => {
     const { result } = setupPog();
     act(() => { setPotential(result.current, SLOT_POG, 5); });
     act(() => { setUltimateEnergyToMax(result.current, SLOT_POG, 3); });
@@ -332,10 +332,10 @@ describe('D. Fervent Morale max stacks via basic attacks', () => {
     const labels = statusVM!.events
       .filter(ev => ev.columnId === FERVENT_MORALE_ID && ev.ownerEntityId === SLOT_POG)
       .map(ev => statusVM!.statusOverrides.get(ev.uid)?.label);
-    // With cap=5 (not 3), the 4th concurrent FM must be labeled IV,
-    // not capped at III. Earlier bug: eventPresentationController clamped at the
-    // DEFAULT_VALUE_CONTEXT-resolved limit = 3, so every FM past the 3rd read "III".
-    expect(labels.some(l => l?.endsWith(' IV'))).toBe(true);
-    expect(labels.filter(l => l?.endsWith(' III')).length).toBeLessThanOrEqual(1);
+    // With cap=5 (not 3), the 4th concurrent FM must be labeled 4,
+    // not capped at 3. Earlier bug: eventPresentationController clamped at the
+    // DEFAULT_VALUE_CONTEXT-resolved limit = 3, so every FM past the 3rd read "3".
+    expect(labels.some(l => l?.endsWith(' 4'))).toBe(true);
+    expect(labels.filter(l => l?.endsWith(' 3')).length).toBeLessThanOrEqual(1);
   });
 });

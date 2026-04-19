@@ -69,9 +69,7 @@ function buildTestColumns() {
 }
 
 function firstDslEffect(segments: EventSegmentData[] | undefined): Effect | undefined {
-  const eff = segments?.[0]?.frames?.[0]?.clauses?.[0]?.effects?.[0] as
-    { type?: string; dslEffect?: Effect } | undefined;
-  return eff?.type === 'dsl' ? eff?.dslEffect : undefined;
+  return segments?.[0]?.frames?.[0]?.clause?.[0]?.effects?.[0] as Effect | undefined;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -151,11 +149,11 @@ function segWithReaction(
   const effects = sibling ? [applyReaction, sibling] : [applyReaction];
   const clause: FrameClausePredicate = {
     conditions: [],
-    effects: effects.map(dslEffect => ({ type: 'dsl' as const, dslEffect })),
+    effects,
   };
   return [{
     properties: { duration: 600 },
-    frames: [{ offsetFrame: 0, clauses: [clause] }],
+    frames: [{ offsetFrame: 0, clause: [clause] }],
   }];
 }
 
@@ -197,10 +195,10 @@ describe('B. injectStatusLevelIntoSegments', () => {
     };
     const segs = segWithReaction(REACTION_COLUMNS.CORROSION, 1, sibling);
     const out = injectStatusLevelIntoSegments(segs, 2);
-    const effects = out?.[0]?.frames?.[0]?.clauses?.[0]?.effects;
+    const effects = out?.[0]?.frames?.[0]?.clause?.[0]?.effects;
     expect(effects).toHaveLength(2);
-    const apply = (effects![0] as { type: string; dslEffect: Effect }).dslEffect;
-    const recover = (effects![1] as { type: string; dslEffect: Effect }).dslEffect;
+    const apply = effects![0] as Effect;
+    const recover = effects![1] as Effect;
     expect(apply.verb).toBe(VerbType.APPLY);
     expect((apply.with as Record<string, { value: number }>).statusLevel.value).toBe(2);
     // Sibling untouched
@@ -217,11 +215,11 @@ describe('B. injectStatusLevelIntoSegments', () => {
     };
     const clause: FrameClausePredicate = {
       conditions: [],
-      effects: [{ type: 'dsl' as const, dslEffect: applyStatus }],
+      effects: [applyStatus],
     };
     const segs: EventSegmentData[] = [{
       properties: { duration: 600 },
-      frames: [{ offsetFrame: 0, clauses: [clause] }],
+      frames: [{ offsetFrame: 0, clause: [clause] }],
     }];
     const out = injectStatusLevelIntoSegments(segs, 4);
     const dsl = firstDslEffect(out);
@@ -249,15 +247,15 @@ describe('B. injectStatusLevelIntoSegments', () => {
       to: NounType.ENEMY,
       with: { stacks: { verb: VerbType.IS, value: 1 }, statusLevel: { verb: VerbType.IS, value: 1 } },
     };
-    const clause: FrameClausePredicate = { conditions: [], effects: [{ type: 'dsl', dslEffect: applyCombustion }] };
+    const clause: FrameClausePredicate = { conditions: [], effects: [applyCombustion] };
     const segs: EventSegmentData[] = [
-      { properties: { duration: 300 }, frames: [{ offsetFrame: 0, clauses: [clause] }, { offsetFrame: 60, clauses: [clause] }] },
-      { properties: { duration: 300 }, frames: [{ offsetFrame: 0, clauses: [clause] }] },
+      { properties: { duration: 300 }, frames: [{ offsetFrame: 0, clause: [clause] }, { offsetFrame: 60, clause: [clause] }] },
+      { properties: { duration: 300 }, frames: [{ offsetFrame: 0, clause: [clause] }] },
     ];
     const out = injectStatusLevelIntoSegments(segs, 4)!;
     const checkFrameLevel = (seg: number, frame: number) => {
-      const eff = out[seg].frames![frame].clauses![0].effects[0] as { type: string; dslEffect: Effect };
-      expect((eff.dslEffect.with as Record<string, { value: number }>).statusLevel.value).toBe(4);
+      const eff = out[seg].frames![frame].clause![0].effects[0] as Effect;
+      expect((eff.with as Record<string, { value: number }>).statusLevel.value).toBe(4);
     };
     checkFrameLevel(0, 0);
     checkFrameLevel(0, 1);

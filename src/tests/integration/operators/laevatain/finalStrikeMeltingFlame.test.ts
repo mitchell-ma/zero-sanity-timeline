@@ -483,9 +483,9 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     const renderedSurvivor = heatVm!.events.find((ev) => ev.uid === survivor.uid)!;
     const consumeFrame = phase2HeatsConsumed[0].startFrame + eventDuration(phase2HeatsConsumed[0]);
     expect(renderedSurvivor.segments).toHaveLength(2);
-    expect(renderedSurvivor.segments[0].properties.name).toBe('Heat II');
+    expect(renderedSurvivor.segments[0].properties.name).toBe('Heat 2');
     expect(renderedSurvivor.segments[0].properties.duration).toBe(consumeFrame - survivor.startFrame);
-    expect(renderedSurvivor.segments[1].properties.name).toBe('Heat I');
+    expect(renderedSurvivor.segments[1].properties.name).toBe('Heat 1');
     expect(renderedSurvivor.segments[1].properties.duration).toBe(survivorDurBefore - (consumeFrame - survivor.startFrame));
   });
 
@@ -573,8 +573,8 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     const heatVm = viewModels.get(heatCol!.key);
     const renderedSurvivor = heatVm!.events.find((ev) => ev.uid === survivor.uid)!;
     expect(renderedSurvivor.segments).toHaveLength(2);
-    expect(renderedSurvivor.segments[0].properties.name).toBe('Heat II');
-    expect(renderedSurvivor.segments[1].properties.name).toBe('Heat I');
+    expect(renderedSurvivor.segments[0].properties.name).toBe('Heat 2');
+    expect(renderedSurvivor.segments[1].properties.name).toBe('Heat 1');
     // Segments sum to the survivor's original duration.
     expect(renderedSurvivor.segments[0].properties.duration + renderedSurvivor.segments[1].properties.duration).toBe(survivorOriginalDur);
   });
@@ -642,11 +642,11 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     const heatVm = viewModels.get(heatCol!.key);
     const renderedSurvivor = heatVm!.events.find((ev) => ev.uid === survivor.uid)!;
     expect(renderedSurvivor.segments).toHaveLength(2);
-    expect(renderedSurvivor.segments[0].properties.name).toBe('Heat II');
-    expect(renderedSurvivor.segments[1].properties.name).toBe('Heat I');
+    expect(renderedSurvivor.segments[0].properties.name).toBe('Heat 2');
+    expect(renderedSurvivor.segments[1].properties.name).toBe('Heat 1');
   });
 
-  it("FREEFORM: add heats manually, BATK-1 consume, more heats, BATK-2 consume — labels evolve correctly (no 'Heat IV' on surviving heat)", () => {
+  it("FREEFORM: add heats manually, BATK-1 consume, more heats, BATK-2 consume — labels evolve correctly (no 'Heat 4' on surviving heat)", () => {
     const { result } = renderHook(() => useApp());
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
@@ -745,7 +745,7 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     // Every segment's label must reflect an accurate cumulative count at its
     // time window. No active heat should have a segment labeled with a count
     // greater than the number of heats actually alive during that segment.
-    // Specifically, there should never be a "Heat IV" when fewer than 4 heats are co-active.
+    // Specifically, there should never be a "Heat 4" when fewer than 4 heats are co-active.
     const survivors = heatVmAfter!.events.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     for (const surv of survivors) {
       for (const seg of surv.segments) {
@@ -761,17 +761,15 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
           && ev.startFrame + ev.segments.reduce((s, x) => s + x.properties.duration, 0) > frameAtSegStart,
         ).length;
         const actualCount = activeAtFrame;
-        const labelRomanMatch = name.match(/Heat (I{1,3}|IV|V|VI{0,3}|IX)$/);
-        const labelRoman = labelRomanMatch?.[1];
-        const romanToNum: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9 };
-        const labelCount = labelRoman ? romanToNum[labelRoman] : -1;
+        const labelDigitMatch = name.match(/Heat (\d+)$/);
+        const labelCount = labelDigitMatch ? Number(labelDigitMatch[1]) : -1;
         expect({ survivor: surv.uid, segLabel: name, segStartFrame: frameAtSegStart, labelCount, actualActive: actualCount })
           .toMatchObject({ labelCount: actualCount });
       }
     }
   });
 
-  it("post-consume: new heats after an old batch was consumed restart at 'Heat I'", () => {
+  it("post-consume: new heats after an old batch was consumed restart at 'Heat 1'", () => {
     // Regression test for the "Heat IV starting by itself" bug. After a
     // full consume (all 3 heats absorbed by Scorching Heart), a later BS
     // must produce a fresh Heat I — not Heat IV — because the earlier
@@ -819,10 +817,10 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     // Single segment (no other heats overlap to cause a split). Event-level
     // label — used by EventRenderer for isSingleSeg — reads "Heat I".
     expect(rendered.segments).toHaveLength(1);
-    expect(heatVm!.statusOverrides.get(newHeat!.uid)?.label).toBe('Heat I');
+    expect(heatVm!.statusOverrides.get(newHeat!.uid)?.label).toBe('Heat 1');
   });
 
-  it("consumed fresh heat after earlier batch: label stays 'Heat I', never flips to 'Heat IV'", () => {
+  it("consumed fresh heat after earlier batch: label stays 'Heat 1', never flips to 'Heat 4'", () => {
     // Regression for the screenshot bug: a fresh solo heat applied after an
     // earlier batch has been fully consumed must remain labeled "Heat I"
     // both while alive AND after it itself is consumed by a BATK. Previously
@@ -870,7 +868,7 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
             || (c as MiniTimeline).columnId === INFLICTION_COLUMNS.HEAT),
       );
       const heatVm = vms.get(heatCol!.key)!;
-      expect(heatVm.statusOverrides.get(freshHeat!.uid)?.label).toBe('Heat I');
+      expect(heatVm.statusOverrides.get(freshHeat!.uid)?.label).toBe('Heat 1');
     }
 
     // Phase 3: another BATK consumes the fresh heat (MF goes 3 → 4).
@@ -894,7 +892,7 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
           || (c as MiniTimeline).columnId === INFLICTION_COLUMNS.HEAT),
     );
     const heatVmAfter = vmsAfter.get(heatColAfter!.key)!;
-    expect(heatVmAfter.statusOverrides.get(freshHeat!.uid)?.label).toBe('Heat I');
+    expect(heatVmAfter.statusOverrides.get(freshHeat!.uid)?.label).toBe('Heat 1');
 
     // Now verify start/end/names for every heat infliction in the timeline.
     const allHeats = getHeatInflictions(result.current).slice().sort(
@@ -933,6 +931,6 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     const labels = allHeats.map(
       (h) => heatVmAfter.statusOverrides.get(h.uid)?.label,
     );
-    expect(labels).toEqual(['Heat I', 'Heat II', 'Heat III', 'Heat I']);
+    expect(labels).toEqual(['Heat 1', 'Heat 2', 'Heat 3', 'Heat 1']);
   });
 });

@@ -693,8 +693,8 @@ describe('H. Ultimate — OLDEN STARE Application', () => {
     // Last frame (rogue wave) should have higher multiplier than DoT frames
     const dotFrame = seg.frames![0];
     const rogueFrame = seg.frames![8];
-    const dotInfo = findDealDamageInClauses(dotFrame.clauses);
-    const rogueInfo = findDealDamageInClauses(rogueFrame.clauses);
+    const dotInfo = findDealDamageInClauses(dotFrame.clause);
+    const rogueInfo = findDealDamageInClauses(rogueFrame.clause);
     const dotNode = dotInfo?.valueNode ?? dotInfo;
     const rogueNode = rogueInfo?.valueNode ?? rogueInfo;
     expect(dotNode).toBeDefined();
@@ -1047,13 +1047,12 @@ describe('J. Whirlpool Lifecycle', () => {
     // Both overlap (30s duration each, 5s apart) — must have DIFFERENT labels
     const labels = vmWhirlpools.map(wp => statusVM!.statusOverrides?.get(wp.uid)?.label);
     expect(labels[0]).not.toBe(labels[1]);
-    // First = I, second = II
-    expect(labels[0]).toMatch(/I$/);
-    expect(labels[0]).not.toMatch(/II$/);
-    expect(labels[1]).toMatch(/II$/);
+    // First = 1, second = 2
+    expect(labels[0]).toMatch(/\s1$/);
+    expect(labels[1]).toMatch(/\s2$/);
   });
 
-  it('J3: Whirlpools placed out of chronological order get correct I/II labels', () => {
+  it('J3: Whirlpools placed out of chronological order get correct 1/2 labels', () => {
     const { result } = setupTangtang();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
@@ -1066,7 +1065,7 @@ describe('J. Whirlpool Lifecycle', () => {
     );
     expect(whirlpools.length).toBe(2);
 
-    // ── View layer: labels should be chronological (I then II) ──
+    // ── View layer: labels should be chronological (1 then 2) ──
     const statusCol = findMatchingColumn(result.current, SLOT_TANGTANG, WHIRLPOOL_ID)
       ?? findColumn(result.current, SLOT_TANGTANG, OPERATOR_STATUS_COLUMN_ID);
     expect(statusCol).toBeDefined();
@@ -1085,12 +1084,11 @@ describe('J. Whirlpool Lifecycle', () => {
     // First event (chronologically) should be at 3s, second at 8s
     expect(vmWhirlpools[0].startFrame).toBeLessThan(vmWhirlpools[1].startFrame);
 
-    // Labels: first = I, second = II (chronological, not insertion order)
+    // Labels: first = 1, second = 2 (chronological, not insertion order)
     const label0 = statusVM!.statusOverrides?.get(vmWhirlpools[0].uid)?.label;
     const label1 = statusVM!.statusOverrides?.get(vmWhirlpools[1].uid)?.label;
-    expect(label0).toMatch(/I$/);
-    expect(label0).not.toMatch(/II$/);
-    expect(label1).toMatch(/II$/);
+    expect(label0).toMatch(/\s1$/);
+    expect(label1).toMatch(/\s2$/);
   });
 
   it('J4: Three whirlpools out of order — labels never exceed stack limit', () => {
@@ -1120,10 +1118,10 @@ describe('J. Whirlpool Lifecycle', () => {
       expect(vmWhirlpools[i].startFrame).toBeGreaterThanOrEqual(vmWhirlpools[i - 1].startFrame);
     }
 
-    // No label should exceed "II" (stack limit = 2)
+    // No label should exceed "2" (stack limit = 2)
     for (const wp of vmWhirlpools) {
       const label = statusVM!.statusOverrides?.get(wp.uid)?.label ?? '';
-      expect(label).not.toMatch(/III/);
+      expect(label).not.toMatch(/\s[3-9]$/);
     }
   });
 
@@ -1153,7 +1151,7 @@ describe('J. Whirlpool Lifecycle', () => {
     placeCombo(result.current, 2 * FPS);
     placeCombo(result.current, 4 * FPS);
 
-    // ── Whirlpool II: 2 whirlpools on operator, labeled I and II ──
+    // ── Whirlpool 2: 2 whirlpools on operator, labeled 1 and 2 ──
     const whirlpools = result.current.allProcessedEvents.filter(
       ev => ev.columnId === WHIRLPOOL_ID && ev.ownerEntityId === SLOT_TANGTANG && ev.startFrame > 0,
     );
@@ -1168,8 +1166,8 @@ describe('J. Whirlpool Lifecycle', () => {
     const opVM = vmBefore.get(opStatusCol!.key);
     expect(opVM).toBeDefined();
     const wpLabels = whirlpools.map(wp => opVM!.statusOverrides?.get(wp.uid)?.label);
-    expect(wpLabels.some(l => l && /\bI$/.test(l))).toBe(true);
-    expect(wpLabels.some(l => l && /II$/.test(l))).toBe(true);
+    expect(wpLabels.some(l => l && /\s1$/.test(l))).toBe(true);
+    expect(wpLabels.some(l => l && /\s2$/.test(l))).toBe(true);
 
     // ── BS consumes whirlpools → 3 waterspouts on enemy ──
     placeBS(result.current, 8 * FPS);
@@ -1185,7 +1183,7 @@ describe('J. Whirlpool Lifecycle', () => {
     );
     expect(cryoInflictions.length).toBeGreaterThanOrEqual(3);
 
-    // ── View layer: cryo infliction label shows "III" (3 stacks) ──
+    // ── View layer: cryo infliction label shows "3" (3 stacks) ──
     const enemyStatusCol = result.current.columns.find(
       (c): c is MiniTimeline => c.type === ColumnType.MINI_TIMELINE
         && c.ownerEntityId === ENEMY_ID && c.columnId === ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
@@ -1203,9 +1201,9 @@ describe('J. Whirlpool Lifecycle', () => {
     );
     expect(vmCryo.length).toBeGreaterThanOrEqual(3);
 
-    // The third (or later) cryo infliction should have label containing "III"
+    // The third (or later) cryo infliction should have label containing "3"
     const cryoLabels = vmCryo.map(ev => enemyVM!.statusOverrides?.get(ev.uid)?.label).filter(Boolean);
-    expect(cryoLabels.some(l => l!.includes('III'))).toBe(true);
+    expect(cryoLabels.some(l => /\s3$/.test(l!))).toBe(true);
   });
 });
 
@@ -1399,12 +1397,12 @@ describe('M. BS Waterspout Stacking with Whirlpools', () => {
       expect(enemyVM!.microPositions.has(ws.uid)).toBe(true);
     }
 
-    // Waterspouts are independent entities — NO roman numeral stack labels.
+    // Waterspouts are independent entities — NO stack-count suffix labels.
     // statusOverrides should either not exist for these UIDs or have bare name labels.
     for (const ws of vmWaterspouts) {
       const label = enemyVM!.statusOverrides?.get(ws.uid)?.label ?? '';
-      // Label should NOT contain roman numerals (I, II, III, IV, V)
-      expect(label).not.toMatch(/\s[IVX]+$/);
+      // Label should NOT contain a trailing stack count (e.g. " 1", " 2", …)
+      expect(label).not.toMatch(/\s\d+$/);
     }
   });
 });

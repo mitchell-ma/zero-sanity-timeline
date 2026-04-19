@@ -9,7 +9,6 @@ import { hasDealDamageClause } from '../controller/timeline/clauseQueries';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
 // validateSegmentContiguity removed — no longer needed in render path
 import { VERTICAL_AXIS, segmentRadius, type AxisMap } from '../utils/axisMap';
-import { formatSegmentShortName } from '../dsl/semanticsTranslation';
 import { VerbType, NounType, AdjectiveType } from '../dsl/semantics';
 
 /** Warning icon with a fixed-position tooltip that escapes scroll overflow. */
@@ -49,13 +48,8 @@ const WarningIcon = React.memo(function WarningIcon({ messages }: { messages: st
   );
 });
 
-const ROMAN_RE = /^\d+$/;
-/** Convert bare numeric labels (legacy "1","2",...) to Roman numerals. */
-const toDisplayLabel = (label: string | undefined) =>
-  label && ROMAN_RE.test(label) ? formatSegmentShortName(undefined, Number(label) - 1) : label;
-
-/** Match trailing roman numeral (I–XX) or arabic number at end of label. */
-const TRAILING_NUMERAL_RE = /\s+((?:X{0,2}(?:IX|IV|V?I{0,3}))|(?:\d+))$/;
+/** Match trailing arabic digits or reaction StatusLevel roman (I–IV) at end of label. */
+const TRAILING_NUMERAL_RE = /\s+((?:IV|III|II|I)|(?:\d+))$/;
 /** If a label has a trailing numeral/roman, return just that suffix; otherwise undefined. */
 function extractTrailingNumeral(label: string): string | undefined {
   const m = label.match(TRAILING_NUMERAL_RE);
@@ -67,13 +61,11 @@ const CHAR_PX = 7;
 const LABEL_PAD_PX = 8;
 
 function hasInflictionOrStatus(f: EventFrameMarker): boolean {
-  if (!f.clauses) return false;
-  for (const pred of f.clauses) {
-    for (const ef of pred.effects) {
-      if (ef.dslEffect) {
-        const v = ef.dslEffect.verb;
-        if (v === VerbType.APPLY || v === VerbType.CONSUME) return true;
-      }
+  if (!f.clause) return false;
+  for (const pred of f.clause) {
+    for (const dsl of pred.effects) {
+      const v = dsl.verb;
+      if (v === VerbType.APPLY || v === VerbType.CONSUME) return true;
     }
   }
   return false;
@@ -122,21 +114,20 @@ function getElementColorMix(el: string): string | undefined {
 function getFrameElementColor(f: EventFrameMarker, skillElement?: string): string | undefined {
   // Extract element from clause effects (first APPLY/CONSUME with an element qualifier or status element).
   let el: string | undefined;
-  if (f.clauses) {
-    for (const pred of f.clauses) {
+  if (f.clause) {
+    for (const pred of f.clause) {
       if (el) break;
-      for (const ef of pred.effects) {
-        if (!ef.dslEffect) continue;
-        const q = ef.dslEffect.objectQualifier;
-        if (ef.dslEffect.verb === VerbType.APPLY || ef.dslEffect.verb === VerbType.CONSUME) {
-          if (ef.dslEffect.object === NounType.STATUS && ef.dslEffect.objectId === NounType.INFLICTION && q) { el = q; break; }
-          if (ef.dslEffect.object === NounType.STATUS && ef.dslEffect.objectId === NounType.REACTION && q) {
+      for (const dsl of pred.effects) {
+        const q = dsl.objectQualifier;
+        if (dsl.verb === VerbType.APPLY || dsl.verb === VerbType.CONSUME) {
+          if (dsl.object === NounType.STATUS && dsl.objectId === NounType.INFLICTION && q) { el = q; break; }
+          if (dsl.object === NounType.STATUS && dsl.objectId === NounType.REACTION && q) {
             el = getStatusElementMap()[q]; break;
           }
-          if (ef.dslEffect.object === NounType.STATUS && ef.dslEffect.objectId
-              && ef.dslEffect.objectId !== AdjectiveType.PHYSICAL
-              && ef.dslEffect.objectId !== NounType.REACTION) {
-            el = getStatusElementMap()[ef.dslEffect.objectId]; break;
+          if (dsl.object === NounType.STATUS && dsl.objectId
+              && dsl.objectId !== AdjectiveType.PHYSICAL
+              && dsl.objectId !== NounType.REACTION) {
+            el = getStatusElementMap()[dsl.objectId]; break;
           }
         }
       }
@@ -301,7 +292,7 @@ function EventBlock({
   /** Resolve visual crit state for a frame based on runtime crit mode. */
   const isFrameVisualCrit = (f: EventFrameMarker): boolean => {
     const mode = getRuntimeCritMode();
-    if (mode === CritMode.ALWAYS || mode === CritMode.EXPECTED) return hasDealDamageClause(f.clauses);
+    if (mode === CritMode.ALWAYS || mode === CritMode.EXPECTED) return hasDealDamageClause(f.clause);
     if (mode === CritMode.NEVER) return false;
     return !!f.isCrit;
   };
@@ -419,9 +410,7 @@ function EventBlock({
 
     // Segment label: use segment name if present, otherwise empty for multi-segment.
     // For single-segment events, fall back to the display label.
-    const segLabelFull = seg.properties.name
-      ? toDisplayLabel(seg.properties.name)
-      : (isSingleSegment ? displayLabel : undefined);
+    const segLabelFull = seg.properties.name ?? (isSingleSegment ? displayLabel : undefined);
     // If full label won't fit the segment, show just the trailing numeral (if any)
     const segLabelFits = !segLabelFull || segH >= segLabelFull.length * CHAR_PX + LABEL_PAD_PX;
     const segLabel = segLabelFits ? segLabelFull
@@ -498,7 +487,7 @@ function EventBlock({
         <div
           key={`f-${i}-${fi}`}
           data-frame-id={`${uid}-${i}-${fi}`}
-          className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${isFrameVisualCrit(f) ? ' event-frame-diamond--crit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${!hasDealDamageClause(f.clauses) ? ' event-frame-diamond--status' : ''}`}
+          className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${isFrameVisualCrit(f) ? ' event-frame-diamond--crit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${!hasDealDamageClause(f.clause) ? ' event-frame-diamond--status' : ''}`}
           style={elColor && !isSelected && !isHoverHighlight
             ? { ...baseStyle, background: elColor, boxShadow: `0 0 3px ${elColor}80` } as React.CSSProperties
             : baseStyle as React.CSSProperties}

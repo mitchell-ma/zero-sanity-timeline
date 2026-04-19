@@ -303,8 +303,8 @@ describe('E. Conditional frame (Solidification) skipping', () => {
     const conditionalFrame = ult.segments[1].frames![1];
 
     // Clauses should be narrowed to empty (conditions not met → all filtered out)
-    expect(conditionalFrame.clauses).toBeDefined();
-    expect(conditionalFrame.clauses!.length).toBe(0);
+    expect(conditionalFrame.clause).toBeDefined();
+    expect(conditionalFrame.clause!.length).toBe(0);
   });
 });
 

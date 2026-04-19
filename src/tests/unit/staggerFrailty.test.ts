@@ -398,7 +398,7 @@ describe('F. StaggerController.sync', () => {
         properties: { duration: 120 },
         frames: [{
           offsetFrame: 0,
-          clauses: [buildDealStaggerClause(staggerValue)],
+          clause: [buildDealStaggerClause(staggerValue)],
         }],
       }],
     };
@@ -476,7 +476,7 @@ describe('F. StaggerController.sync', () => {
           properties: { duration: 200 },
           frames: [{
             offsetFrame: 20,
-            clauses: [buildDealStaggerClause(35)],
+            clause: [buildDealStaggerClause(35)],
           }],
         },
       ],

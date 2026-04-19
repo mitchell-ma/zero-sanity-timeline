@@ -5,7 +5,7 @@
  *
  * Extracted from UnifiedCustomizer.tsx for reuse.
  */
-import React, { useState, useCallback, createContext, useContext } from 'react';
+import React, { useState, useCallback, createContext, useContext, useEffect, useRef } from 'react';
 import { VerbType, NounType } from '../../dsl/semantics';
 import { splitConditionText, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
 import { PERMANENT_DURATION, UnitType } from '../../consts/enums';
@@ -1310,21 +1310,31 @@ export function TabbedSegmentView({ entry, critState, editState }: {
     setActiveFrameTab(null);
   }, []);
 
+  // React's synthetic onWheel is registered passive, so preventDefault() inside
+  // it is a no-op — the outer info pane keeps scrolling vertically. Attach a
+  // non-passive native listener to intercept the wheel and redirect vertical
+  // deltas into horizontal scroll on the tabs row itself.
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const onWheelNative = (e: WheelEvent) => {
+      if (e.deltaY === 0) return;
+      el.scrollLeft += e.deltaY;
+      e.preventDefault();
+    };
+    el.addEventListener('wheel', onWheelNative, { passive: false });
+    return () => el.removeEventListener('wheel', onWheelNative);
+  }, []);
+
   if (segments.length === 0 && topFrames.length === 0) return null;
 
   if (segments.length === 0) {
     const flatFrame = activeFrameTab != null ? activeFrameTab : 0;
     return (
       <div className="ops-seg-view">
-        <div className="ops-conjoined-tabs">
-          <div
-            className="ops-conjoined-row ops-conjoined-row--frame"
-            onWheel={(e) => {
-              if (e.deltaY === 0) return;
-              e.currentTarget.scrollLeft += e.deltaY;
-              e.preventDefault();
-            }}
-          >
+        <div className="ops-conjoined-tabs" ref={tabsRef}>
+          <div className="ops-conjoined-row ops-conjoined-row--frame">
             {topFrames.map((_f, fi) => (
               <button
                 key={fi}
@@ -1360,14 +1370,7 @@ export function TabbedSegmentView({ entry, critState, editState }: {
 
   return (
     <div className="ops-seg-view">
-      <div
-        className="ops-conjoined-tabs"
-        onWheel={(e) => {
-          if (e.deltaY === 0) return;
-          e.currentTarget.scrollLeft += e.deltaY;
-          e.preventDefault();
-        }}
-      >
+      <div className="ops-conjoined-tabs" ref={tabsRef}>
         <div className="ops-conjoined-row ops-conjoined-row--seg">
           {segments.map((s, si) => {
             const isActiveSeg = safeSeg === si && !viewingFrame;

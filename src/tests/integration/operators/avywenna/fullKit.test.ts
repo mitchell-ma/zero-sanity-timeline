@@ -243,14 +243,14 @@ describe('A. BS base hit (unconditional)', () => {
     expect(frames.length).toBeGreaterThanOrEqual(1);
 
     // At least one frame should have dealDamage (unconditional electric damage)
-    const damageFrame = frames.find(f => findDealDamageInClauses(f.clauses));
+    const damageFrame = frames.find(f => findDealDamageInClauses(f.clause));
     expect(damageFrame).toBeDefined();
-    expect(findDealDamageInClauses(damageFrame!.clauses)!.element).toBe(AdjectiveType.ELECTRIC);
+    expect(findDealDamageInClauses(damageFrame!.clause)!.element).toBe(AdjectiveType.ELECTRIC);
 
     // At least one frame should have stagger
-    const staggerFrame = frames.find(f => findStaggerInClauses(f.clauses));
+    const staggerFrame = frames.find(f => findStaggerInClauses(f.clause));
     expect(staggerFrame).toBeDefined();
-    expect(findStaggerInClauses(staggerFrame!.clauses)!).toBeGreaterThan(0);
+    expect(findStaggerInClauses(staggerFrame!.clause)!).toBeGreaterThan(0);
 
     // No Thunderlance events should exist
     expect(getThunderlanceEvents(result.current)).toHaveLength(0);
@@ -320,11 +320,11 @@ describe('B. BS consumes Thunderlance — full effect chain', () => {
     const frames = allFrames(bsEvents[0]);
 
     // Find the frame with clauses (conditional effects)
-    const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
+    const clauseFrame = frames.find(f => f.clause && f.clause.length > 0);
     expect(clauseFrame).toBeDefined();
 
     // Should have conditional clause for THUNDERLANCE (HAVE STATUS THUNDERLANCE)
-    const thunderlanceClause = clauseFrame!.clauses!.find(c =>
+    const thunderlanceClause = clauseFrame!.clause!.find(c =>
       c.conditions?.some(
         cond => cond.verb === VerbType.HAVE
           && cond.object === NounType.STATUS
@@ -333,23 +333,19 @@ describe('B. BS consumes Thunderlance — full effect chain', () => {
     );
     expect(thunderlanceClause).toBeDefined();
 
-    // Clause effects should include CONSUME STATUS THUNDERLANCE (as dsl effect)
+    // Clause effects should include CONSUME STATUS THUNDERLANCE
     const consumeEffect = thunderlanceClause!.effects.find(
-      e => e.type === 'dsl' && e.dslEffect?.verb === VerbType.CONSUME
-        && e.dslEffect?.objectId === THUNDERLANCE_STATUS_ID,
+      dsl => dsl.verb === VerbType.CONSUME && dsl.objectId === THUNDERLANCE_STATUS_ID,
     );
     expect(consumeEffect).toBeDefined();
 
     // dealDamage and stagger live on the unconditional clause now (single merged dealDamage)
-    const unconditional = clauseFrame!.clauses!.find(c => !c.conditions || c.conditions.length === 0);
+    const unconditional = clauseFrame!.clause!.find(c => !c.conditions || c.conditions.length === 0);
     expect(unconditional).toBeDefined();
     const dealInfo = findDealDamageInClauses([unconditional!]);
     expect(dealInfo).toBeDefined();
     expect(dealInfo!.element).toBe(AdjectiveType.ELECTRIC);
-    expect(unconditional!.effects.some(e => {
-      const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
-      return dsl?.verb === VerbType.DEAL && dsl?.object === NounType.STAGGER;
-    })).toBe(true);
+    expect(unconditional!.effects.some(dsl => dsl?.verb === VerbType.DEAL && dsl?.object === NounType.STAGGER)).toBe(true);
   });
 });
 
@@ -410,11 +406,11 @@ describe('C. BS consumes Thunderlance EX — full effect chain', () => {
     );
     const frames = allFrames(bsEvents[0]);
 
-    const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
+    const clauseFrame = frames.find(f => f.clause && f.clause.length > 0);
     expect(clauseFrame).toBeDefined();
 
     // Conditional clause for THUNDERLANCE_EX
-    const exClause = clauseFrame!.clauses!.find(c =>
+    const exClause = clauseFrame!.clause!.find(c =>
       c.conditions?.some(
         cond => cond.verb === VerbType.HAVE
           && cond.object === NounType.STATUS
@@ -423,16 +419,14 @@ describe('C. BS consumes Thunderlance EX — full effect chain', () => {
     );
     expect(exClause).toBeDefined();
 
-    // CONSUME STATUS THUNDERLANCE_EX (as dsl effect)
+    // CONSUME STATUS THUNDERLANCE_EX
     expect(exClause!.effects.some(
-      e => e.type === 'dsl' && e.dslEffect?.verb === VerbType.CONSUME
-        && e.dslEffect?.objectId === THUNDERLANCE_EX_STATUS_ID,
+      dsl => dsl.verb === VerbType.CONSUME && dsl.objectId === THUNDERLANCE_EX_STATUS_ID,
     )).toBe(true);
 
     // EX damage is now produced by a separate THUNDERLANCE_EX_PIERCE status applied to enemy.
     expect(exClause!.effects.some(
-      e => e.type === 'dsl' && e.dslEffect?.verb === VerbType.APPLY
-        && e.dslEffect?.objectId === THUNDERLANCE_EX_PIERCE_STATUS_ID,
+      dsl => dsl.verb === VerbType.APPLY && dsl.objectId === THUNDERLANCE_EX_PIERCE_STATUS_ID,
     )).toBe(true);
 
     // EX stagger and Electric Infliction live on the pierce status, not the BS clause
@@ -453,11 +447,11 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
       ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     const frames = allFrames(bsEvents[0]);
-    const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
+    const clauseFrame = frames.find(f => f.clause && f.clause.length > 0);
     expect(clauseFrame).toBeDefined();
 
     // Unconditional clause should have dealDamage effect
-    const unconditional = clauseFrame!.clauses!.find(c =>
+    const unconditional = clauseFrame!.clause!.find(c =>
       !c.conditions || c.conditions.length === 0,
     );
     expect(unconditional).toBeDefined();
@@ -490,18 +484,17 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
       ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     const frames = allFrames(bsEvents[0]);
-    const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
+    const clauseFrame = frames.find(f => f.clause && f.clause.length > 0);
     expect(clauseFrame).toBeDefined();
 
-    const lanceClause = clauseFrame!.clauses!.find(c =>
+    const lanceClause = clauseFrame!.clause!.find(c =>
       c.conditions?.some(cond => cond.objectId === THUNDERLANCE_STATUS_ID),
     );
     expect(lanceClause).toBeDefined();
 
     // The conditional clause applies THUNDERLANCE_PIERCE — damage is on that status
     expect(lanceClause!.effects.some(
-      e => e.type === 'dsl' && e.dslEffect?.verb === VerbType.APPLY
-        && e.dslEffect?.objectId === THUNDERLANCE_PIERCE_STATUS_ID,
+      dsl => dsl.verb === VerbType.APPLY && dsl.objectId === THUNDERLANCE_PIERCE_STATUS_ID,
     )).toBe(true);
   });
 
@@ -516,17 +509,16 @@ describe('D. P5 Carrot and Sharp Stick — 1.15× BS damage', () => {
       ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.BATTLE,
     );
     const frames = allFrames(bsEvents[0]);
-    const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
+    const clauseFrame = frames.find(f => f.clause && f.clause.length > 0);
     expect(clauseFrame).toBeDefined();
 
-    const exClause = clauseFrame!.clauses!.find(c =>
+    const exClause = clauseFrame!.clause!.find(c =>
       c.conditions?.some(cond => cond.objectId === THUNDERLANCE_EX_STATUS_ID),
     );
     expect(exClause).toBeDefined();
 
     expect(exClause!.effects.some(
-      e => e.type === 'dsl' && e.dslEffect?.verb === VerbType.APPLY
-        && e.dslEffect?.objectId === THUNDERLANCE_EX_PIERCE_STATUS_ID,
+      dsl => dsl.verb === VerbType.APPLY && dsl.objectId === THUNDERLANCE_EX_PIERCE_STATUS_ID,
     )).toBe(true);
   });
 });
@@ -699,21 +691,20 @@ describe('G. T2 Tactful Approach — Electric Susceptibility', () => {
       ev => ev.ownerEntityId === SLOT && ev.columnId === NounType.ULTIMATE,
     );
     const frames = allFrames(ultEvents[0]);
-    const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
+    const clauseFrame = frames.find(f => f.clause && f.clause.length > 0);
     expect(clauseFrame).toBeDefined();
 
     // Find the DSL effect for APPLY SUSCEPTIBILITY
-    const allEffects = clauseFrame!.clauses!.flatMap(c => c.effects);
+    const allEffects = clauseFrame!.clause!.flatMap(c => c.effects);
     const suscEffect = allEffects.find(
-      e => e.type === 'dsl'
-        && e.dslEffect?.verb === VerbType.APPLY
-        && e.dslEffect?.object === NounType.STATUS
-        && e.dslEffect?.objectId === NounType.SUSCEPTIBILITY,
+      dsl => dsl.verb === VerbType.APPLY
+        && dsl.object === NounType.STATUS
+        && dsl.objectId === NounType.SUSCEPTIBILITY,
     );
     expect(suscEffect).toBeDefined();
 
     // Value should be VARY_BY TALENT_LEVEL [0, 0.06, 0.10]
-    const withValue = suscEffect!.dslEffect!.with as Record<string, unknown>;
+    const withValue = suscEffect!.with as Record<string, unknown>;
     expect(withValue.value).toBeDefined();
     const valueNode = withValue.value as Record<string, unknown>;
     expect(valueNode.verb).toBe(VerbType.VARY_BY);
@@ -760,9 +751,9 @@ describe('I. Combo skill — damage multipliers and stagger', () => {
     expect(frames.length).toBeGreaterThanOrEqual(1);
 
     // Frame should have dealDamage with Electric element
-    const damageFrame = frames.find(f => findDealDamageInClauses(f.clauses));
+    const damageFrame = frames.find(f => findDealDamageInClauses(f.clause));
     expect(damageFrame).toBeDefined();
-    const damageInfo = findDealDamageInClauses(damageFrame!.clauses)!;
+    const damageInfo = findDealDamageInClauses(damageFrame!.clause)!;
     expect(damageInfo.element).toBe(AdjectiveType.ELECTRIC);
 
     // Values should be the 12-entry skill level array
@@ -792,23 +783,21 @@ describe('I. Combo skill — damage multipliers and stagger', () => {
     const frames = allFrames(comboEvents[0]);
 
     // Stagger on the frame marker
-    const staggerFrame = frames.find(f => findStaggerInClauses(f.clauses));
+    const staggerFrame = frames.find(f => findStaggerInClauses(f.clause));
     expect(staggerFrame).toBeDefined();
-    expect(findStaggerInClauses(staggerFrame!.clauses)).toBe(10);
+    expect(findStaggerInClauses(staggerFrame!.clause)).toBe(10);
 
     // Frame clause should contain APPLY THUNDERLANCE with stacks 3
-    const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
+    const clauseFrame = frames.find(f => f.clause && f.clause.length > 0);
     expect(clauseFrame).toBeDefined();
 
-    const applyLance = clauseFrame!.clauses!.flatMap(c => c.effects).find(
-      e => e.type === 'dsl'
-        && e.dslEffect?.verb === VerbType.APPLY
-        && e.dslEffect?.objectId === THUNDERLANCE_STATUS_ID,
+    const applyLance = clauseFrame!.clause!.flatMap(c => c.effects).find(
+      dsl => dsl.verb === VerbType.APPLY && dsl.objectId === THUNDERLANCE_STATUS_ID,
     );
     expect(applyLance).toBeDefined();
 
     // Stacks should be 3
-    const withStacks = (applyLance!.dslEffect!.with as Record<string, unknown>)?.stacks as Record<string, unknown>;
+    const withStacks = (applyLance!.with as Record<string, unknown>)?.stacks as Record<string, unknown>;
     expect(withStacks).toBeDefined();
     expect(withStacks.value).toBe(3);
   });
@@ -835,9 +824,9 @@ describe('J. Ultimate skill — damage multipliers and stagger', () => {
     expect(frames.length).toBeGreaterThanOrEqual(1);
 
     // Frame should have dealDamage with Electric element
-    const damageFrame = frames.find(f => findDealDamageInClauses(f.clauses));
+    const damageFrame = frames.find(f => findDealDamageInClauses(f.clause));
     expect(damageFrame).toBeDefined();
-    const damageInfo = findDealDamageInClauses(damageFrame!.clauses)!;
+    const damageInfo = findDealDamageInClauses(damageFrame!.clause)!;
     expect(damageInfo.element).toBe(AdjectiveType.ELECTRIC);
 
     // Values should be the 12-entry skill level array
@@ -868,23 +857,21 @@ describe('J. Ultimate skill — damage multipliers and stagger', () => {
     const frames = allFrames(ultEvents[0]);
 
     // Stagger on the frame marker (VARY_BY SL resolves to first value at parse time)
-    const staggerFrame = frames.find(f => findStaggerInClauses(f.clauses));
+    const staggerFrame = frames.find(f => findStaggerInClauses(f.clause));
     expect(staggerFrame).toBeDefined();
-    expect(findStaggerInClauses(staggerFrame!.clauses)!).toBeGreaterThan(0);
+    expect(findStaggerInClauses(staggerFrame!.clause)!).toBeGreaterThan(0);
 
     // Frame clause should contain APPLY THUNDERLANCE_EX with stacks 1
-    const clauseFrame = frames.find(f => f.clauses && f.clauses.length > 0);
+    const clauseFrame = frames.find(f => f.clause && f.clause.length > 0);
     expect(clauseFrame).toBeDefined();
 
-    const applyEx = clauseFrame!.clauses!.flatMap(c => c.effects).find(
-      e => e.type === 'dsl'
-        && e.dslEffect?.verb === VerbType.APPLY
-        && e.dslEffect?.objectId === THUNDERLANCE_EX_STATUS_ID,
+    const applyEx = clauseFrame!.clause!.flatMap(c => c.effects).find(
+      dsl => dsl.verb === VerbType.APPLY && dsl.objectId === THUNDERLANCE_EX_STATUS_ID,
     );
     expect(applyEx).toBeDefined();
 
     // Stacks should be 1
-    const withStacks = (applyEx!.dslEffect!.with as Record<string, unknown>)?.stacks as Record<string, unknown>;
+    const withStacks = (applyEx!.with as Record<string, unknown>)?.stacks as Record<string, unknown>;
     expect(withStacks).toBeDefined();
     expect(withStacks.value).toBe(1);
   });

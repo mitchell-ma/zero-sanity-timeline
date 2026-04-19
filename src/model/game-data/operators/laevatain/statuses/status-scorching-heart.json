@@ -27,9 +27,9 @@
                   "verb": "VARY_BY",
                   "object": "TALENT_LEVEL",
                   "value": [
-                    10,
-                    15,
-                    20
+                    0.10,
+                    0.15,
+                    0.20
                   ],
                   "of": {
                     "object": "OPERATOR",

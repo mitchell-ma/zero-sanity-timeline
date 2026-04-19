@@ -338,10 +338,10 @@ describe('Stack labels and display name resolution', () => {
 
     expect(linkEvents).toHaveLength(5);
 
-    // 5th event (index 4) should be capped at IV, not V
+    // 5th event (index 4) should be capped at 4, not 5
     const fifthLabel = overrides.get(linkEvents[4].uid)?.label;
-    expect(fifthLabel).toContain('IV');
-    expect(fifthLabel).not.toContain(' V');
+    expect(fifthLabel).toMatch(/\s4$/);
+    expect(fifthLabel).not.toMatch(/\s5$/);
   });
 });
 

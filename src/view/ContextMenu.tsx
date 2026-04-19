@@ -1,6 +1,18 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ContextMenuItem, ContextMenuItemOverride, ContextMenuParameterSubmenu } from "../consts/viewTypes";
-import { ContextMenuAxisKind } from "../consts/enums";
+import { ContextMenuAxisKind, StepperActionIcon } from "../consts/enums";
+
+function StepperActionIconGlyph({ icon }: { icon: StepperActionIcon }) {
+  switch (icon) {
+    case StepperActionIcon.REFRESH:
+      return (
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M14 8a6 6 0 1 1-1.76-4.24" />
+          <path d="M14 2v3.5h-3.5" />
+        </svg>
+      );
+  }
+}
 
 interface ContextMenuProps {
   x: number;
@@ -40,7 +52,20 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
   const menuRef = useRef<HTMLDivElement>(null);
   const submenuRef = useRef<HTMLDivElement>(null);
   const expandRefs = useRef<Record<number, HTMLButtonElement | null>>({});
+  const hoverCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [, forceRender] = useState(0);
+
+  const cancelHoverClose = () => {
+    if (hoverCloseTimer.current != null) {
+      clearTimeout(hoverCloseTimer.current);
+      hoverCloseTimer.current = null;
+    }
+  };
+  const scheduleHoverClose = () => {
+    cancelHoverClose();
+    hoverCloseTimer.current = setTimeout(() => setOpenSubmenu(null), 260);
+  };
+  useEffect(() => () => cancelHoverClose(), []);
 
   // Track submenu selection per item index — map of paramId → value.
   const [selections, setSelections] = useState<Record<number, Record<string, number>>>(() => {
@@ -56,12 +81,29 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
 
   const menuW = 220;
   const menuH = items.reduce((h, item) =>
-    h + (item.separator ? 9 : item.header ? 28 : item.segmentTabs ? 56 : 36) + (item.inlineButtons && !item.segmentTabs ? 32 : 0) + (item.inlineLabel && item.inlineButtons ? 16 : 0),
+    h + (item.separator ? 9 : item.header ? 28 : item.segmentTabs ? 56 : 36) + (item.inlineButtons && !item.segmentTabs ? 32 : 0) + (item.inlineLabel && item.inlineButtons ? 16 : 0) + (item.stepper?.action?.inline ? 32 : 0),
     10);
   const maxH = Math.min(384, window.innerHeight - 16);
   const effectiveH = Math.min(menuH, maxH);
-  const clampedX = Math.min(x, window.innerWidth  - menuW - 8);
-  const clampedY = Math.min(y, window.innerHeight - effectiveH - 8);
+  const estClampedX = Math.max(8, Math.min(x, window.innerWidth  - menuW - 8));
+  const estClampedY = Math.max(8, Math.min(y, window.innerHeight - effectiveH - 8));
+  const [measuredPos, setMeasuredPos] = useState<{ left: number; top: number } | null>(null);
+  const clampedX = measuredPos?.left ?? estClampedX;
+  const clampedY = measuredPos?.top ?? estClampedY;
+
+  // Refine clamping after first paint using actual menu dimensions — the item
+  // height estimate above is a best-effort guess, so measure-and-flip keeps
+  // the menu fully on-screen for any item composition.
+  useLayoutEffect(() => {
+    const el = menuRef.current;
+    if (!el) return;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const margin = 8;
+    const left = Math.max(margin, Math.min(x, window.innerWidth - w - margin));
+    const top = Math.max(margin, Math.min(y, window.innerHeight - h - margin));
+    setMeasuredPos({ left, top });
+  }, [x, y, items]);
 
   useEffect(() => {
     const handleDown = (e: MouseEvent | TouchEvent) => {
@@ -73,13 +115,30 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
+    // Any scroll outside the menu (wheel, touch, or programmatic scroll on any
+    // scroll container) closes — the menu is pinned in viewport coords and
+    // stops pointing at its anchor once the page moves.
+    const handleScroll = (e: Event) => {
+      const target = e.target as Node | null;
+      if (target && (menuRef.current?.contains(target) || submenuRef.current?.contains(target))) return;
+      onClose();
+    };
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as Node;
+      if (menuRef.current?.contains(target) || submenuRef.current?.contains(target)) return;
+      onClose();
+    };
     document.addEventListener('mousedown', handleDown);
     document.addEventListener('touchstart', handleDown);
     document.addEventListener('keydown', handleKey);
+    document.addEventListener('wheel', handleWheel, { passive: true });
+    document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
     return () => {
       document.removeEventListener('mousedown', handleDown);
       document.removeEventListener('touchstart', handleDown);
       document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('wheel', handleWheel);
+      document.removeEventListener('scroll', handleScroll, { capture: true });
     };
   }, [onClose]);
 
@@ -122,6 +181,7 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
         className="context-menu"
         style={{ left: clampedX, top: clampedY }}
         onContextMenu={(e) => e.preventDefault()}
+        onMouseEnter={cancelHoverClose}
       >
         {items.map((item, i) => {
           if (item.separator) {
@@ -129,6 +189,52 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
           }
           if (item.header) {
             return <div key={i} className="context-menu-header">{item.label}</div>;
+          }
+          if (item.stepper) {
+            const stepper = item.stepper;
+            const action = stepper.action;
+            const inlineAction = action && !action.inline ? action : undefined;
+            const rowAction = action && action.inline ? action : undefined;
+            return (
+              <div key={i} className="context-menu-stepper-group">
+                <div className="context-menu-submenu-stepper context-menu-stepper--discrete">
+                  <button
+                    className="context-menu-stepper-btn"
+                    onClick={(e) => { e.stopPropagation(); stepper.onPrev(); forceRender((n) => n + 1); }}
+                    title="Previous"
+                    aria-label="Previous"
+                  >{'\u2039'}</button>
+                  <div className="context-menu-stepper-value">{stepper.valueLabel}</div>
+                  <button
+                    className="context-menu-stepper-btn"
+                    onClick={(e) => { e.stopPropagation(); stepper.onNext(); forceRender((n) => n + 1); }}
+                    title="Next"
+                    aria-label="Next"
+                  >{'\u203a'}</button>
+                  {inlineAction && (
+                    <button
+                      className="context-menu-stepper-action"
+                      onClick={(e) => { e.stopPropagation(); inlineAction.onClick(); forceRender((n) => n + 1); }}
+                      title={inlineAction.title}
+                      aria-label={inlineAction.title}
+                    >
+                      <StepperActionIconGlyph icon={inlineAction.icon} />
+                    </button>
+                  )}
+                </div>
+                {rowAction && (
+                  <button
+                    className="context-menu-stepper-action-row"
+                    onClick={(e) => { e.stopPropagation(); rowAction.onClick(); forceRender((n) => n + 1); }}
+                    title={rowAction.title}
+                    aria-label={rowAction.label ?? rowAction.title}
+                  >
+                    <StepperActionIconGlyph icon={rowAction.icon} />
+                    <span>{rowAction.label ?? rowAction.title}</span>
+                  </button>
+                )}
+              </div>
+            );
           }
           const checked = typeof item.checked === 'function' ? item.checked() : item.checked;
           if (item.segmentTabs && item.inlineButtons) {
@@ -167,8 +273,13 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
           }
           const submenu = item.parameterSubmenu;
           const isSubmenuOpen = openSubmenu === i;
+          // Hovering a non-submenu row while a submenu is open closes it
+          // immediately — rows with submenus are handled by their own `›`.
+          const rowHoverProps = !submenu && openSubmenu != null
+            ? { onMouseEnter: () => { cancelHoverClose(); setOpenSubmenu(null); } }
+            : undefined;
           return (
-            <div key={i} className={submenu ? 'context-menu-row-with-submenu' : undefined}>
+            <div key={i} className={submenu ? 'context-menu-row-with-submenu' : undefined} {...rowHoverProps}>
               <div className={submenu ? 'context-menu-row' : undefined}>
                 <button
                   className={`context-menu-item${item.danger ? ' danger' : ''}${item.disabled ? ' disabled' : ''}${item.checked != null ? ' context-menu-item--toggle' : ''}`}
@@ -195,6 +306,21 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
                     ref={(el) => { expandRefs.current[i] = el; }}
                     className={`context-menu-expand${isSubmenuOpen ? ' open' : ''}`}
                     title={submenu.map((a) => a.paramName).join(' / ')}
+                    onMouseEnter={() => { cancelHoverClose(); setOpenSubmenu(i); }}
+                    onMouseLeave={(e) => {
+                      const rel = e.relatedTarget as Node | null;
+                      // Into the submenu → stay open.
+                      if (rel && submenuRef.current?.contains(rel)) { cancelHoverClose(); return; }
+                      // Into the scrollbar channel (relatedTarget is the menu
+                      // itself) → brief grace so diagonal travel toward the
+                      // submenu through the scrollbar gutter still works.
+                      if (rel === menuRef.current) { scheduleHoverClose(); return; }
+                      // Into any other main-menu element → close immediately.
+                      if (rel && menuRef.current?.contains(rel)) { cancelHoverClose(); setOpenSubmenu(null); return; }
+                      // Outside the overlay entirely → keep open; user can
+                      // close via click-outside, scroll, or Escape.
+                      cancelHoverClose();
+                    }}
                     onClick={(e) => {
                       e.stopPropagation();
                       setOpenSubmenu(isSubmenuOpen ? null : i);
@@ -236,6 +362,20 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
           className={`context-menu-submenu${submenuFlipped ? ' flipped' : ''}`}
           style={{ left: submenuPos.left, top: submenuPos.top }}
           onContextMenu={(e) => e.preventDefault()}
+          onMouseEnter={cancelHoverClose}
+          onMouseLeave={(e) => {
+            const rel = e.relatedTarget as Node | null;
+            // Moving back into the main menu → close immediately.
+            if (rel && menuRef.current?.contains(rel)) {
+              cancelHoverClose();
+              setOpenSubmenu(null);
+              return;
+            }
+            // Non-main-menu regions (outside the overlay entirely) → keep
+            // the submenu open; user can close via click-outside, scroll, or
+            // Escape.
+            cancelHoverClose();
+          }}
         >
           {activeSubmenu.map((axis) => {
             const setAxisValue = (raw: number) => {

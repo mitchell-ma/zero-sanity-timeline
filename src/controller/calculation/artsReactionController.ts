@@ -127,9 +127,10 @@ function readOperatorStatIfExists(entityId: string, key: string): number {
 
 /** Resistance addback for `element` from operator RESISTANCE_IGNORE +
  *  enemy RESISTANCE_REDUCTION (with ARTS umbrella for arts elements).
- *  Corrosion contributes via per-segment APPLY ARTS RESISTANCE_REDUCTION
- *  STAT clauses (see processInfliction.buildCorrosionSegments) — already
- *  in the accumulator, no special case needed. */
+ *  Corrosion contributes via per-segment APPLY RESISTANCE_REDUCTION STAT
+ *  clauses for both ARTS and PHYSICAL (see
+ *  processInfliction.buildCorrosionSegments) — already in the accumulator,
+ *  no special case needed. */
 function getResistanceAddback(element: ElementType, sourceEntityId: string | undefined): number {
   let sum = 0;
   sum += readEnemyStatIfExists(`${element}_RESISTANCE_REDUCTION`);

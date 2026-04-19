@@ -593,9 +593,10 @@ function elementResistanceReductionStat(el: ElementType): StatType | undefined {
 /** Read the addback applied to the resistance multiplier for `element`:
  *  operator's <EL>_RESISTANCE_IGNORE + enemy's <EL>_RESISTANCE_REDUCTION,
  *  plus the ARTS umbrella stats when the element is one of the four arts.
- *  Corrosion contributes via per-segment APPLY ARTS RESISTANCE_REDUCTION
- *  STAT clauses (see processInfliction.ts buildCorrosionSegments) — those
- *  flow through the accumulator naturally, no special case needed here. */
+ *  Corrosion contributes via per-segment APPLY RESISTANCE_REDUCTION STAT
+ *  clauses for both ARTS and PHYSICAL (see processInfliction.ts
+ *  buildCorrosionSegments) — those flow through the accumulator naturally,
+ *  no special case needed here. */
 function readResistanceAddback(
   element: ElementType,
   operatorRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
@@ -614,17 +615,18 @@ function readResistanceAddback(
 }
 
 /** Combine per-source breakdowns from operator IGNORE + enemy REDUCTION
- *  for the active element (with ARTS umbrella where applicable). All
- *  contributions (Corrosion, Scorching Heart, etc.) flow through their
- *  per-element stat keys via the accumulator — no virtual sources here. */
+ *  for `element`. Per-element rows carry ONLY their own per-element stats;
+ *  the ARTS umbrella contributions (e.g. Corrosion's ARTS_RESISTANCE_REDUCTION)
+ *  are shown in the dedicated ARTS row instead of being duplicated under each
+ *  of HEAT/CRYO/NATURE/ELECTRIC. The damage math still sums per-element +
+ *  ARTS umbrella for arts elements (see `readResistanceAddback`) — this is a
+ *  display-only change so readers see each source exactly once. */
 function buildResistanceSources(
   element: ElementType,
   operatorRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
   enemyRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
   perElIgnoreSources: readonly import('./statAccumulator').StatSource[] | undefined,
   perElReductionSources: readonly import('./statAccumulator').StatSource[] | undefined,
-  artsIgnoreSources: readonly import('./statAccumulator').StatSource[] | undefined,
-  artsReductionSources: readonly import('./statAccumulator').StatSource[] | undefined,
 ): MultiplierSource[] {
   const result: MultiplierSource[] = [];
   const perElIgnore = elementResistanceIgnoreStat(element);
@@ -635,17 +637,15 @@ function buildResistanceSources(
   if (perElReduction) {
     result.push(...ampStatToSources(enemyRuntimeDeltas?.[perElReduction], perElReductionSources, perElReduction));
   }
-  if (isArtsElement(element)) {
-    result.push(...ampStatToSources(operatorRuntimeDeltas?.[StatType.ARTS_RESISTANCE_IGNORE], artsIgnoreSources, StatType.ARTS_RESISTANCE_IGNORE));
-    result.push(...ampStatToSources(enemyRuntimeDeltas?.[StatType.ARTS_RESISTANCE_REDUCTION], artsReductionSources, StatType.ARTS_RESISTANCE_REDUCTION));
-  }
   return result;
 }
 
 /** Per-element resistance source breakdown for display. Each element row
- *  shows its per-element IGNORE + REDUCTION; arts elements additionally
- *  pick up the ARTS umbrella entries. The dedicated ARTS row shows the
- *  ARTS_RESISTANCE_IGNORE + ARTS_RESISTANCE_REDUCTION only. */
+ *  shows ONLY its per-element IGNORE + REDUCTION. The dedicated ARTS row
+ *  surfaces the umbrella ARTS_RESISTANCE_IGNORE + ARTS_RESISTANCE_REDUCTION —
+ *  those are NOT duplicated under HEAT/CRYO/NATURE/ELECTRIC even though the
+ *  damage math applies them there (see `readResistanceAddback`). This keeps
+ *  contributors like Corrosion visible exactly once under ARTS / PHYSICAL. */
 function buildAllResistanceSources(
   operatorRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
   enemyRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
@@ -654,11 +654,6 @@ function buildAllResistanceSources(
   ownerEntityId: string,
 ): Partial<Record<ElementType, MultiplierSource[]>> {
   const result: Partial<Record<ElementType, MultiplierSource[]>> = {};
-  const artsIgnoreSources = mergeStatSources(
-    accumulator?.getFrameStatSources(frameKey, ownerEntityId, StatType.ARTS_RESISTANCE_IGNORE),
-    accumulator?.getFrameStatSources(frameKey, TEAM_ID, StatType.ARTS_RESISTANCE_IGNORE),
-  );
-  const artsReductionSources = accumulator?.getFrameStatSources(frameKey, ENEMY_ID, StatType.ARTS_RESISTANCE_REDUCTION);
   for (const el of ALL_DISPLAY_ELEMENTS) {
     const perElIgnoreKey = elementResistanceIgnoreStat(el);
     const perElIgnoreSources = perElIgnoreKey ? mergeStatSources(
@@ -671,7 +666,7 @@ function buildAllResistanceSources(
       : undefined;
     const merged = buildResistanceSources(
       el, operatorRuntimeDeltas, enemyRuntimeDeltas,
-      perElIgnoreSources, perElReductionSources, artsIgnoreSources, artsReductionSources,
+      perElIgnoreSources, perElReductionSources,
     );
     if (merged.length > 0) result[el] = merged;
   }
@@ -774,7 +769,7 @@ export function buildDamageTableRows(
             const isDot = f.damageType === DamageType.DAMAGE_OVER_TIME;
             const key = `${ev.uid}:${si}:${fi}`;
             // All damage frames participate in intra-frame ordering
-            if (hasDealDamageClause(f.clauses)) {
+            if (hasDealDamageClause(f.clause)) {
               allDamageFrameKeys.push({ absFrame, key });
             }
             if (isDot) continue; // DOT can't crit
@@ -873,7 +868,7 @@ export function buildDamageTableRows(
             // conditions evaluated false (`frameSkipped`) are likewise dropped —
             // the row previously rendered as "-" with no damage.
             if (frame.frameSkipped) continue;
-            if (!hasDealDamageClause(frame.clauses)) continue;
+            if (!hasDealDamageClause(frame.clause)) continue;
             const absFrame = frame.absoluteFrame ?? (ev.startFrame + segmentFrameOffset + frame.offsetFrame);
 
             // Look up multiplier
@@ -900,7 +895,7 @@ export function buildDamageTableRows(
               const chancePin = overrides?.[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isChance;
               const chanceHit = shouldFireChance(resolvedCritMode, chancePin);
               // Find the DEAL DAMAGE from the active branch (hit or else).
-              const dealInfo = findDealDamageInClauses(frame.clauses, chanceHit);
+              const dealInfo = findDealDamageInClauses(frame.clause, chanceHit);
               if (dealInfo && dealInfo.values.length > 0) {
                 const levelIdx = Math.min(skillLevel - 1, dealInfo.values.length - 1);
                 multiplier = dealInfo.values[levelIdx];
@@ -1012,11 +1007,11 @@ export function buildDamageTableRows(
                   subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg + subFinalStrikeDmg,
                 );
 
-                // Resistance — single addback bucket combining operator
-                // RESISTANCE_IGNORE (e.g. Laevatain Scorching Heart) and enemy
-                // RESISTANCE_REDUCTION (e.g. Corrosion). Both stats sum into
-                // ignoredResistance per the formula:
-                //   ResistanceMultiplier = 1 - Resistance/100 + IgnoredResistance/100
+                // Resistance — all values stored as decimal multipliers
+                // (0.12 = 12%, 1.0 = neutral, 0.8 = 20% resist). Operator
+                // RESISTANCE_IGNORE (e.g. Laevatain Scorching Heart) + enemy
+                // RESISTANCE_REDUCTION (e.g. Corrosion) combine additively:
+                //   resMultiplier = baseResistance + IGNORE + REDUCTION
                 // Can exceed 1.0 when the addback pushes past zero resistance.
                 const baseResistance = modelEnemy
                   ? getResistanceMultiplier(modelEnemy, element)
@@ -1024,9 +1019,7 @@ export function buildDamageTableRows(
                 const subIgnoredRes = element !== ElementType.NONE
                   ? readResistanceAddback(element, runtimeDeltas, enemyRuntimeDeltas)
                   : 0;
-                const resMultiplier = subIgnoredRes !== 0
-                  ? baseResistance + subIgnoredRes / 100
-                  : baseResistance;
+                const resMultiplier = baseResistance + subIgnoredRes;
 
                 // Crit multiplier — unified via getFrameExpectation()
                 // Deterministic modes (NEVER/ALWAYS/EXPECTED) are authoritative over pins.
@@ -1115,11 +1108,6 @@ export function buildDamageTableRows(
                     elementResistanceReductionStat(element)
                       ? accumulator?.getFrameStatSources(currentFrameKey, ENEMY_ID, elementResistanceReductionStat(element)!)
                       : undefined,
-                    mergeStatSources(
-                      accumulator?.getFrameStatSources(currentFrameKey, resolvedEntityId, StatType.ARTS_RESISTANCE_IGNORE),
-                      accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, StatType.ARTS_RESISTANCE_IGNORE),
-                    ),
-                    accumulator?.getFrameStatSources(currentFrameKey, ENEMY_ID, StatType.ARTS_RESISTANCE_REDUCTION),
                   ),
                   allResistanceSources: buildAllResistanceSources(
                     runtimeDeltas, enemyRuntimeDeltas, accumulator, currentFrameKey, resolvedEntityId,
@@ -1229,7 +1217,7 @@ export function buildDamageTableRows(
             }
 
             const chancePin2 = overrides?.[buildOverrideKey(ev)]?.segments?.[si]?.frames?.[fi]?.isChance;
-            const rowDealInfo = findDealDamageInClauses(frame.clauses, shouldFireChance(resolvedCritMode, chancePin2));
+            const rowDealInfo = findDealDamageInClauses(frame.clause, shouldFireChance(resolvedCritMode, chancePin2));
             const rowElement = ((rowDealInfo?.element ?? frame.damageElement ?? col.skillElement) as ElementType | undefined) ?? opData?.element;
             rows.push({
               key: `${ev.uid}-s${si}-f${fi}`,

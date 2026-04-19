@@ -1,12 +1,12 @@
 import { TimelineEvent, EventFrameMarker, EventSegmentData, eventDuration } from '../../consts/viewTypes';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
-import { EdgeKind, ElementType, EventFrameType, EventStatusType } from '../../consts/enums';
+import { EdgeKind, ElementType, EventFrameType, EventStatusType, UnitType } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
 import type { CausalityGraph } from './causalityGraph';
 import type { StatusLevel } from '../../consts/types';
 import { resolveEventLabel } from './eventPresentationController';
 import { getStatusById } from '../gameDataStore';
-import { getArtsReactionBaseMultiplier, getCombustionDotMultiplier, getShatterBaseMultiplier, getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
+import { getArtsReactionBaseMultiplier, getCombustionDotMultiplier, getShatterBaseMultiplier, getCorrosionBaseReduction, getCorrosionReductionMultiplier, getCorrosionReductionRange } from '../../model/calculation/damageFormulas';
 import { VerbType, AdjectiveType } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
 import {
@@ -247,14 +247,11 @@ function buildReactionDealDamageClause(multiplier: number, element: string): rea
   return [{
     conditions: [],
     effects: [{
-      type: 'dsl' as const,
-      dslEffect: {
-        verb: VerbType.DEAL,
-        object: NounType.DAMAGE,
-        objectQualifier: element as AdjectiveType,
-        to: NounType.ENEMY,
-        with: { value: { verb: VerbType.IS, value: multiplier } },
-      },
+      verb: VerbType.DEAL,
+      object: NounType.DAMAGE,
+      objectQualifier: element as AdjectiveType,
+      to: NounType.ENEMY,
+      with: { value: { verb: VerbType.IS, value: multiplier } },
     }],
   }];
 }
@@ -283,7 +280,12 @@ export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, fo
 
   // Initial reaction hit at frame 0 (skipped for forced reactions)
   if (!forced) {
-    frames.push({ offsetFrame: 0, damageElement: element, clauses: initialClauses });
+    frames.push({
+      offsetFrame: 0,
+      properties: { offset: { value: 0, unit: UnitType.SECOND } },
+      damageElement: element,
+      clause: initialClauses,
+    });
   }
 
   const COMBUSTION_FRAME_TYPES = [EventFrameType.GUARANTEED_HIT, EventFrameType.DAMAGE_OVER_TIME, EventFrameType.PASSIVE];
@@ -295,7 +297,13 @@ export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, fo
     const dotClauses = buildReactionDealDamageClause(dotMult, element);
     const tickCount = Math.floor(tickDur / FPS);
     for (let i = 1; i <= tickCount; i++) {
-      frames.push({ offsetFrame: i * FPS, damageElement: element, frameTypes: COMBUSTION_FRAME_TYPES, clauses: dotClauses });
+      frames.push({
+        offsetFrame: i * FPS,
+        properties: { offset: { value: i, unit: UnitType.SECOND } },
+        damageElement: element,
+        frameTypes: COMBUSTION_FRAME_TYPES,
+        clause: dotClauses,
+      });
     }
   }
   // Solidification: initial hit only — shatter is triggered by physical status consumption
@@ -309,41 +317,55 @@ export function buildReactionSegment(ev: TimelineEvent, rawDuration?: number, fo
   };
 }
 
-/** Build the per-segment APPLY ARTS RESISTANCE_REDUCTION STAT clause carrying
- *  the segment's resistance reduction value. Lifecycle dispatch in
- *  runStatusCreationLifecycle reads this clause and applies the stat delta to
+/** Build the per-segment RESISTANCE_REDUCTION clause carrying the segment's
+ *  reduction value. Corrosion reduces both ARTS and PHYSICAL umbrella
+ *  resistance, which together cover all damage types (ARTS umbrella rolls up
+ *  HEAT/CRYO/NATURE/ELECTRIC). Lifecycle dispatch in
+ *  runStatusCreationLifecycle reads this clause and applies the stat deltas to
  *  ENEMY for the segment's lifetime, with auto-reversal at segment end. */
 function buildCorrosionResistanceReductionClause(reduction: number) {
+  const withValue = { value: { verb: VerbType.IS, value: reduction } };
   return [{
     conditions: [],
-    effects: [{
-      verb: VerbType.APPLY,
-      object: NounType.STAT,
-      objectId: NounType.RESISTANCE_REDUCTION,
-      objectQualifier: AdjectiveType.ARTS,
-      to: NounType.ENEMY,
-      with: { value: { verb: VerbType.IS, value: reduction } },
-    }],
+    effects: [
+      {
+        verb: VerbType.APPLY,
+        object: NounType.STAT,
+        objectId: NounType.RESISTANCE_REDUCTION,
+        objectQualifier: AdjectiveType.ARTS,
+        to: NounType.ENEMY,
+        with: withValue,
+      },
+      {
+        verb: VerbType.APPLY,
+        object: NounType.STAT,
+        objectId: NounType.RESISTANCE_REDUCTION,
+        objectQualifier: AdjectiveType.PHYSICAL,
+        to: NounType.ENEMY,
+        with: withValue,
+      },
+    ],
   }];
 }
 
-/** Roman numeral table for segment naming (1-indexed, up to 20 segments). */
-const SEGMENT_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
-  'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
-const segmentRoman = (i: number): string => SEGMENT_ROMAN[i] ?? String(i + 1);
+/** Roman numeral table — used only for StatusLevel display (reactions cap at 4). */
+const STATUS_LEVEL_ROMAN = ['I', 'II', 'III', 'IV'];
+const statusLevelRomanFor = (level: number): string => STATUS_LEVEL_ROMAN[level - 1] ?? String(level);
 
 /** Number of seconds the corrosion reduction takes to fully ramp to max. */
 const CORROSION_RAMP_SECONDS = 10;
 
 /**
  * Build segments for corrosion. The reduction value ramps over
- * `CORROSION_RAMP_SECONDS` (one 1s segment per intermediate ramp tick), then
- * a single final segment holds at max for the rest of the event.
+ * `CORROSION_RAMP_SECONDS` (one 1s segment per ramp tick) using
+ * **start-of-segment sampling** — segment N carries the reduction at t=N.
+ * After the ramp, a final max-hold segment fills the remaining duration.
  *
- * For a full-duration 15s corrosion this is 9 ramp segments (carrying the
- * interpolated values at t=1..9) + 1 final segment (carrying max value, lasting
- * t=9 → end). The final segment subsumes what would otherwise be the "fully
- * ramped" tick at t=10 because it already holds the max value.
+ * For a full-duration 15s corrosion this is 9 ramp segments at t=0..8
+ * (carrying the sampled values: initial, sample(1), sample(2), …, sample(8))
+ * + 1 final max-hold segment lasting t=9 → end at value=max. Segment 0
+ * holds the un-ramped INITIAL value; the first ramp tick takes effect in
+ * segment 1.
  *
  * Each segment carries:
  *  - a clause that applies ARTS_RESISTANCE_REDUCTION to ENEMY for that span
@@ -351,9 +373,10 @@ const CORROSION_RAMP_SECONDS = 10;
  *  - a statusLabel for view rendering
  *  - the initial damage frame on segment 0 for natural (non-forced) corrosion
  *
- * Segment naming follows the skill-card convention: segment 0 carries the
- * status name + status-level roman ("Corrosion III") and subsequent segments
- * carry sequential roman numerals ("II", "III", "IV", …).
+ * Segment naming: segment 0 carries the status name + status-level roman
+ * ("Corrosion III" — the roman numeral is the StatusLevel) and subsequent
+ * segments carry sequential 1-based indices ("2", "3", "4", …). Roman
+ * numerals are reserved for StatusLevel display only.
  */
 export function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | null {
   const element = REACTION_DAMAGE_ELEMENT[ev.columnId];
@@ -367,45 +390,66 @@ export function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | 
   const aiMultiplier = getCorrosionReductionMultiplier(ev.artsIntensity ?? 0);
   const statusName = (getStatusById(ev.id) as { properties?: { name?: string } } | null)
     ?.properties?.name ?? 'Corrosion';
-  const statusLevelRoman = segmentRoman(cappedStacks - 1);
+  const statusLevelRoman = statusLevelRomanFor(cappedStacks);
   const forced = ev.isForced;
   const totalSeconds = Math.floor(totalDuration / FPS);
 
   const buildInitialFrames = () => (!forced
-    ? [{ offsetFrame: 0, damageElement: element, clauses: buildReactionDealDamageClause(getArtsReactionBaseMultiplier(cappedStacks), element) }]
+    ? [{
+        offsetFrame: 0,
+        properties: { offset: { value: 0, unit: UnitType.SECOND } },
+        damageElement: element,
+        clause: buildReactionDealDamageClause(getArtsReactionBaseMultiplier(cappedStacks), element),
+      }]
     : undefined);
 
-  // Intermediate ramp ticks: one 1s segment per non-final ramp second. For a
-  // full-duration corrosion this covers t=1..9 (9 segments). Each carries the
-  // value sampled at end-of-second.
+  // Floor-equivalent ramp time: when this corrosion was created via merge,
+  // `floor` carries the previous corrosion's ramped value at the merge frame.
+  // We resume ramping from the floor's position on THIS event's curve rather
+  // than holding flat at the floor while early segments wait for the natural
+  // curve to catch up. Solve `floor = (initial + (max-initial)*t/10) * aiMult`
+  // for t. Saturates at CORROSION_RAMP_SECONDS when floor is at/past max.
+  const { initial: rampInitial, max: rampMax } = getCorrosionReductionRange(cappedStacks);
+  let tFloor = 0;
+  if (floor > rampInitial * aiMultiplier) {
+    if (floor >= rampMax * aiMultiplier) {
+      tFloor = CORROSION_RAMP_SECONDS;
+    } else {
+      tFloor = (floor / aiMultiplier - rampInitial) * CORROSION_RAMP_SECONDS / (rampMax - rampInitial);
+    }
+  }
+
+  // Intermediate ramp ticks: one 1s segment per ramp second using
+  // start-of-segment sampling, offset by `tFloor` so a merged corrosion's
+  // segment 0 begins at the floor and segment 1 already ramps above it
+  // (instead of sitting flat at floor for several segments).
   const rampTickCount = Math.min(CORROSION_RAMP_SECONDS - 1, Math.max(0, totalSeconds - 1));
   for (let i = 0; i < rampTickCount; i++) {
-    const segIndex = i + 1;
-    const scaledReduction = getCorrosionBaseReduction(cappedStacks, segIndex) * aiMultiplier;
+    const scaledReduction = getCorrosionBaseReduction(cappedStacks, i + tFloor) * aiMultiplier;
     const reduction = Math.max(floor, scaledReduction);
     segments.push({
       properties: {
         duration: FPS,
-        name: i === 0 ? `${statusName} ${statusLevelRoman}` : segmentRoman(i),
+        name: i === 0 ? `${statusName} ${statusLevelRoman}` : String(i + 1),
       },
-      unknown: { statusLabel: `-${reduction.toFixed(1)} Res` },
+      unknown: { statusLabel: `-${(reduction * 100).toFixed(1)} Res` },
       clause: buildCorrosionResistanceReductionClause(reduction),
       frames: i === 0 ? buildInitialFrames() : undefined,
     });
   }
 
-  // Final segment: holds the max reduction (or the t=N reduction if the event
-  // ends before the ramp completes). Spans from the end of the last ramp tick
-  // to the event's end, so a 15s corrosion gets 9 ramp + 1 final = 10 segments.
+  // Final segment: same start-of-segment sampling with `tFloor` offset.
+  // For full-duration corrosions (totalSeconds + tFloor ≥ CORROSION_RAMP_SECONDS)
+  // the final segment effectively holds at max.
   const consumedFrames = rampTickCount * FPS;
   const remainingFrames = totalDuration - consumedFrames;
   if (remainingFrames > 0) {
-    // Cap the sampled second at the ramp length so short corrosions don't
-    // over-ramp; full-length corrosions land on the max value.
-    const finalSampleSecond = Math.min(CORROSION_RAMP_SECONDS, Math.max(1, totalSeconds));
+    const finalSampleSecond = totalSeconds >= CORROSION_RAMP_SECONDS
+      ? CORROSION_RAMP_SECONDS
+      : rampTickCount;
     const finalReduction = Math.max(
       floor,
-      getCorrosionBaseReduction(cappedStacks, finalSampleSecond) * aiMultiplier,
+      getCorrosionBaseReduction(cappedStacks, finalSampleSecond + tFloor) * aiMultiplier,
     );
     const isOnlySegment = segments.length === 0;
     segments.push({
@@ -413,9 +457,9 @@ export function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | 
         duration: remainingFrames,
         name: isOnlySegment
           ? `${statusName} ${statusLevelRoman}`
-          : segmentRoman(rampTickCount),
+          : String(rampTickCount + 1),
       },
-      unknown: { statusLabel: `-${finalReduction.toFixed(1)} Res` },
+      unknown: { statusLabel: `-${(finalReduction * 100).toFixed(1)} Res` },
       clause: buildCorrosionResistanceReductionClause(finalReduction),
       frames: isOnlySegment ? buildInitialFrames() : undefined,
     });

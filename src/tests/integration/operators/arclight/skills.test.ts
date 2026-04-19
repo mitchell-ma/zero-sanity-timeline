@@ -652,7 +652,7 @@ describe('H. Wildland Trekker counter pipeline', () => {
     expect(buffVisible).toBe(false);
   });
 
-  it('H3: counter labels increment I → II across successive casts (not stuck at the threshold)', () => {
+  it('H3: counter labels increment 1 → 2 across successive casts (not stuck at the threshold)', () => {
     const { result } = setupArclight();
 
     // Direct-place reactions on the enemy at two distinct frames so each BS
@@ -689,13 +689,13 @@ describe('H. Wildland Trekker counter pipeline', () => {
     }
 
     // With two casts under the default P5 (counter threshold 2), the labels
-    // must show a strict I → II progression — not two copies of "II" which
+    // must show a strict 1 → 2 progression — not two copies of "2" which
     // is what `consumeWithRestack`'s `ev.stacks = allActive.length` stamp
     // used to produce before the presentation layer ignored `ev.stacks` for
     // counter accumulators.
     expect(talentLabels.length).toBeGreaterThanOrEqual(2);
-    expect(talentLabels.some(l => l.endsWith(' I'))).toBe(true);
-    expect(talentLabels.some(l => l.endsWith(' II'))).toBe(true);
+    expect(talentLabels.some(l => l.endsWith(' 1'))).toBe(true);
+    expect(talentLabels.some(l => l.endsWith(' 2'))).toBe(true);
   });
 
   it('H4: Wildland Trekker TEAM buff Electric DMG Bonus is reflected in damage calculation', () => {

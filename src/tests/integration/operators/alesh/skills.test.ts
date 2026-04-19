@@ -378,11 +378,11 @@ describe('Alesh Skills — Combo CHANCE gate', () => {
     expect(damageSeg!.frames).toHaveLength(1);
 
     const frame = damageSeg!.frames![0];
-    expect(hasChanceClause(frame.clauses)).toBe(true);
+    expect(hasChanceClause(frame.clause)).toBe(true);
 
     // The DEAL DAMAGE inside CHANCE hit branch (via elseEffects fallback for
     // base-only) is found by findDealDamageInClauses descending into CHANCE.
-    const dealInfo = findDealDamageInClauses(frame.clauses);
+    const dealInfo = findDealDamageInClauses(frame.clause);
     expect(dealInfo).not.toBeNull();
     expect(dealInfo!.insideChance).toBe(true);
   });
@@ -581,9 +581,9 @@ describe('Alesh Skills — T1 Flash-frozen self-trigger', () => {
     expect(frame.offsetFrame).toBe(0);
     // Two predicate clauses: one unconditional (base UE), one gated on
     // THIS OPERATOR IS TRIGGER OPERATOR (self-triggered bonus UE).
-    expect(frame.clauses?.length).toBe(2);
-    const baseClause = frame.clauses![0];
-    const bonusClause = frame.clauses![1];
+    expect(frame.clause?.length).toBe(2);
+    const baseClause = frame.clause![0];
+    const bonusClause = frame.clause![1];
     expect(baseClause.conditions.length).toBe(0);
     expect(bonusClause.conditions.length).toBe(1);
     const bonusCond = bonusClause.conditions[0] as {
@@ -755,7 +755,7 @@ describe('Alesh Skills — CHANCE pin + P3 MAY_THE_WILLING_BITE', () => {
     const frame1 = dmgSeg1.frames![0];
     // Miss branch: elseEffects fires. The DEAL DAMAGE from elseEffects has
     // base-only multipliers; findDealDamageInClauses(clauses, false) finds it.
-    const dealMiss = findDealDamageInClauses(frame1.clauses, false);
+    const dealMiss = findDealDamageInClauses(frame1.clause, false);
     expect(dealMiss).not.toBeNull();
     expect(dealMiss!.insideChanceElse).toBe(true);
     // Base multiplier at L12 = 0.75 (from the elseEffects VARY_BY array)
@@ -779,7 +779,7 @@ describe('Alesh Skills — CHANCE pin + P3 MAY_THE_WILLING_BITE', () => {
     const dmgSeg2 = combo2.segments.find(s => s.frames && s.frames.length > 0)!;
     const frame2 = dmgSeg2.frames![0];
     // Hit branch: predicates fire. DEAL DAMAGE has ADD(base, bonus) multipliers.
-    const dealHit = findDealDamageInClauses(frame2.clauses, true);
+    const dealHit = findDealDamageInClauses(frame2.clause, true);
     expect(dealHit).not.toBeNull();
     expect(dealHit!.insideChance).toBe(true);
     // Hit damage is a compound expression (ADD of two VARY_BY arrays), so
@@ -834,7 +834,7 @@ describe('Alesh Skills — CHANCE pin + P3 MAY_THE_WILLING_BITE', () => {
     let frameIdx = -1;
     combo!.segments.forEach((seg, si) => {
       seg.frames?.forEach((f, fi) => {
-        if (hasChanceClause(f.clauses)) {
+        if (hasChanceClause(f.clause)) {
           segIdx = si;
           frameIdx = fi;
         }

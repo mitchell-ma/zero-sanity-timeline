@@ -36,8 +36,17 @@ export default function CustomSelect({ value, options, onChange, className, plac
   useLayoutEffect(() => {
     if (!open || !triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
-    setPos({ top: rect.bottom, left: rect.left, width: Math.max(rect.width, 120) });
-  }, [open]);
+    const width = Math.max(rect.width, 120);
+    // Estimate menu height from option count (bounded by .cs-menu's max-height: 16rem).
+    const estH = Math.min(options.length * 28 + 12, 256);
+    // Prefer opening below; flip above if the menu would run off the viewport bottom.
+    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const top = spaceBelow >= estH
+      ? rect.bottom
+      : Math.max(8, rect.top - estH);
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+    setPos({ top, left, width });
+  }, [open, options.length]);
 
   // Listen for other dropdowns opening — close this one
   useEffect(() => {

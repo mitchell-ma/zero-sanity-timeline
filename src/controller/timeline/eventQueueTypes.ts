@@ -163,6 +163,13 @@ export interface QueueFrame {
   segmentIndex?: number;
   /** Frame index within the segment. */
   frameIndex?: number;
+  /** True when this PROCESS_FRAME carries a segment's `clause` (segment-passive
+   *  effects) rather than a real damage-frame marker. doApply already pushes a
+   *  long-lived `_statReversals` entry at parentSegmentEndFrame for these,
+   *  so handleProcessFrame must NOT also do frame-scoped APPLY STAT reversal
+   *  (which would double-reverse and net negative across the segment lifetime)
+   *  and must NOT fire reactive triggers (those belong to author-frame hooks). */
+  isSegmentClauseDispatch?: boolean;
 
   // ── ENGINE_TRIGGER fields ─────────────────────────────────────────────
   /** Engine trigger context for ENGINE_TRIGGER entries. */

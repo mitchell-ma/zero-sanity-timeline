@@ -6,7 +6,6 @@ import { parseJsonClauseArray, findFirstEffectValue } from "../../controller/tim
 import {
   SkillEventFrame,
   FrameClausePredicate,
-  FrameClauseEffect,
   FrameCondition,
 } from "./skillEventFrame";
 import { SkillEventSequence } from "./skillEventSequence";
@@ -206,7 +205,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         };
       });
 
-      const clauseEffects: FrameClauseEffect[] = [];
+      const clauseEffects: Effect[] = [];
       for (const ef of pred.effects) {
         const isSource = ef.objectDeterminer === DeterminerType.TRIGGER;
 
@@ -250,14 +249,12 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         // DISABLE, ENABLE, compound CHANCE/ALL/ANY, …) works at frame level
         // without a parse-time allowlist. Unknown verbs fall through to
         // interpret()'s default case and are harmlessly no-oped.
-        clauseEffects.push({ type: 'dsl', dslEffect: normalizedEffect });
+        clauseEffects.push(normalizedEffect);
       }
       // ── Parse-time optimizations ──────────────────────────────────────────
       // 1. Collapse constant ValueNode expressions in effect WITH blocks
       // 2. Pre-compose qualified status IDs (objectQualifier + objectId → flat ID)
-      for (const ce of clauseEffects) {
-        if (!ce.dslEffect) continue;
-        const dsl = ce.dslEffect;
+      for (const dsl of clauseEffects) {
         // (1) Collapse constant expressions in WITH properties
         if (dsl.with) {
           const w = dsl.with as Record<string, ValueNode>;

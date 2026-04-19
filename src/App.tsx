@@ -1,7 +1,6 @@
 import { lazy, Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { useApp } from './app/useApp';
 import AppBar from './view/AppBar';
-import { buildShareUrl, detectCustomContent } from './utils/embedCodec';
 import LoadoutSidebar from './view/LoadoutSidebar';
 import type { SidebarMode } from './view/LoadoutSidebar';
 import { ContentCategory } from './consts/contentBrowserTypes';
@@ -16,6 +15,7 @@ import { createCustomGearEffect, updateCustomGearEffect } from './controller/cus
 import { createCustomOperatorStatus, updateCustomOperatorStatus } from './controller/custom/customOperatorStatusController';
 import { createCustomOperatorTalent, updateCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
+import { t } from './locales/locale';
 import { InteractionModeType, InfoLevel, InfoPaneMode, SidebarMode as SidebarModeEnum } from './consts/enums';
 import { getAnimationDuration, eventDuration } from './consts/viewTypes';
 import type { SkillType } from './consts/viewTypes';
@@ -30,6 +30,8 @@ import type { CustomOperatorTalent } from './model/custom/customOperatorTalentTy
 import ContextMenu from './view/ContextMenu';
 import WarningModal from './view/WarningModal';
 import ConfirmModal from './view/ConfirmModal';
+import CreateViewsModal from './view/CreateViewsModal';
+import { LoadoutNodeType } from './consts/enums';
 import './App.css';
 
 type CustomContentData = CustomWeapon | CustomGearSet | CustomOperator | CustomSkill
@@ -77,6 +79,7 @@ export default function App() {
   const [expandAnim, setExpandAnim] = useState(false);
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>(() => loadUiState().sidebarMode);
   const [workbenchOpen, setWorkbenchOpen] = useState(() => loadUiState().sidebarMode === SidebarModeEnum.WORKBENCH);
+  const [viewsModal, setViewsModal] = useState<{ parentId: string } | null>(null);
   const [workbenchInitial, setWorkbenchInitial] = useState<{ entityType: ContentCategory; data: CustomContentData } | undefined>();
   const [contentRefreshKey, setContentRefreshKey] = useState(0);
   const bumpContentRefresh = useCallback(() => setContentRefreshKey((k) => k + 1), []);
@@ -186,16 +189,7 @@ export default function App() {
       <AppBar
         activeLoadoutName={app.loadoutTree.nodes.find((n) => n.id === app.activeLoadoutId)?.name ?? ''}
         onRenameLoadout={app.handleRenameActiveLoadout}
-        onClearLoadout={() => app.setConfirmClearLoadout(true)}
         onClearAll={() => app.setConfirmClearAll(true)}
-        onExport={app.handleExport}
-        onImport={app.handleImport}
-        onShare={async () => {
-          const sheetData = app.buildSheetData();
-          const warning = detectCustomContent(sheetData);
-          if (warning) app.setWarningMessage(warning);
-          return buildShareUrl(sheetData, app.columns, app.loadoutTree.nodes.find((n) => n.id === app.activeLoadoutId)?.name ?? 'Shared Loadout');
-        }}
         onDevlog={() => app.setDevlogOpen(true)}
         onKeys={() => app.setKeysOpen((p) => !p)}
         interactionMode={app.interactionMode}
@@ -203,9 +197,6 @@ export default function App() {
         lightMode={app.lightMode}
         onToggleTheme={app.handleToggleTheme}
         onSettings={() => app.setSettingsOpen(true)}
-        onRandomizeCrit={app.handleRandomizeCrit}
-        critMode={app.critMode}
-        onCritModeChange={app.setCritMode}
       />
 
       <div ref={app.appBodyRef} className="app-body" style={{ '--tl-flex': `${app.splitPct} 0 0`, '--sheet-flex': `${100 - app.splitPct} 0 0` } as React.CSSProperties}>
@@ -218,8 +209,15 @@ export default function App() {
           onNewLoadout={app.handleNewLoadout}
           onDuplicateLoadout={app.handleDuplicateLoadout}
           onDeleteLoadout={app.handleDeleteLoadout}
+          onDownloadLoadout={app.handleDownloadLoadout}
+          onShareLoadout={app.handleShareLoadout}
           onWarning={app.setWarningMessage}
           onLoadCommunityLoadout={app.handleLoadCommunityLoadout}
+          onExport={app.handleExport}
+          onImport={app.handleImport}
+          onOpenViewsModal={(parentId) => setViewsModal({ parentId })}
+          onClearViews={app.handleClearLoadoutViews}
+          viewWarningMap={app.viewWarningMap}
           sidebarMode={sidebarMode}
           onSidebarModeChange={(mode) => {
             setSidebarMode(mode);
@@ -413,6 +411,7 @@ export default function App() {
                     onSelectFrame={app.handleSelectFrame}
                     critMode={app.critMode}
                     onCritModeChange={app.setCritMode}
+                    onRandomizeCrit={app.handleRandomizeCrit}
                     overrides={app.overrides}
                     plannerHidden={app.hiddenPane === 'left'}
                     resourceGraphs={app.resourceGraphs}
@@ -582,6 +581,16 @@ export default function App() {
         </div>
       )}
 
+      {app.urlCopiedFlash && (
+        <div className="save-flash url-copied-flash">
+          <svg viewBox="0 0 16 16" width="40" height="40" fill="currentColor">
+            <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
+            <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
+          </svg>
+          <span className="url-copied-flash-label">{t('sidebar.btn.shareCopied')}</span>
+        </div>
+      )}
+
       <ConfirmModal
         open={app.confirmClearAll}
         message="Delete ALL loadouts and start fresh? This cannot be undone."
@@ -589,6 +598,35 @@ export default function App() {
         onConfirm={app.handleClearAll}
         onClose={() => app.setConfirmClearAll(false)}
       />
+
+      {viewsModal && (() => {
+        const sourceLoadoutId = (() => {
+          const node = app.loadoutTree.nodes.find((n) => n.id === viewsModal.parentId);
+          if (!node) return null;
+          if (node.type === LoadoutNodeType.LOADOUT) return node.id;
+          if (node.type === LoadoutNodeType.LOADOUT_VIEW && node.viewParentId) return node.viewParentId;
+          return null;
+        })();
+        if (!sourceLoadoutId) return null;
+        const sourceNode = app.loadoutTree.nodes.find((n) => n.id === sourceLoadoutId);
+        const slotContexts = app.getViewSlotContexts(sourceLoadoutId) ?? [];
+        const hasExisting = app.loadoutTree.nodes.some(
+          (n) => n.parentId === sourceLoadoutId && n.type === LoadoutNodeType.LOADOUT_VIEW,
+        );
+        return (
+          <CreateViewsModal
+            open
+            slots={slotContexts}
+            initialSelections={sourceNode?.viewSelections}
+            hasExistingViews={hasExisting}
+            onConfirm={(selections) => {
+              app.handleCreateLoadoutViews(sourceLoadoutId, selections);
+              setViewsModal(null);
+            }}
+            onClose={() => setViewsModal(null)}
+          />
+        );
+      })()}
 
     </div>
   );

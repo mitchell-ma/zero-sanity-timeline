@@ -22,7 +22,7 @@ export function computeSpReturnSummary(
     for (const seg of event.segments) {
       if (!seg.frames) continue;
       for (const f of seg.frames) {
-        const sp = findSkillPointRecoveryInClauses(f.clauses);
+        const sp = findSkillPointRecoveryInClauses(f.clause);
         if (sp) totalSpReturn += sp;
       }
     }

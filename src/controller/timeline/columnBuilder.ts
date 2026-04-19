@@ -1,7 +1,7 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
 import { AdjectiveType, DeterminerType, NounType, VerbType, isQualifiedId, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, CombatResourceType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UNLIMITED_STACKS } from '../../consts/enums';
+import { ColumnType, CombatResourceType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UnitType, UNLIMITED_STACKS } from '../../consts/enums';
 import { ENEMY_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, ENEMY_ACTION_LABELS } from '../../consts/timelineColumnLabels';
@@ -9,6 +9,7 @@ import { getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllStatusLabels, 
 import { TEAM_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
+import { t } from '../../locales/locale';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
 import { buildDealStaggerClause, stripStaggerClauses, buildDealDamageClause } from './clauseQueries';
 import { getFrameSequences, getSegmentLabels, getOperatorSkill, getOperatorSkills, getRawSkillTypeMap, getEnabledStatusEvents } from '../gameDataStore';
@@ -97,9 +98,13 @@ const MIN_SLOT_COLS = 4;
 function syntheticFrame(effect: Partial<Effect>): EventFrameMarker {
   const clause: FrameClausePredicate = {
     conditions: [],
-    effects: [{ type: 'dsl', dslEffect: effect as Effect }],
+    effects: [effect as Effect],
   };
-  return { offsetFrame: 0, clauses: [clause] };
+  return {
+    offsetFrame: 0,
+    properties: { offset: { value: 0, unit: UnitType.SECOND } },
+    clause: [clause],
+  };
 }
 
 function syntheticSegments(duration: number, effect: Partial<Effect>) {
@@ -696,8 +701,8 @@ export function buildColumns(
                   const frame = seg?.frames?.[fm.frameIndex];
                   if (frame) {
                     if (fm.stagger != null) {
-                      const stripped = stripStaggerClauses(frame.clauses);
-                      frame.clauses = [...(stripped ?? []), buildDealStaggerClause(fm.stagger)];
+                      const stripped = stripStaggerClauses(frame.clause);
+                      frame.clause = [...(stripped ?? []), buildDealStaggerClause(fm.stagger)];
                     }
                   }
                 }
@@ -1006,7 +1011,7 @@ export function buildColumns(
           properties: { duration: 240, name: ENEMY_ACTION_LABELS[id], element },
           frames: [{
             offsetFrame: 0,
-            clauses: [buildDealDamageClause({ multiplier: 1, element })],
+            clause: [buildDealDamageClause({ multiplier: 1, element })],
           }],
         }],
       })),
@@ -1016,13 +1021,13 @@ export function buildColumns(
       // last so existing tests that pick the first variant by default still
       // get a damage-dealing AOE_PHYSICAL.
       //
-      // The segment carries an explicit frame with an empty `clauses` array
+      // The segment carries an explicit frame with an empty `clause` array
       // so `flattenEventsToQueueFrames` does NOT synthesize a placeholder
-      // frame (which would drop into the `!frame.clauses` branch of
+      // frame (which would drop into the `!frame.clause` branch of
       // `handleProcessFrame` → `applyEvent` and duplicate the event on the
       // enemy-action column, stripping `creationInteractionMode` from the
       // duplicate and making the resulting event non-draggable in the view).
-      // An empty-array `clauses: []` is truthy, so `!frame.clauses` is false
+      // An empty-array `clause: []` is truthy, so `!frame.clause` is false
       // and the synthesis / re-apply path is skipped.
       {
         id: EnemyActionType.CHARGE,
@@ -1032,7 +1037,7 @@ export function buildColumns(
           properties: { duration: 240, name: ENEMY_ACTION_LABELS[EnemyActionType.CHARGE], element: ElementType.PHYSICAL },
           frames: [{
             offsetFrame: 0,
-            clauses: [],
+            clause: [],
           }],
         }],
       },
@@ -1061,7 +1066,7 @@ export function buildColumns(
     // Arts reactions
     ...REACTION_MICRO_COLUMNS.map((mc) => buildStatusMicroColumn(mc.id, mc.color, { label: mc.label })),
     // Physical inflictions
-    buildStatusMicroColumn(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ELEMENT_COLORS[ElementType.PHYSICAL], { label: 'VULN' }),
+    buildStatusMicroColumn(PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ELEMENT_COLORS[ElementType.PHYSICAL], { label: t('physicalInfliction.vulnerable') }),
     // Physical statuses
     buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.LIFT, ELEMENT_COLORS[ElementType.PHYSICAL]),
     buildStatusMicroColumn(PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN, ELEMENT_COLORS[ElementType.PHYSICAL]),

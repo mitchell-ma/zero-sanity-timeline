@@ -4,12 +4,15 @@
  * that need to display the resolved numeric value of a clause effect (e.g.
  * "Gauge Gain: +18") instead of executing it.
  *
- * Source of truth is always `frame.clauses` — these helpers replace the
+ * Source of truth is always `frame.clause` — these helpers replace the
  * deprecated `frame.ultimateEnergyGain` cache field.
+ *
+ * Frame clause effects are raw `Effect` objects (the same shape JSON configs
+ * use). There is no wrapper; consumers read `dsl` fields directly.
  */
 import { NounType, VerbType, AdjectiveType, DeterminerType } from '../../dsl/semantics';
 import type { Effect, ValueNode } from '../../dsl/semantics';
-import type { FrameClausePredicate, FrameClauseEffect } from '../../model/event-frames/skillEventFrame';
+import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
 import { CritMode, type DamageScalingStatType } from '../../consts/enums';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from '../calculation/valueResolver';
 
@@ -83,9 +86,7 @@ function sumVerbObject(
   let total = 0;
   let found = false;
   for (const pred of clauses) {
-    for (const ef of pred.effects) {
-      const dsl = ef.dslEffect as Effect | undefined;
-      if (!dsl) continue;
+    for (const dsl of pred.effects) {
       const r = sumEffectTree(dsl, verbs, object, ctx, chanceHit);
       if (r != null) { total += r; found = true; }
     }
@@ -173,9 +174,7 @@ export function hasSkillPointClause(
 ): boolean {
   if (!clauses) return false;
   for (const pred of clauses) {
-    for (const ef of pred.effects) {
-      const dsl = ef.dslEffect as Effect | undefined;
-      if (!dsl) continue;
+    for (const dsl of pred.effects) {
       if (effectContainsVerbObject(dsl, RECOVER_VERBS, NounType.SKILL_POINT)) return true;
     }
   }
@@ -201,10 +200,10 @@ function effectContainsVerbObject(dsl: Effect, verbs: ReadonlySet<string>, objec
 
 /**
  * Wrap raw JSON clause predicates (from `JsonSkillCategory.clause` or any
- * other top-level clause source) into the unified `FrameClausePredicate`
- * shape so loader-time metadata extractors share the same query helpers as
- * runtime frame-clause consumers. The conversion is a cheap cast: every
- * raw `JsonEffect` becomes `{ type: 'dsl', dslEffect: e }`.
+ * other top-level clause source) into the `FrameClausePredicate` shape so
+ * loader-time metadata extractors share the same query helpers as runtime
+ * frame-clause consumers. Now that frame effects are raw `Effect` objects
+ * (matching JSON), the conversion is a near-identity pass.
  *
  * This replaces the legacy `flattenClauseEffects` / `findValue` /
  * `findEffectValue` / `withValue` helpers that previously lived in
@@ -217,11 +216,10 @@ export function parseJsonClauseArray(
   if (!clause || clause.length === 0) return [];
   const out: FrameClausePredicate[] = [];
   for (const pred of clause) {
-    const effects: FrameClauseEffect[] = [];
-    for (const ef of (pred.effects ?? [])) {
-      effects.push({ type: 'dsl', dslEffect: ef as unknown as Effect });
-    }
-    out.push({ conditions: (pred.conditions ?? []) as FrameClausePredicate['conditions'], effects });
+    out.push({
+      conditions: (pred.conditions ?? []) as FrameClausePredicate['conditions'],
+      effects: (pred.effects ?? []) as Effect[],
+    });
   }
   return out;
 }
@@ -254,9 +252,8 @@ export function findFirstEffectValue(
 ): number | undefined {
   if (!clauses || clauses.length === 0) return undefined;
   for (const pred of clauses) {
-    for (const ef of pred.effects) {
-      const dsl = ef.dslEffect as Effect | undefined;
-      if (!dsl || dsl.verb !== verb || dsl.object !== object) continue;
+    for (const dsl of pred.effects) {
+      if (dsl.verb !== verb || dsl.object !== object) continue;
       if (target) {
         const label = dslTargetLabel(dsl.to as string | undefined, (dsl as unknown as { toDeterminer?: string }).toDeterminer);
         if (label !== target) continue;
@@ -279,13 +276,10 @@ export function buildSkillPointRecoveryClause(amount: number): FrameClausePredic
   return {
     conditions: [],
     effects: [{
-      type: 'dsl',
-      dslEffect: {
-        verb: VerbType.RECOVER,
-        object: NounType.SKILL_POINT,
-        with: { value: { verb: 'IS', value: amount } },
-      } as unknown as Effect,
-    }],
+      verb: VerbType.RECOVER,
+      object: NounType.SKILL_POINT,
+      with: { value: { verb: VerbType.IS, value: amount } },
+    } as unknown as Effect],
   };
 }
 
@@ -307,8 +301,7 @@ export function hasStaggerClause(
 ): boolean {
   if (!clauses) return false;
   for (const pred of clauses) {
-    for (const ef of pred.effects) {
-      const dsl = ef.dslEffect as Effect | undefined;
+    for (const dsl of pred.effects) {
       if (dsl?.verb === VerbType.DEAL && dsl.object === NounType.STAGGER) return true;
     }
   }
@@ -320,13 +313,10 @@ export function buildDealStaggerClause(amount: number): FrameClausePredicate {
   return {
     conditions: [],
     effects: [{
-      type: 'dsl',
-      dslEffect: {
-        verb: VerbType.DEAL,
-        object: NounType.STAGGER,
-        with: { value: { verb: 'IS', value: amount } },
-      } as unknown as Effect,
-    }],
+      verb: VerbType.DEAL,
+      object: NounType.STAGGER,
+      with: { value: { verb: VerbType.IS, value: amount } },
+    } as unknown as Effect],
   };
 }
 
@@ -341,10 +331,9 @@ export function stripStaggerClauses(
   if (!clauses) return undefined;
   const out: FrameClausePredicate[] = [];
   for (const pred of clauses) {
-    const filtered = pred.effects.filter(e => {
-      const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
-      return !(dsl?.verb === VerbType.DEAL && dsl.object === NounType.STAGGER);
-    });
+    const filtered = pred.effects.filter(dsl =>
+      !(dsl?.verb === VerbType.DEAL && dsl.object === NounType.STAGGER),
+    );
     if (filtered.length > 0) out.push({ ...pred, effects: filtered });
   }
   return out.length > 0 ? out : undefined;
@@ -378,9 +367,7 @@ export function findDealDamageInClauses(
 ): DealDamageInfo | null {
   if (!clauses || clauses.length === 0) return null;
   for (const pred of clauses) {
-    for (const ef of pred.effects) {
-      const dsl = ef.dslEffect as Effect | undefined;
-      if (!dsl) continue;
+    for (const dsl of pred.effects) {
       const found = extractDealDamageFromEffect(dsl, ChanceBranch.NONE, chanceHit);
       if (found) return found;
     }
@@ -488,9 +475,8 @@ export function hasDealDamageClause(
 ): boolean {
   if (!clauses) return false;
   for (const pred of clauses) {
-    for (const ef of pred.effects) {
-      const dsl = ef.dslEffect as Effect | undefined;
-      if (dsl && effectContainsDealDamage(dsl)) return true;
+    for (const dsl of pred.effects) {
+      if (effectContainsDealDamage(dsl)) return true;
     }
   }
   return false;
@@ -524,9 +510,7 @@ export function hasChanceClause(
 ): boolean {
   if (!clauses) return false;
   for (const pred of clauses) {
-    for (const ef of pred.effects) {
-      const dsl = ef.dslEffect as Effect | undefined;
-      if (!dsl) continue;
+    for (const dsl of pred.effects) {
       if (effectContainsChance(dsl)) return true;
     }
   }
@@ -561,16 +545,13 @@ export function buildDealDamageClause(opts: {
   return {
     conditions: [],
     effects: [{
-      type: 'dsl',
-      dslEffect: {
-        verb: VerbType.DEAL,
-        object: NounType.DAMAGE,
-        ...(opts.element ? { objectQualifier: opts.element } : {}),
-        with: {
-          value: { verb: 'IS', value: opts.multiplier },
-          ...(opts.mainStat ? { mainStat: { objectId: opts.mainStat } } : {}),
-        },
-      } as unknown as Effect,
-    }],
+      verb: VerbType.DEAL,
+      object: NounType.DAMAGE,
+      ...(opts.element ? { objectQualifier: opts.element } : {}),
+      with: {
+        value: { verb: VerbType.IS, value: opts.multiplier },
+        ...(opts.mainStat ? { mainStat: { objectId: opts.mainStat } } : {}),
+      },
+    } as unknown as Effect],
   };
 }

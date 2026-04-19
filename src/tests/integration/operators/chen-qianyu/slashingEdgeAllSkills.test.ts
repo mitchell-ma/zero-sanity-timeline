@@ -186,7 +186,7 @@ describe('Chen Qianyu — Slashing Edge from ultimate', () => {
 });
 
 describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
-  it('BS → combo → ult produces 3 Slashing Edge stacks with labels I, II, III', () => {
+  it('BS → combo → ult produces 3 Slashing Edge stacks with labels 1, 2, 3', () => {
     const { result } = setupChen();
 
     // Freeform mode to bypass resource gates
@@ -261,7 +261,7 @@ describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
     // 2 BS + 1 combo + 1 ult = 4 triggers total
     expect(activeAtCheck.length).toBeGreaterThanOrEqual(3);
 
-    // Verify stack labels via view overrides — should see roman numerals I, II, III
+    // Verify stack labels via view overrides — should see arabic 1, 2, 3
     const overrides = computeStatusViewOverrides(
       result.current.allProcessedEvents,
       result.current.columns,
@@ -270,9 +270,9 @@ describe('Chen Qianyu — Slashing Edge mixed rotation', () => {
       .map(ev => overrides.get(ev.uid)?.label)
       .filter(Boolean) as string[];
     expect(labels.length).toBeGreaterThanOrEqual(3);
-    expect(labels.some(l => /I/.test(l))).toBe(true);
-    expect(labels.some(l => /II/.test(l))).toBe(true);
-    expect(labels.some(l => /III/.test(l))).toBe(true);
+    expect(labels.some(l => /\s1$/.test(l))).toBe(true);
+    expect(labels.some(l => /\s2$/.test(l))).toBe(true);
+    expect(labels.some(l => /\s3$/.test(l))).toBe(true);
   });
 });
 

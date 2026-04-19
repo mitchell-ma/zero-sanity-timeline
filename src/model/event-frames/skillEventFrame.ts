@@ -1,6 +1,7 @@
 // ── Clause/predicate types (DSL v2) ──────────────────────────────────────────
 
-import { EventFrameType } from "../../consts/enums";
+import { EventFrameType, UnitType } from "../../consts/enums";
+import type { Effect } from "../../dsl/semantics";
 
 /** A condition within a frame clause predicate. */
 export interface FrameCondition {
@@ -21,21 +22,12 @@ export interface FrameCondition {
   of?: import('../../dsl/semantics').OfClause;
 }
 
-/**
- * A single effect within a clause predicate. After Phase 0d, the only shape
- * is `{ type: 'dsl', dslEffect: Effect }` — every effect routes through
- * `interpret()` and downstream consumers read clause data via the
- * `clauseQueries` helpers (`findDealDamageInClauses`, etc.).
- */
-export interface FrameClauseEffect {
-  type: 'dsl';
-  dslEffect?: import('../../dsl/semantics').Effect;
-}
-
-/** A predicate: conditions (AND'd) → effects. Empty conditions = unconditional. */
+/** A predicate: conditions (AND'd) → effects. Empty conditions = unconditional.
+ *  Effects are raw DSL `Effect` objects (matching the JSON config shape) —
+ *  there is no runtime wrapper. */
 export interface FrameClausePredicate {
   conditions: FrameCondition[];
-  effects: FrameClauseEffect[];
+  effects: Effect[];
 }
 
 /** A single damage tick within a skill sequence. */
@@ -66,15 +58,17 @@ export abstract class SkillEventFrame {
 
   /** Convert to a view-layer EventFrameMarker. */
   toMarker(fps: number): import('../../consts/viewTypes').EventFrameMarker {
+    const offsetSec = this.getOffsetSeconds();
     const marker: import('../../consts/viewTypes').EventFrameMarker = {
-      offsetFrame: Math.round(this.getOffsetSeconds() * fps),
+      offsetFrame: Math.round(offsetSec * fps),
+      properties: { offset: { value: offsetSec, unit: UnitType.SECOND } },
     };
     const dmgEl = this.getDamageElement();
     if (dmgEl) marker.damageElement = dmgEl;
     if (this.getDuplicateTriggerSource()) marker.duplicateTriggerSource = true;
     const clauses = this.getClauses();
     if (clauses.length > 0) {
-      marker.clauses = clauses as FrameClausePredicate[];
+      marker.clause = clauses as FrameClausePredicate[];
       const ct = this.getClauseType();
       if (ct) marker.clauseType = ct;
     }

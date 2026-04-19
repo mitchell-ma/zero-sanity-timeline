@@ -123,7 +123,7 @@ export class StaggerController {
         if (seg.properties.segmentTypes?.includes(SegmentType.ANIMATION)) continue;
         if (seg.frames) {
           for (const f of seg.frames) {
-            const stagger = findStaggerInClauses(f.clauses, ctx);
+            const stagger = findStaggerInClauses(f.clause, ctx);
             if (stagger && stagger > 0) {
               const frame = f.absoluteFrame ?? (ev.startFrame + animOffset + segOffset + f.offsetFrame);
               staggerEvents.push({

@@ -63,12 +63,24 @@ export class ReactionColumn implements EventColumn {
         setEventDuration(prev, ev.startFrame - prev.startFrame);
         prev.eventStatus = EventStatusType.REFRESHED;
         if (source.sourceEventUid) this.host.linkTransition(prev.uid, source.sourceEventUid);
+        // Fire any pending APPLY STAT reversals whose scheduled frame is past
+        // the clamp. Without this, the previous corrosion's already-fired
+        // segment APPLYs (e.g. its current max-hold +0.12 with reverse
+        // scheduled at the original end frame) would leak into the merged
+        // event's lifetime and double-stack on the resistance accumulator.
+        this.host.clampStatReversalsForColumn(this.columnId, ownerEntityId, ev.startFrame);
 
         const prevStacks = prev.statusLevel ?? 1;
         const remainingOldDuration = prevEnd - ev.startFrame;
 
-        // Corrosion-specific: carry forward reduction floor from elapsed damage
-        if (prev.artsIntensity != null || prev.reductionFloor != null) {
+        // Corrosion-specific: carry forward the previous corrosion's current
+        // reduction value as the new event's reductionFloor. Every segment's
+        // reduction = max(floor, segment_natural_value), so the merged event
+        // never dips below where the previous one had already ramped to.
+        // Applies to all corrosion merges — even when the previous corrosion
+        // has no prior reductionFloor or artsIntensity (a fresh corrosion
+        // ramping naturally).
+        if (this.columnId === REACTION_COLUMNS.CORROSION) {
           const elapsedSeconds = (ev.startFrame - prev.startFrame) / FPS;
           const oldReductionFloor = prev.reductionFloor ?? 0;
           const oldArtsIntensity = prev.artsIntensity ?? 0;

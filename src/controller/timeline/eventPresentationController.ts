@@ -21,7 +21,7 @@ import { StackInteractionType } from '../../consts/enums';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
 import { COMBO_WINDOW_COLUMN_ID, REACTION_COLUMNS, INFLICTION_COLUMN_IDS } from '../../model/channels';
-import { formatSegmentShortName, translateDslToken, formatEventLabel } from '../../dsl/semanticsTranslation';
+import { translateDslToken, formatEventLabel } from '../../dsl/semanticsTranslation';
 import { getAllOperatorStatuses } from '../gameDataStore';
 import { getAllWeaponStats } from '../../model/game-data/weaponStatusesStore';
 import { getAllGearStats } from '../../model/game-data/gearStatusesStore';
@@ -36,11 +36,11 @@ import { aggregateEventWarnings } from './eventValidationController';
 // ════════════════════════════════════════════════════════════════════════
 
 const REACTION_COLUMN_IDS: Set<string> = new Set(Object.values(REACTION_COLUMNS));
-const MAX_ROMAN = 9;
 
+/** Stack count label (e.g. Heat 1, Heat 2). Roman numerals are reserved for
+ *  StatusLevel display (reactions) — see resolveEventLabel. */
 function stackLabel(stackNumber: number): string {
-  if (stackNumber <= MAX_ROMAN) return formatSegmentShortName(undefined, stackNumber - 1);
-  return `${stackNumber}`;
+  return String(stackNumber);
 }
 
 interface StatusStackInfo {

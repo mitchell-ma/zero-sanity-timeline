@@ -96,6 +96,13 @@ export interface ColumnHost {
    * so downstream IS_NOT / BECOME-NOT triggers fire at the real end frame.
    */
   rescheduleEventEnd(eventUid: string, newEndFrame: number): void;
+  /**
+   * When a column clamps an event (e.g. corrosion merge), retroactively fire
+   * any pending APPLY STAT reversals for that column+owner whose scheduled
+   * frame is past `clampFrame`. Prevents the orphan APPLY's stat contribution
+   * from lingering after the event's lifetime is shortened.
+   */
+  clampStatReversalsForColumn(columnId: string, ownerEntityId: string, clampFrame: number): void;
 }
 
 // ── EventColumn ──────────────────────────────────────────────────────────────

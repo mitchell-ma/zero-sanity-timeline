@@ -260,7 +260,7 @@ describe('A. Basic Attack (Rapid Fire Akimbo)', () => {
     const sequences = getSequences(NounType.BATK);
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.dslEffect?.verb === VerbType.APPLY && e.dslEffect?.objectId === NounType.INFLICTION)).toBeUndefined();
+        expect(frame.getClauses().flatMap(c => c.effects).find(e => e.verb === VerbType.APPLY && e.objectId === NounType.INFLICTION)).toBeUndefined();
       }
     }
   });

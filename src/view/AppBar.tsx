@@ -1,24 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { IS_DEV } from '../consts/devFlags';
-import { CritMode, InteractionModeType } from '../consts/enums';
+import { InteractionModeType } from '../consts/enums';
 import { t } from '../locales/locale';
-
-const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NEVER, CritMode.ALWAYS, CritMode.MANUAL];
-const CRIT_MODE_LABELS: Record<CritMode, string> = {
-  [CritMode.EXPECTED]: t('sheet.crit.expected'),
-  [CritMode.NEVER]: t('sheet.crit.never'),
-  [CritMode.ALWAYS]: t('sheet.crit.always'),
-  [CritMode.MANUAL]: t('sheet.crit.manual'),
-};
 
 interface AppBarProps {
   activeLoadoutName: string;
   onRenameLoadout: (name: string) => void;
-  onClearLoadout: () => void;
   onClearAll: () => void;
-  onExport: () => void;
-  onImport: () => void;
-  onShare: () => Promise<string>;
   onDevlog: () => void;
   onSettings: () => void;
   onKeys: () => void;
@@ -26,22 +14,17 @@ interface AppBarProps {
   onToggleInteractionMode?: () => void;
   lightMode?: boolean;
   onToggleTheme?: () => void;
-  onRandomizeCrit?: () => void;
-  critMode?: CritMode;
-  onCritModeChange?: (mode: CritMode) => void;
 }
 
 export default function AppBar({
   activeLoadoutName, onRenameLoadout,
-  onClearLoadout, onClearAll,
-  onExport, onImport, onShare, onDevlog, onSettings, onKeys,
+  onClearAll,
+  onDevlog, onSettings, onKeys,
   interactionMode, onToggleInteractionMode,
-  lightMode, onToggleTheme, onRandomizeCrit,
-  critMode = CritMode.EXPECTED, onCritModeChange,
+  lightMode, onToggleTheme,
 }: AppBarProps) {
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
-  const [shareStatus, setShareStatus] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
   const cancellingRef = useRef(false);
 
@@ -56,19 +39,6 @@ export default function AppBar({
     setRenameValue(activeLoadoutName);
     setRenaming(true);
   };
-
-  const handleShare = useCallback(async () => {
-    setShareStatus('copying');
-    try {
-      const url = await onShare();
-      await navigator.clipboard.writeText(url);
-      setShareStatus('copied');
-      setTimeout(() => setShareStatus('idle'), 2000);
-    } catch {
-      setShareStatus('error');
-      setTimeout(() => setShareStatus('idle'), 2000);
-    }
-  }, [onShare]);
 
   const handleRenameSubmit = () => {
     if (cancellingRef.current) { cancellingRef.current = false; return; }
@@ -120,46 +90,9 @@ export default function AppBar({
 
       <div className="app-bar-divider" />
 
-      <button className="btn-clear" onClick={onClearLoadout}>
-        {t('app.btn.clear')}
-      </button>
       <button className="btn-clear" onClick={onClearAll}>
         {t('app.btn.clearAll')}
       </button>
-      <button className="btn-devlog" onClick={onExport}>
-        {t('app.btn.export')}
-      </button>
-      <button className="btn-devlog" onClick={onImport}>
-        {t('app.btn.import')}
-      </button>
-      <button
-        className={`btn-devlog${shareStatus === 'copied' ? ' btn-share--copied' : ''}`}
-        onClick={handleShare}
-        disabled={shareStatus === 'copying'}
-        title={t('app.tooltip.share')}
-      >
-        {shareStatus === 'copied' ? t('app.btn.share.copied') : shareStatus === 'error' ? t('app.btn.share.failed') : t('app.btn.share')}
-      </button>
-      <button
-        className={`app-bar-crit-toggle app-bar-crit-toggle--${critMode.toLowerCase()}`}
-        onClick={() => {
-          const idx = CRIT_MODE_CYCLE.indexOf(critMode);
-          const next = CRIT_MODE_CYCLE[(idx + 1) % CRIT_MODE_CYCLE.length];
-          onCritModeChange?.(next);
-        }}
-        title={`Crit mode: ${CRIT_MODE_LABELS[critMode]}. Click to cycle.`}
-      >
-        {CRIT_MODE_LABELS[critMode]}
-      </button>
-      {onRandomizeCrit && critMode === CritMode.MANUAL && (
-        <button
-          className="btn-devlog"
-          onClick={onRandomizeCrit}
-          title="Roll crit for all damage frames based on each operator's crit rate"
-        >
-          Roll Crit
-        </button>
-      )}
       <div className="app-bar-right">
         <button
           className="btn-theme"

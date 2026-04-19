@@ -2,10 +2,13 @@
  * Tests for statusViewController — stack-aware labels and visual truncations.
  *
  * Verifies:
- * - Multi-instance statuses (e.g. Melting Flame, instances=4) get roman numeral suffixes
- * - Single-instance statuses with RESET/NONE verb omit roman numerals
+ * - Multi-instance statuses (e.g. Melting Flame, instances=4) get arabic stack suffixes
+ * - Single-instance statuses with RESET/NONE verb omit stack suffixes
  * - Visual truncation of overlapping same-type events
  * - Single events are never overridden
+ *
+ * Note: roman numerals are reserved for StatusLevel display (reactions);
+ * stack-count suffixes use arabic digits.
  */
 
 import { computeStatusViewOverrides } from '../../controller/timeline/eventPresentationController';
@@ -62,7 +65,7 @@ describe('computeStatusViewOverrides', () => {
   describe('multi-instance statuses (Melting Flame, instances=4)', () => {
     const col = statusColumn('slot1', [MELTING_FLAME_ID]);
 
-    it('adds roman numeral suffixes to overlapping events', () => {
+    it('adds arabic stack suffixes to overlapping events', () => {
       const events = [
         statusEvent('mf1', MELTING_FLAME_ID, MELTING_FLAME_ID, 'slot1', 0, 10 * FPS),
         statusEvent('mf2', MELTING_FLAME_ID, MELTING_FLAME_ID, 'slot1', 2 * FPS, 10 * FPS),
@@ -70,9 +73,9 @@ describe('computeStatusViewOverrides', () => {
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
-      expect(overrides.get('mf1')?.label).toContain('I');
-      expect(overrides.get('mf2')?.label).toContain('II');
-      expect(overrides.get('mf3')?.label).toContain('III');
+      expect(overrides.get('mf1')?.label).toMatch(/\s1$/);
+      expect(overrides.get('mf2')?.label).toMatch(/\s2$/);
+      expect(overrides.get('mf3')?.label).toMatch(/\s3$/);
     });
 
     it('truncates earlier events where next starts', () => {
@@ -92,18 +95,18 @@ describe('computeStatusViewOverrides', () => {
   describe('single-instance statuses with RESET (Scorching Heart)', () => {
     const col = statusColumn('slot1', [SCORCHING_HEART_ID]);
 
-    it('omits roman numeral suffixes for overlapping events', () => {
+    it('omits stack suffixes for overlapping events', () => {
       const events = [
         statusEvent('sh1', SCORCHING_HEART_ID, SCORCHING_HEART_ID, 'slot1', 0, 20 * FPS),
         statusEvent('sh2', SCORCHING_HEART_ID, SCORCHING_HEART_ID, 'slot1', 5 * FPS, 20 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
-      // Labels should NOT contain roman numerals
+      // Labels should NOT contain stack-count suffixes
       const label1 = overrides.get('sh1')?.label ?? '';
       const label2 = overrides.get('sh2')?.label ?? '';
-      expect(label1).not.toMatch(/\sI+$/);
-      expect(label2).not.toMatch(/\sI+$/);
+      expect(label1).not.toMatch(/\s\d+$/);
+      expect(label2).not.toMatch(/\s\d+$/);
       // Both should have the same label (base name only)
       expect(label1).toBe(label2);
     });
@@ -122,7 +125,7 @@ describe('computeStatusViewOverrides', () => {
   describe('single-instance statuses with RESET (Focus)', () => {
     const col = statusColumn('slot2', [FOCUS_ID]);
 
-    it('omits roman numeral suffixes', () => {
+    it('omits stack suffixes', () => {
       const events = [
         statusEvent('f1', FOCUS_ID, FOCUS_ID, 'slot2', 0, 20 * FPS),
         statusEvent('f2', FOCUS_ID, FOCUS_ID, 'slot2', 10 * FPS, 20 * FPS),
@@ -131,13 +134,13 @@ describe('computeStatusViewOverrides', () => {
 
       const label1 = overrides.get('f1')?.label ?? '';
       const label2 = overrides.get('f2')?.label ?? '';
-      expect(label1).not.toMatch(/\sI+$/);
+      expect(label1).not.toMatch(/\s\d+$/);
       expect(label1).toBe(label2);
     });
   });
 
   describe('single events are not overridden', () => {
-    it('single stackable status event still gets roman numeral', () => {
+    it('single stackable status event still gets a stack suffix', () => {
       const col = statusColumn('slot1', [MELTING_FLAME_ID]);
       const events = [
         statusEvent('mf1', MELTING_FLAME_ID, MELTING_FLAME_ID, 'slot1', 0, 10 * FPS),
@@ -145,7 +148,7 @@ describe('computeStatusViewOverrides', () => {
       const overrides = computeStatusViewOverrides(events, [col]);
 
       expect(overrides.size).toBe(1);
-      expect(overrides.get('mf1')?.label).toMatch(/I$/);
+      expect(overrides.get('mf1')?.label).toMatch(/\s1$/);
     });
 
     it('no overrides for a single RESET status event', () => {
@@ -169,9 +172,9 @@ describe('computeStatusViewOverrides', () => {
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
-      // Both get "I" since they don't overlap (activeEarlier = 0 for both)
-      expect(overrides.get('mf1')?.label).toContain('I');
-      expect(overrides.get('mf2')?.label).toContain('I');
+      // Both get "1" since they don't overlap (activeEarlier = 0 for both)
+      expect(overrides.get('mf1')?.label).toMatch(/\s1$/);
+      expect(overrides.get('mf2')?.label).toMatch(/\s1$/);
       // No truncation since they don't overlap
       expect(overrides.get('mf1')?.visualActivationDuration).toBeUndefined();
     });
@@ -190,11 +193,11 @@ describe('computeStatusViewOverrides', () => {
       const overrides = computeStatusViewOverrides(events, [col1, col2]);
 
       // Melting Flame: multi-instance → numerals
-      expect(overrides.get('mf1')?.label).toContain('I');
-      expect(overrides.get('mf2')?.label).toContain('II');
+      expect(overrides.get('mf1')?.label).toMatch(/\s1$/);
+      expect(overrides.get('mf2')?.label).toMatch(/\s2$/);
       // Focus: single-instance → no numerals
       const focusLabel = overrides.get('f1')?.label ?? '';
-      expect(focusLabel).not.toMatch(/\sI+$/);
+      expect(focusLabel).not.toMatch(/\s\d+$/);
     });
   });
 });

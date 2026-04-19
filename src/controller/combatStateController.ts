@@ -58,6 +58,13 @@ export function setRuntimeCritMode(mode: CritMode) {
   _runtimeCritMode = mode;
 }
 
+/** Force a crit-visual repaint (e.g. after rerolling Manual crit pins).
+ *  The mode itself didn't change, but downstream memoized caches keyed on
+ *  `critModeGeneration` (canvas renderer, EventBlock memo) need to invalidate. */
+export function bumpCritModeGeneration() {
+  _critModeGeneration++;
+}
+
 // ── Context types for methods that need runtime state ────────────────
 
 export interface MoveContext {

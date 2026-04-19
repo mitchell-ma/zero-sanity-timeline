@@ -103,12 +103,11 @@ describe('Chen Qianyu — Momentum Breaker self-triggers on BS/CS/ULT + ENEMY HA
     const mb = events[0];
     const staggerEffects = (mb.segments ?? [])
       .flatMap(s => s.frames ?? [])
-      .flatMap(f => f.clauses ?? [])
+      .flatMap(f => f.clause ?? [])
       .flatMap(c => c.effects ?? [])
-      .map(e => (e as { dslEffect?: { verb?: string; object?: string; with?: { value?: { verb?: string; value?: number } } } }).dslEffect)
-      .filter((d): d is NonNullable<typeof d> => d?.verb === VerbType.DEAL && d?.object === NounType.STAGGER);
+      .filter(dsl => dsl?.verb === VerbType.DEAL && dsl?.object === NounType.STAGGER);
     expect(staggerEffects.length).toBeGreaterThanOrEqual(1);
-    const val = staggerEffects[0].with?.value;
+    const val = staggerEffects[0].with?.value as { verb?: string; value?: number } | undefined;
     expect(val?.verb).toBe(VerbType.IS);
     expect(val?.value).toBe(10);
   });

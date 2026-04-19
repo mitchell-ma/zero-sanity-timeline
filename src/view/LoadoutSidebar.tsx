@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo, forwardRef } from 'react';
+import { useState, useCallback, useRef, useEffect, useLayoutEffect, useMemo, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   LoadoutTree,
@@ -10,6 +10,7 @@ import {
   toggleFolder,
   moveNode,
   uniqueName,
+  isReadOnlyNode,
 } from '../utils/loadoutStorage';
 import { LoadoutNodeType, SidebarMode as SidebarModeEnum } from '../consts/enums';
 import { t } from '../locales/locale';
@@ -25,8 +26,16 @@ interface LoadoutSidebarProps {
   onNewLoadout: (parentId: string | null) => void;
   onDuplicateLoadout: (sourceId: string) => void;
   onDeleteLoadout: (loadoutIds: string[], nodeId: string) => void;
+  onDownloadLoadout: (loadoutId: string) => void;
+  onShareLoadout: (loadoutId: string) => Promise<boolean>;
+  onExport: () => void;
+  onImport: () => void;
   onWarning?: (message: string) => void;
   onLoadCommunityLoadout: (loadoutId: string) => void;
+  onOpenViewsModal: (parentLoadoutId: string) => void;
+  onClearViews: (parentLoadoutId: string) => void;
+  /** Per-view-id flag indicating placement validation errors (warning icon). */
+  viewWarningMap?: Record<string, boolean>;
   sidebarMode: SidebarMode;
   onSidebarModeChange: (mode: SidebarMode) => void;
 }
@@ -46,6 +55,9 @@ function flattenVisibleNodes(
     result.push(node.id);
     if (node.type === LoadoutNodeType.FOLDER && (!node.collapsed || filterActive)) {
       result.push(...flattenVisibleNodes(tree, node.id, visibleIds, filterActive));
+    } else if (node.type === LoadoutNodeType.LOADOUT && (!node.collapsed || filterActive)) {
+      // LOADOUT_VIEW children are nested under their parent loadout
+      result.push(...flattenVisibleNodes(tree, node.id, visibleIds, filterActive));
     }
   }
   return result;
@@ -59,8 +71,15 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   onNewLoadout,
   onDuplicateLoadout,
   onDeleteLoadout,
+  onDownloadLoadout,
+  onShareLoadout,
+  onExport,
+  onImport,
   onWarning,
   onLoadCommunityLoadout,
+  onOpenViewsModal,
+  onClearViews,
+  viewWarningMap,
   sidebarMode,
   onSidebarModeChange,
 }, ref) {
@@ -71,6 +90,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ id: string | null; position: 'before' | 'inside' | 'after' } | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; nodeId: string | null; parentId: string | null } | null>(null);
+  const [copiedNodeId, setCopiedNodeId] = useState<string | null>(null);
 
   // ─── Multi-select state ───────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -80,6 +100,10 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   const [marquee, setMarquee] = useState<{ startX: number; startY: number; endX: number; endY: number } | null>(null);
   const marqueeActiveRef = useRef(false);
   const marqueeJustEndedRef = useRef(false);
+  const marqueeAdditiveRef = useRef(false);
+  const marqueeBaseRef = useRef<Set<string>>(new Set());
+  const selectedIdsRef = useRef(selectedIds);
+  useEffect(() => { selectedIdsRef.current = selectedIds; }, [selectedIds]);
   const treeRef = useRef<HTMLDivElement>(null);
 
   // Focus rename input when it appears
@@ -165,6 +189,14 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
     setSelectedIds(new Set());
   }, [tree, onTreeChange, onDeleteLoadout]);
 
+  const handleShare = useCallback(async (nodeId: string) => {
+    const ok = await onShareLoadout(nodeId);
+    if (ok) {
+      setCopiedNodeId(nodeId);
+      setTimeout(() => setCopiedNodeId((prev) => (prev === nodeId ? null : prev)), 1400);
+    }
+  }, [onShareLoadout]);
+
   const handleToggleFolder = useCallback((folderId: string) => {
     onTreeChange(toggleFolder(tree, folderId));
   }, [tree, onTreeChange]);
@@ -194,8 +226,11 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
       // Normal click — select single, also trigger loadout switch / folder toggle
       setSelectedIds(new Set([node.id]));
       lastClickedRef.current = node.id;
-      if (node.type === LoadoutNodeType.LOADOUT) onSelectLoadout(node.id);
-      else handleToggleFolder(node.id);
+      if (node.type === LoadoutNodeType.LOADOUT || node.type === LoadoutNodeType.LOADOUT_VIEW) {
+        onSelectLoadout(node.id);
+      } else {
+        handleToggleFolder(node.id);
+      }
     }
   }, [flatOrder, onSelectLoadout, handleToggleFolder]);
 
@@ -208,6 +243,8 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
       const isNode = (e.target as HTMLElement).closest('.loadout-node');
       if (isNode || e.button !== 0) return;
       marqueeActiveRef.current = true;
+      marqueeAdditiveRef.current = e.ctrlKey || e.metaKey;
+      marqueeBaseRef.current = marqueeAdditiveRef.current ? new Set(selectedIdsRef.current) : new Set();
       setMarquee({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
     };
 
@@ -246,7 +283,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
       bottom: Math.max(marquee.startY, marquee.endY),
     };
     const nodeEls = treeRef.current.querySelectorAll('.loadout-node');
-    const selected = new Set<string>();
+    const selected = new Set<string>(marqueeBaseRef.current);
     nodeEls.forEach((el) => {
       const r = el.getBoundingClientRect();
       const nodeId = (el as HTMLElement).dataset.nodeId;
@@ -319,25 +356,34 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   const renderNode = (node: LoadoutNode, depth: number) => {
     if (visibleIds && !visibleIds.has(node.id)) return null;
 
-    const isActive = node.type === LoadoutNodeType.LOADOUT && node.id === activeLoadoutId;
+    const isView = node.type === LoadoutNodeType.LOADOUT_VIEW;
+    const isLoadoutLike = node.type === LoadoutNodeType.LOADOUT || isView;
+    const isActive = isLoadoutLike && node.id === activeLoadoutId;
     const isSelected = selectedIds.has(node.id);
     const isDragging = node.id === dragId;
     const isDropInside = dropTarget?.id === node.id && dropTarget.position === 'inside';
     const isDropBefore = dropTarget?.id === node.id && dropTarget.position === 'before';
     const isDropAfter = dropTarget?.id === node.id && dropTarget.position === 'after';
 
-    const children = node.type === LoadoutNodeType.FOLDER ? getChildrenOf(tree, node.id) : [];
-    const isCollapsed = node.type === LoadoutNodeType.FOLDER && node.collapsed && !filterLower;
+    const children =
+      node.type === LoadoutNodeType.FOLDER || node.type === LoadoutNodeType.LOADOUT
+        ? getChildrenOf(tree, node.id)
+        : [];
+    const hasViewChildren =
+      node.type === LoadoutNodeType.LOADOUT && children.some((c) => c.type === LoadoutNodeType.LOADOUT_VIEW);
+    const isCollapsed =
+      ((node.type === LoadoutNodeType.FOLDER) || (node.type === LoadoutNodeType.LOADOUT && hasViewChildren)) &&
+      node.collapsed === true && !filterLower;
 
     return (
       <div key={node.id} style={{ opacity: isDragging ? 0.4 : 1 }}>
         {isDropBefore && <div className="loadout-drop-indicator" style={{ marginLeft: depth * 16 }} />}
         <div
-          className={`loadout-node${isActive ? ' loadout-node--active' : ''}${isSelected && !isActive ? ' loadout-node--selected' : ''}${isDropInside ? ' loadout-node--drop-target' : ''}`}
+          className={`loadout-node${isActive ? ' loadout-node--active' : ''}${isSelected && !isActive ? ' loadout-node--selected' : ''}${isDropInside ? ' loadout-node--drop-target' : ''}${isView ? ' loadout-node--view' : ''}`}
           style={{ paddingLeft: 8 + depth * 16 }}
           data-node-id={node.id}
-          draggable
-          onDragStart={(e) => handleDragStart(e, node.id)}
+          draggable={!isView && renamingId !== node.id}
+          onDragStart={(e) => !isView && renamingId !== node.id && handleDragStart(e, node.id)}
           onDragOver={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const y = e.clientY - rect.top;
@@ -355,9 +401,11 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
           onDragEnd={handleDragEnd}
           onClick={(e) => handleNodeClick(e, node)}
           onDoubleClick={() => {
+            if (isView) return; // view names are derived; no rename
             setRenamingId(node.id);
             setRenameValue(node.name);
           }}
+          title={isView ? t('sidebar.view.readonlyTooltip') : undefined}
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -365,7 +413,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
             if (!selectedIds.has(node.id) || selectedIds.size <= 1) {
               setSelectedIds(new Set([node.id]));
               // Load the loadout when right-clicking it
-              if (node.type === LoadoutNodeType.LOADOUT) onSelectLoadout(node.id);
+              if (isLoadoutLike) onSelectLoadout(node.id);
             }
             setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: node.id, parentId: node.type === LoadoutNodeType.FOLDER ? node.id : node.parentId });
           }}
@@ -374,6 +422,21 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
             <span className="loadout-node-icon loadout-node-chevron">
               {isCollapsed ? '\u25B6' : '\u25BC'}
             </span>
+          ) : node.type === LoadoutNodeType.LOADOUT && hasViewChildren ? (
+            <span
+              className="loadout-node-icon loadout-node-chevron"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTreeChange({
+                  nodes: tree.nodes.map((n) => n.id === node.id ? { ...n, collapsed: !n.collapsed } : n),
+                });
+              }}
+              role="button"
+            >
+              {isCollapsed ? '\u25B6' : '\u25BC'}
+            </span>
+          ) : isView ? (
+            <span className="loadout-node-icon loadout-view-icon" aria-hidden>{'\u25C7'}</span>
           ) : (
             <span className="loadout-node-icon loadout-node-dot">
               {isActive ? '\u25CF' : '\u25CB'}
@@ -394,11 +457,20 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className="loadout-node-name">{node.name}</span>
+            <span className="loadout-node-name">
+              {node.name}
+              {isView && viewWarningMap?.[node.id] && (
+                <span
+                  className="loadout-view-warning"
+                  title={t('sidebar.view.invalidTooltip')}
+                  aria-label="invalid permutation"
+                >{'\u26A0'}</span>
+              )}
+            </span>
           )}
 
           <span className="loadout-node-actions" onClick={(e) => e.stopPropagation()}>
-            {node.type === LoadoutNodeType.FOLDER && (
+            {isView ? null : node.type === LoadoutNodeType.FOLDER ? (
               <>
                 <button
                   className="loadout-action-btn"
@@ -415,21 +487,40 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
                   </svg>
                 </button>
               </>
+            ) : (
+              <>
+                <button
+                  className="loadout-action-btn"
+                  title={t('sidebar.btn.download')}
+                  onClick={() => onDownloadLoadout(node.id)}
+                >
+                  <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                    <path d="M8 1a.5.5 0 01.5.5v7.793l2.646-2.647a.5.5 0 01.708.708l-3.5 3.5a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L7.5 9.293V1.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
+                  </svg>
+                </button>
+                <button
+                  className={`loadout-action-btn${copiedNodeId === node.id ? ' loadout-action-btn--copied' : ''}`}
+                  title={copiedNodeId === node.id ? t('sidebar.btn.shareCopied') : t('sidebar.btn.share')}
+                  onClick={() => handleShare(node.id)}
+                >
+                  {copiedNodeId === node.id ? (
+                    <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                      <path d="M13.854 3.646a.5.5 0 010 .708l-7 7a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L6.5 10.293l6.646-6.647a.5.5 0 01.708 0z"/>
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                      <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
+                      <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
+                    </svg>
+                  )}
+                </button>
+              </>
             )}
-            <button
-              className="loadout-action-btn loadout-action-btn--delete"
-              title={t('sidebar.btn.delete')}
-              onClick={() => handleDelete(node.id)}
-            >
-              <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor">
-                <path d="M4.646 4.646a.5.5 0 01.708 0L8 7.293l2.646-2.647a.5.5 0 01.708.708L8.707 8l2.647 2.646a.5.5 0 01-.708.708L8 8.707l-2.646 2.647a.5.5 0 01-.708-.708L7.293 8 4.646 5.354a.5.5 0 010-.708z"/>
-              </svg>
-            </button>
           </span>
         </div>
         {isDropAfter && <div className="loadout-drop-indicator" style={{ marginLeft: depth * 16 }} />}
 
-        {node.type === LoadoutNodeType.FOLDER && !isCollapsed && children.map((child) => renderNode(child, depth + 1))}
+        {(node.type === LoadoutNodeType.FOLDER || node.type === LoadoutNodeType.LOADOUT) && !isCollapsed && children.map((child) => renderNode(child, depth + 1))}
       </div>
     );
   };
@@ -497,6 +588,24 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
                   <path d="M1 3.5A1.5 1.5 0 012.5 2h3.879a1.5 1.5 0 011.06.44l1.122 1.12A1.5 1.5 0 009.62 4H13.5A1.5 1.5 0 0115 5.5v7a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 011 12.5v-9z"/>
                 </svg>
               </button>
+              <button
+                className="loadout-action-btn"
+                title={t('sidebar.btn.import')}
+                onClick={onImport}
+              >
+                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                  <path d="M8 1a.5.5 0 01.354.146l3.5 3.5a.5.5 0 01-.708.708L8.5 2.707V10.5a.5.5 0 01-1 0V2.707L4.854 5.354a.5.5 0 11-.708-.708l3.5-3.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
+                </svg>
+              </button>
+              <button
+                className="loadout-action-btn"
+                title={t('sidebar.btn.export')}
+                onClick={onExport}
+              >
+                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                  <path d="M8 1a.5.5 0 01.5.5v7.793l2.646-2.647a.5.5 0 01.708.708l-3.5 3.5a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L7.5 9.293V1.5A.5.5 0 018 1zM2.5 12a.5.5 0 01.5.5V14h10v-1.5a.5.5 0 011 0V14a1 1 0 01-1 1H3a1 1 0 01-1-1v-1.5a.5.5 0 01.5-.5z"/>
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -530,6 +639,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
                 marqueeJustEndedRef.current = false;
                 return;
               }
+              if (e.ctrlKey || e.metaKey) return;
               const isOverNode = (e.target as HTMLElement).closest('.loadout-node');
               if (!isOverNode) setSelectedIds(new Set());
             }}
@@ -575,6 +685,10 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
               }}
               onDelete={(nodeId) => { handleDelete(nodeId); setCtxMenu(null); }}
               onBatchDelete={(ids) => { handleBatchDelete(ids); setCtxMenu(null); }}
+              onDownload={(nodeId) => { onDownloadLoadout(nodeId); setCtxMenu(null); }}
+              onShare={(nodeId) => { handleShare(nodeId); setCtxMenu(null); }}
+              onCreateViews={(nodeId) => { onOpenViewsModal(nodeId); setCtxMenu(null); }}
+              onClearViews={(nodeId) => { onClearViews(nodeId); setCtxMenu(null); }}
               onClose={() => setCtxMenu(null)}
             />,
             document.body,
@@ -594,6 +708,7 @@ function CommunitySection({ folders, activeId, onLoad, onDuplicate }: { folders:
   const [collapsed, setCollapsed] = useState(false);
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set());
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; loadoutId: string } | null>(null);
+  const [ctxPos, setCtxPos] = useState<{ left: number; top: number } | null>(null);
   const ctxRef = useRef<HTMLDivElement>(null);
 
   const toggleFolder = useCallback((folderId: string) => {
@@ -614,6 +729,18 @@ function CommunitySection({ folders, activeId, onLoad, onDuplicate }: { folders:
     window.addEventListener('mousedown', dismiss);
     window.addEventListener('keydown', dismissKey);
     return () => { window.removeEventListener('mousedown', dismiss); window.removeEventListener('keydown', dismissKey); };
+  }, [ctxMenu]);
+
+  useLayoutEffect(() => {
+    if (!ctxMenu) { setCtxPos(null); return; }
+    const el = ctxRef.current;
+    if (!el) return;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const margin = 8;
+    const left = Math.max(margin, Math.min(ctxMenu.x, window.innerWidth - w - margin));
+    const top = Math.max(margin, Math.min(ctxMenu.y, window.innerHeight - h - margin));
+    setCtxPos({ left, top });
   }, [ctxMenu]);
 
   return (
@@ -660,7 +787,17 @@ function CommunitySection({ folders, activeId, onLoad, onDuplicate }: { folders:
         </div>
       ))}
       {ctxMenu && createPortal(
-        <div ref={ctxRef} className="loadout-ctx-menu" style={{ position: 'fixed', left: ctxMenu.x, top: ctxMenu.y, zIndex: 9999 }}>
+        <div
+          ref={ctxRef}
+          className="loadout-ctx-menu"
+          style={{
+            position: 'fixed',
+            left: ctxPos?.left ?? ctxMenu.x,
+            top: ctxPos?.top ?? ctxMenu.y,
+            zIndex: 9999,
+            visibility: ctxPos ? 'visible' : 'hidden',
+          }}
+        >
           <button className="loadout-ctx-item" onClick={() => { onDuplicate(ctxMenu.loadoutId); setCtxMenu(null); }}>
             {t('sidebar.ctx.duplicate')}
           </button>
@@ -675,7 +812,7 @@ function CommunitySection({ folders, activeId, onLoad, onDuplicate }: { folders:
 
 function LoadoutContextMenu({
   x, y, nodeId, node, parentId, selectedIds,
-  onNewLoadout, onNewFolder, onDuplicate, onRename, onDelete, onBatchDelete, onClose,
+  onNewLoadout, onNewFolder, onDuplicate, onRename, onDelete, onBatchDelete, onDownload, onShare, onCreateViews, onClearViews, onClose,
 }: {
   x: number;
   y: number;
@@ -689,10 +826,15 @@ function LoadoutContextMenu({
   onRename: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   onBatchDelete: (ids: string[]) => void;
+  onDownload: (nodeId: string) => void;
+  onShare: (nodeId: string) => void;
+  onCreateViews: (parentLoadoutId: string) => void;
+  onClearViews: (parentLoadoutId: string) => void;
   onClose: () => void;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -709,12 +851,26 @@ function LoadoutContextMenu({
     };
   }, [onClose, confirmDelete]);
 
-  // Position: clamp to viewport
+  // Measure the rendered menu and flip upward / leftward if it would overflow
+  // the viewport. Runs again when confirmDelete toggles since the menu content
+  // (and therefore its height) changes.
+  useLayoutEffect(() => {
+    const el = menuRef.current;
+    if (!el) return;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const margin = 8;
+    const left = Math.max(margin, Math.min(x, window.innerWidth - w - margin));
+    const top = Math.max(margin, Math.min(y, window.innerHeight - h - margin));
+    setPos({ left, top });
+  }, [x, y, confirmDelete]);
+
   const style: React.CSSProperties = {
     position: 'fixed',
-    left: x,
-    top: y,
+    left: pos?.left ?? x,
+    top: pos?.top ?? y,
     zIndex: 9999,
+    visibility: pos ? 'visible' : 'hidden',
   };
 
   const isBatch = selectedIds.size > 1 && (!nodeId || selectedIds.has(nodeId));
@@ -734,19 +890,40 @@ function LoadoutContextMenu({
             <>
               <div className="loadout-ctx-separator" />
               {node.type === LoadoutNodeType.LOADOUT && (
-                <button className="loadout-ctx-item" onClick={() => onDuplicate(nodeId)}>
-                  {t('sidebar.ctx.duplicate')}
+                <>
+                  <button className="loadout-ctx-item" onClick={() => onDuplicate(nodeId)}>
+                    {t('sidebar.ctx.duplicate')}
+                  </button>
+                  <button className="loadout-ctx-item" onClick={() => onDownload(nodeId)}>
+                    {t('sidebar.ctx.download')}
+                  </button>
+                  <button className="loadout-ctx-item" onClick={() => onShare(nodeId)}>
+                    {t('sidebar.ctx.share')}
+                  </button>
+                  <div className="loadout-ctx-separator" />
+                  <button className="loadout-ctx-item" onClick={() => onCreateViews(nodeId)}>
+                    {node.viewSelections ? t('sidebar.ctx.editViews') : t('sidebar.ctx.createViews')}
+                  </button>
+                  {node.viewSelections && (
+                    <button className="loadout-ctx-item" onClick={() => onClearViews(nodeId)}>
+                      {t('sidebar.ctx.clearViews')}
+                    </button>
+                  )}
+                </>
+              )}
+              {!isReadOnlyNode(node) && (
+                <button className="loadout-ctx-item" onClick={() => onRename(nodeId)}>
+                  {t('sidebar.ctx.rename')}
                 </button>
               )}
-              <button className="loadout-ctx-item" onClick={() => onRename(nodeId)}>
-                {t('sidebar.ctx.rename')}
-              </button>
-              <button
-                className="loadout-ctx-item loadout-ctx-item--danger"
-                onClick={() => setConfirmDelete(true)}
-              >
-                {t('sidebar.ctx.delete')}
-              </button>
+              {!isReadOnlyNode(node) && (
+                <button
+                  className="loadout-ctx-item loadout-ctx-item--danger"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  {t('sidebar.ctx.delete')}
+                </button>
+              )}
             </>
           )}
           {isBatch && (

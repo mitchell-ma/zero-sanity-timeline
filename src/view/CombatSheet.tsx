@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { Column, TimelineEvent, SelectedFrame, Enemy, ContextMenuItem } from '../consts/viewTypes';
 import ContextMenu from './ContextMenu';
-import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame, secondsToFrames } from '../utils/timeline';
+import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame } from '../utils/timeline';
 import {
   buildDamageTableColumns,
   computeDamageStatistics,
@@ -12,18 +12,13 @@ import { runCalculation } from '../controller/calculation/calculationController'
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
-import { CritMode, ELEMENT_COLORS, FoldMode, NumberFormatType } from '../consts/enums';
+import { CritMode, ELEMENT_COLORS, FoldMode, NumberFormatType, StepperActionIcon } from '../consts/enums';
 import { loadSettings } from '../consts/settings';
 import type { OverrideStore } from '../consts/overrideTypes';
 import { LoadoutProperties } from './InformationPane';
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { OPERATORS } from '../utils/loadoutRegistry';
-import {
-  getWeapon,
-  getGearPiece,
-  getConsumable,
-  getTactical,
-} from '../controller/gameDataStore';
+import CombatSheetHeader from './CombatSheetHeader';
 import { SKILL_LABELS } from '../consts/timelineColumnLabels';
 import { getAllSkillLabels } from '../controller/gameDataStore';
 import { t } from '../locales/locale';
@@ -152,6 +147,21 @@ const FOLD_MODE_LABELS: Record<FoldMode, string> = {
   [FoldMode.SEGMENT]: t('sheet.fold.segment'),
   [FoldMode.EVENT]: t('sheet.fold.event'),
 };
+
+const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NEVER, CritMode.ALWAYS, CritMode.MANUAL];
+const CRIT_MODE_LABELS: Record<CritMode, string> = {
+  [CritMode.EXPECTED]: t('sheet.crit.expected'),
+  [CritMode.NEVER]: t('sheet.crit.never'),
+  [CritMode.ALWAYS]: t('sheet.crit.always'),
+  [CritMode.MANUAL]: t('sheet.crit.manual'),
+};
+
+function cycleValue<T>(cycle: T[], current: T, delta: 1 | -1): T {
+  const idx = cycle.indexOf(current);
+  const base = idx === -1 ? 0 : idx;
+  const n = cycle.length;
+  return cycle[(base + delta + n) % n];
+}
 
 function getSegmentStartFrame(ev: TimelineEvent, segmentIndex: number): number {
   let offset = 0;
@@ -294,6 +304,7 @@ interface CombatSheetProps {
   onSelectFrame?: (frame: SelectedFrame) => void;
   critMode?: CritMode;
   onCritModeChange?: (mode: CritMode) => void;
+  onRandomizeCrit?: () => void;
   overrides?: OverrideStore;
   plannerHidden?: boolean;
   resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
@@ -303,7 +314,7 @@ export default React.memo(function CombatSheet({
   slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight, headerRowHeight,
   selectedFrames, hoverFrameRef, onHoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows, onSelectFrame,
-  critMode = CritMode.NEVER, onCritModeChange, overrides, plannerHidden, resourceGraphs,
+  critMode = CritMode.NEVER, onCritModeChange, onRandomizeCrit, overrides, plannerHidden: _plannerHidden, resourceGraphs,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const formatTime = useCallback(
@@ -316,6 +327,7 @@ export default React.memo(function CombatSheet({
   const [colVisible, setColVisible] = useState<Record<SheetCol, boolean>>(loadColVisible);
   const [colOrder, setColOrder] = useState<SheetCol[]>(loadColOrder);
   const [headerMenu, setHeaderMenu] = useState<{ x: number; y: number } | null>(null);
+  const [sheetMenu, setSheetMenu] = useState<{ x: number; y: number } | null>(null);
 
   // Persist column settings to localStorage
   useEffect(() => {
@@ -339,7 +351,13 @@ export default React.memo(function CombatSheet({
 
   const handleHeaderContext = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setHeaderMenu({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  const handleSheetContext = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setSheetMenu({ x: e.clientX, y: e.clientY });
   }, []);
 
   /** Read live header child rects and find which column index the cursor is over.
@@ -502,10 +520,10 @@ export default React.memo(function CombatSheet({
   const rows = useMemo(() => foldRows(rawRows, foldMode, events), [rawRows, foldMode, events]);
 
   // DPS range filter
-  const [dpsRangeStart, setDpsRangeStart] = useState('');
-  const [dpsRangeEnd, setDpsRangeEnd] = useState('');
-  const rangeStartFrame = dpsRangeStart ? secondsToFrames(dpsRangeStart) : undefined;
-  const rangeEndFrame = dpsRangeEnd ? secondsToFrames(dpsRangeEnd) : undefined;
+  // DPS range filter UI was removed in header redesign — keep the undefined
+  // inputs so statistics still reflect the full-timeline range.
+  const rangeStartFrame: number | undefined = undefined;
+  const rangeEndFrame: number | undefined = undefined;
 
   const statistics = useMemo(
     () => computeDamageStatistics(rawRows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame),
@@ -813,160 +831,19 @@ export default React.memo(function CombatSheet({
   }
 
   return (
-    <div className="dmg-table-outer">
-      {/* Loadout spacer — team stats summary */}
-      <div
-        className="dmg-loadout-spacer"
-        style={{ height: loadoutRowHeight }}
-      >
-        <div className="dmg-loadout-ops">
-          {slots.map((slot) => {
-            if (!slot.operator) return null;
-            const opStats = statistics.operators.find((o) => o.ownerEntityId === slot.slotId);
-            return (
-              <div
-                key={slot.slotId}
-                className="dmg-loadout-op"
-                style={{
-                  '--op-color': slot.operator.color,
-                  flex: 1,
-                } as React.CSSProperties}
-              >
-                <span className="dmg-loadout-op-name">{slot.operator.name}</span>
-                {opStats && opStats.totalDamage > 0 && (
-                  <span className="dmg-loadout-op-stats">
-                    {formatDamage(opStats.totalDamage)} ({formatPct(opStats.teamPct)})
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Team total bar */}
-        {statistics.teamTotalDamage > 0 && (
-          <div className="dmg-team-total">
-            <span className="dmg-team-total-label">Team Total</span>
-            <span className="dmg-team-total-value">{formatDamage(statistics.teamTotalDamage)}</span>
-            <button
-              className={`dmg-fold-toggle dmg-fold-toggle--${foldMode.toLowerCase()}`}
-              onClick={() => {
-                const idx = FOLD_MODE_CYCLE.indexOf(foldMode);
-                const next = FOLD_MODE_CYCLE[(idx + 1) % FOLD_MODE_CYCLE.length];
-                setFoldMode(next);
-              }}
-              title={`Fold mode: ${FOLD_MODE_LABELS[foldMode]}. Click to cycle.`}
-            >
-              {FOLD_MODE_LABELS[foldMode]}
-            </button>
-            <div className="dmg-team-total-bars">
-              {statistics.operators.map((op) => {
-                const slot = slots.find((s) => s.slotId === op.ownerEntityId);
-                if (!slot?.operator || op.totalDamage <= 0) return null;
-                return (
-                  <div
-                    key={op.ownerEntityId}
-                    className="dmg-team-bar-segment"
-                    style={{
-                      width: `${op.teamPct * 100}%`,
-                      background: slot.operator.color,
-                    }}
-                    title={`${slot.operator.name}: ${formatDamage(op.totalDamage)} (${formatPct(op.teamPct)})`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Extended statistics row */}
-        {statistics.teamTotalDamage > 0 && (
-          <div className="dmg-stats-row">
-            {statistics.teamDps != null && (
-              <span className="dmg-stats-item" title="Team damage per second (set range to filter)">
-                <span className="dmg-stats-label">DPS</span>
-                <span className="dmg-stats-value">{formatDamage(statistics.teamDps)}</span>
-              </span>
-            )}
-            <span className="dmg-stats-item dmg-stats-item--range" title="DPS time range (seconds). Leave empty for full timeline.">
-              <input
-                className="dmg-range-input"
-                type="text"
-                inputMode="decimal"
-                placeholder="0"
-                value={dpsRangeStart}
-                onChange={(e) => setDpsRangeStart(e.target.value)}
-              />
-              <span className="dmg-range-sep">&ndash;</span>
-              <input
-                className="dmg-range-input"
-                type="text"
-                inputMode="decimal"
-                placeholder="end"
-                value={dpsRangeEnd}
-                onChange={(e) => setDpsRangeEnd(e.target.value)}
-              />
-            </span>
-            {statistics.highestTick && (
-              <span className="dmg-stats-item" title={`Highest tick: ${statistics.highestTick.label}`}>
-                <span className="dmg-stats-label">Peak</span>
-                <span className="dmg-stats-value">{formatDamage(statistics.highestTick.damage)}</span>
-              </span>
-            )}
-            {statistics.highestBurst && (
-              <span className="dmg-stats-item" title={`Best 5s burst window: ${formatTime(statistics.highestBurst.startFrame)} – ${formatTime(statistics.highestBurst.endFrame)}`}>
-                <span className="dmg-stats-label">5s Burst</span>
-                <span className="dmg-stats-value">{formatDamage(statistics.highestBurst.damage)}</span>
-              </span>
-            )}
-            {statistics.timeToKill != null && (
-              <span className="dmg-stats-item dmg-stats-item--ttk" title="Time to kill">
-                <span className="dmg-stats-label">TTK</span>
-                <span className="dmg-stats-value">{formatTime(statistics.timeToKill)}</span>
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Minimized loadout icons when planner is hidden */}
-        {plannerHidden && (
-          <div className="dmg-mini-loadout">
-            {slots.map((slot) => {
-              if (!slot.operator) return null;
-              const opEntry = OPERATORS.find((o) => o.name === slot.operator!.name);
-              const loadout = loadouts?.[slot.slotId];
-              const weaponEntry = loadout?.weaponId ? getWeapon(loadout.weaponId) : null;
-              const armorEntry = loadout?.armorId ? getGearPiece(loadout.armorId) : null;
-              const glovesEntry = loadout?.glovesId ? getGearPiece(loadout.glovesId) : null;
-              const kit1Entry = loadout?.kit1Id ? getGearPiece(loadout.kit1Id) : null;
-              const kit2Entry = loadout?.kit2Id ? getGearPiece(loadout.kit2Id) : null;
-              const consumableEntry = loadout?.consumableId ? getConsumable(loadout.consumableId) : null;
-              const tacticalEntry = loadout?.tacticalId ? getTactical(loadout.tacticalId) : null;
-              const coreItems = [weaponEntry, armorEntry, glovesEntry, kit1Entry, kit2Entry];
-              const items = [
-                ...coreItems,
-                ...(consumableEntry ? [consumableEntry] : []),
-                ...(tacticalEntry ? [tacticalEntry] : []),
-              ];
-
-              return (
-                <div key={slot.slotId} className="dmg-mini-loadout-slot" style={{ '--op-color': slot.operator.color } as React.CSSProperties}>
-                  <div className="dmg-mini-loadout-op">
-                    {opEntry?.icon && <img className="dmg-mini-loadout-icon dmg-mini-loadout-icon--op" src={opEntry.icon} alt={slot.operator.name} />}
-                    <span className="dmg-mini-loadout-name">{slot.operator.name}</span>
-                  </div>
-                  <div className="dmg-mini-loadout-items">
-                    {items.map((entry, i) => entry?.icon ? (
-                      <img key={i} className="dmg-mini-loadout-icon" src={entry.icon} alt={entry.name} title={entry.name} />
-                    ) : i < coreItems.length ? (
-                      <span key={i} className="dmg-mini-loadout-icon dmg-mini-loadout-icon--empty" />
-                    ) : null)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+    <div className="dmg-table-outer" onContextMenu={handleSheetContext}>
+      {/* Team header — operator cards, equipment, per-operator stats.
+          Height is hard-locked to the planner row so the sheet column headers
+          line up with the planner's skill-column headers. Inner content flexes
+          to fit; overflow is hidden. */}
+      <div className="dmg-loadout-spacer" style={{ height: loadoutRowHeight }}>
+        <CombatSheetHeader
+          slots={slots}
+          loadouts={loadouts}
+          loadoutProperties={loadoutProperties}
+          statistics={statistics}
+          tableColumns={tableColumns}
+        />
       </div>
 
       {/* Column headers — data-driven, draggable for reorder */}
@@ -999,6 +876,39 @@ export default React.memo(function CombatSheet({
             action: () => toggleCol(id),
           }))}
           onClose={() => setHeaderMenu(null)}
+        />
+      )}
+
+      {sheetMenu && (
+        <ContextMenu
+          x={sheetMenu.x}
+          y={sheetMenu.y}
+          items={[
+            { header: true, label: t('sheet.menu.grouping') },
+            {
+              stepper: {
+                valueLabel: FOLD_MODE_LABELS[foldMode],
+                onPrev: () => setFoldMode((m) => cycleValue(FOLD_MODE_CYCLE, m, -1)),
+                onNext: () => setFoldMode((m) => cycleValue(FOLD_MODE_CYCLE, m, 1)),
+              },
+            },
+            { header: true, label: t('sheet.menu.critMode') },
+            {
+              stepper: {
+                valueLabel: CRIT_MODE_LABELS[critMode],
+                onPrev: () => onCritModeChange?.(cycleValue(CRIT_MODE_CYCLE, critMode, -1)),
+                onNext: () => onCritModeChange?.(cycleValue(CRIT_MODE_CYCLE, critMode, 1)),
+                action: onRandomizeCrit && critMode === CritMode.MANUAL ? {
+                  icon: StepperActionIcon.REFRESH,
+                  onClick: onRandomizeCrit,
+                  title: t('sheet.menu.rerollCritTooltip'),
+                  label: t('sheet.menu.rerollCrit'),
+                  inline: true,
+                } : undefined,
+              },
+            },
+          ]}
+          onClose={() => setSheetMenu(null)}
         />
       )}
 

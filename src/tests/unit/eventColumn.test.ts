@@ -42,6 +42,7 @@ function makeHost(): ColumnHost & { events: TimelineEvent[] } {
     linkCausality() {},
     linkTransition() {},
     rescheduleEventEnd() {},
+    clampStatReversalsForColumn() {},
   };
 }
 
@@ -138,6 +139,7 @@ describe('InflictionColumn — cross-element reaction causality', () => {
       linkCausality(childUid, parents) { linkCalls.push({ childUid, parents }); },
       linkTransition() {},
       rescheduleEventEnd() {},
+      clampStatReversalsForColumn() {},
     };
 
     const col = new InflictionColumn(INFLICTION_COLUMNS.HEAT, host);

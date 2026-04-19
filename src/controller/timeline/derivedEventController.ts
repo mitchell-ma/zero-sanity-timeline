@@ -284,6 +284,20 @@ export class DerivedEventController implements ColumnHost {
     return this.statAccumulator !== null;
   }
 
+  // ── Stat-reversal clamp callback ──────────────────────────────────────
+  // Registered by EventInterpretorController.resetWith so columns can
+  // retroactively clear orphan APPLY STAT contributions when an event is
+  // clamped (corrosion merge / status RESET).
+  private _statReversalClamper?: (columnId: string, ownerEntityId: string, clampFrame: number) => void;
+
+  setStatReversalClamper(fn: (columnId: string, ownerEntityId: string, clampFrame: number) => void): void {
+    this._statReversalClamper = fn;
+  }
+
+  clampStatReversalsForColumn(columnId: string, ownerEntityId: string, clampFrame: number): void {
+    this._statReversalClamper?.(columnId, ownerEntityId, clampFrame);
+  }
+
   // ── HP / shield passthroughs ───────────────────────────────────────────
 
   applyShield(operatorId: string, frame: number, value: number, expirationFrame: number) {

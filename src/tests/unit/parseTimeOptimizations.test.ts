@@ -51,7 +51,7 @@ describe('qualified status-ID pre-composition', () => {
     const clauses = parsed.getClauses();
     expect(clauses.length).toBe(1);
 
-    const effect = clauses[0].effects[0].dslEffect;
+    const effect = clauses[0].effects[0];
     expect(effect).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const composed = (effect as any)._composedQualifiedId;
@@ -74,7 +74,7 @@ describe('qualified status-ID pre-composition', () => {
     const clauses = parsed.getClauses();
     expect(clauses.length).toBe(1);
 
-    const effect = clauses[0].effects[0].dslEffect;
+    const effect = clauses[0].effects[0];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((effect as any)._composedQualifiedId).toBeUndefined();
   });
@@ -96,7 +96,7 @@ describe('qualified status-ID pre-composition', () => {
     }]);
 
     const parsed = new DataDrivenSkillEventFrame(frame as never);
-    const effect = parsed.getClauses()[0].effects[0].dslEffect;
+    const effect = parsed.getClauses()[0].effects[0];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const composed = (effect as any)._composedQualifiedId;
     expect(composed).toBe(flattenQualifiedId(qualifier, objectId));
@@ -118,7 +118,7 @@ describe('qualified status-ID pre-composition', () => {
 
     const parsed = new DataDrivenSkillEventFrame(frame as never);
     const clauses = parsed.getClauses();
-    const effect = clauses[0]?.effects[0]?.dslEffect;
+    const effect = clauses[0]?.effects[0];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((effect as any)?._composedQualifiedId).toBeUndefined();
   });

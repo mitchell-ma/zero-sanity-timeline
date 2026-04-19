@@ -7,9 +7,24 @@
  */
 
 import { SheetData, MultiLoadoutBundle, cleanSheetData } from './sheetStorage';
-import { LoadoutNodeType } from '../consts/enums';
+import { LoadoutNodeType, ViewVariableType } from '../consts/enums';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+/**
+ * Per-slot multi-selection of view variables, stored on a parent LOADOUT
+ * to remember the configuration that generated its child views.
+ *
+ * Shape: `{ [slotId]: { [ViewVariableType]: number[] } }` where the array
+ * is the user-selected set of values for that variable on that slot.
+ */
+export type ViewSelections = Record<string, Partial<Record<ViewVariableType, number[]>>>;
+
+/**
+ * Per-slot resolved override values for a single permutation, stored on a
+ * LOADOUT_VIEW child. Each entry pins one variable to one concrete value.
+ */
+export type ViewOverride = Record<string, Partial<Record<ViewVariableType, number>>>;
 
 export interface LoadoutNode {
   id: string;
@@ -18,6 +33,12 @@ export interface LoadoutNode {
   parentId: string | null; // null = root level
   order: number;           // sort order within parent
   collapsed?: boolean;     // folders only
+  /** LOADOUT only: permutation configuration that generated child views. */
+  viewSelections?: ViewSelections;
+  /** LOADOUT_VIEW only: id of the parent LOADOUT this view derives from. */
+  viewParentId?: string;
+  /** LOADOUT_VIEW only: per-slot variable overrides applied on top of parent's sheet. */
+  viewOverride?: ViewOverride;
 }
 
 export interface LoadoutTree {
@@ -253,9 +274,88 @@ export function flattenTreeNodes(tree: LoadoutTree, parentId: string | null = nu
     result.push({ node, depth });
     if (node.type === LoadoutNodeType.FOLDER) {
       result.push(...flattenTreeNodes(tree, node.id, depth + 1));
+    } else if (node.type === LoadoutNodeType.LOADOUT) {
+      // LOADOUT_VIEW children are nested under their parent LOADOUT.
+      result.push(...flattenTreeNodes(tree, node.id, depth + 1));
     }
   }
   return result;
+}
+
+// ─── View helpers ───────────────────────────────────────────────────────────
+
+export function isReadOnlyNode(node: LoadoutNode | null | undefined): boolean {
+  return node?.type === LoadoutNodeType.LOADOUT_VIEW;
+}
+
+/**
+ * Return the LOADOUT (non-view) ancestor for a given node id. For a
+ * LOADOUT_VIEW this resolves to its parent loadout via `viewParentId`.
+ * For a LOADOUT this returns the node itself. Returns null otherwise.
+ */
+export function resolveSourceLoadoutId(tree: LoadoutTree, nodeId: string | null): string | null {
+  if (!nodeId) return null;
+  const node = tree.nodes.find((n) => n.id === nodeId);
+  if (!node) return null;
+  if (node.type === LoadoutNodeType.LOADOUT) return node.id;
+  if (node.type === LoadoutNodeType.LOADOUT_VIEW && node.viewParentId) return node.viewParentId;
+  return null;
+}
+
+/**
+ * Replace all LOADOUT_VIEW children under `parentId` with a fresh set of
+ * children built from `views`. Keeps tree IDs stable across other nodes.
+ *
+ * Returns the new tree plus the list of newly created child nodes (for
+ * persistence wiring) and the IDs of removed children (for cache cleanup).
+ */
+export function setLoadoutViews(
+  tree: LoadoutTree,
+  parentId: string,
+  selections: ViewSelections,
+  views: { name: string; override: ViewOverride }[],
+): { tree: LoadoutTree; created: LoadoutNode[]; removedIds: string[] } {
+  const removedIds = tree.nodes
+    .filter((n) => n.parentId === parentId && n.type === LoadoutNodeType.LOADOUT_VIEW)
+    .map((n) => n.id);
+  const remaining = tree.nodes.filter((n) => !removedIds.includes(n.id));
+
+  const created: LoadoutNode[] = views.map((v, i) => ({
+    id: generateId(),
+    type: LoadoutNodeType.LOADOUT_VIEW,
+    name: v.name,
+    parentId,
+    order: i,
+    viewParentId: parentId,
+    viewOverride: v.override,
+  }));
+
+  const updatedParents = remaining.map((n) =>
+    n.id === parentId
+      ? { ...n, viewSelections: selections, ...(n.collapsed === undefined ? { collapsed: false } : {}) }
+      : n,
+  );
+
+  return {
+    tree: { nodes: [...updatedParents, ...created] },
+    created,
+    removedIds,
+  };
+}
+
+/** Remove every LOADOUT_VIEW child of `parentId` and clear its `viewSelections`. */
+export function clearLoadoutViews(tree: LoadoutTree, parentId: string): { tree: LoadoutTree; removedIds: string[] } {
+  const removedIds = tree.nodes
+    .filter((n) => n.parentId === parentId && n.type === LoadoutNodeType.LOADOUT_VIEW)
+    .map((n) => n.id);
+  const nextNodes = tree.nodes
+    .filter((n) => !removedIds.includes(n.id))
+    .map((n) => {
+      if (n.id !== parentId) return n;
+      const { viewSelections: _v, ...rest } = n;
+      return rest;
+    });
+  return { tree: { nodes: nextNodes }, removedIds };
 }
 
 // ─── Bundle merge ───────────────────────────────────────────────────────────
@@ -294,6 +394,7 @@ export function mergeBundle(
     const siblings = getChildrenOf(workingTree, newParentId);
     const order = siblings.length > 0 ? Math.max(...siblings.map((s) => s.order)) + 1 : 0;
 
+    const newViewParentId = node.viewParentId ? oldToNewId.get(node.viewParentId) : undefined;
     const newNode: LoadoutNode = {
       id: newId,
       type: node.type,
@@ -301,6 +402,9 @@ export function mergeBundle(
       parentId: newParentId,
       order,
       ...(node.collapsed !== undefined ? { collapsed: node.collapsed } : {}),
+      ...(node.viewSelections ? { viewSelections: node.viewSelections } : {}),
+      ...(newViewParentId ? { viewParentId: newViewParentId } : {}),
+      ...(node.viewOverride ? { viewOverride: node.viewOverride } : {}),
     };
     newNodes.push(newNode);
     workingTree = { nodes: [...workingTree.nodes, newNode] };

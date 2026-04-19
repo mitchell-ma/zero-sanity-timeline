@@ -104,7 +104,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
     expect(label).toContain('Slashing Edge');
   });
 
-  it('10 battle skills produce 5 Slashing Edge stacks with labels I–V', () => {
+  it('10 battle skills produce 5 Slashing Edge stacks with labels 1–5', () => {
     const { result } = setupChen();
     const battleCol = findColumn(result.current, SLOT_CHEN, NounType.BATTLE);
     expect(battleCol?.defaultEvent).toBeDefined();
@@ -148,7 +148,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
     });
     expect(activeAtLast.length).toBeLessThanOrEqual(5);
 
-    // 4. Stack labels via view overrides — should see numerals up to V
+    // 4. Stack labels via view overrides — should see numerals up to 5
     const overrides = computeStatusViewOverrides(
       result.current.allProcessedEvents,
       result.current.columns,
@@ -157,7 +157,7 @@ describe('Chen Qianyu — Slashing Edge', () => {
       .map(ev => overrides.get(ev.uid)?.label)
       .filter(Boolean) as string[];
     expect(labels.length).toBeGreaterThanOrEqual(5);
-    expect(labels.some(l => /II|III|IV|V/.test(l))).toBe(true);
+    expect(labels.some(l => /\s[2-5]$/.test(l))).toBe(true);
 
     // ── Second wave: 10 more BS after all prior stacks expire ──────────
     // Last stack from first wave: t=20s + 10s = expires at t=30s.
@@ -194,37 +194,37 @@ describe('Chen Qianyu — Slashing Edge', () => {
     expect(activeAtLast2.length).toBeGreaterThanOrEqual(5);
 
     // Verify stack progression by checking labels at intermediate points.
-    // Label shows total active stack count — e.g. "Slashing Edge III" means 3 active.
+    // Label shows total active stack count — e.g. "Slashing Edge 3" means 3 active.
     const overrides2 = computeStatusViewOverrides(
       result.current.allProcessedEvents,
       result.current.columns,
     );
 
-    // After 1st BS of second wave (t=32s): 1 stack → "Slashing Edge I"
+    // After 1st BS of second wave (t=32s): 1 stack → "Slashing Edge 1"
     const at1 = allSE2.filter((ev) => {
       if (ev.eventStatus === EventStatusType.CONSUMED || ev.eventStatus === EventStatusType.REFRESHED) return false;
       const end = ev.startFrame + eventDuration(ev);
       return ev.startFrame <= 33 * FPS && 33 * FPS < end;
     });
     expect(at1).toHaveLength(1);
-    expect(overrides2.get(at1[0].uid)?.label).toMatch(/\bI$/);
+    expect(overrides2.get(at1[0].uid)?.label).toMatch(/\s1$/);
 
-    // After 3rd BS (t=36s): 3 stacks → "III"
+    // After 3rd BS (t=36s): 3 stacks → "3"
     const at3 = allSE2.filter((ev) => {
       if (ev.eventStatus === EventStatusType.CONSUMED || ev.eventStatus === EventStatusType.REFRESHED) return false;
       const end = ev.startFrame + eventDuration(ev);
       return ev.startFrame <= 37 * FPS && 37 * FPS < end;
     });
     expect(at3).toHaveLength(3);
-    expect(at3.some(ev => overrides2.get(ev.uid)?.label?.includes('III'))).toBe(true);
+    expect(at3.some(ev => /\s3$/.test(overrides2.get(ev.uid)?.label ?? ''))).toBe(true);
 
-    // At final frame (t=50s): 5 stacks, all labeled "V" (max stacks reached)
+    // At final frame (t=50s): 5 stacks, all labeled "5" (max stacks reached)
     const activeLabels = activeAtLast2
       .map(ev => overrides2.get(ev.uid)?.label)
       .filter(Boolean) as string[];
     expect(activeLabels).toHaveLength(5);
     for (const label of activeLabels) {
-      expect(label).toMatch(/\bV$/);
+      expect(label).toMatch(/\s5$/);
     }
   });
 });

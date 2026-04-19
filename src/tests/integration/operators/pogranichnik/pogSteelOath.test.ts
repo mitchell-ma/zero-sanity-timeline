@@ -335,18 +335,18 @@ describe('Pogranichnik Steel Oath — integration through useApp', () => {
       if (l && !seen.has(l)) { seen.add(l); distinctLabels.push(l); }
     }
 
-    // Should have 3 distinct labels: "Steel Oath V", "Steel Oath IV", "Steel Oath III"
+    // Should have 3 distinct labels: "Steel Oath 5", "Steel Oath 4", "Steel Oath 3"
     expect(distinctLabels).toHaveLength(3);
-    expect(distinctLabels[0]).toContain('V');
-    expect(distinctLabels[1]).toContain('IV');
-    expect(distinctLabels[2]).toContain('III');
+    expect(distinctLabels[0]).toMatch(/\s5$/);
+    expect(distinctLabels[1]).toMatch(/\s4$/);
+    expect(distinctLabels[2]).toMatch(/\s3$/);
 
     // Active (non-consumed) events should all have the lowest stack label
     const active = steelOathEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(active.length).toBeGreaterThan(0);
     for (const ev of active) {
       const label = allOverrides.get(ev.uid)?.label ?? '';
-      expect(label).toContain('III');
+      expect(label).toMatch(/\s3$/);
     }
   });
 });

@@ -96,7 +96,7 @@ describe('MI Security dual-scope stacking — E2E', () => {
   });
 
   describe('single scope (kit1 only) — baseline the stacking engine works', () => {
-    it('produces ≥2 distinct MI_SECURITY_STAT events with I / II label progression', () => {
+    it('produces ≥2 distinct MI_SECURITY_STAT events with 1 / 2 label progression', () => {
       const { result } = setupRossi(null);
       placeBA(result.current, 1 * FPS);
 
@@ -106,8 +106,8 @@ describe('MI Security dual-scope stacking — E2E', () => {
       expect(distinctFrames.size).toBe(events.length);
 
       const labels = miStatLabels(result.current);
-      expect(labels[0]).toBe(`${MI_SECURITY_BUFF_LABEL} I`);
-      expect(labels[1]).toBe(`${MI_SECURITY_BUFF_LABEL} II`);
+      expect(labels[0]).toBe(`${MI_SECURITY_BUFF_LABEL} 1`);
+      expect(labels[1]).toBe(`${MI_SECURITY_BUFF_LABEL} 2`);
     });
   });
 
@@ -122,7 +122,7 @@ describe('MI Security dual-scope stacking — E2E', () => {
       expect(events.length).toBeGreaterThanOrEqual(2);
 
       // Distinct start frames (stack-label logic uses startFrame as the key;
-      // collapsed-to-same-frame events would all label as "I" and fail the
+      // collapsed-to-same-frame events would all label as "1" and fail the
       // next assertion too).
       const distinctFrames = new Set(events.map(e => e.startFrame));
       expect(distinctFrames.size).toBe(events.length);
@@ -140,32 +140,32 @@ describe('MI Security dual-scope stacking — E2E', () => {
       }
     });
 
-    it('view layer: stack labels progress I → II → … (not stuck at "MI Security I")', () => {
+    it('view layer: stack labels progress 1 → 2 → … (not stuck at "MI Security 1")', () => {
       const { result } = setupRossi('MI_SECURITY_SCOPE_T1');
       placeBA(result.current, 1 * FPS);
 
       const labels = miStatLabels(result.current);
       expect(labels.length).toBeGreaterThanOrEqual(2);
-      expect(labels[0]).toBe(`${MI_SECURITY_BUFF_LABEL} I`);
-      expect(labels[1]).toBe(`${MI_SECURITY_BUFF_LABEL} II`);
-      // Pre-fix: every label in this array was "MI Security I".
+      expect(labels[0]).toBe(`${MI_SECURITY_BUFF_LABEL} 1`);
+      expect(labels[1]).toBe(`${MI_SECURITY_BUFF_LABEL} 2`);
+      // Pre-fix: every label in this array was "MI Security 1".
       const uniqueLabels = new Set(labels);
       expect(uniqueLabels.size).toBeGreaterThanOrEqual(2);
     });
 
-    it('view layer: label caps at V even if more than 5 crit frames fire', () => {
+    it('view layer: label caps at 5 even if more than 5 crit frames fire', () => {
       const { result } = setupRossi('MI_SECURITY_SCOPE_T1');
       placeBA(result.current, 1 * FPS);
 
       const labels = miStatLabels(result.current);
       // The GearStat has stacks.limit=5. Seething Wolfblood BA fires well
-      // over 5 crit frames in ALWAYS mode, so the label must reach V — and
+      // over 5 crit frames in ALWAYS mode, so the label must reach 5 — and
       // must never exceed it.
       expect(labels.length).toBeGreaterThanOrEqual(5);
-      expect(labels).toContain(`${MI_SECURITY_BUFF_LABEL} V`);
+      expect(labels).toContain(`${MI_SECURITY_BUFF_LABEL} 5`);
       for (const label of labels) {
-        expect(label).not.toMatch(/\bVI$/);
-        expect(label).not.toMatch(/\bVII$/);
+        expect(label).not.toMatch(/\s6$/);
+        expect(label).not.toMatch(/\s7$/);
       }
     });
 

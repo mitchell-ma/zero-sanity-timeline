@@ -546,11 +546,11 @@ describe('Laevatain damage calculation — Enhanced battle skill (during ultimat
 
   it('additional hit (atk_scale_3, Scorching Heart active) → 64578', () => {
     // atk_scale_3 = 9 at lv12, P1 potential ×1.2 → 10.8
-    // Scorching Heart (talent lv3) ignores 20 Heat Resistance → resMult += 0.20
+    // Scorching Heart (talent lv3) ignores 20% Heat Resistance → resMult += 0.20
     const potMod = 1.2;
     const atkScale3 = 9 * potMod;
     const shIgnoredRes = getScorchingHeartIgnoredResistance(3 as TalentLevel);
-    const resistanceMultiplier = 1.0 + shIgnoredRes / 100;
+    const resistanceMultiplier = 1.0 + shIgnoredRes;
 
     const damage = calculateDamage({
       attack: totalAttack,

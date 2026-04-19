@@ -54,16 +54,13 @@ function linkStatusEvent(startFrame: number, durationFrames: number): TimelineEv
       properties: { duration: durationFrames },
       frames: [{
         offsetFrame: 0,
-        clauses: [{
+        clause: [{
           conditions: [],
           effects: [{
-            type: 'dsl',
-            dslEffect: {
-              verb: VerbType.APPLY,
-              object: NounType.STATUS,
-              objectId: StatusType.LINK,
-              to: NounType.TEAM,
-            },
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
+            objectId: StatusType.LINK,
+            to: NounType.TEAM,
           }],
         }],
       }],

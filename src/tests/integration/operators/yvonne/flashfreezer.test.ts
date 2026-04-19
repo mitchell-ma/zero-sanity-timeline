@@ -517,8 +517,8 @@ describe('I. Combo updates on loadout potential change', () => {
     expect(frames.length).toBe(5);
     const lastFrame = frames[4];
     // Frame 5 has 2 clause predicates: unconditional energy + P0-gated stagger/Solidification
-    expect(lastFrame.clauses).toBeDefined();
-    expect(lastFrame.clauses!.length).toBe(2);
+    expect(lastFrame.clause).toBeDefined();
+    expect(lastFrame.clause!.length).toBe(2);
   });
 
   it('I7: at P1, frame 5 is energy-only (stagger/Solidification clause skipped), frame 7 has stagger/Solidification', () => {
@@ -531,13 +531,10 @@ describe('I. Combo updates on loadout potential change', () => {
     // Frame 5 (index 4): still present but P0 clause (stagger/Solidification) should be skipped at runtime
     // Frame 7 (index 6): P1-gated with stagger + Solidification
     const frame7 = frames[6];
-    expect(frame7.clauses).toBeDefined();
-    expect(frame7.clauses!.length).toBeGreaterThanOrEqual(1);
-    const effects = frame7.clauses![0].effects;
-    expect(effects.some(e => {
-      const dsl = (e as { dslEffect?: { verb?: string; object?: string } }).dslEffect;
-      return dsl?.verb === VerbType.DEAL && dsl?.object === NounType.STAGGER;
-    })).toBe(true);
+    expect(frame7.clause).toBeDefined();
+    expect(frame7.clause!.length).toBeGreaterThanOrEqual(1);
+    const effects = frame7.clause![0].effects;
+    expect(effects.some(dsl => dsl?.verb === VerbType.DEAL && dsl?.object === NounType.STAGGER)).toBe(true);
   });
 
   it('I8: P0→P1→P0 round-trip preserves correct frame count and offsets', () => {

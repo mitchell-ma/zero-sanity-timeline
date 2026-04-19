@@ -147,7 +147,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     expect(controlledVMBefore).toBeDefined();
     const acBeforeVM = controlledVMBefore!.events.filter(ev => ev.name === AC_STATUS_ID);
     const labelsBefore = acBeforeVM.map(ev => controlledVMBefore!.statusOverrides.get(ev.uid)?.label);
-    expect(labelsBefore).toContain('Auxiliary Crystal II');
+    expect(labelsBefore).toContain('Auxiliary Crystal 2');
 
     // ── Context menu: place BA on controlled operator (slot-0) after BS frame ──
     const baCol = findColumn(result.current, SLOT_DEFAULT_CONTROLLED, NounType.BASIC_ATTACK);
@@ -187,7 +187,7 @@ describe('D. Auxiliary Crystal targeting', () => {
     expect(activeInVM.length).toBe(1);
     const activeOverride = controlledVM!.statusOverrides.get(activeInVM[0].uid);
     expect(activeOverride).toBeDefined();
-    expect(activeOverride!.label).toBe('Auxiliary Crystal I');
+    expect(activeOverride!.label).toBe('Auxiliary Crystal 1');
   });
 
   it('D4: Two BA final strikes consume both AC stacks', () => {
@@ -649,7 +649,7 @@ describe('E. Auxiliary Crystal — Laevatain cross-operator damage', () => {
     expect(laevVMBefore).toBeDefined();
     const acBeforeVM = laevVMBefore!.events.filter(ev => ev.name === AC_STATUS_ID);
     const labelsBefore = acBeforeVM.map(ev => laevVMBefore!.statusOverrides.get(ev.uid)?.label);
-    expect(labelsBefore).toContain('Auxiliary Crystal II');
+    expect(labelsBefore).toContain('Auxiliary Crystal 2');
 
     // ── Freeform: place two BATKs at the same frame (5s) ──
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });

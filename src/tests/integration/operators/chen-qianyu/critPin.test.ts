@@ -144,7 +144,7 @@ describe('Chen Qianyu — Crit pin on derived Lift event', () => {
         if (!seg.frames) continue;
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const f = seg.frames[fi];
-          if (!hasDealDamageClause(f.clauses)) continue;
+          if (!hasDealDamageClause(f.clause)) continue;
           if (f.damageType === DamageType.DAMAGE_OVER_TIME) continue;
           crittableFrames.push({ uid: ev.uid, si, fi });
         }

@@ -118,7 +118,7 @@ export function computeFrameMarkerDamage(
   if (!f) return undefined;
   const maxFrames = seg.frames.length;
   let multiplier: number | null = null;
-  const dealInfo = findDealDamageInClauses(f.clauses);
+  const dealInfo = findDealDamageInClauses(f.clause);
   if (dealInfo && dealInfo.values.length > 0) {
     const idx = Math.min(skillLevel - 1, dealInfo.values.length - 1);
     multiplier = dealInfo.values[idx];
@@ -354,11 +354,11 @@ function resolvePhysicalStatusStagger(
     for (const seg of ev.segments) {
       if (!seg.frames) continue;
       for (const frame of seg.frames) {
-        if (hasDealDamageClause(frame.clauses)) {
+        if (hasDealDamageClause(frame.clause)) {
           // Replace any existing DEAL STAGGER clause with the runtime-resolved
           // value (depends on the source operator's arts intensity).
-          const stripped = stripStaggerClauses(frame.clauses);
-          frame.clauses = [...(stripped ?? []), buildDealStaggerClause(stagger)];
+          const stripped = stripStaggerClauses(frame.clause);
+          frame.clause = [...(stripped ?? []), buildDealStaggerClause(stagger)];
         }
       }
     }

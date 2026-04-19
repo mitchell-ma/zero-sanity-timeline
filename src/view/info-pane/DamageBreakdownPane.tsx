@@ -74,16 +74,16 @@ function DamageBreakdownPane({ row, frame, onToggleCrit }: DamageBreakdownPanePr
           const formatMul = (m: number) =>
             nf === NumberFormatType.DECIMAL ? m.toFixed(dp) : `${(m * 100).toFixed(dp)}%`;
           const singleMul = (() => {
-            const dmg = findDealDamageInClauses(frame.clauses);
+            const dmg = findDealDamageInClauses(frame.clause);
             return dmg?.values?.length === 1 ? dmg.values[0] : undefined;
           })();
           const summedMul = isFolded
             ? folded!.reduce((s, r) => (r.multiplier != null ? s + r.multiplier : s), 0)
             : undefined;
           const mul = summedMul ?? singleMul;
-          const singleSp = findSkillPointRecoveryInClauses(frame.clauses);
-          const singleStag = findStaggerInClauses(frame.clauses);
-          const singleGauge = findUltimateEnergyGainInClauses(frame.clauses);
+          const singleSp = findSkillPointRecoveryInClauses(frame.clause);
+          const singleStag = findStaggerInClauses(frame.clause);
+          const singleGauge = findUltimateEnergyGainInClauses(frame.clause);
           return (
             <div className="edit-panel-section">
               <span className="edit-section-label">{sectionLabel}</span>

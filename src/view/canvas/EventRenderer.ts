@@ -15,8 +15,8 @@ import { getStatusElementMap } from '../../controller/gameDataStore';
 import { hasDealDamageClause } from '../../controller/timeline/clauseQueries';
 import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
 
-/** Match trailing roman numeral (I–XX) or arabic number at end of label. */
-const TRAILING_NUMERAL_RE = /\s+((?:X{0,2}(?:IX|IV|V?I{0,3}))|(?:\d+))$/;
+/** Match trailing arabic digits or reaction StatusLevel roman (I–IV) at end of label. */
+const TRAILING_NUMERAL_RE = /\s+((?:IV|III|II|I)|(?:\d+))$/;
 
 // ── Gradient mask texture (shared, created once) ──────────────────────
 // White-to-transparent vertical gradient: solid for most of the height,
@@ -95,13 +95,11 @@ function getSegStyle(seg: EventSegmentData, passive: boolean): SegStyle {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function hasInflictionOrStatus(f: EventFrameMarker): boolean {
-  if (!f.clauses) return false;
-  for (const pred of f.clauses) {
-    for (const ef of pred.effects) {
-      if (ef.dslEffect) {
-        const v = ef.dslEffect.verb;
-        if (v === VerbType.APPLY || v === VerbType.CONSUME) return true;
-      }
+  if (!f.clause) return false;
+  for (const pred of f.clause) {
+    for (const dsl of pred.effects) {
+      const v = dsl.verb;
+      if (v === VerbType.APPLY || v === VerbType.CONSUME) return true;
     }
   }
   return false;
@@ -116,12 +114,10 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): numbe
   //      element-tagged statuses) — inferred from secondary effects
   //   4. Fall back to the skill's declared element
   let el: string | undefined = f.damageElement;
-  if (!el && f.clauses) {
+  if (!el && f.clause) {
     // DEAL DAMAGE walk
-    outer: for (const pred of f.clauses) {
-      for (const ef of pred.effects) {
-        const dsl = ef.dslEffect;
-        if (!dsl) continue;
+    outer: for (const pred of f.clause) {
+      for (const dsl of pred.effects) {
         if (dsl.verb === VerbType.DEAL && dsl.object === NounType.DAMAGE && dsl.objectQualifier) {
           el = dsl.objectQualifier as string;
           break outer;
@@ -129,12 +125,10 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): numbe
       }
     }
   }
-  if (!el && f.clauses) {
+  if (!el && f.clause) {
     // Inflictions / reactions / element-tagged statuses walk
-    outer: for (const pred of f.clauses) {
-      for (const ef of pred.effects) {
-        const dsl = ef.dslEffect;
-        if (!dsl) continue;
+    outer: for (const pred of f.clause) {
+      for (const dsl of pred.effects) {
         const q = dsl.objectQualifier;
         if (dsl.verb === VerbType.APPLY || dsl.verb === VerbType.CONSUME) {
           if (dsl.object === NounType.STATUS && dsl.objectId === NounType.INFLICTION && q) { el = q; break outer; }
@@ -159,7 +153,7 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): numbe
 
 function isFrameVisualCrit(f: EventFrameMarker): boolean {
   const mode = getRuntimeCritMode();
-  if (mode === CritMode.ALWAYS || mode === CritMode.EXPECTED) return hasDealDamageClause(f.clauses);
+  if (mode === CritMode.ALWAYS || mode === CritMode.EXPECTED) return hasDealDamageClause(f.clause);
   if (mode === CritMode.NEVER) return false;
   return !!f.isCrit;
 }
@@ -411,12 +405,13 @@ export function renderEvent(
 
     // ── Per-segment label ─────────────────────────────────────────────
     // Single-segment: show event label. Multi-segment: show segment name,
-    // fall back to I/II/III for non-animation/cooldown if name doesn't fit.
+    // fall back to 1-based segment index for non-animation/cooldown if name
+    // doesn't fit. Roman numerals are reserved for StatusLevel display only.
     const isAnimOrCooldown = isNonDamage;
     const isBatk = event.columnId === NounType.BASIC_ATTACK;
     let segLabelText: string | undefined;
     if (isSingleSeg && isBatk && event.segmentOrigin != null) {
-      // Individual BATK segment placed via context menu — show Roman numeral
+      // Individual BATK segment placed via context menu — show 1-based index
       segLabelText = seg.properties.name ?? formatSegmentShortName(undefined, event.segmentOrigin[0]);
     } else if (isSingleSeg && seg.properties.name) {
       // Single-segment event whose segment carries its own name (e.g. an
@@ -447,14 +442,14 @@ export function renderEvent(
     } else if (seg.properties.name) {
       const segName = seg.properties.name;
       if (!isAnimOrCooldown && isBatk && segName.length * 6 + 8 > segH) {
-        // BATK: fall back to Roman numeral when name doesn't fit
-        segLabelText = i < 10 ? formatSegmentShortName(undefined, i) : `${i + 1}`;
+        // BATK: fall back to 1-based segment index when name doesn't fit
+        segLabelText = formatSegmentShortName(undefined, i);
       } else {
         segLabelText = segName;
       }
     } else if (!isAnimOrCooldown && isBatk) {
-      // No name — use numeral only for basic attacks
-      segLabelText = i < 10 ? formatSegmentShortName(undefined, i) : `${i + 1}`;
+      // No name — use 1-based segment index for basic attacks
+      segLabelText = formatSegmentShortName(undefined, i);
     }
 
     const labelObj = obj.labels[i];
@@ -590,7 +585,7 @@ export function renderEvent(
         const ox = diamondOrigin?.x ?? 0;
         const oy = diamondOrigin?.y ?? 0;
 
-        const isDealDamage = hasDealDamageClause(f.clauses);
+        const isDealDamage = hasDealDamageClause(f.clause);
         if (isHorizontal) {
           const cx = framePx - segTopPx;
           const cy = inset + eventW + lateralShift;

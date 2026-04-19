@@ -157,7 +157,7 @@ describe('buildColumns — matchColumnIds includes raw status IDs', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // Every freeform-placeable non-skill column's `defaultEvent` must carry an
-// APPLY clause at `segments[0].frames[0].clauses[0].effects[0].dslEffect`.
+// APPLY clause at `segments[0].frames[0].clause[0].effects[0].dslEffect`.
 // At pipeline runtime, the wrapper's PROCESS_FRAME drives the unified
 // `interpret → doApply → applyEvent → runStatusCreationLifecycle` path —
 // no fallback branch exists. Runtime-user-edited fields (`susceptibility`
@@ -171,9 +171,9 @@ type MicroCol = NonNullable<MiniTimeline['microColumns']>[number];
 function hasApplyClause(mc: MicroCol): boolean {
   const seg = mc.defaultEvent?.segments?.[0];
   const frame = seg?.frames?.[0];
-  const clause = frame?.clauses?.[0];
-  const effect = (clause?.effects?.[0] as { type?: string; dslEffect?: { verb?: string } } | undefined);
-  return effect?.type === 'dsl' && effect?.dslEffect?.verb === VerbType.APPLY;
+  const clause = frame?.clause?.[0];
+  const effect = clause?.effects?.[0] as { verb?: string } | undefined;
+  return effect?.verb === VerbType.APPLY;
 }
 
 describe('buildColumns — APPLY-clause invariant on freeform-placeable columns', () => {
@@ -220,9 +220,9 @@ describe('buildColumns — APPLY-clause invariant on freeform-placeable columns'
     for (const id of physicalIds) {
       const mc = micros.find(m => m.id === id);
       expect(mc).toBeDefined();
-      const effect = (mc!.defaultEvent?.segments?.[0]?.frames?.[0]?.clauses?.[0]?.effects?.[0] as {
-        type?: string; dslEffect?: { verb?: string; objectId?: string; objectQualifier?: string; with?: { isForced?: { verb?: string; value?: number } } };
-      }).dslEffect;
+      const effect = mc!.defaultEvent?.segments?.[0]?.frames?.[0]?.clause?.[0]?.effects?.[0] as {
+        verb?: string; objectId?: string; objectQualifier?: string; with?: { isForced?: { verb?: string; value?: number } };
+      } | undefined;
       expect(effect?.verb).toBe(VerbType.APPLY);
       expect(effect?.objectId).toBe(DslAdjective.PHYSICAL);
       expect(effect?.objectQualifier).toBe(id);

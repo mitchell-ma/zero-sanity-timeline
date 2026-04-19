@@ -105,11 +105,11 @@ function placeFreeformInflictionViaMenu(
 }
 
 function placeFreeformCryo(app: AppResult, atFrame: number, durationFrames?: number) {
-  placeFreeformInflictionViaMenu(app, 'CRYO', INFLICTION_COLUMNS.CRYO, atFrame, durationFrames);
+  placeFreeformInflictionViaMenu(app, 'Cryo', INFLICTION_COLUMNS.CRYO, atFrame, durationFrames);
 }
 
 function placeFreeformHeat(app: AppResult, atFrame: number, durationFrames?: number) {
-  placeFreeformInflictionViaMenu(app, 'HEAT', INFLICTION_COLUMNS.HEAT, atFrame, durationFrames);
+  placeFreeformInflictionViaMenu(app, 'Heat', INFLICTION_COLUMNS.HEAT, atFrame, durationFrames);
 }
 
 function placeFreeformCorrosion(app: AppResult, atFrame: number) {

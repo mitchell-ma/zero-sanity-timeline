@@ -497,26 +497,21 @@ export function getBaseSkillId(skillId: string): string {
     .replace(/_ENHANCED$/, '');
 }
 
-const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
-  'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
-
-function toRoman(n: number): string {
-  return ROMAN_NUMERALS[n] ?? `${n + 1}`;
-}
-
 /**
  * Format a segment display name.
- * Uses the segment's name if available, otherwise a Roman numeral.
+ * Uses the segment's name if available, otherwise the 1-based index.
+ * Roman numerals are reserved for StatusLevels (reactions) — never used here.
  */
 export function formatSegmentDisplayName(segmentName: string | undefined, index: number): string {
-  return segmentName ?? toRoman(index);
+  return segmentName ?? String(index + 1);
 }
 
 /**
- * Short segment label: name if available, otherwise a Roman numeral.
+ * Short segment label: name if available, otherwise the 1-based index.
+ * Roman numerals are reserved for StatusLevels (reactions) — never used here.
  */
 export function formatSegmentShortName(segmentName: string | undefined, index: number): string {
-  return segmentName ?? toRoman(index);
+  return segmentName ?? String(index + 1);
 }
 
 /**

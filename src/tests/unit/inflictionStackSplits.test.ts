@@ -102,17 +102,17 @@ describe('eventPresentationController — infliction stack-timeline splitter', (
     const h1Segs = renderedSegments(vm, 'h1')!;
     expect(h1Segs).toHaveLength(2);
     expect(h1Segs[0].properties.duration).toBe(4 * FPS);
-    expect(h1Segs[0].properties.name).toBe('Heat I');
+    expect(h1Segs[0].properties.name).toBe('Heat 1');
     expect(h1Segs[1].properties.duration).toBe(6 * FPS);
-    expect(h1Segs[1].properties.name).toBe('Heat II');
+    expect(h1Segs[1].properties.name).toBe('Heat 2');
 
     // h2: "Heat II" for [4s, 10s), "Heat I" for [10s, 14s)
     const h2Segs = renderedSegments(vm, 'h2')!;
     expect(h2Segs).toHaveLength(2);
     expect(h2Segs[0].properties.duration).toBe(6 * FPS);
-    expect(h2Segs[0].properties.name).toBe('Heat II');
+    expect(h2Segs[0].properties.name).toBe('Heat 2');
     expect(h2Segs[1].properties.duration).toBe(4 * FPS);
-    expect(h2Segs[1].properties.name).toBe('Heat I');
+    expect(h2Segs[1].properties.name).toBe('Heat 1');
   });
 
   it('two heats, older consumed at mid-span: survivor splits II → I at consume frame', () => {
@@ -130,9 +130,9 @@ describe('eventPresentationController — infliction stack-timeline splitter', (
     const h2Segs = renderedSegments(vm, 'h2')!;
     expect(h2Segs).toHaveLength(2);
     expect(h2Segs[0].properties.duration).toBe(2 * FPS);
-    expect(h2Segs[0].properties.name).toBe('Heat II');
+    expect(h2Segs[0].properties.name).toBe('Heat 2');
     expect(h2Segs[1].properties.duration).toBe(8 * FPS);
-    expect(h2Segs[1].properties.name).toBe('Heat I');
+    expect(h2Segs[1].properties.name).toBe('Heat 1');
     // Original duration preserved
     const totalDur = h2Segs[0].properties.duration + h2Segs[1].properties.duration;
     expect(totalDur).toBe(10 * FPS);
@@ -156,7 +156,7 @@ describe('eventPresentationController — infliction stack-timeline splitter', (
     // Since single segment, label comes from override (not segment name).
     // The view override should reflect count=1.
     const override = vm.get(`${ENEMY_ID}-${HEAT_COL}`)?.statusOverrides.get('h4');
-    expect(override?.label).toBe('Heat I');
+    expect(override?.label).toBe('Heat 1');
   });
 
   it('three heats overlap: label progression is I → II → III as stacks add up', () => {
@@ -170,12 +170,12 @@ describe('eventPresentationController — infliction stack-timeline splitter', (
 
     // h1 picks up segments: I [0, 5s), II [5s, 10s), III [10s, 20s)
     const h1Segs = renderedSegments(vm, 'h1')!;
-    expect(h1Segs.map(s => s.properties.name)).toEqual(['Heat I', 'Heat II', 'Heat III']);
+    expect(h1Segs.map(s => s.properties.name)).toEqual(['Heat 1', 'Heat 2', 'Heat 3']);
     expect(h1Segs.map(s => s.properties.duration)).toEqual([5 * FPS, 5 * FPS, 10 * FPS]);
 
     // h2 picks up: II [5s, 10s), III [10s, 20s)
     const h2Segs = renderedSegments(vm, 'h2')!;
-    expect(h2Segs.map(s => s.properties.name)).toEqual(['Heat II', 'Heat III']);
+    expect(h2Segs.map(s => s.properties.name)).toEqual(['Heat 2', 'Heat 3']);
 
     // h3 is entirely in the "III" window — single segment labeled "III"
     // (when uniqueCounts.size is 1, no split; label comes from override).
@@ -199,7 +199,7 @@ describe('eventPresentationController — infliction stack-timeline splitter', (
     const vm = computeTimelinePresentation(events, [heatColumn()]);
     // h4's first segment at its start frame — count=4 → "Heat IV"
     const h4Segs = renderedSegments(vm, 'h4')!;
-    expect(h4Segs[0].properties.name).toBe('Heat IV');
+    expect(h4Segs[0].properties.name).toBe('Heat 4');
   });
 
   it('REGRESSION: 3 old heats fully consumed + 2 new → labels restart at I, II', () => {
@@ -216,7 +216,7 @@ describe('eventPresentationController — infliction stack-timeline splitter', (
 
     const h5Segs = renderedSegments(vm, 'h5')!;
     // h5's first visible segment must be "Heat II" (count at 11s = h4 still alive + h5 = 2)
-    expect(h5Segs[0].properties.name).toBe('Heat II');
+    expect(h5Segs[0].properties.name).toBe('Heat 2');
   });
 
   it('REGRESSION: 3 heats → MF-cap consume takes 1, new heat restarts cleanly', () => {
@@ -235,7 +235,7 @@ describe('eventPresentationController — infliction stack-timeline splitter', (
     expect(h4Segs).toHaveLength(1);
     // Override carries the "Heat I" label since h4 is alone (no split).
     const override = vm.get(`${ENEMY_ID}-${HEAT_COL}`)?.statusOverrides.get('h4');
-    expect(override?.label).toBe('Heat I');
+    expect(override?.label).toBe('Heat 1');
   });
 
   it('REGRESSION: fresh heat applied alone, then consumed by BATK, stays "Heat I"', () => {
@@ -256,7 +256,7 @@ describe('eventPresentationController — infliction stack-timeline splitter', (
     const h4Segs = renderedSegments(vm, 'h4')!;
     expect(h4Segs).toHaveLength(1);
     const override = vm.get(`${ENEMY_ID}-${HEAT_COL}`)?.statusOverrides.get('h4');
-    expect(override?.label).toBe('Heat I');
+    expect(override?.label).toBe('Heat 1');
   });
 
   it('event mutation is a clone — does not modify the input events', () => {

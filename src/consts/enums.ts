@@ -796,7 +796,20 @@ export enum HeaderVariant {
 export enum LoadoutNodeType {
   FOLDER = "folder",
   LOADOUT = "loadout",
+  LOADOUT_VIEW = "loadout-view",
 }
+
+/**
+ * Variables that can be permuted to generate read-only loadout views.
+ * Each axis maps to a single field inside `LoadoutProperties`.
+ */
+export enum ViewVariableType {
+  OPERATOR_POTENTIAL = 'operatorPotential',
+  WEAPON_SKILL_3_LEVEL = 'weaponSkill3Level',
+}
+
+/** Maximum number of view-permutations a single loadout may generate. */
+export const MAX_LOADOUT_VIEW_PERMUTATIONS = 256;
 
 /**
  * Axis kind for a ContextMenuParamAxis.
@@ -808,6 +821,11 @@ export enum ContextMenuAxisKind {
   PARAMETER = 'PARAMETER',
   STACKS = 'STACKS',
   STATUS_LEVEL = 'STATUS_LEVEL',
+}
+
+/** Icon glyphs available on a stepper's trailing action button. */
+export enum StepperActionIcon {
+  REFRESH = 'REFRESH',
 }
 
 // ── Column header labels ─────────────────────────────────────────────────────
