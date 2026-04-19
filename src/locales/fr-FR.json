@@ -840,5 +840,14 @@
   "breakdown.source.operator": "Opérateur",
   "breakdown.source.weapon": "Arme",
   "breakdown.source.potential": "Potentiel",
-  "breakdown.source.attrIncrease": "Aug. attr."
+  "breakdown.source.attrIncrease": "Aug. attr.",
+
+  "planner.label.loadout": "ÉQUIPEMENT",
+  "planner.label.team": "ÉQUIPE",
+  "planner.btn.vertical": "Vertical",
+  "planner.btn.horizontal": "Horizontal",
+  "planner.tooltip.toggleVertical": "Passer en chronologie verticale",
+  "planner.tooltip.toggleHorizontal": "Passer en chronologie horizontale",
+
+  "sheet.empty.addEvents": "Ajoutez des événements à la chronologie pour voir les calculs de dégâts"
 }

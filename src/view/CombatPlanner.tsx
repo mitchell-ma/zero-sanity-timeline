@@ -28,6 +28,7 @@ import {
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
 import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
+import { t } from '../locales/locale';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { TimelineSourceType, InteractionModeType, ColumnType, DamageType, EventCategoryType } from '../consts/enums';
 import {
@@ -2196,14 +2197,14 @@ export default React.memo(function CombatPlanner({
           style={isHorizontal ? { gridTemplateRows: gridRows } : { gridTemplateColumns: gridCols }}
         >
           <div className="tl-loadout-corner">
-            <span className="corner-label">LOADOUT</span>
+            <span className="corner-label">{t('planner.label.loadout')}</span>
             {onToggleOrientation && (
               <button
                 className="btn-orientation-toggle"
                 onClick={onToggleOrientation}
-                title={isHorizontal ? 'Switch to vertical timeline' : 'Switch to horizontal timeline'}
+                title={isHorizontal ? t('planner.tooltip.toggleVertical') : t('planner.tooltip.toggleHorizontal')}
               >
-                {isHorizontal ? 'Horizontal' : 'Vertical'}
+                {isHorizontal ? t('planner.btn.horizontal') : t('planner.btn.vertical')}
               </button>
             )}
           </div>
@@ -2213,7 +2214,7 @@ export default React.memo(function CombatPlanner({
             style={{ [isHorizontal ? 'gridRow' : 'gridColumn']: `${commonStartCol} / span ${commonColCount}` } as React.CSSProperties}
           >
             <div className="lo-cell lo-cell--common">
-              <span className="lo-common-label">TEAM</span>
+              <span className="lo-common-label">{t('planner.label.team')}</span>
             </div>
           </div>
 

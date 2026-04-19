@@ -930,5 +930,14 @@
   "breakdown.source.operator": "Operator",
   "breakdown.source.weapon": "Weapon",
   "breakdown.source.potential": "Potential",
-  "breakdown.source.attrIncrease": "Attr Increase"
+  "breakdown.source.attrIncrease": "Attr Increase",
+
+  "planner.label.loadout": "LOADOUT",
+  "planner.label.team": "TEAM",
+  "planner.btn.vertical": "Vertical",
+  "planner.btn.horizontal": "Horizontal",
+  "planner.tooltip.toggleVertical": "Switch to vertical timeline",
+  "planner.tooltip.toggleHorizontal": "Switch to horizontal timeline",
+
+  "sheet.empty.addEvents": "Add events to the timeline to see damage calculations"
 }
