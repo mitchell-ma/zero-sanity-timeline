@@ -6,6 +6,7 @@
           "subject": "ENEMY",
           "verb": "DEAL",
           "object": "DAMAGE",
+          "objectQualifier": "ANY",
           "to": "OPERATOR",
           "toDeterminer": "ALL",
           "with": {

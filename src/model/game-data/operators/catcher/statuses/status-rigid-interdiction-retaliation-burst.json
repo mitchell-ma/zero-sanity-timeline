@@ -52,7 +52,8 @@
             "offset": {
               "value": 0,
               "unit": "SECOND"
-            }
+            },
+            "element": "PHYSICAL"
           },
           "clause": [
             {

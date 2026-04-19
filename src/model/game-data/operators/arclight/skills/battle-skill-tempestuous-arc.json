@@ -164,7 +164,6 @@
           },
           "clause": [
             {
-              "_note": "Additional attack: only fires when enemy has active Electrification. Consumes the Electrification, deals Electric DMG, recovers SP, and applies Wildland Trekker Trigger for the talent counter.",
               "conditions": [
                 {
                   "subject": "ENEMY",
@@ -180,7 +179,10 @@
                   "object": "STATUS",
                   "objectId": "REACTION",
                   "objectQualifier": "ELECTRIFICATION",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "DEAL",

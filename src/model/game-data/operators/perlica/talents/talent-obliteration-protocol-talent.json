@@ -110,7 +110,10 @@
         {
           "verb": "CONSUME",
           "object": "EVENT",
-          "objectDeterminer": "THIS"
+          "objectDeterminer": "THIS",
+          "with": {
+            "stacks": "MAX"
+          }
         }
       ]
     }

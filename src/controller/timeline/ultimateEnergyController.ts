@@ -8,7 +8,7 @@
  * calls onNaturalSpConsumed per battle skill after its own finalize.
  */
 
-import { SegmentType, StatType } from '../../consts/enums';
+import { StatType } from '../../consts/enums';
 import { VerbType, NounType } from '../../dsl/semantics';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties, getDefaultLoadoutProperties } from '../../view/InformationPane';
@@ -262,11 +262,15 @@ export function collectNoGainWindowsForEvent(
   let cursor = ev.startFrame;
   let foundTypedSegment = false;
   for (const seg of ev.segments) {
-    const isActive = seg.properties.segmentTypes?.includes(SegmentType.ACTIVE);
+    // No-gain windows are driven entirely by the IGNORE ULTIMATE_ENERGY DSL
+    // effect. Segment typing is used only as a signal that the event's
+    // timings are data-driven, so the fallback doesn't fire for events that
+    // already author explicit segment types (e.g. an ANIMATION-only ultimate
+    // should yield zero windows, not the hard-coded 1800-frame fallback).
     const ignoresUlt = seg.clause?.some(c =>
       c.effects.some(e => e.verb === VerbType.IGNORE && e.object === NounType.ULTIMATE_ENERGY)
     );
-    if (isActive || ignoresUlt) {
+    if (ignoresUlt) {
       windows.push({ start: cursor, end: cursor + seg.properties.duration });
       foundTypedSegment = true;
     } else if (seg.properties.segmentTypes?.length) {

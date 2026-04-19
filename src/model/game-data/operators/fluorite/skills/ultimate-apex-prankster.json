@@ -165,7 +165,10 @@
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "IMPROVISED_EXPLOSIVE",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "APPLY",

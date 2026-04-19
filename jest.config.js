@@ -11,6 +11,6 @@ module.exports = {
     '\\.(webp|png|jpg|jpeg|gif|svg)$': '<rootDir>/src/tests/assetStub.js',
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!uuid/)',
+    '/node_modules/(?!(uuid|yjs|lib0)/)',
   ],
 };

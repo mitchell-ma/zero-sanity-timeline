@@ -2,7 +2,6 @@
   "properties": {
     "id": "WHEN_THE_BANNER_FLUTTERS",
     "name": "When the Banner Flutters (P3)",
-    "level": 3,
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {

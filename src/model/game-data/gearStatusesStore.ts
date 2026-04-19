@@ -44,8 +44,8 @@ function validateLocalEffect(ef: Record<string, unknown>, path: string): string[
 const VALID_GEAR_TOP_KEYS = new Set(['segments', 'onTriggerClause', 'properties', 'metadata']);
 const VALID_GEAR_PROPS_KEYS = new Set(['id', 'name', 'rarity', 'piecesRequired', 'description', 'eventType', 'eventCategoryType']);
 
-/** Validate a raw Gear (set-level effect) JSON entry. */
-export function validateGear(json: Record<string, unknown>): string[] {
+/** Validate a raw GearSet (set-level effect) JSON entry. */
+export function validateGearSet(json: Record<string, unknown>): string[] {
   const errors = checkKeys(json, VALID_GEAR_TOP_KEYS, 'root');
   errors.push(...validateNonNegativeValues(json, 'root'));
 
@@ -142,10 +142,10 @@ interface TriggerClauseEntry {
   effects: { verb: string; object: string; objectId?: string }[];
 }
 
-/** A gear definition (eventCategoryType=GEAR_STAT). Set-level metadata,
+/** A gear set definition (eventCategoryType=GEAR_STAT). Set-level metadata,
  *  `segments` carrying the permanent-effect clause, and `onTriggerClause`
  *  that apply in-game Gear statuses (eventCategoryType=GEAR). */
-export class Gear {
+export class GearSet {
   readonly segments: StatusSegment[];
   readonly onTriggerClause: TriggerClauseEntry[];
   readonly id: string;
@@ -223,13 +223,13 @@ export class Gear {
     };
   }
 
-  static deserialize(json: Record<string, unknown>, source?: string): Gear {
-    const errors = validateGear(json);
+  static deserialize(json: Record<string, unknown>, source?: string): GearSet {
+    const errors = validateGearSet(json);
     if (errors.length > 0) {
       const id = (json.properties as Record<string, unknown>)?.id ?? 'unknown';
-      console.warn(`[Gear] Validation errors in ${source ?? id}:\n  ${errors.join('\n  ')}`);
+      console.warn(`[GearSet] Validation errors in ${source ?? id}:\n  ${errors.join('\n  ')}`);
     }
-    return new Gear(json);
+    return new GearSet(json);
   }
 }
 
@@ -311,8 +311,8 @@ export class GearStat {
 
 // ── Loader ──────────────────────────────────────────────────────────────────
 
-/** Gears (set-level effects) indexed by ID (e.g. "HOT_WORK"). */
-const gearCache = new Map<string, Gear>();
+/** Gear sets (set-level effects) indexed by ID (e.g. "HOT_WORK_STAT"). */
+const gearSetCache = new Map<string, GearSet>();
 /** Gear stats indexed by originId (gear set id). */
 const gearStatCache = new Map<string, GearStat[]>();
 
@@ -325,9 +325,9 @@ for (const key of gearContext.keys()) {
   const json = gearContext(key) as Record<string, unknown>;
   const catType = ((json.properties ?? {}) as Record<string, unknown>).eventCategoryType as string;
   if (catType === NounType.GEAR_STAT) {
-    // Gear wrapper: holds onTriggerClause + permanent `clause`.
-    const gear = Gear.deserialize(json, key);
-    if (gear.id) gearCache.set(gear.id, gear);
+    // Gear set wrapper: holds onTriggerClause + permanent `clause`.
+    const gearSet = GearSet.deserialize(json, key);
+    if (gearSet.id) gearSetCache.set(gearSet.id, gearSet);
   } else if (catType === NounType.GEAR) {
     // In-game-visible gear buff status applied by the wrapper.
     const stat = GearStat.deserialize(json, key);
@@ -339,22 +339,22 @@ for (const key of gearContext.keys()) {
   }
 }
 
-// ── Public API: Gears ───────────────────────────────────────────────────────
+// ── Public API: Gear Sets ───────────────────────────────────────────────────
 
-/** Get a Gear by ID (e.g. "HOT_WORK"). */
-export function getGear(gearId: string): Gear | undefined {
-  return gearCache.get(gearId);
+/** Get a GearSet by ID (e.g. "HOT_WORK_STAT"). */
+export function getGearSet(gearSetId: string): GearSet | undefined {
+  return gearSetCache.get(gearSetId);
 }
 
-/** Get all Gear IDs. */
-export function getAllGearIds(): string[] {
-  return Array.from(gearCache.keys());
+/** Get all GearSet IDs. */
+export function getAllGearSetIds(): string[] {
+  return Array.from(gearSetCache.keys());
 }
 
-/** Get all Gears. */
-export function getAllGears(): readonly Gear[] {
-  const result: Gear[] = [];
-  gearCache.forEach(e => result.push(e));
+/** Get all GearSets. */
+export function getAllGearSets(): readonly GearSet[] {
+  const result: GearSet[] = [];
+  gearSetCache.forEach(e => result.push(e));
   return result;
 }
 

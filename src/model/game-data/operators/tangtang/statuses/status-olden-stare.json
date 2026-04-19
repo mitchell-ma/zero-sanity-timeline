@@ -128,12 +128,18 @@
           "object": "STATUS",
           "objectId": "WHIRLPOOL",
           "fromDeterminer": "SOURCE",
-          "from": "OPERATOR"
+          "from": "OPERATOR",
+          "with": {
+            "stacks": "MAX"
+          }
         },
         {
           "verb": "CONSUME",
           "objectDeterminer": "THIS",
-          "object": "EVENT"
+          "object": "EVENT",
+          "with": {
+            "stacks": "MAX"
+          }
         }
       ]
     }

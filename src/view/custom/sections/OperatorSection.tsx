@@ -20,7 +20,7 @@ import { NounType } from '../../../dsl/semantics';
 import IdField from '../IdField';
 import InteractionBuilder, { defaultInteraction } from '../InteractionBuilder';
 import NumberInputWithFastForwardButtons from '../../components/inputs/NumberInputWithFastForwardButtons';
-import { DataCardBody } from '../DataCardComponents';
+import { DataCardBody, ReadonlySection } from '../DataCardComponents';
 import { getOperatorPotentialRaw, getOperatorStatuses } from '../../../controller/gameDataStore';
 import { buildSkillEntries } from '../OperatorEventEditor';
 import { getCustomSkills, createCustomSkill, getDefaultCustomSkill, updateCustomSkill } from '../../../controller/custom/customSkillController';
@@ -32,7 +32,7 @@ import OperatorStatusSection from './OperatorStatusSection';
 import OperatorTalentSection from './OperatorTalentSection';
 
 const CLASS_TYPES = Object.values(OperatorClassType);
-const ELEMENT_TYPES = Object.values(ElementType).filter((e) => e !== ElementType.NONE);
+const ELEMENT_TYPES = Object.values(ElementType).filter((e) => e !== ElementType.NONE && e !== ElementType.ARTS);
 const WEAPON_TYPES = Object.values(WeaponType);
 
 const SKILL_TYPE_ORDER = [
@@ -70,29 +70,62 @@ interface Props {
   originalId?: string;
 }
 
-// ── Section divider ───────────────────────────────────────────────────────────
-
-function Section({ label, children, trailing }: { label: string; children: React.ReactNode; trailing?: React.ReactNode }) {
-  return (
-    <div className="ops-section">
-      <div className="ops-section-rule">
-        <span className="ops-section-label">{label}</span>
-        {trailing && <span className="ops-section-trailing">{trailing}</span>}
-      </div>
-      <div className="ops-section-body">{children}</div>
-    </div>
-  );
-}
+// Section divider is provided by DataCardComponents.ReadonlySection — used
+// for both readonly cards and the editor so the two surfaces stay cohesive.
+const Section = ReadonlySection;
 
 // ── Stat grid (compact 2-col: stat + value) ──────────────────────────────────
+
+interface StatStepperConfig {
+  step: number;
+  holdStep: number;
+  max: number;
+}
+
+const BASE_STAT_ORDER: string[] = [
+  StatType.BASE_HP,
+  StatType.BASE_ATTACK,
+  StatType.BASE_DEFENSE,
+  StatType.STRENGTH,
+  StatType.AGILITY,
+  StatType.INTELLECT,
+  StatType.WILL,
+  StatType.WEIGHT,
+  StatType.CRITICAL_RATE,
+  StatType.CRITICAL_DAMAGE,
+  StatType.ATTACK_RANGE,
+];
+
+const BASE_STAT_FIXED: Set<string> = new Set(BASE_STAT_ORDER);
+
+const STAT_STEPPERS: Record<string, StatStepperConfig> = {
+  [StatType.BASE_HP]: { step: 1, holdStep: 100, max: 99999 },
+  [StatType.BASE_ATTACK]: { step: 1, holdStep: 10, max: 99999 },
+  [StatType.BASE_DEFENSE]: { step: 1, holdStep: 10, max: 99999 },
+  [StatType.STRENGTH]: { step: 0.1, holdStep: 5, max: 999 },
+  [StatType.AGILITY]: { step: 0.1, holdStep: 5, max: 999 },
+  [StatType.INTELLECT]: { step: 0.1, holdStep: 5, max: 999 },
+  [StatType.WILL]: { step: 0.1, holdStep: 5, max: 999 },
+  [StatType.WEIGHT]: { step: 0.1, holdStep: 1, max: 999 },
+  [StatType.CRITICAL_RATE]: { step: 0.01, holdStep: 0.05, max: 1 },
+  [StatType.CRITICAL_DAMAGE]: { step: 0.01, holdStep: 0.1, max: 10 },
+  [StatType.ATTACK_RANGE]: { step: 0.1, holdStep: 1, max: 99 },
+};
 
 function StatGrid({ stats, onChange, title }: {
   stats: Partial<Record<string, number>>;
   onChange: (stats: Partial<Record<string, number>>) => void;
   title: string;
 }) {
-  const entries = Object.entries(stats);
-  const isFixed = (key: string) => key === StatType.BASE_HP || key === StatType.BASE_ATTACK || key === StatType.BASE_DEFENSE;
+  const isFixed = (key: string) => BASE_STAT_FIXED.has(key);
+  const stepperFor = (key: string): StatStepperConfig => STAT_STEPPERS[key] ?? { step: 1, holdStep: 10, max: 99999 };
+
+  // Render fixed stats in canonical order (fallback to 0 if absent), then any custom keys.
+  const fixedEntries: [string, number][] = BASE_STAT_ORDER.map((k) => [k, stats[k] ?? 0]);
+  const customEntries: [string, number][] = Object.entries(stats)
+    .filter(([k]) => !BASE_STAT_FIXED.has(k))
+    .map(([k, v]) => [k, v ?? 0]);
+  const entries: [string, number][] = [...fixedEntries, ...customEntries];
 
   return (
     <div className="ops-stat-block">
@@ -100,9 +133,11 @@ function StatGrid({ stats, onChange, title }: {
         <span>{title}</span>
         <button className="ops-btn-micro" onClick={() => onChange({ ...stats, '': 0 })} title="Add stat">+</button>
       </div>
-      <div className="ops-stat-grid">
-        {entries.map(([key, val], i) => (
-          <div key={i} className="ops-stat-row">
+      <div className="ops-stat-grid ops-stat-grid--aligned">
+        {entries.map(([key, val], i) => {
+          const cfg = stepperFor(key);
+          return (
+          <div key={`${key}-${i}`} className="ops-stat-row ops-stat-row--aligned">
             <NumberInputWithFastForwardButtons
               label={isFixed(key) ? (
                 <span className="ops-stat-name ops-stat-name--fixed">{key.replace(/_/g, ' ')}</span>
@@ -122,11 +157,11 @@ function StatGrid({ stats, onChange, title }: {
                   }}
                 />
               )}
-              value={val ?? 0}
+              value={val}
               min={0}
-              max={99999}
-              step={1}
-              holdStep={10}
+              max={cfg.max}
+              step={cfg.step}
+              holdStep={cfg.holdStep}
               onChange={(v) => onChange({ ...stats, [key]: v })}
             />
             {!isFixed(key) && (
@@ -137,7 +172,8 @@ function StatGrid({ stats, onChange, title }: {
               }}>&times;</button>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -403,14 +439,14 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
       <div className="ops-split-left">
         {/* ─── IDENTITY ──────────────────────────────────────────── */}
         <Section label="IDENTITY">
-          <IdField value={data.id} onChange={(id) => update({ id })} originalId={originalId} />
-          <div className="ops-row">
-            <label className="ops-field ops-field--grow">
-              <span className="ops-field-label">Name</span>
-              <input type="text" value={data.name} onChange={(e) => update({ name: e.target.value })} placeholder="Operator name" />
-            </label>
-            <label className="ops-field">
-              <span className="ops-field-label">Rarity</span>
+          <IdField value={data.id} onChange={(id) => update({ id })} originalId={originalId} fieldClassName="ops-field ops-field--inline" />
+          <label className="ops-field ops-field--inline">
+            <span className="ops-field-label">Name</span>
+            <input type="text" value={data.name} onChange={(e) => update({ name: e.target.value })} placeholder="Operator name" />
+          </label>
+          <div className="ops-field ops-field--inline">
+            <span className="ops-field-label">Rarity</span>
+            <div className="ops-field-value">
               <div className="ops-rarity-group">
                 {([4, 5, 6] as const).map((r) => (
                   <button
@@ -423,43 +459,43 @@ export default function OperatorSection({ data, onChange, originalId }: Props) {
                   </button>
                 ))}
               </div>
-            </label>
+            </div>
           </div>
-          <div className="ops-row">
-            <label className="ops-field">
-              <span className="ops-field-label">Class</span>
-              <select value={data.operatorClassType} onChange={(e) => update({ operatorClassType: e.target.value as OperatorClassType })}>
-                {CLASS_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </label>
-            <label className="ops-field">
-              <span className="ops-field-label">Element</span>
-              <select value={data.elementType} onChange={(e) => update({ elementType: e.target.value as ElementType })}>
-                {ELEMENT_TYPES.map((e) => <option key={e} value={e}>{e}</option>)}
-              </select>
-            </label>
-          </div>
-          <div className="ops-weapon-row">
+          <label className="ops-field ops-field--inline">
+            <span className="ops-field-label">Class</span>
+            <select value={data.operatorClassType} onChange={(e) => update({ operatorClassType: e.target.value as OperatorClassType })}>
+              {CLASS_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+          <label className="ops-field ops-field--inline">
+            <span className="ops-field-label">Element</span>
+            <select value={data.elementType} onChange={(e) => update({ elementType: e.target.value as ElementType })}>
+              {ELEMENT_TYPES.map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
+          </label>
+          <div className="ops-field ops-field--inline">
             <span className="ops-field-label">Weapons</span>
-            <div className="ops-pill-group">
-              {WEAPON_TYPES.map((w) => {
-                const selected = data.weaponTypes.includes(w);
-                return (
-                  <button
-                    key={w}
-                    type="button"
-                    className={`ops-pill${selected ? ' ops-pill--active' : ''}`}
-                    onClick={() => {
-                      const next = selected
-                        ? data.weaponTypes.filter((t) => t !== w)
-                        : [...data.weaponTypes, w];
-                      if (next.length > 0) update({ weaponTypes: next });
-                    }}
-                  >
-                    {w.replace(/_/g, ' ')}
-                  </button>
-                );
-              })}
+            <div className="ops-field-value">
+              <div className="ops-pill-group">
+                {WEAPON_TYPES.map((w) => {
+                  const selected = data.weaponTypes.includes(w);
+                  return (
+                    <button
+                      key={w}
+                      type="button"
+                      className={`ops-pill${selected ? ' ops-pill--active' : ''}`}
+                      onClick={() => {
+                        const next = selected
+                          ? data.weaponTypes.filter((t) => t !== w)
+                          : [...data.weaponTypes, w];
+                        if (next.length > 0) update({ weaponTypes: next });
+                      }}
+                    >
+                      {w.replace(/_/g, ' ')}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </Section>

@@ -151,6 +151,8 @@
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "COMMISERATION_TALENT",
+                  "fromDeterminer": "THIS",
+                  "from": "OPERATOR",
                   "with": {
                     "stacks": {
                       "verb": "IS",

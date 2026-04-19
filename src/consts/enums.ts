@@ -435,11 +435,8 @@ export enum SkillCategoryKey {
 export enum SegmentType {
   ANIMATION = "ANIMATION",
   STASIS = "STASIS",
-  NORMAL = "NORMAL",
-  ACTIVE = "ACTIVE",
   COOLDOWN = "COOLDOWN",
   IMMEDIATE_COOLDOWN = "IMMEDIATE_COOLDOWN",
-  INPUT_DELAY = "INPUT_DELAY",
 }
 
 export enum TimelineSourceType {
@@ -786,6 +783,7 @@ export enum InfoPaneMode {
 export enum SidebarMode {
   LOADOUTS = "loadouts",
   WORKBENCH = "workbench",
+  STATISTICS = "statistics",
 }
 
 export enum HeaderVariant {
@@ -797,6 +795,92 @@ export enum LoadoutNodeType {
   FOLDER = "folder",
   LOADOUT = "loadout",
   LOADOUT_VIEW = "loadout-view",
+}
+
+export enum StatisticsNodeType {
+  FOLDER = "folder",
+  STATISTICS = "statistics",
+}
+
+/**
+ * A single numeric dimension that can be compared across statistics sources.
+ * Some metrics need additional config (operator, column, stat) to be resolvable.
+ */
+export enum StatisticsMetricType {
+  TEAM_TOTAL_DAMAGE = "TEAM_TOTAL_DAMAGE",
+  TEAM_DPS = "TEAM_DPS",
+  TIME_TO_KILL = "TIME_TO_KILL",
+  HIGHEST_BURST = "HIGHEST_BURST",
+  HIGHEST_TICK = "HIGHEST_TICK",
+  OPERATOR_DAMAGE = "OPERATOR_DAMAGE",
+  COLUMN_DAMAGE = "COLUMN_DAMAGE",
+  AGGREGATED_STAT = "AGGREGATED_STAT",
+}
+
+export enum StatisticsLayoutType {
+  TABLE = "TABLE",
+  BAR_CHART = "BAR_CHART",
+  OPERATOR_BREAKDOWN = "OPERATOR_BREAKDOWN",
+}
+
+/**
+ * Comparison mode for statistics-table cells.
+ *  - RAW: show raw numeric values.
+ *  - DELTA_AGAINST_BASE: show each row's % delta vs the first row's value
+ *    for the same column (per-slot for operator subrows). First row is "—".
+ *  - DELTA_AGAINST_PREVIOUS: show each row's % delta vs the previous row.
+ *    First row is "—".
+ * Underlying values used for delta computation are always the RAW numbers.
+ */
+export enum ComparisonModeType {
+  RAW                    = "RAW",
+  DELTA_AGAINST_BASE     = "DELTA_AGAINST_BASE",
+  DELTA_AGAINST_PREVIOUS = "DELTA_AGAINST_PREVIOUS",
+}
+
+/**
+ * Individual columns/stats that can be hidden in a statistics sheet's
+ * per-source stats table. Persisted per-sheet in `StatisticsData.hiddenColumns`.
+ */
+export enum StatisticsColumnType {
+  OPERATOR           = "OPERATOR",
+  OPERATOR_POTENTIAL = "OPERATOR_POTENTIAL",
+  WEAPON_RANK        = "WEAPON_RANK",
+  TOTAL              = "TOTAL",
+  BASIC              = "BASIC",
+  BATTLE             = "BATTLE",
+  COMBO              = "COMBO",
+  ULTIMATE           = "ULTIMATE",
+  TEAM_DPS           = "TEAM_DPS",
+  CROWD_CONTROL      = "CROWD_CONTROL",
+  DURATION           = "DURATION",
+  TIME_TO_KILL       = "TIME_TO_KILL",
+  TEAM_TOTAL         = "TEAM_TOTAL",
+}
+
+export enum CollaborationRole {
+  HOST = 'host',
+  JOINER = 'joiner',
+}
+
+export enum PermissionLevel {
+  VIEW = 'view',
+  EDIT = 'edit',
+}
+
+export enum ConnectionStatus {
+  DISCONNECTED = 'disconnected',
+  /** Initial connection attempt (no prior successful connect). */
+  CONNECTING = 'connecting',
+  /** Retry after a previously-established connection dropped. */
+  RECONNECTING = 'reconnecting',
+  CONNECTED = 'connected',
+  ERROR = 'error',
+}
+
+export enum SyncStatus {
+  IDLE = 'idle',
+  SYNCING = 'syncing',
 }
 
 /**

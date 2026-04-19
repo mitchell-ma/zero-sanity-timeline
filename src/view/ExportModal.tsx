@@ -40,11 +40,23 @@ function collectLoadoutDescendants(tree: LoadoutTree, folderId: string): string[
   return result;
 }
 
+const MARQUEE_THRESHOLD_PX = 4;
+
 export default function ExportModal({ open, tree, activeLoadoutId, onClose }: ExportModalProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState('');
   const lastClickedRef = useRef<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Marquee-drag state (invert selection as the rect passes over loadouts)
+  const [marquee, setMarquee] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const marqueeActiveRef = useRef(false);
+  const marqueeJustEndedRef = useRef(false);
+  const marqueeBaseRef = useRef<Set<string>>(new Set());
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const selectedIdsRef = useRef(selectedIds);
+  useEffect(() => { selectedIdsRef.current = selectedIds; }, [selectedIds]);
 
   const allLoadoutIds = useMemo(
     () => tree.nodes.filter((n) => n.type === LoadoutNodeType.LOADOUT).map((n) => n.id),
@@ -70,7 +82,6 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
       if (node.type === LoadoutNodeType.LOADOUT_VIEW) continue;
       if (node.name.toLowerCase().includes(queryLower) && node.type === LoadoutNodeType.LOADOUT) {
         matching.add(node.id);
-        // climb ancestors
         let cur: LoadoutNode | undefined = node;
         while (cur?.parentId) {
           const pid: string = cur.parentId;
@@ -82,7 +93,6 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
     return matching;
   }, [tree, queryLower]);
 
-  // Flat list of every *rendered* node (folders + loadouts, no views, filtered).
   const flattened = useMemo(
     () => flattenTreeNodes(tree)
       .filter(({ node }) => node.type !== LoadoutNodeType.LOADOUT_VIEW)
@@ -90,7 +100,6 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
     [tree, visibleIds],
   );
 
-  // Flat ordered list of loadout ids in tree order — drives shift-click range selection.
   const orderedLoadoutIds = useMemo(
     () => flattened.filter(({ node }) => node.type === LoadoutNodeType.LOADOUT).map(({ node }) => node.id),
     [flattened],
@@ -120,8 +129,6 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
     if (a < 0 || b < 0) return;
     const [start, end] = a < b ? [a, b] : [b, a];
     const range = orderedLoadoutIds.slice(start, end + 1);
-    // Drive the whole range to the state of the anchor: if the clicked target
-    // will be selected after the click, add the range — otherwise remove it.
     const shouldSelect = !selectedIds.has(to);
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -139,16 +146,14 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
     const anyOff = descendants.some((id) => !selectedIds.has(id));
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (anyOff) {
-        for (const id of descendants) next.add(id);
-      } else {
-        for (const id of descendants) next.delete(id);
-      }
+      if (anyOff) for (const id of descendants) next.add(id);
+      else for (const id of descendants) next.delete(id);
       return next;
     });
   }, [tree, orderedLoadoutIdSet, selectedIds]);
 
   const handleRowClick = useCallback((e: React.MouseEvent, id: string) => {
+    if (marqueeJustEndedRef.current) { marqueeJustEndedRef.current = false; return; }
     if (e.shiftKey && lastClickedRef.current && lastClickedRef.current !== id) {
       selectRange(lastClickedRef.current, id);
     } else {
@@ -157,10 +162,83 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
     lastClickedRef.current = id;
   }, [selectRange, toggleOne]);
 
+  const handleFolderClick = useCallback((id: string) => {
+    if (marqueeJustEndedRef.current) { marqueeJustEndedRef.current = false; return; }
+    toggleFolder(id);
+  }, [toggleFolder]);
+
+  // ── Marquee drag: sweeping a row toggles (inverts) its state ────────────
+  useEffect(() => {
+    if (!open) return;
+    const el = listRef.current;
+    if (!el) return;
+
+    const onDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      // Don't initiate marquee from form-like controls inside the list.
+      const target = e.target as HTMLElement;
+      if (target.closest('input, textarea')) return;
+      dragStartRef.current = { x: e.clientX, y: e.clientY };
+      marqueeBaseRef.current = new Set(selectedIdsRef.current);
+    };
+
+    const onMove = (e: MouseEvent) => {
+      const start = dragStartRef.current;
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (!marqueeActiveRef.current && Math.hypot(dx, dy) > MARQUEE_THRESHOLD_PX) {
+        marqueeActiveRef.current = true;
+      }
+      if (!marqueeActiveRef.current) return;
+
+      const rect = { x1: start.x, y1: start.y, x2: e.clientX, y2: e.clientY };
+      setMarquee(rect);
+
+      const left = Math.min(rect.x1, rect.x2);
+      const right = Math.max(rect.x1, rect.x2);
+      const top = Math.min(rect.y1, rect.y2);
+      const bottom = Math.max(rect.y1, rect.y2);
+
+      const rows = el.querySelectorAll<HTMLElement>('[data-loadout-id]');
+      const inside = new Set<string>();
+      rows.forEach((row) => {
+        const r = row.getBoundingClientRect();
+        const id = row.dataset.loadoutId;
+        if (!id) return;
+        if (r.right >= left && r.left <= right && r.bottom >= top && r.top <= bottom) {
+          inside.add(id);
+        }
+      });
+
+      // Selection = baseline XOR rows inside the marquee (inversion)
+      const base = marqueeBaseRef.current;
+      const next = new Set<string>();
+      base.forEach((id) => { if (!inside.has(id)) next.add(id); });
+      inside.forEach((id) => { if (!base.has(id)) next.add(id); });
+      setSelectedIds(next);
+    };
+
+    const onUp = () => {
+      if (marqueeActiveRef.current) marqueeJustEndedRef.current = true;
+      marqueeActiveRef.current = false;
+      dragStartRef.current = null;
+      setMarquee(null);
+    };
+
+    el.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      el.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [open]);
+
   // ── Quick action handlers ───────────────────────────────────
   const handleSelectAll = useCallback(() => {
     setSelectedIds((prev) => {
-      // If filtering, "ALL" means all currently-visible loadouts (union with prior).
       if (queryLower) {
         const next = new Set(prev);
         for (const id of orderedLoadoutIds) next.add(id);
@@ -182,7 +260,6 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
   }, [queryLower, orderedLoadoutIds]);
 
   const handleInvert = useCallback(() => {
-    // Invert within the visible (filtered) set; non-visible selections stick.
     setSelectedIds((prev) => {
       const target = queryLower ? orderedLoadoutIds : allLoadoutIds;
       const next = new Set(prev);
@@ -210,7 +287,6 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
         return;
       }
       if (e.key === 'Enter' && selectedIds.size > 0) {
-        // Don't hijack Enter while the user is typing in the search field.
         if (!(document.activeElement instanceof HTMLInputElement)) {
           e.preventDefault();
           handleExport();
@@ -224,16 +300,21 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
   if (!open) return null;
 
   const filteredEmpty = flattened.length === 0;
+  const marqueeRect = marquee ? {
+    left: Math.min(marquee.x1, marquee.x2),
+    top: Math.min(marquee.y1, marquee.y2),
+    width: Math.abs(marquee.x2 - marquee.x1),
+    height: Math.abs(marquee.y2 - marquee.y1),
+  } : null;
 
   return (
     <div className="devlog-overlay" onClick={onClose}>
       <div className="export-modal" onClick={(e) => e.stopPropagation()}>
         <header className="export-modal-header">
           <div className="export-modal-title-row">
-            <span className="export-modal-eyebrow">{t('export.eyebrow')}</span>
+            <h2 className="export-modal-title">{t('export.title')}</h2>
             <button className="export-modal-close" onClick={onClose} aria-label="Close">&times;</button>
           </div>
-          <h2 className="export-modal-title">{t('export.title')}</h2>
           <p className="export-modal-subtitle">{t('export.subtitle')}</p>
         </header>
 
@@ -269,7 +350,7 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
           </div>
         </div>
 
-        <div className="export-modal-list">
+        <div ref={listRef} className="export-modal-list">
           {filteredEmpty && (
             <div className="export-modal-empty">{t('export.empty')}</div>
           )}
@@ -286,7 +367,7 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
                   type="button"
                   className={`export-node export-node--folder${disabled ? ' export-node--empty' : ''}`}
                   style={{ paddingLeft: 10 + depth * 18 }}
-                  onClick={() => !disabled && toggleFolder(node.id)}
+                  onClick={() => !disabled && handleFolderClick(node.id)}
                   disabled={disabled}
                 >
                   <Check state={state} />
@@ -304,12 +385,12 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
               <button
                 key={node.id}
                 type="button"
+                data-loadout-id={node.id}
                 className={`export-node export-node--loadout${isSelected ? ' export-node--selected' : ''}${isActive ? ' export-node--active' : ''}`}
                 style={{ paddingLeft: 10 + depth * 18 }}
                 onClick={(e) => handleRowClick(e, node.id)}
               >
                 <Check state={isSelected ? 'on' : 'off'} />
-                <span className="export-loadout-glyph" aria-hidden>{isSelected ? '\u25C6' : '\u25C7'}</span>
                 <span className="export-node-name">{node.name}</span>
                 {isActive && <span className="export-node-badge">{t('export.badge.active')}</span>}
               </button>
@@ -333,6 +414,18 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
             </button>
           </div>
         </footer>
+
+        {marqueeRect && marqueeRect.width > 1 && marqueeRect.height > 1 && (
+          <div
+            className="export-marquee"
+            style={{
+              left: marqueeRect.left,
+              top: marqueeRect.top,
+              width: marqueeRect.width,
+              height: marqueeRect.height,
+            }}
+          />
+        )}
       </div>
     </div>
   );

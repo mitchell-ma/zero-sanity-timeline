@@ -51,9 +51,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "segmentTypes": [
-          "ACTIVE"
-        ],
         "duration": {
           "value": {
             "verb": "IS",
@@ -99,6 +96,12 @@
         {
           "conditions": [],
           "effects": [
+            {
+              "verb": "IGNORE",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
             {
               "verb": "ENABLE",
               "object": "SKILL",
@@ -154,7 +157,10 @@
                   "objectId": "BASIC_ATTACK",
                   "objectQualifier": "EXUBERANT_TRIGGER_BATK_EMPOWERED",
                   "fromDeterminer": "THIS",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "DEAL",
@@ -231,14 +237,20 @@
                   "object": "STATUS",
                   "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
                   "fromDeterminer": "THIS",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "CRYOBLASTING_PISTOLIER_CRIT_DAMAGE",
                   "fromDeterminer": "THIS",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 }
               ]
             }
@@ -319,21 +331,30 @@
                   "object": "STATUS",
                   "objectId": "REACTION",
                   "from": "ENEMY",
-                  "objectQualifier": "SOLIDIFICATION"
+                  "objectQualifier": "SOLIDIFICATION",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "CRYOBLASTING_PISTOLIER_CRIT_RATE",
                   "fromDeterminer": "THIS",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "CONSUME",
                   "object": "STATUS",
                   "objectId": "CRYOBLASTING_PISTOLIER_CRIT_DAMAGE",
                   "fromDeterminer": "THIS",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 }
               ]
             }

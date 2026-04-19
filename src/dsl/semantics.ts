@@ -352,6 +352,7 @@ export enum AdjectiveType {
   SOLIDIFICATION = "SOLIDIFICATION",
   CORROSION = "CORROSION",
   ELECTRIFICATION = "ELECTRIFICATION",
+  SHATTER = "SHATTER",
 
   // State adjectives:
   //   IS <adj>     = existence check (is the entity currently in this state?)
@@ -388,6 +389,11 @@ export enum AdjectiveType {
   BREACH = "BREACH",
   CRUSH = "CRUSH",
 
+  // Physical-infliction status qualifier (APPLY STATUS VULNERABLE TO ENEMY).
+  // Reads as "the VULNERABLE INFLICTION STATUS" — qualifies the STATUS object,
+  // parallel to how LIFT/CRUSH qualify it as a physical-status trigger.
+  VULNERABLE = "VULNERABLE",
+
   // Reaction modifier adjectives (APPLY 1 FORCED <reaction> REACTION TO ENEMY)
   FORCED = "FORCED",
 
@@ -417,6 +423,11 @@ export enum AdjectiveType {
   //   number of stacks consumed by the triggering CONSUME effect. Used when an
   //   APPLY following CONSUME wants to scale by the consumed count.
   CONSUMED = "CONSUMED",
+
+  // Element wildcard for DEAL DAMAGE conditions that fire on any damage type
+  //   (e.g. `ENEMY DEAL ANY DAMAGE TO OPERATOR` for reactive retaliation triggers).
+  //   Not a real element — never appears on an effect, only on trigger conditions.
+  ANY = "ANY",
 }
 
 // ── Object ──────────────────────────────────────────────────────────────────
@@ -436,7 +447,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   // or as status identifiers at other positions. The validator rejects
   // `object: INFLICTION` / `object: REACTION` to keep DSL data in a single shape.
   [VerbType.APPLY]:      [ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAT, ObjectType.STAGGER, ObjectType.SUSCEPTIBILITY, ObjectType.FRAGILITY, ObjectType.TIME_STOP, ObjectType.EVENT],
-  [VerbType.CONSUME]:    [ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT, ObjectType.SKILL],
+  [VerbType.CONSUME]:    [ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT, ObjectType.SKILL, ObjectType.CHARGE],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
   [VerbType.DEAL]:       [ObjectType.DAMAGE, ObjectType.STAGGER],
@@ -470,19 +481,30 @@ export const OBJECT_QUALIFIERS: Partial<Record<ObjectType, (AdjectiveType | Noun
   [ObjectType.DAMAGE]: [
     // Element prefix: DEAL HEAT DAMAGE, DEAL PHYSICAL DAMAGE
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
+    // Condition-only: ENEMY DEAL ANY DAMAGE TO OPERATOR — matches any incoming damage type.
+    AdjectiveType.ANY,
   ],
   [ObjectType.INFLICTION]: [
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS,
   ],
   [ObjectType.REACTION]: [
     // Arts reactions
-    AdjectiveType.COMBUSTION, AdjectiveType.SOLIDIFICATION, AdjectiveType.CORROSION, AdjectiveType.ELECTRIFICATION,
+    AdjectiveType.COMBUSTION, AdjectiveType.SOLIDIFICATION, AdjectiveType.CORROSION, AdjectiveType.ELECTRIFICATION, AdjectiveType.SHATTER,
     // Physical reactions
     AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
   ],
   [ObjectType.STATUS]: [
-    // Physical statuses (APPLY LIFT STATUS TO ENEMY)
+    // STATUS is a three-level object (object / objectId / objectQualifier).
+    // The list below is the *superset* of qualifiers across every objectId —
+    // use OBJECT_ID_QUALIFIERS below to narrow by the chosen objectId.
+    //   INFLICTION → HEAT, CRYO, NATURE, ELECTRIC, ARTS, VULNERABLE
+    //   REACTION   → COMBUSTION, SOLIDIFICATION, CORROSION, ELECTRIFICATION
+    //   PHYSICAL   → LIFT, KNOCK_DOWN, BREACH, CRUSH
+    //   SUSCEPTIBILITY → ARTS, PHYSICAL
     AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
+    AdjectiveType.VULNERABLE,
+    AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.ARTS, AdjectiveType.PHYSICAL,
+    AdjectiveType.COMBUSTION, AdjectiveType.SOLIDIFICATION, AdjectiveType.CORROSION, AdjectiveType.ELECTRIFICATION, AdjectiveType.SHATTER,
   ],
   [ObjectType.TIME_STOP]: [
     NounType.COMBO, AdjectiveType.DODGE, AdjectiveType.ANIMATION,
@@ -500,6 +522,56 @@ export const OBJECT_QUALIFIERS: Partial<Record<ObjectType, (AdjectiveType | Noun
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
   ],
 };
+
+/**
+ * Three-level narrow: object × objectId → allowed qualifiers.
+ * For objects whose `objectId` is itself a typed discriminator (not a free-form
+ * status id), this map nails down which qualifiers are valid for that specific
+ * objectId. Callers should prefer this over the permissive `OBJECT_QUALIFIERS`
+ * when an objectId is known.
+ *
+ *   `{object: STATUS, objectId: INFLICTION, objectQualifier: VULNERABLE}`
+ *   → "the VULNERABLE INFLICTION STATUS"
+ *
+ * When the objectId is a free-form status id (e.g. MELTING_FLAME,
+ * FORCE_OF_NATURE_TALENT), no qualifier narrowing applies — the objectId
+ * alone identifies the status.
+ */
+export const OBJECT_ID_QUALIFIERS: Partial<Record<ObjectType, Partial<Record<string, (AdjectiveType | NounType)[]>>>> = {
+  [ObjectType.STATUS]: {
+    [NounType.INFLICTION]: [
+      AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.ARTS,
+      AdjectiveType.VULNERABLE,
+    ],
+    [NounType.REACTION]: [
+      AdjectiveType.COMBUSTION, AdjectiveType.SOLIDIFICATION, AdjectiveType.CORROSION, AdjectiveType.ELECTRIFICATION, AdjectiveType.SHATTER,
+    ],
+    [AdjectiveType.PHYSICAL]: [
+      AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
+    ],
+    [NounType.SUSCEPTIBILITY]: [
+      // Per-element susceptibility debuff on enemy. ARTS = all arts elements
+      // umbrella; PHYSICAL = physical-only; plus the four individual arts elements.
+      AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC,
+      AdjectiveType.ARTS, AdjectiveType.PHYSICAL,
+    ],
+  },
+};
+
+/** Typed objectId values that discriminate an object into a qualifier sub-family.
+ *  Anything not in this list is a free-form status/event id string. */
+export const STATUS_OBJECT_IDS: readonly string[] = [
+  NounType.INFLICTION,
+  NounType.REACTION,
+  AdjectiveType.PHYSICAL,
+  NounType.SUSCEPTIBILITY,
+] as const;
+
+/** Allowed qualifiers for a given object+objectId pair. Returns [] when the
+ *  objectId is free-form (i.e. no qualifier narrowing applies). */
+export function qualifiersForObjectId(object: ObjectType, objectId: string): (AdjectiveType | NounType)[] {
+  return OBJECT_ID_QUALIFIERS[object]?.[objectId] ?? [];
+}
 
 /** Objects whose object qualifier is required (no empty "—" option in dropdown). */
 export const OBJECT_REQUIRED_QUALIFIER = new Set<string>([ObjectType.DAMAGE]);
@@ -572,6 +644,164 @@ export const NOUN_POSSESSOR_MAPPING: Partial<Record<NounType, NounType[]>> = {
 export const VERB_OBJECT_MAPPING: Partial<Record<VerbType, NounType[]>> = {
   [VerbType.RECOVER]: [NounType.HP, NounType.SKILL_POINT, NounType.ULTIMATE_ENERGY],
 };
+
+// ── Subject / Subject-Verb / Verb-Target mappings ────────────────────────────
+
+/**
+ * Subject → allowed condition verbs (A-B mapping).
+ * Which verbs each condition subject can take. Used by the condition-builder
+ * UI to narrow the verb dropdown per subject.
+ * e.g. `EVENT` can only take BECOME / HAVE / IS — it cannot APPLY or DEAL.
+ */
+export const SUBJECT_VERB_MAPPING: Partial<Record<SubjectType, VerbType[]>> = {
+  [SubjectType.OPERATOR]: [
+    VerbType.APPLY, VerbType.BECOME, VerbType.CONSUME, VerbType.DEAL,
+    VerbType.DEFEAT, VerbType.EXPERIENCE, VerbType.HAVE, VerbType.IS,
+    VerbType.PERFORM, VerbType.RECEIVE, VerbType.RECOVER,
+  ],
+  [SubjectType.ENEMY]: [
+    VerbType.BECOME, VerbType.DEAL, VerbType.HAVE, VerbType.HIT,
+    VerbType.IS, VerbType.PERFORM, VerbType.RECEIVE,
+  ],
+  [SubjectType.EVENT]: [
+    VerbType.BECOME, VerbType.HAVE, VerbType.IS,
+  ],
+  [SubjectType.STATUS]: [
+    VerbType.BECOME, VerbType.HAVE, VerbType.IS,
+  ],
+  [SubjectType.TEAM]: [
+    VerbType.HAVE,
+  ],
+};
+
+/**
+ * Subject × Verb → allowed condition objects (A-B-C mapping).
+ * Narrows the object dropdown based on the specific subject+verb combo so
+ * semantically-impossible combos can't be authored from the builder UI.
+ *
+ * Examples:
+ *   `ENEMY IS`      → { STAGGERED, COMBUSTED, LIFTED, … } (state checks)
+ *   `ENEMY HAVE`    → { HP, STATUS, CHARGE, STACKS }      (resource checks)
+ *   `OPERATOR RECOVER` → { HP, SKILL_POINT, ULTIMATE_ENERGY }
+ *
+ * When a subject+verb pair isn't listed here, callers should fall through to
+ * `VERB_OBJECTS[verb]` (the verb-agnostic list of valid objects).
+ */
+export const SUBJECT_VERB_OBJECT_MAPPING: Partial<Record<SubjectType, Partial<Record<VerbType, ObjectType[]>>>> = {
+  [SubjectType.OPERATOR]: {
+    [VerbType.APPLY]: [
+      // Canonical shape: object=STATUS with a qualifier such as LIFT, CRUSH,
+      // BREACH, KNOCK_DOWN, VULNERABLE (see OBJECT_QUALIFIERS[STATUS]). Direct
+      // object=PROTECTED / ARTS_BURST / STAT / EVENT are stand-alone objects.
+      ObjectType.STATUS, ObjectType.STAT, ObjectType.EVENT,
+      ObjectType.ARTS_BURST, ObjectType.PROTECTED,
+    ],
+    [VerbType.BECOME]: [ObjectType.STACKS, ObjectType.ACTIVE],
+    [VerbType.CONSUME]: [
+      ObjectType.STATUS, ObjectType.STACKS, ObjectType.SKILL_POINT,
+      ObjectType.ULTIMATE_ENERGY, ObjectType.EVENT,
+    ],
+    [VerbType.DEAL]: [ObjectType.DAMAGE],
+    [VerbType.DEFEAT]: [ObjectType.ENEMY],
+    [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
+    [VerbType.HAVE]: [
+      ObjectType.HP, ObjectType.POTENTIAL, ObjectType.STATUS, ObjectType.STACKS,
+      ObjectType.TALENT_LEVEL, ObjectType.ULTIMATE_ENERGY, ObjectType.SKILL_POINT,
+      ObjectType.CHARGE,
+    ],
+    [VerbType.IS]: [
+      ObjectType.OPERATOR, ObjectType.CONTROLLED_STATE, ObjectType.ACTIVE,
+      ObjectType.STAGGERED, ObjectType.SLOWED,
+    ],
+    [VerbType.PERFORM]: [
+      ObjectType.SKILL, ObjectType.NORMAL_ATTACK, ObjectType.CRITICAL_HIT,
+      ObjectType.CHARGE,
+    ],
+    [VerbType.RECEIVE]: [ObjectType.STATUS, ObjectType.STAGGER],
+    [VerbType.RECOVER]: [ObjectType.HP, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY],
+  },
+  [SubjectType.ENEMY]: {
+    [VerbType.BECOME]: [
+      ObjectType.STAGGERED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED,
+      ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED,
+      ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED,
+      ObjectType.CRYO_INFLICTED, ObjectType.HEAT_INFLICTED, ObjectType.NATURE_INFLICTED,
+      ObjectType.ELECTRIC_INFLICTED, ObjectType.ARTS_INFLICTED, ObjectType.VULNERABLE_INFLICTED,
+      ObjectType.SLOWED,
+    ],
+    [VerbType.DEAL]: [ObjectType.DAMAGE],
+    [VerbType.HAVE]: [ObjectType.HP, ObjectType.STATUS, ObjectType.STACKS, ObjectType.CHARGE],
+    [VerbType.HIT]: [ObjectType.OPERATOR],
+    [VerbType.IS]: [
+      ObjectType.STAGGERED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED,
+      ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED,
+      ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED,
+      ObjectType.CRYO_INFLICTED, ObjectType.HEAT_INFLICTED, ObjectType.NATURE_INFLICTED,
+      ObjectType.ELECTRIC_INFLICTED, ObjectType.ARTS_INFLICTED, ObjectType.VULNERABLE_INFLICTED,
+      ObjectType.SLOWED,
+    ],
+    [VerbType.PERFORM]: [ObjectType.STATUS],
+    [VerbType.RECEIVE]: [ObjectType.STATUS, ObjectType.STAGGER],
+  },
+  [SubjectType.EVENT]: {
+    [VerbType.BECOME]: [ObjectType.STACKS],
+    [VerbType.HAVE]: [ObjectType.STACKS],
+    [VerbType.IS]: [ObjectType.OCCURRENCE],
+  },
+  [SubjectType.STATUS]: {
+    [VerbType.BECOME]: [ObjectType.STACKS],
+    [VerbType.HAVE]: [ObjectType.STACKS],
+    [VerbType.IS]: [ObjectType.ACTIVE],
+  },
+  [SubjectType.TEAM]: {
+    [VerbType.HAVE]: [ObjectType.STATUS],
+  },
+};
+
+/**
+ * Verb → allowed `to` target nouns (effect target mapping).
+ * Which nouns each effect verb can direct its `to` at. Used by the effect
+ * builder to narrow the target dropdown per verb.
+ *   APPLY → {ENEMY, OPERATOR, TEAM}
+ *   DEAL  → {ENEMY, OPERATOR}
+ *   RECOVER → {OPERATOR}
+ */
+export const VERB_TARGET_MAPPING: Partial<Record<VerbType, NounType[]>> = {
+  [VerbType.APPLY]:   [NounType.ENEMY, NounType.OPERATOR, NounType.TEAM],
+  [VerbType.DEAL]:    [NounType.ENEMY, NounType.OPERATOR],
+  [VerbType.PERFORM]: [NounType.ENEMY],
+  [VerbType.RECOVER]: [NounType.OPERATOR],
+  [VerbType.RETURN]:  [NounType.OPERATOR],
+  [VerbType.IGNORE]:  [NounType.OPERATOR, NounType.ENEMY],
+  [VerbType.REFRESH]: [NounType.OPERATOR, NounType.ENEMY],
+  [VerbType.EXTEND]:  [NounType.OPERATOR, NounType.ENEMY],
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+// Convenience accessors that encapsulate the fallback rule from subject-specific
+// mappings to verb-agnostic ones. Prefer calling these from UI code so a new
+// mapping table only has to be added in one place.
+
+/** Valid condition verbs for a given subject. Returns [] if unmapped. */
+export function verbsForSubject(subject: SubjectType): VerbType[] {
+  return SUBJECT_VERB_MAPPING[subject] ?? [];
+}
+
+/**
+ * Valid condition objects for a given subject + verb combo.
+ * Falls back to `VERB_OBJECTS[verb]` when the subject+verb pair isn't listed
+ * in SUBJECT_VERB_OBJECT_MAPPING (the verb-agnostic list of valid objects).
+ */
+export function objectsForSubjectVerb(subject: SubjectType, verb: VerbType): ObjectType[] {
+  const narrowed = SUBJECT_VERB_OBJECT_MAPPING[subject]?.[verb];
+  if (narrowed) return narrowed;
+  return VERB_OBJECTS[verb] ?? [];
+}
+
+/** Valid `to` target nouns for an effect verb. Returns [] if unmapped. */
+export function targetsForVerb(verb: VerbType): NounType[] {
+  return VERB_TARGET_MAPPING[verb] ?? [];
+}
 
 // ── Cardinality Constraint ───────────────────────────────────────────────────
 

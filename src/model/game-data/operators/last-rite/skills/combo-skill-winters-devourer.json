@@ -90,8 +90,7 @@
                             "object": "STATUS",
                             "objectId": "INFLICTION",
                             "of": {
-                              "object": "ENEMY",
-                              "determiner": "THIS"
+                              "object": "ENEMY"
                             },
                             "objectQualifier": "CRYO"
                           }
@@ -326,8 +325,7 @@
               "objectId": "INFLICTION",
               "objectQualifier": "CRYO",
               "of": {
-                "object": "ENEMY",
-                "determiner": "THIS"
+                "object": "ENEMY"
               }
             },
             "verb": "IS",

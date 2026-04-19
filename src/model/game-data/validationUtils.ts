@@ -4,7 +4,7 @@ import {
   CONSUME_TARGET_MAPPING, OBJECT_QUALIFIER_MAPPING,
 } from '../../dsl/semantics';
 import type { ObjectType } from '../../dsl/semantics';
-import { ArtsReactionType, ElementType, OperatorClassType, PhysicalStatusType, SegmentType } from '../../consts/enums';
+import { ArtsReactionType, ElementType, OperatorClassType, PhysicalInflictionType, PhysicalStatusType, SegmentType } from '../../consts/enums';
 
 // ── Enum value sets for validation ──────────────────────────────────────────
 const VALID_DETERMINERS = new Set<string>(Object.values(DeterminerType));
@@ -89,9 +89,6 @@ export const VALID_SEGMENT_KEYS = new Set([
   // eventInterpretorController.ts:2337 SEGMENT_START / SEGMENT_END handlers
   // and dataDrivenEventFrames.ts JsonSegment.clause).
   'clause', 'clauseType', 'onEntryClause', 'onExitClause',
-  // Documented comment field used in some files (e.g. pogranichnik); ignored
-  // by the parser. Keeping it whitelisted so editors can leave inline notes.
-  '_note',
 ]);
 
 export const VALID_SEGMENT_PROPERTIES_KEYS = new Set([
@@ -104,9 +101,7 @@ export const VALID_SEGMENT_METADATA_KEYS = new Set([
 ]);
 
 export const VALID_FRAME_KEYS = new Set([
-  'metadata', 'properties', 'clause', 'clauseType', 'damageElement',
-  // Comment field; same rationale as VALID_SEGMENT_KEYS._note.
-  '_note',
+  'metadata', 'properties', 'clause', 'clauseType',
 ]);
 
 export const VALID_FRAME_PROPERTIES_KEYS = new Set([
@@ -124,6 +119,19 @@ const REACTION_QUALIFIER_TO_ELEMENT: Partial<Record<ArtsReactionType, ElementTyp
   [ArtsReactionType.CORROSION]: ElementType.NATURE,
   [ArtsReactionType.ELECTRIFICATION]: ElementType.ELECTRIC,
   [ArtsReactionType.SHATTER]: ElementType.CRYO,
+};
+
+/** Infliction-qualifier → element mapping. Element inflictions map to their own
+ *  element; physical inflictions (VULNERABLE) map to PHYSICAL since they are
+ *  not elements themselves. */
+const INFLICTION_QUALIFIER_TO_ELEMENT: Record<string, ElementType> = {
+  [AdjectiveType.HEAT]: ElementType.HEAT,
+  [AdjectiveType.CRYO]: ElementType.CRYO,
+  [AdjectiveType.NATURE]: ElementType.NATURE,
+  [AdjectiveType.ELECTRIC]: ElementType.ELECTRIC,
+  [AdjectiveType.ARTS]: ElementType.ARTS,
+  [AdjectiveType.PHYSICAL]: ElementType.PHYSICAL,
+  [PhysicalInflictionType.VULNERABLE]: ElementType.PHYSICAL,
 };
 
 /**
@@ -145,13 +153,17 @@ function frameClauseElementRequirement(frame: Record<string, unknown>): string |
       const objId = ef.objectId as NounType | undefined;
       const qual = ef.objectQualifier as AdjectiveType | ArtsReactionType | undefined;
 
-      // DEAL <ELEMENT> DAMAGE — qual is the element. PHYSICAL is not "tinted".
-      if (verb === VerbType.DEAL && obj === NounType.DAMAGE && qual && qual !== AdjectiveType.PHYSICAL) {
+      // DEAL <ELEMENT> DAMAGE — qual is the element. PHYSICAL is not "tinted";
+      // ANY is a trigger-condition wildcard and never a real effect element.
+      if (verb === VerbType.DEAL && obj === NounType.DAMAGE && qual
+          && qual !== AdjectiveType.PHYSICAL && qual !== AdjectiveType.ANY) {
         return qual;
       }
-      // APPLY STATUS INFLICTION <ELEMENT> — qual is the element.
+      // APPLY STATUS INFLICTION <QUAL> — qual may be an element (HEAT/CRYO/...)
+      // or a physical infliction (VULNERABLE); physical inflictions are rendered
+      // with PHYSICAL element.
       if (verb === VerbType.APPLY && obj === NounType.STATUS && objId === NounType.INFLICTION && qual) {
-        return qual;
+        return INFLICTION_QUALIFIER_TO_ELEMENT[qual as string] ?? null;
       }
       // APPLY STATUS REACTION <REACTION_NAME> — qual is the reaction name.
       if (verb === VerbType.APPLY && obj === NounType.STATUS && objId === NounType.REACTION && qual) {

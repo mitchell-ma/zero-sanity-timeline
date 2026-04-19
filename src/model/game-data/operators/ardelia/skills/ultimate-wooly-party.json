@@ -71,9 +71,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "segmentTypes": [
-          "ACTIVE"
-        ],
         "duration": {
           "value": {
             "operation": "ADD",

@@ -76,8 +76,11 @@ export default function CreateViewsModal({
 
   const count = useMemo(() => countViewPermutations(selections, slots), [selections, slots]);
   const exceeded = count > MAX_LOADOUT_VIEW_PERMUTATIONS;
-  // Generation only meaningful when at least one axis varies (count > 1).
-  const canConfirm = count > 1 && !exceeded;
+  // count === 0 means no axes selected at all; count === 1 collapses to the
+  // parent loadout itself — we treat that as a deliberate "clear views" action
+  // so the same modal handles deletion without a separate UI surface.
+  const willClear = count === 1 && hasExistingViews;
+  const canConfirm = count >= 1 && !exceeded;
 
   if (!open) return null;
 
@@ -174,11 +177,16 @@ export default function CreateViewsModal({
               {t('views.modal.cancel')}
             </button>
             <button
-              className="confirm-btn confirm-btn--primary"
+              className={`confirm-btn ${willClear ? 'confirm-btn--danger' : 'confirm-btn--primary'}`}
               disabled={!canConfirm}
               onClick={() => canConfirm && onConfirm(selections)}
+              title={willClear ? t('views.modal.confirmClearTooltip') : undefined}
             >
-              {t('views.modal.confirm')}
+              {willClear
+                ? t('views.modal.confirmClear')
+                : count > 1
+                  ? t('views.modal.confirmGenerate', { count })
+                  : t('views.modal.confirm')}
             </button>
           </div>
         </div>

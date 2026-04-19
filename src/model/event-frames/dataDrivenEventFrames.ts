@@ -449,8 +449,6 @@ export interface SkillTimings {
   ultDur: number;
   ultAnimDur: number;
   ultCd: number;
-  /** Active phase duration from typed segments (undefined if not segment-driven). */
-  ultActiveDur?: number;
 }
 
 export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): SkillTimings {
@@ -484,7 +482,6 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
   let ultTotalDur: number;
   let ultAnimDur: number;
   let ultCdFrames: number;
-  let ultActiveDurFromSegs: number | undefined;
   if (ultSegs?.length) {
     // Data-driven: derive timings from typed segments
     const segDur = (type: string) => {
@@ -494,7 +491,6 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
     ultAnimDur = segDur(SegmentType.ANIMATION);
     ultTotalDur = ultAnimDur + segDur(SegmentType.STASIS);
     ultCdFrames = segDur(SegmentType.COOLDOWN);
-    ultActiveDurFromSegs = segDur(SegmentType.ACTIVE);
   } else {
     ultTotalDur = dur(catDuration(ultimate, ctx));
     const ultAnimRaw = catAnimationDur(ultimate, ctx);
@@ -511,7 +507,6 @@ export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: Val
     ultDur: ultTotalDur,
     ultAnimDur,
     ultCd: ultCdFrames,
-    ultActiveDur: ultActiveDurFromSegs,
   };
 }
 

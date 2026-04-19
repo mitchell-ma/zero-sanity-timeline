@@ -357,13 +357,19 @@ describe('hasEnableClauseAtFrame', () => {
 describe('collectNoGainWindowsForEvent', () => {
   const SLOT = 'slot-0';
 
-  test('collects ACTIVE segment as no-gain window', () => {
+  test('collects IGNORE ULTIMATE_ENERGY clause segment as no-gain window', () => {
+    // No-gain windows are driven entirely by the IGNORE ULTIMATE_ENERGY DSL
+    // effect. Segment typing alone no longer emits a window — authoring must
+    // attach an explicit IGNORE clause to the segment that should be no-gain.
     const ev = makeEvent({
       uid: 'ult-1', ownerEntityId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0,
       segments: [
         { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' } },
         { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' } },
-        { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' } },
+        {
+          properties: { duration: 1800, name: 'Active' },
+          clause: [{ conditions: [], effects: [{ verb: 'IGNORE', object: 'ULTIMATE_ENERGY' }] }],
+        },
         { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
       ],
     });
@@ -373,7 +379,7 @@ describe('collectNoGainWindowsForEvent', () => {
     expect(activeWindow!.end).toBe(285 + 1800);
   });
 
-  test('collects IGNORE ULTIMATE_ENERGY clause segment as no-gain window', () => {
+  test('collects IGNORE ULTIMATE_ENERGY clause across multiple segments', () => {
     const ev = makeEvent({
       uid: 'ult-1', ownerEntityId: SLOT, columnId: NounType.ULTIMATE, startFrame: 0,
       segments: [
@@ -381,11 +387,13 @@ describe('collectNoGainWindowsForEvent', () => {
           properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' },
           clause: [{ conditions: [], effects: [{ verb: 'IGNORE', object: 'ULTIMATE_ENERGY' }] }],
         },
-        { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' } },
+        {
+          properties: { duration: 1800, name: 'Active' },
+          clause: [{ conditions: [], effects: [{ verb: 'IGNORE', object: 'ULTIMATE_ENERGY' }] }],
+        },
       ],
     });
     const windows = collectNoGainWindowsForEvent(ev);
-    // Both Animation (IGNORE clause) and Active (segmentType) should be no-gain windows
     expect(windows.length).toBe(2);
     expect(windows[0]).toEqual({ start: 0, end: 249 });
     expect(windows[1]).toEqual({ start: 249, end: 249 + 1800 });

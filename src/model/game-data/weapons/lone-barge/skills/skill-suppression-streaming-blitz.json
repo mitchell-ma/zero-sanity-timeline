@@ -6,8 +6,12 @@
           "subjectDeterminer": "THIS",
           "subject": "OPERATOR",
           "verb": "CONSUME",
-          "object": "STATUS", "objectId": "REACTION",
-          "to": "ENEMY"
+          "object": "STATUS",
+          "objectId": "REACTION",
+          "to": "ENEMY",
+          "with": {
+            "stacks": "MAX"
+          }
         }
       ],
       "effects": [

@@ -269,7 +269,10 @@
                   "object": "STATUS",
                   "objectId": "PERFECT_TIMING",
                   "fromDeterminer": "THIS",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 }
               ]
             },
@@ -278,7 +281,8 @@
                 {
                   "subjectDeterminer": "THIS",
                   "subject": "OPERATOR",
-                  "verb": "NOT_HAVE",
+                  "verb": "HAVE",
+                  "negated": true,
                   "object": "STATUS",
                   "objectId": "PERFECT_TIMING"
                 }

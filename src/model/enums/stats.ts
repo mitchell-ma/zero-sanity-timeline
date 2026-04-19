@@ -97,6 +97,8 @@ export enum StatType {
   NATURE_RESISTANCE_REDUCTION = "NATURE_RESISTANCE_REDUCTION",
   ELECTRIC_RESISTANCE_REDUCTION = "ELECTRIC_RESISTANCE_REDUCTION",
   ARTS_RESISTANCE_REDUCTION = "ARTS_RESISTANCE_REDUCTION",
+  /** Absorptive shield value on operator — HP-like buffer drained first by incoming damage. */
+  SHIELD = "SHIELD",
   // ── Debuff stats ─────────────────────────────────────────────────────────────
   /** Damage dealt reduction debuff on enemy (percentage). Damage formula uses (1 - WEAKNESS). */
   WEAKNESS = "WEAKNESS",
@@ -215,6 +217,7 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.ATTACK_RANGE]: [StatOwnerType.ENEMY],
   [StatType.WEIGHT]: [StatOwnerType.ENEMY],
   [StatType.WEAKNESS]: [StatOwnerType.ENEMY],
+  [StatType.SHIELD]: [StatOwnerType.OPERATOR],
   [StatType.SLOW]: [StatOwnerType.ENEMY],
   [StatType.STAGGER_FRAILTY]: [StatOwnerType.ENEMY],
 };

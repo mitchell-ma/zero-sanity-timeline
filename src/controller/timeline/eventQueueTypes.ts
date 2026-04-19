@@ -47,6 +47,8 @@ interface StatusProperties {
   duration?: { value: ValueNode; unit: string };
   susceptibility?: Record<string, number[]>;
   cooldownSeconds?: number;
+  /** CC kinds this status imposes on its target (see CrowdControlType). */
+  crowdControls?: string[];
 }
 
 export interface StatusEventDef {

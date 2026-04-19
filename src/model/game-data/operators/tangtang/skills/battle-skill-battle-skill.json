@@ -291,7 +291,10 @@
                   "object": "STATUS",
                   "objectId": "WHIRLPOOL",
                   "fromDeterminer": "THIS",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 }
               ]
             }

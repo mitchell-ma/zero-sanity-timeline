@@ -69,12 +69,12 @@ import {
 } from '../model/game-data/gearPiecesStore';
 
 import {
-  getGear,
-  getAllGearIds,
-  getAllGears,
+  getGearSet,
+  getAllGearSetIds,
+  getAllGearSets,
   getGearStats,
   getAllGearStatOriginIds,
-  type Gear,
+  type GearSet,
   type GearStat,
 } from '../model/game-data/gearStatusesStore';
 
@@ -123,7 +123,7 @@ export type {
   OperatorStatus,
   Weapon,
   GearPiece,
-  Gear,
+  GearSet,
   GearStat,
   WeaponSkill,
   WeaponSkillStatResult,
@@ -150,7 +150,7 @@ export { getGearPiece, getAllGearPieces, getGearPiecesBySet, getGearPiecesByType
 export { registerCustomGearPiece, deregisterCustomGearPiece };
 
 // Gear statuses & set effects
-export { getGear, getAllGearIds, getAllGears };
+export { getGearSet, getAllGearSetIds, getAllGearSets };
 export { getGearStats, getAllGearStatOriginIds };
 
 // Weapon skills
@@ -556,8 +556,8 @@ for (const weapon of getAllWeapons()) {
 interface GearEffectEntry { properties: { type: string; id: string; name: string }; onTriggerClause?: { conditions: Interaction[]; effects: { objectId?: string }[] }[] }
 const GEAR_EFFECT_INDEX: Record<string, GearEffectEntry> = {};
 
-for (const gearSetId of getAllGearIds()) {
-  const effect = getGear(gearSetId);
+for (const gearSetId of getAllGearSetIds()) {
+  const effect = getGearSet(gearSetId);
   if (effect) {
     const serialized = effect.serialize() as unknown as GearEffectEntry;
     GEAR_EFFECT_INDEX[gearSetId] = serialized;
@@ -744,7 +744,7 @@ export function getGearStatTriggerDefs(gearSetType: string): NormalizedEffectDef
  * Returns one def per gear set with the effect's real ID and all onTriggerClause entries.
  */
 export function getGearTriggerDefs(gearSetType: string): NormalizedEffectDef[] {
-  const effect = getGear(gearSetType);
+  const effect = getGearSet(gearSetType);
   if (!effect) return [];
   if (!effect.onTriggerClause.length) return [];
   return [normalizeEffectEntry(effect.serializeAsTriggerDef())];
@@ -821,7 +821,7 @@ export interface GearSetData {
 
 const GEAR_SET_DATA: Record<string, GearSetData> = {};
 
-for (const effect of getAllGears()) {
+for (const effect of getAllGearSets()) {
   const id = effect.id;
   if (id) {
     GEAR_SET_DATA[id] = {

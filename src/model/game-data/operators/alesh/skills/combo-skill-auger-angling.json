@@ -423,6 +423,9 @@
             "objectId": "REACTION",
             "of": {
               "object": "ENEMY"
+            },
+            "with": {
+              "stacks": "MAX"
             }
           }
         ]

@@ -3,7 +3,6 @@
     {
       "conditions": [
         {
-          "subjectDeterminer": "THIS",
           "subject": "ENEMY",
           "verb": "HAVE",
           "object": "STATUS",

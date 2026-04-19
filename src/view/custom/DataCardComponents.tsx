@@ -6,6 +6,7 @@
  * Extracted from UnifiedCustomizer.tsx for reuse.
  */
 import React, { useState, useCallback, createContext, useContext, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { VerbType, NounType } from '../../dsl/semantics';
 import { splitConditionText, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
 import { PERMANENT_DURATION, UnitType } from '../../consts/enums';
@@ -270,14 +271,93 @@ export function ReadonlyField({ label, value }: { label: string; value: string |
   );
 }
 
-export function ReadonlySection({ label, children }: { label: string; children: React.ReactNode }) {
+export function ReadonlySection({ label, children, trailing }: { label: string; children: React.ReactNode; trailing?: React.ReactNode }) {
   return (
     <div className="ops-section">
       <div className="ops-section-rule">
         <span className="ops-section-label">{label}</span>
+        {trailing && <span className="ops-section-trailing">{trailing}</span>}
       </div>
       <div className="ops-section-body">{children}</div>
     </div>
+  );
+}
+
+/**
+ * Card body wrapper. Gives children the subtle-tinted panel + row-layout
+ * field treatment used by DataCardBody's readonly cards. Pair with
+ * `EditableField` for labeled inputs.
+ */
+export function CardBody({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={className ? `ops-skill-form ${className}` : 'ops-skill-form'}>{children}</div>;
+}
+
+/**
+ * Editable field: same structural shape as `ReadonlyField` (label left,
+ * value-slot right), but the value slot accepts arbitrary editable content
+ * (input, select, button group, etc.). Intended to be placed inside `CardBody`
+ * so the row-layout + label-column rules apply uniformly.
+ *
+ * Pass `help` to surface a small `?` next to the label that reveals the
+ * help text on hover/focus — use it liberally; authored content is full of
+ * domain jargon that means nothing to a new author otherwise.
+ */
+export function EditableField({ label, htmlFor, help, children }: { label: string; htmlFor?: string; help?: string; children: React.ReactNode }) {
+  return (
+    <div className="ops-field ops-field--editable">
+      {htmlFor
+        ? <label className="ops-field-label" htmlFor={htmlFor}>{label}{help && <HelpTip text={help} />}</label>
+        : <span className="ops-field-label">{label}{help && <HelpTip text={help} />}</span>}
+      <div className="ops-field-value ops-field-value--editable">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * Tiny `?` badge with an instant hover bubble positioned directly above the
+ * glyph. The bubble is portaled to `document.body` so it escapes any ancestor
+ * stacking context or overflow:hidden boundary — it always paints above
+ * adjacent cards/panels. Keyboard-accessible via tab/focus; screen-reader
+ * accessible via aria-label.
+ */
+export function HelpTip({ text }: { text: string }) {
+  const glyphRef = useRef<HTMLSpanElement | null>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+
+  const show = useCallback(() => {
+    const el = glyphRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPos({ left: r.left + r.width / 2, top: r.top - 6 });
+  }, []);
+  const hide = useCallback(() => setPos(null), []);
+
+  return (
+    <>
+      <span
+        ref={glyphRef}
+        className="ops-help-tip"
+        tabIndex={0}
+        role="note"
+        aria-label={text}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+      >
+        <span className="ops-help-tip-glyph" aria-hidden="true">?</span>
+      </span>
+      {pos && createPortal(
+        <span
+          className="ops-help-tip-bubble"
+          role="tooltip"
+          style={{ left: pos.left, top: pos.top }}
+        >
+          {text}
+        </span>,
+        document.body,
+      )}
+    </>
   );
 }
 

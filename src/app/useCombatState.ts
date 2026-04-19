@@ -16,7 +16,7 @@ export function useCombatState(initial: CombatState) {
     controllerRef.current = new CombatStateController();
   }
 
-  const { state, setState, resetState, beginBatch, endBatch, undo, redo } =
+  const { state, setState, resetState, beginBatch, endBatch, undo, redo, applyRemote } =
     useHistory<CombatState>(initial);
 
   return {
@@ -27,6 +27,7 @@ export function useCombatState(initial: CombatState) {
     endBatch,
     undo,
     redo,
+    applyRemote,
     controller: controllerRef.current,
   };
 }

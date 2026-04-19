@@ -23,7 +23,6 @@
   },
   "onTriggerClause": [
     {
-      "_note": "Decisive Assault \u2014 last stack (1 remaining) + Physical Status trigger",
       "conditions": [
         {
           "subjectDeterminer": "ANY",
@@ -66,7 +65,6 @@
       ]
     },
     {
-      "_note": "Harass \u2014 Physical Status trigger (stacks > 1)",
       "conditions": [
         {
           "subjectDeterminer": "ANY",

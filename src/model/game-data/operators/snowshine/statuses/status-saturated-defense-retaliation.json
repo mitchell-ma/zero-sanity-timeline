@@ -33,6 +33,7 @@
           "subject": "ENEMY",
           "verb": "DEAL",
           "object": "DAMAGE",
+          "objectQualifier": "ANY",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }

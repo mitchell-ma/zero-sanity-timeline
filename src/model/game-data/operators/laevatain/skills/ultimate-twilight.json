@@ -156,9 +156,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "segmentTypes": [
-          "ACTIVE"
-        ],
         "name": "Twilight",
         "duration": {
           "value": {
@@ -172,6 +169,12 @@
         {
           "conditions": [],
           "effects": [
+            {
+              "verb": "IGNORE",
+              "object": "ULTIMATE_ENERGY",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR"
+            },
             {
               "verb": "ENABLE",
               "object": "SKILL",

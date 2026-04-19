@@ -30,7 +30,10 @@
         {
           "verb": "CONSUME",
           "object": "EVENT",
-          "objectDeterminer": "THIS"
+          "objectDeterminer": "THIS",
+          "with": {
+            "stacks": "MAX"
+          }
         }
       ]
     }
@@ -89,8 +92,11 @@
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "duration": {
-      "verb": "IS",
-      "value": 99999
+      "value": {
+        "verb": "IS",
+        "value": 99999
+      },
+      "unit": "SECOND"
     },
     "stacks": {
       "limit": {

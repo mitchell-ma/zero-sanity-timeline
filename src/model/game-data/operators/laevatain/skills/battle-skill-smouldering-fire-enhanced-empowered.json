@@ -199,7 +199,10 @@
                   "object": "STATUS",
                   "objectId": "MELTING_FLAME",
                   "fromDeterminer": "THIS",
-                  "from": "OPERATOR"
+                  "from": "OPERATOR",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "DEAL",

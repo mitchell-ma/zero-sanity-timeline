@@ -25,6 +25,8 @@ interface CombatSheetHeaderProps {
   loadoutProperties: Record<string, LoadoutProperties>;
   statistics: DamageStatistics;
   tableColumns: DamageTableColumn[];
+  onEditLoadout?: (slotId: string) => void;
+  editingSlotId?: string;
 }
 
 /** Column keys the stats table renders, in display order. */
@@ -109,7 +111,7 @@ function WpnPotSlot({ rank }: { rank: number }) {
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 export default React.memo(function CombatSheetHeader({
-  slots, loadouts, loadoutProperties, statistics, tableColumns,
+  slots, loadouts, loadoutProperties, statistics, tableColumns, onEditLoadout, editingSlotId,
 }: CombatSheetHeaderProps) {
   // Build lookup: slotId → columnId → damage (for per-skill breakdown)
   const opColumnDamage = useMemo(() => {
@@ -147,11 +149,14 @@ export default React.memo(function CombatSheetHeader({
             const props = loadoutProperties[slot.slotId];
             const element = op.element as ElementType;
             const operatorClassType = op.operatorClassType as OperatorClassType | undefined;
+            const isActive = editingSlotId === slot.slotId;
+            const clickable = !!onEditLoadout;
             return (
               <article
                 key={slot.slotId}
-                className="csh-op-card"
+                className={`csh-op-card${clickable ? ' csh-op-card--clickable' : ''}${isActive ? ' csh-op-card--active' : ''}`}
                 style={{ '--accent': op.color } as React.CSSProperties}
+                onClick={clickable ? () => onEditLoadout!(slot.slotId) : undefined}
               >
                 {op.splash && (
                   <div
@@ -301,6 +306,18 @@ export default React.memo(function CombatSheetHeader({
             <div className="csh-ts-label">Team Total</div>
             <div className="csh-ts-value">{formatDamage(statistics.teamTotalDamage)}</div>
           </div>
+          {statistics.crowdControlPct != null && (
+            <>
+              <div className="csh-team-divider" />
+              <div className="csh-team-stat">
+                <div className="csh-ts-label">CC %</div>
+                <div className="csh-ts-value">
+                  {(statistics.crowdControlPct * 100).toFixed(1)}
+                  <span className="csh-ts-unit">%</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

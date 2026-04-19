@@ -9,7 +9,10 @@
           "object": "STATUS",
           "objectId": "REACTION",
           "objectQualifier": "ELECTRIFICATION",
-          "to": "ENEMY"
+          "to": "ENEMY",
+          "with": {
+            "stacks": "MAX"
+          }
         }
       ],
       "effects": [
@@ -31,7 +34,10 @@
           "object": "STATUS",
           "objectId": "REACTION",
           "objectQualifier": "CORROSION",
-          "to": "ENEMY"
+          "to": "ENEMY",
+          "with": {
+            "stacks": "MAX"
+          }
         }
       ],
       "effects": [

@@ -40,6 +40,7 @@ import {
   exportMultiLoadoutBundle,
 } from '../utils/sheetStorage';
 import { decodeEmbed, getEmbedParams, buildShareUrl, detectCustomContent } from '../utils/embedCodec';
+import { applyViewOverride } from '../utils/applyViewOverride';
 import {
   SLOT_IDS,
   INITIAL_OPERATORS,
@@ -81,6 +82,8 @@ import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useCombatLoadout } from './useCombatLoadout';
 import { useResourceGraphs } from './useResourceGraphs';
 import { useAutoSave } from './useAutoSave';
+import { useCollaboration } from './useCollaboration';
+import { findNodeByUuid } from '../utils/loadoutStorage';
 import { LOADOUT_ROW_HEIGHT, FPS, TOTAL_FRAMES, frameToPx } from '../utils/timeline';
 import { TEAM_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import {
@@ -144,54 +147,6 @@ function initLoadouts() {
 
 const initialLoadouts = initLoadouts();
 
-/**
- * Apply a per-slot view override on top of a parent loadout's SheetData.
- * Pins potential and weapon skill 3 level on `loadoutProperties` AND recomputes
- * the per-slot ultimate-energy `resourceConfigs.max`, since the cost is
- * potential-dependent and is otherwise frozen at the parent's value.
- */
-function applyViewOverride(parent: SheetData, override: import('../utils/loadoutStorage').ViewOverride): SheetData {
-  const nextLoadoutProperties = { ...parent.loadoutProperties };
-  const nextResourceConfigs = { ...(parent.resourceConfigs ?? {}) };
-
-  for (const [slotId, slotOverride] of Object.entries(override)) {
-    const baseProps = nextLoadoutProperties[slotId] ?? INITIAL_LOADOUT_PROPERTIES[slotId];
-    if (!baseProps) continue;
-    const operatorPotential = slotOverride[ViewVariableType.OPERATOR_POTENTIAL];
-    const weaponSkill3Level = slotOverride[ViewVariableType.WEAPON_SKILL_3_LEVEL];
-    nextLoadoutProperties[slotId] = {
-      ...baseProps,
-      operator: {
-        ...baseProps.operator,
-        ...(operatorPotential !== undefined ? { potential: operatorPotential } : {}),
-      },
-      weapon: {
-        ...baseProps.weapon,
-        ...(weaponSkill3Level !== undefined ? { skill3Level: weaponSkill3Level } : {}),
-      },
-    };
-
-    // Recompute ultimate energy cost (graph max) when potential changes.
-    if (operatorPotential !== undefined) {
-      const slotIdx = SLOT_IDS.indexOf(slotId);
-      const opId = slotIdx >= 0 ? parent.operatorIds[slotIdx] : null;
-      if (opId) {
-        const newCost = getUltimateEnergyCostForPotential(opId, operatorPotential as 0 | 1 | 2 | 3 | 4 | 5)
-          ?? getUltimateEnergyCost(opId);
-        if (newCost > 0) {
-          const ultKey = `${slotId}-${NounType.ULTIMATE}`;
-          const existing = nextResourceConfigs[ultKey];
-          nextResourceConfigs[ultKey] = existing
-            ? { ...existing, max: newCost, startValue: Math.min(existing.startValue, newCost) }
-            : { startValue: newCost, max: newCost, regenPerSecond: 0 };
-        }
-      }
-    }
-  }
-
-  return { ...parent, loadoutProperties: nextLoadoutProperties, resourceConfigs: nextResourceConfigs };
-}
-
 /** Build per-slot view context (operator name + weapon skill3 availability + current pinned values) from a SheetData. */
 function buildSlotContexts(data: SheetData): ViewSlotContext[] {
   const ctxs: ViewSlotContext[] = [];
@@ -227,6 +182,7 @@ export function useApp() {
     endBatch,
     undo,
     redo,
+    applyRemote: applyRemoteCombatState,
     controller: ctrl,
   } = useCombatState({
     events: initialLoad.loaded?.events ?? [],
@@ -914,11 +870,11 @@ export function useApp() {
 
   // Eager validation for view loadouts under the *currently scoped parent*
   // (the active LOADOUT, or the parent of the active LOADOUT_VIEW). For each
-  // sibling view, we approximate validation by reusing the parent's processed
-  // events + non-resource validation maps and swapping the per-slot ultimate
-  // energy max with the view's potential-derived cost — the only validator
-  // affected by view overrides in practice.
-  const [viewWarningMap, setViewWarningMap] = useState<Record<string, boolean>>({});
+  // sibling view, we collect the distinct validation messages: parent-derived
+  // ones (combo, time-stop, infliction, etc. — identical across views since
+  // events are shared) plus the view's own resource-insufficiency messages
+  // computed against an adjusted per-slot ult-energy max.
+  const [viewWarningMap, setViewWarningMap] = useState<Record<string, string[]>>({});
   useEffect(() => {
     if (!activeLoadoutId) return;
     const node = loadoutTree.nodes.find((n) => n.id === activeLoadoutId);
@@ -933,15 +889,16 @@ export function useApp() {
     if (views.length === 0) return;
 
     const parentValidations = computeAllValidations(allProcessedEvents, slots, resourceGraphs, staggerBreaks, null);
-    let parentNonResourceInvalid = false;
-    for (const [k, m] of Object.entries(parentValidations.maps)) {
-      if (k === 'resource') continue;
-      if (m.size > 0) { parentNonResourceInvalid = true; break; }
+    // Distinct non-resource warnings inherited by every view (events identical).
+    const inheritedMessages = new Set<string>();
+    const { resource: _resourceMap, ...nonResourceMaps } = parentValidations.maps;
+    for (const map of Object.values(nonResourceMaps)) {
+      for (const msg of Array.from(map.values())) inheritedMessages.add(msg);
     }
 
-    const updates: Record<string, boolean> = {};
+    const updates: Record<string, string[]> = {};
     for (const view of views) {
-      if (parentNonResourceInvalid) { updates[view.id] = true; continue; }
+      const messages = new Set<string>(inheritedMessages);
 
       // Build per-slot adjusted ULT graph from view override
       const adjustedGraphs = new Map(resourceGraphs);
@@ -963,20 +920,105 @@ export function useApp() {
       }
 
       const viewResources = validateResources(allProcessedEvents, adjustedGraphs, slots);
-      updates[view.id] = viewResources.size > 0;
+      for (const msg of Array.from(viewResources.values())) messages.add(msg);
+
+      updates[view.id] = Array.from(messages);
     }
 
     setViewWarningMap((prev) => {
       let changed = false;
       const next = { ...prev };
-      for (const [id, v] of Object.entries(updates)) {
-        if (next[id] !== v) { next[id] = v; changed = true; }
+      for (const [id, list] of Object.entries(updates)) {
+        const existing = next[id];
+        if (!existing || existing.length !== list.length || existing.some((m, i) => m !== list[i])) {
+          next[id] = list;
+          changed = true;
+        }
       }
       return changed ? next : prev;
     });
   }, [activeLoadoutId, loadoutTree, allProcessedEvents, slots, resourceGraphs, staggerBreaks, operators]);
 
   useAutoSave(buildSheetData, isViewActive);
+
+  // ─── Collaboration ──────────────────────────────────────────────────────
+  const loadoutTreeRef = useRef(loadoutTree);
+  loadoutTreeRef.current = loadoutTree;
+  const activeLoadoutIdRef = useRef<string | null>(activeLoadoutId);
+  activeLoadoutIdRef.current = activeLoadoutId;
+
+  const collaboration = useCollaboration({
+    buildSheetData,
+    applyRemoteSheetData: (uuid, sheetData, _isInitial) => {
+      const node = findNodeByUuid(loadoutTreeRef.current, uuid);
+      if (!node) return;
+      if (node.id === activeLoadoutIdRef.current) {
+        const resolved = applySheetData(sheetData);
+        applyRemoteCombatState({
+          events: resolved.events,
+          operators: resolved.operators,
+          enemy: resolved.enemy,
+          enemyStats: resolved.enemyStats ?? getDefaultEnemyStats(resolved.enemy.id),
+          loadouts: resolved.loadouts,
+          loadoutProperties: resolved.loadoutProperties,
+          resourceConfigs: resolved.resourceConfigs,
+          overrides: resolved.overrides,
+        });
+        setVisibleSkills(resolved.visibleSkills);
+      } else {
+        saveLoadoutData(node.id, sheetData);
+      }
+    },
+    createLocalLoadoutForUuid: (uuid, name) => {
+      const dedupedName = uniqueName(loadoutTreeRef.current, name, null);
+      const { tree: newTree, node } = addLoadoutNode(loadoutTreeRef.current, dedupedName, null);
+      // Patch the new node's uuid to match the shared UUID.
+      const patched: LoadoutTree = {
+        nodes: newTree.nodes.map((n) => (n.id === node.id ? { ...n, uuid } : n)),
+      };
+      setLoadoutTree(patched);
+      saveLoadoutTree(patched);
+      return node.id;
+    },
+    getLocalIdForUuid: (uuid) => findNodeByUuid(loadoutTreeRef.current, uuid)?.id ?? null,
+    renameLocalLoadout: (localId, name) => {
+      const next = renameNode(loadoutTreeRef.current, localId, name);
+      setLoadoutTree(next);
+      saveLoadoutTree(next);
+    },
+  });
+
+  // Push active-loadout changes to collaborators whenever combatState changes
+  // while the loadout is in the shared set.
+  const lastSentSheetRef = useRef<SheetData | null>(null);
+  useEffect(() => {
+    if (!activeLoadoutId || isCommunityLoadoutId(activeLoadoutId)) return;
+    if (isViewActive) return;
+    const node = loadoutTreeRef.current.nodes.find((n) => n.id === activeLoadoutId);
+    if (!node) return;
+    if (!collaboration.isLoadoutSyncing(node.uuid)) return;
+    const next = buildSheetData();
+    collaboration.pushLocalChange(node.uuid, lastSentSheetRef.current, next);
+    lastSentSheetRef.current = next;
+  }, [combatState, visibleSkills, activeLoadoutId, isViewActive, collaboration, buildSheetData]);
+
+  // Reset lastSentSheet when active loadout changes so the first push is a full seed.
+  useEffect(() => {
+    lastSentSheetRef.current = null;
+  }, [activeLoadoutId]);
+
+  // Auto-restore a recent collab session on mount (survives accidental refreshes).
+  const collabRestoredRef = useRef(false);
+  useEffect(() => {
+    if (collabRestoredRef.current) return;
+    collabRestoredRef.current = true;
+    try {
+      const restored = collaboration.tryRestoreSession();
+      console.info('[collab] tryRestoreSession returned:', restored);
+    } catch (e) {
+      console.warn('[collab] failed to restore session:', e);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!activeLoadoutId || isCommunityLoadoutId(activeLoadoutId)) return;
@@ -1786,10 +1828,23 @@ export function useApp() {
     if (!sourceData) return;
     const slotContexts = buildSlotContexts(sourceData);
     const views = generateViewPermutations(selections, slotContexts);
+
+    // A single permutation (or none) collapses back to the parent itself — treat
+    // as the "default" generation, which is functionally a clear-all-views op.
+    if (views.length <= 1) {
+      const { tree: nextTree, removedIds } = clearLoadoutViews(loadoutTree, sourceId);
+      setLoadoutTree(nextTree);
+      saveLoadoutTree(nextTree);
+      if (activeLoadoutId && removedIds.includes(activeLoadoutId)) {
+        handleSelectLoadout(sourceId);
+      }
+      return;
+    }
+
     const { tree: nextTree } = setLoadoutViews(loadoutTree, sourceId, selections, views);
     setLoadoutTree(nextTree);
     saveLoadoutTree(nextTree);
-  }, [loadoutTree, activeLoadoutId, isViewActive, buildSheetData, setLoadoutTree]);
+  }, [loadoutTree, activeLoadoutId, isViewActive, buildSheetData, setLoadoutTree, handleSelectLoadout]);
 
   const handleClearLoadoutViews = useCallback((parentLoadoutId: string) => {
     const sourceId = resolveSourceLoadoutId(loadoutTree, parentLoadoutId);
@@ -2151,6 +2206,9 @@ export function useApp() {
 
     // Performance
     dragThrottle: PERFORMANCE_THROTTLE[settings.performanceMode],
+
+    // Collaboration
+    collaboration,
 
     // Constants
     allOperators: ALL_OPERATORS,

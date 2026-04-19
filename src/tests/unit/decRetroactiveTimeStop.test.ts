@@ -42,7 +42,7 @@ function mkUltimate(uid: string, startFrame: number, animDuration: number): Time
     startFrame,
     segments: [
       { properties: { duration: animDuration, segmentTypes: [SegmentType.ANIMATION] } },
-      { properties: { duration: 60, segmentTypes: [SegmentType.ACTIVE] } },
+      { properties: { duration: 60 } },
     ],
     sourceSkillId: 'TEST_ULT',
   } as TimelineEvent;

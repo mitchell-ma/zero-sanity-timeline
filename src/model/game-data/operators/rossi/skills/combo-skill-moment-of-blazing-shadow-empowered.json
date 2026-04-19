@@ -62,7 +62,10 @@
               "object": "STATUS",
               "objectId": "PERFECT_TIMING",
               "fromDeterminer": "THIS",
-              "from": "OPERATOR"
+              "from": "OPERATOR",
+              "with": {
+                "stacks": "MAX"
+              }
             }
           ]
         }
@@ -286,8 +289,7 @@
                               "object": "STATUS",
                               "objectId": "INFLICTION",
                               "of": {
-                                "object": "ENEMY",
-                                "determiner": "THIS"
+                                "object": "ENEMY"
                               },
                               "objectQualifier": "ARTS"
                             }

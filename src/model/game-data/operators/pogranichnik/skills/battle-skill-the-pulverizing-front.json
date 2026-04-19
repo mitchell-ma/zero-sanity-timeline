@@ -41,7 +41,6 @@
           },
           "clause": [
             {
-              "_note": "SP return based on Vulnerability stacks \u2014 FIRST_MATCH highest to lowest, unconditional clause always fires",
               "conditions": [
                 {
                   "subject": "ENEMY",
@@ -295,7 +294,6 @@
           },
           "clause": [
             {
-              "_note": "P1: hitting 2+ enemies returns 15 SP",
               "conditions": [
                 {
                   "subjectDeterminer": "THIS",

@@ -4,7 +4,7 @@
  * Takes dumb model data (operator stats, enemy stats, skill multipliers)
  * and combines them into computed damage numbers for the dumb view.
  */
-import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
+import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy, eventEndFrame } from '../../consts/viewTypes';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../overrideController';
 import { NounType } from '../../dsl/semantics';
@@ -167,6 +167,12 @@ export interface DamageStatistics {
   timeToKill: number | null;
   /** Highest 5-second burst window damage. */
   highestBurst: { damage: number; startFrame: number; endFrame: number } | null;
+  /**
+   * Fraction of the fight duration during which the enemy is under at least
+   * one crowd-control status (LIFT/KNOCK_DOWN/LOCK_DOWN/IMMOBILIZE/SOLIDIFICATION).
+   * Null when no fight duration is available.
+   */
+  crowdControlPct: number | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1404,6 +1410,12 @@ export function computeDamageStatistics(
   /** Optional frame range to restrict DPS and total calculations. */
   rangeStartFrame?: number,
   rangeEndFrame?: number,
+  /**
+   * Processed events for derived metrics that don't come from damage rows
+   * (e.g. crowd-control uptime). Optional for backwards-compat; callers that
+   * want CC% pass the full processed event list.
+   */
+  events?: readonly TimelineEvent[],
 ): DamageStatistics {
   // Filter rows to the requested range (if any)
   const hasRange = rangeStartFrame != null || rangeEndFrame != null;
@@ -1515,5 +1527,54 @@ export function computeDamageStatistics(
     }
   }
 
-  return { teamTotalDamage, operators, columnTotals, bossMaxHp: bossMaxHp ?? null, highestTick, teamDps, timeToKill, highestBurst };
+  // ── Crowd-control uptime ─────────────────────────────────────────────────
+  let crowdControlPct: number | null = null;
+  if (events && events.length > 0) {
+    const fightStart = rangeStartFrame ?? (filteredRows.length > 0 ? filteredRows[0].absoluteFrame : null);
+    const fightEnd = rangeEndFrame ?? (filteredRows.length > 0 ? filteredRows[filteredRows.length - 1].absoluteFrame : null);
+    if (fightStart != null && fightEnd != null && fightEnd > fightStart) {
+      crowdControlPct = computeCrowdControlUptime(events, fightStart, fightEnd);
+    }
+  }
+
+  return { teamTotalDamage, operators, columnTotals, bossMaxHp: bossMaxHp ?? null, highestTick, teamDps, timeToKill, highestBurst, crowdControlPct };
+}
+
+/**
+ * Fraction of [start, end] during which the enemy is under at least one CC
+ * status. Intervals from overlapping CC events are unioned so stacked CCs
+ * don't double-count.
+ */
+function computeCrowdControlUptime(
+  events: readonly TimelineEvent[],
+  fightStart: number,
+  fightEnd: number,
+): number {
+  const intervals: [number, number][] = [];
+  for (const ev of events) {
+    if (ev.ownerEntityId !== ENEMY_ID) continue;
+    const def = getStatusDef(ev.id);
+    const cc = def?.properties.crowdControls;
+    if (!cc || cc.length === 0) continue;
+    const s = Math.max(ev.startFrame, fightStart);
+    const e = Math.min(eventEndFrame(ev), fightEnd);
+    if (e > s) intervals.push([s, e]);
+  }
+  if (intervals.length === 0) return 0;
+  intervals.sort((a, b) => a[0] - b[0]);
+  let covered = 0;
+  let curStart = intervals[0][0];
+  let curEnd = intervals[0][1];
+  for (let i = 1; i < intervals.length; i++) {
+    const [s, e] = intervals[i];
+    if (s > curEnd) {
+      covered += curEnd - curStart;
+      curStart = s;
+      curEnd = e;
+    } else if (e > curEnd) {
+      curEnd = e;
+    }
+  }
+  covered += curEnd - curStart;
+  return covered / (fightEnd - fightStart);
 }

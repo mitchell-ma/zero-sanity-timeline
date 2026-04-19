@@ -17,7 +17,7 @@ import {
 import { StatType } from '../../model/enums';
 import type { OperatorClassType } from '../../model/enums/operators';
 import type { CustomOperator, CustomPotentialEntry } from '../../model/custom/customOperatorTypes';
-import type { CustomSkill, CustomSkillResourceInteraction, CustomSkillSegmentDef } from '../../model/custom/customSkillTypes';
+import type { CustomSkill, CustomSkillResourceInteraction, CustomSkillSegmentDef, CustomSkillFrameDef } from '../../model/custom/customSkillTypes';
 import type { CustomOperatorStatus } from '../../model/custom/customOperatorStatusTypes';
 import type { CustomOperatorTalent } from '../../model/custom/customOperatorTalentTypes';
 import type { CustomWeapon, CustomWeaponSkillDef } from '../../model/custom/customWeaponTypes';
@@ -187,14 +187,42 @@ export function skillToFriendly(json: GameDataJson, skillId?: string): CustomSki
     }
   }
 
-  // Extract segments
+  // Extract segments — round-trips the full JSON segment shape (properties
+  // bucket, clauseType, and the four clause buckets) so the editor can expose
+  // every field without losing data on save/reload.
   const rawSegments = (json.segments ?? []) as GameDataJson[];
   const segments: CustomSkillSegmentDef[] = rawSegments.map(seg => {
     const segProps = (seg.properties ?? {}) as GameDataJson;
     const segDur = segProps.duration as { value?: unknown; unit?: string } | undefined;
+    const rawFrames = (seg.frames ?? []) as GameDataJson[];
+    const frames: CustomSkillFrameDef[] = rawFrames.map(f => {
+      const fp = (f.properties ?? {}) as GameDataJson;
+      const off = fp.offset as { value?: unknown; unit?: string } | undefined;
+      return {
+        name: fp.name as string | undefined,
+        offsetSeconds: off ? extractDurationSeconds(off) : 0,
+        ...(fp.element ? { element: fp.element as import('../../consts/enums').ElementType } : {}),
+        ...(fp.frameTypes ? { frameTypes: fp.frameTypes as import('../../consts/enums').EventFrameType[] } : {}),
+        ...(f.clauseType ? { clauseType: f.clauseType as import('../../dsl/semantics').ClauseEvaluationType } : {}),
+        ...(f.clause ? { clause: f.clause as import('../../dsl/semantics').Clause } : {}),
+        ...(f.onTriggerClause ? { onTriggerClause: f.onTriggerClause as import('../../dsl/semantics').Clause } : {}),
+        ...(f.onEntryClause ? { onEntryClause: f.onEntryClause as import('../../dsl/semantics').Clause } : {}),
+        ...(f.onExitClause ? { onExitClause: f.onExitClause as import('../../dsl/semantics').Clause } : {}),
+      };
+    });
     return {
       name: segProps.name as string | undefined,
       durationSeconds: segDur ? extractDurationSeconds(segDur) : 0,
+      ...(segProps.element ? { element: segProps.element as import('../../consts/enums').ElementType } : {}),
+      ...(segProps.segmentTypes ? { segmentTypes: segProps.segmentTypes as import('../../consts/enums').SegmentType[] } : {}),
+      ...(segProps.timeDependency ? { timeDependency: segProps.timeDependency as import('../../consts/enums').TimeDependency } : {}),
+      ...(segProps.timeInteractionType ? { timeInteractionType: segProps.timeInteractionType as import('../../consts/enums').TimeInteractionType } : {}),
+      ...(seg.clauseType ? { clauseType: seg.clauseType as import('../../dsl/semantics').ClauseEvaluationType } : {}),
+      ...(seg.clause ? { clause: seg.clause as import('../../dsl/semantics').Clause } : {}),
+      ...(seg.onTriggerClause ? { onTriggerClause: seg.onTriggerClause as import('../../dsl/semantics').Clause } : {}),
+      ...(seg.onEntryClause ? { onEntryClause: seg.onEntryClause as import('../../dsl/semantics').Clause } : {}),
+      ...(seg.onExitClause ? { onExitClause: seg.onExitClause as import('../../dsl/semantics').Clause } : {}),
+      ...(frames.length > 0 ? { frames } : {}),
     };
   });
 
@@ -217,6 +245,11 @@ export function skillToFriendly(json: GameDataJson, skillId?: string): CustomSki
     description: props.description as string | undefined,
     resourceInteractions: resourceInteractions.length > 0 ? resourceInteractions : undefined,
     segments: segments.length > 0 ? segments : undefined,
+    ...(json.clauseType ? { clauseType: json.clauseType as import('../../dsl/semantics').ClauseEvaluationType } : {}),
+    ...(json.clause ? { clause: json.clause as import('../../dsl/semantics').Clause } : {}),
+    ...(json.onTriggerClause ? { onTriggerClause: json.onTriggerClause as import('../../dsl/semantics').Clause } : {}),
+    ...(json.onEntryClause ? { onEntryClause: json.onEntryClause as import('../../dsl/semantics').Clause } : {}),
+    ...(json.onExitClause ? { onExitClause: json.onExitClause as import('../../dsl/semantics').Clause } : {}),
   };
 }
 
@@ -241,14 +274,40 @@ export function skillFromFriendly(skill: CustomSkill, operatorId?: string): Game
     with: { value: isNode(r.value) },
   }));
 
-  // Build segments — place resource-interaction clause on the first segment
+  // Build segments — place resource-interaction clause on the first segment.
+  // Serializes the full editor segment shape back to JSON: properties bucket,
+  // clauseType, the four clause buckets, and nested frames with the same set
+  // of fields. Fields that are undefined/empty are omitted so the saved JSON
+  // mirrors the shape authored skills use.
   const rawSegments = (skill.segments ?? []).map(seg => ({
     metadata: { eventComponentType: 'SEGMENT' },
     properties: {
       ...(seg.name ? { name: seg.name } : {}),
       duration: dslDuration(seg.durationSeconds),
+      ...(seg.element ? { element: seg.element } : {}),
+      ...(seg.segmentTypes && seg.segmentTypes.length > 0 ? { segmentTypes: seg.segmentTypes } : {}),
+      ...(seg.timeDependency ? { timeDependency: seg.timeDependency } : {}),
+      ...(seg.timeInteractionType ? { timeInteractionType: seg.timeInteractionType } : {}),
     },
-    frames: [],
+    ...(seg.clauseType ? { clauseType: seg.clauseType } : {}),
+    ...(seg.clause && seg.clause.length > 0 ? { clause: seg.clause } : {}),
+    ...(seg.onTriggerClause && seg.onTriggerClause.length > 0 ? { onTriggerClause: seg.onTriggerClause } : {}),
+    ...(seg.onEntryClause && seg.onEntryClause.length > 0 ? { onEntryClause: seg.onEntryClause } : {}),
+    ...(seg.onExitClause && seg.onExitClause.length > 0 ? { onExitClause: seg.onExitClause } : {}),
+    frames: (seg.frames ?? []).map(f => ({
+      metadata: { eventComponentType: 'FRAME' },
+      properties: {
+        ...(f.name ? { name: f.name } : {}),
+        offset: { value: isNode(f.offsetSeconds), unit: UnitType.SECOND },
+        ...(f.element ? { element: f.element } : {}),
+        ...(f.frameTypes && f.frameTypes.length > 0 ? { frameTypes: f.frameTypes } : {}),
+      },
+      ...(f.clauseType ? { clauseType: f.clauseType } : {}),
+      ...(f.clause && f.clause.length > 0 ? { clause: f.clause } : {}),
+      ...(f.onTriggerClause && f.onTriggerClause.length > 0 ? { onTriggerClause: f.onTriggerClause } : {}),
+      ...(f.onEntryClause && f.onEntryClause.length > 0 ? { onEntryClause: f.onEntryClause } : {}),
+      ...(f.onExitClause && f.onExitClause.length > 0 ? { onExitClause: f.onExitClause } : {}),
+    })),
   }));
   const segments = effects.length > 0
     ? (rawSegments.length > 0
@@ -276,6 +335,11 @@ export function skillFromFriendly(skill: CustomSkill, operatorId?: string): Game
       originId: operatorId ?? skill.originId ?? '',
       dataSources: ['CUSTOM'],
     },
+    ...(skill.clauseType ? { clauseType: skill.clauseType } : {}),
+    ...(skill.clause && skill.clause.length > 0 ? { clause: skill.clause } : {}),
+    ...(skill.onTriggerClause && skill.onTriggerClause.length > 0 ? { onTriggerClause: skill.onTriggerClause } : {}),
+    ...(skill.onEntryClause && skill.onEntryClause.length > 0 ? { onEntryClause: skill.onEntryClause } : {}),
+    ...(skill.onExitClause && skill.onExitClause.length > 0 ? { onExitClause: skill.onExitClause } : {}),
   };
 }
 

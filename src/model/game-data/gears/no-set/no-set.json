@@ -1,10 +1,10 @@
 {
   "properties": {
-    "id": "NONE",
-    "name": "NONE",
+    "id": "NONE_STAT",
+    "name": "No Set",
     "rarity": 5,
     "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR_STAT"
   },
   "metadata": {
     "originId": "game",

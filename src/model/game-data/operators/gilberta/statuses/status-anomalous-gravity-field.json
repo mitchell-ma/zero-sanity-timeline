@@ -120,8 +120,7 @@
                             "object": "STATUS",
                             "objectId": "INFLICTION",
                             "of": {
-                              "object": "ENEMY",
-                              "determiner": "THIS"
+                              "object": "ENEMY"
                             },
                             "objectQualifier": "VULNERABLE"
                           }

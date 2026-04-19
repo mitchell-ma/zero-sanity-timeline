@@ -6,7 +6,7 @@
  * functions to produce editor-compatible types.
  */
 import { GearSetType, ElementType, WeaponType } from '../../consts/enums';
-import { getWeapon, resolveWeaponId, getGear, getWeaponStats, getGearStats, getGearPiecesBySet } from '../gameDataStore';
+import { getWeapon, resolveWeaponId, getGearSet, getWeaponStats, getGearStats, getGearPiecesBySet } from '../gameDataStore';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { getOperatorBase, getComboTriggerInfo } from '../gameDataStore';
 import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../dsl/semantics';
@@ -38,7 +38,7 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
   const gearPieces = getGearPiecesBySet(gearSetType as string);
   if (gearPieces.length === 0) return null;
 
-  const setEffect = getGear(gearSetType);
+  const setEffect = getGearSet(gearSetType);
   const setEffectJson = setEffect?.serialize() ?? undefined;
   const pieceJsons = gearPieces.map(p => p.serialize());
   const gearStatuses = getGearStats(gearSetType as string) ?? [];

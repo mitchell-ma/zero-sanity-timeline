@@ -153,8 +153,7 @@
                                 "object": "STATUS",
                                 "objectId": "SUSCEPTIBILITY",
                                 "of": {
-                                  "object": "ENEMY",
-                                  "determiner": "THIS"
+                                  "object": "ENEMY"
                                 },
                                 "objectQualifier": "ELECTRIC"
                               }

@@ -308,6 +308,8 @@ interface CombatSheetProps {
   overrides?: OverrideStore;
   plannerHidden?: boolean;
   resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
+  onEditLoadout?: (slotId: string) => void;
+  editingSlotId?: string;
 }
 
 export default React.memo(function CombatSheet({
@@ -315,6 +317,7 @@ export default React.memo(function CombatSheet({
   selectedFrames, hoverFrameRef, onHoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows, onSelectFrame,
   critMode = CritMode.NEVER, onCritModeChange, onRandomizeCrit, overrides, plannerHidden: _plannerHidden, resourceGraphs,
+  onEditLoadout, editingSlotId,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const formatTime = useCallback(
@@ -526,8 +529,8 @@ export default React.memo(function CombatSheet({
   const rangeEndFrame: number | undefined = undefined;
 
   const statistics = useMemo(
-    () => computeDamageStatistics(rawRows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame),
-    [rawRows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame],
+    () => computeDamageStatistics(rawRows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame, events),
+    [rawRows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame, events],
   );
 
   // Lift damage rows to parent
@@ -843,6 +846,8 @@ export default React.memo(function CombatSheet({
           loadoutProperties={loadoutProperties}
           statistics={statistics}
           tableColumns={tableColumns}
+          onEditLoadout={onEditLoadout}
+          editingSlotId={editingSlotId}
         />
       </div>
 

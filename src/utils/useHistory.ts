@@ -8,6 +8,9 @@ export function useHistory<T>(initial: T) {
   const undoRef = useRef<T[]>([]);
   const redoRef = useRef<T[]>([]);
   const batchRef = useRef<T | null>(null);
+  // Remote updates that arrived mid-batch — applied once endBatch fires so
+  // local batch mutations aren't overwritten while still accumulating.
+  const pendingRemoteRef = useRef<T[]>([]);
 
   const setState = useCallback((action: T | ((prev: T) => T)) => {
     // Snapshot current state BEFORE the updater runs — ref mutations must be
@@ -42,6 +45,13 @@ export function useHistory<T>(initial: T) {
         if (undoRef.current.length > MAX_HISTORY) undoRef.current.shift();
         redoRef.current = [];
       }
+      if (pendingRemoteRef.current.length > 0) {
+        const pending = pendingRemoteRef.current;
+        pendingRemoteRef.current = [];
+        const latest = pending[pending.length - 1];
+        stateRef.current = latest;
+        setStateRaw(latest);
+      }
     }
   }, []);
 
@@ -66,8 +76,21 @@ export function useHistory<T>(initial: T) {
     undoRef.current = [];
     redoRef.current = [];
     batchRef.current = null;
+    pendingRemoteRef.current = [];
     setStateRaw(value);
   }, []);
 
-  return { state, setState, resetState, beginBatch, endBatch, undo, redo };
+  // Sets state from a remote source (collaboration sync) WITHOUT pushing to
+  // undo/redo stacks. Deferred when a local batch is in progress — the queue
+  // flushes in endBatch so remote changes never interleave with batch mutations.
+  const applyRemote = useCallback((value: T) => {
+    if (batchRef.current !== null) {
+      pendingRemoteRef.current.push(value);
+      return;
+    }
+    stateRef.current = value;
+    setStateRaw(value);
+  }, []);
+
+  return { state, setState, resetState, beginBatch, endBatch, undo, redo, applyRemote };
 }

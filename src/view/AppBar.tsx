@@ -1,12 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
 import { IS_DEV } from '../consts/devFlags';
-import { InteractionModeType } from '../consts/enums';
+import { InteractionModeType, ConnectionStatus } from '../consts/enums';
 import { t } from '../locales/locale';
 
+interface CollaborationReconnectInfo {
+  attempt: number;
+  nextRetryAt: number | null;
+  givenUp: boolean;
+}
+
+interface CollaborationPeerDescriptor {
+  peerId: string;
+  displayName: string;
+  role: string;
+  isLocal: boolean;
+}
+
 interface AppBarProps {
-  activeLoadoutName: string;
-  onRenameLoadout: (name: string) => void;
-  onClearAll: () => void;
   onDevlog: () => void;
   onSettings: () => void;
   onKeys: () => void;
@@ -14,40 +24,55 @@ interface AppBarProps {
   onToggleInteractionMode?: () => void;
   lightMode?: boolean;
   onToggleTheme?: () => void;
+  collaborationStatus?: ConnectionStatus | null;
+  collaborationPeerCount?: number;
+  collaborationRoomId?: string | null;
+  collaborationPeers?: CollaborationPeerDescriptor[];
+  collaborationReconnect?: CollaborationReconnectInfo;
+  onHostCollaboration?: () => void;
+  onJoinCollaboration?: () => void;
+  onLeaveCollaboration?: () => void;
 }
 
 export default function AppBar({
-  activeLoadoutName, onRenameLoadout,
-  onClearAll,
   onDevlog, onSettings, onKeys,
   interactionMode, onToggleInteractionMode,
   lightMode, onToggleTheme,
+  collaborationStatus, collaborationPeerCount, collaborationRoomId, collaborationPeers,
+  collaborationReconnect,
+  onHostCollaboration, onJoinCollaboration, onLeaveCollaboration,
 }: AppBarProps) {
-  const [renaming, setRenaming] = useState(false);
-  const [renameValue, setRenameValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-  const cancellingRef = useRef(false);
-
+  const [collabMenuOpen, setCollabMenuOpen] = useState(false);
+  const collabMenuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (renaming && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [renaming]);
+    if (!collabMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (collabMenuRef.current && !collabMenuRef.current.contains(e.target as Node)) {
+        setCollabMenuOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handler);
+    return () => window.removeEventListener('mousedown', handler);
+  }, [collabMenuOpen]);
+  const collabActive = collaborationStatus != null && collaborationStatus !== ConnectionStatus.DISCONNECTED;
+  const collabColor = collaborationStatus === ConnectionStatus.CONNECTED ? '#3cc46e'
+    : collaborationStatus === ConnectionStatus.CONNECTING ? '#e8b23a'
+    : collaborationStatus === ConnectionStatus.RECONNECTING ? '#e8732a'
+    : collaborationStatus === ConnectionStatus.ERROR ? '#e05555'
+    : 'transparent';
+  const isReconnecting = collaborationStatus === ConnectionStatus.RECONNECTING;
 
-  const handleRenameStart = () => {
-    setRenameValue(activeLoadoutName);
-    setRenaming(true);
-  };
+  // Tick once a second while reconnecting so the "next retry in N s" countdown updates.
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    if (!isReconnecting || !collaborationReconnect?.nextRetryAt) return;
+    const timer = setInterval(() => forceTick((n) => n + 1), 500);
+    return () => clearInterval(timer);
+  }, [isReconnecting, collaborationReconnect?.nextRetryAt]);
 
-  const handleRenameSubmit = () => {
-    if (cancellingRef.current) { cancellingRef.current = false; return; }
-    const trimmed = renameValue.trim();
-    if (trimmed && trimmed !== activeLoadoutName) {
-      onRenameLoadout(trimmed);
-    }
-    setRenaming(false);
-  };
+  const retrySecondsLeft = collaborationReconnect?.nextRetryAt
+    ? Math.max(0, Math.ceil((collaborationReconnect.nextRetryAt - Date.now()) / 1000))
+    : null;
 
   return (
     <div className="app-bar">
@@ -59,40 +84,6 @@ export default function AppBar({
         </div>
       </div>
 
-      <div className="app-bar-divider" />
-
-      <div className="app-bar-loadout">
-        {renaming ? (
-          <input
-            ref={inputRef}
-            className="app-bar-loadout-input"
-            value={renameValue}
-            onChange={(e) => setRenameValue(e.target.value)}
-            onBlur={handleRenameSubmit}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleRenameSubmit();
-              if (e.key === 'Escape') { cancellingRef.current = true; setRenaming(false); }
-            }}
-          />
-        ) : (
-          <span className="app-bar-loadout-name" title={activeLoadoutName}>
-            {activeLoadoutName}
-          </span>
-        )}
-        {!renaming && (
-          <button className="app-bar-loadout-rename" onClick={handleRenameStart} title={t('app.tooltip.renameLoadout')}>
-            <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-              <path d="M12.146.854a.5.5 0 01.708 0l2.292 2.292a.5.5 0 010 .708L5.854 13.146a.5.5 0 01-.233.131l-3.5 1a.5.5 0 01-.612-.612l1-3.5a.5.5 0 01.131-.233L12.146.854zM11.5 2.207L3.207 10.5l-.646 2.262 2.261-.646L13.086 3.854 11.5 2.207z"/>
-            </svg>
-          </button>
-        )}
-      </div>
-
-      <div className="app-bar-divider" />
-
-      <button className="btn-clear" onClick={onClearAll}>
-        {t('app.btn.clearAll')}
-      </button>
       <div className="app-bar-right">
         <button
           className="btn-theme"
@@ -117,6 +108,117 @@ export default function AppBar({
           {t('app.btn.freeform')}
         </button>
         {!IS_DEV && <span className="wip-badge">{t('app.badge.wip')}</span>}
+        <div ref={collabMenuRef} style={{ position: 'relative' }}>
+          <button
+            className="btn-devlog"
+            onClick={() => setCollabMenuOpen((v) => !v)}
+            title={
+              isReconnecting
+                ? `Reconnecting (attempt ${collaborationReconnect?.attempt ?? 0})${retrySecondsLeft != null ? ` — next try in ${retrySecondsLeft}s` : ''}`
+                : collabActive ? `Room ${collaborationRoomId ?? ''} — ${collaborationPeerCount ?? 0} peer(s)` : 'Collaborate'
+            }
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            {collabActive && (
+              <span
+                aria-hidden
+                style={{
+                  display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
+                  background: collabColor,
+                }}
+              />
+            )}
+            Collab{collabActive && collaborationPeerCount != null ? ` (${collaborationPeerCount})` : ''}
+          </button>
+          {collabMenuOpen && (
+            <div
+              style={{
+                position: 'absolute', top: '100%', right: 0, marginTop: 4,
+                background: 'var(--bg-panel, #1a1a1a)', border: '1px solid var(--border-muted, #333)',
+                padding: 6, display: 'flex', flexDirection: 'column', gap: 4,
+                minWidth: 160, zIndex: 50, borderRadius: 4,
+              }}
+            >
+              {collabActive ? (
+                <>
+                  <div style={{ fontSize: 11, opacity: 0.7, padding: '2px 6px' }}>
+                    Room: <code>{collaborationRoomId ?? ''}</code>
+                  </div>
+                  <div style={{ fontSize: 11, opacity: 0.7, padding: '2px 6px' }}>
+                    Status: {collaborationStatus}
+                  </div>
+                  {isReconnecting && (
+                    <div style={{ fontSize: 11, padding: '2px 6px', color: '#e8732a' }}>
+                      Reconnecting (attempt {collaborationReconnect?.attempt ?? 0})
+                      {retrySecondsLeft != null ? ` — next try in ${retrySecondsLeft}s` : ''}
+                    </div>
+                  )}
+                  {collaborationReconnect?.givenUp && (
+                    <div style={{ fontSize: 11, padding: '2px 6px', color: '#e05555' }}>
+                      Gave up reconnecting. Leave and rejoin to retry.
+                    </div>
+                  )}
+                  <div style={{ height: 1, background: 'var(--border-muted, #333)', margin: '2px 0' }} />
+                  <div style={{ fontSize: 11, opacity: 0.7, padding: '2px 6px' }}>
+                    Peers ({collaborationPeers?.length ?? 0})
+                  </div>
+                  {(collaborationPeers ?? []).length === 0 ? (
+                    <div style={{ fontSize: 11, opacity: 0.5, padding: '2px 10px' }}>—</div>
+                  ) : (
+                    (collaborationPeers ?? []).map((p) => (
+                      <div
+                        key={p.peerId}
+                        style={{
+                          fontSize: 12, padding: '3px 10px',
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          opacity: p.isLocal ? 1 : 0.9,
+                        }}
+                        title={p.peerId}
+                      >
+                        <span
+                          aria-hidden
+                          style={{
+                            display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                            background: p.role === 'host' ? '#e8b23a' : '#7cb7e8',
+                          }}
+                        />
+                        <span style={{ fontWeight: p.isLocal ? 600 : 400 }}>
+                          {p.displayName || '(unnamed)'}{p.isLocal ? ' (you)' : ''}
+                        </span>
+                        <span style={{ marginLeft: 'auto', fontSize: 10, opacity: 0.6 }}>{p.role}</span>
+                      </div>
+                    ))
+                  )}
+                  <div style={{ height: 1, background: 'var(--border-muted, #333)', margin: '2px 0' }} />
+                  <button
+                    className="btn-devlog"
+                    style={{ textAlign: 'left' }}
+                    onClick={() => { setCollabMenuOpen(false); onLeaveCollaboration?.(); }}
+                  >
+                    Leave room
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="btn-devlog"
+                    style={{ textAlign: 'left' }}
+                    onClick={() => { setCollabMenuOpen(false); onHostCollaboration?.(); }}
+                  >
+                    Host a room
+                  </button>
+                  <button
+                    className="btn-devlog"
+                    style={{ textAlign: 'left' }}
+                    onClick={() => { setCollabMenuOpen(false); onJoinCollaboration?.(); }}
+                  >
+                    Join a room
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
         <button className="btn-devlog" onClick={onDevlog}>
           {t('app.btn.devlog')}
         </button>

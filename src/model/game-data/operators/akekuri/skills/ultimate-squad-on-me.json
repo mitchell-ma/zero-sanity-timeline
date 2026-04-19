@@ -70,9 +70,6 @@
         "eventComponentType": "SEGMENT"
       },
       "properties": {
-        "segmentTypes": [
-          "ACTIVE"
-        ],
         "duration": {
           "value": {
             "verb": "IS",

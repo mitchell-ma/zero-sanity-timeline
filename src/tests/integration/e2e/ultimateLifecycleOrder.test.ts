@@ -112,11 +112,12 @@ describe('Ultimate lifecycle order — Laevatain Twilight', () => {
     expect(animSeg).toBeDefined();
     expect(animSeg!.properties.duration).toBe(ANIMATION_DURATION_FRAMES);
 
-    const activeSeg = ult.segments.find(s =>
-      s.properties.segmentTypes?.includes(SegmentType.ACTIVE),
-    );
+    // Post-animation active window — no longer typed (ACTIVE was retired in
+    // favor of the IGNORE ULTIMATE_ENERGY DSL). It's the second segment
+    // chronologically, so pick by position instead of by segmentType.
+    const activeSeg = ult.segments[1];
     expect(activeSeg).toBeDefined();
-    expect(activeSeg!.properties.duration).toBe(ACTIVE_DURATION_FRAMES);
+    expect(activeSeg.properties.duration).toBe(ACTIVE_DURATION_FRAMES);
   });
 
   it('animation-segment CONSUME ULTIMATE_ENERGY drops the operator\'s UE graph below max after placement', () => {
@@ -261,9 +262,11 @@ describe('Ultimate lifecycle order — Laevatain Twilight', () => {
     expect(segments).toHaveLength(2);
 
     const segTypes0 = segments[0].properties.segmentTypes as string[];
-    const segTypes1 = segments[1].properties.segmentTypes as string[];
     expect(segTypes0).toContain(SegmentType.ANIMATION);
-    expect(segTypes1).toContain(SegmentType.ACTIVE);
+    // segments[1] is the post-animation active window — no segmentType now,
+    // its no-gain behavior comes from segments[0]'s IGNORE ULTIMATE_ENERGY
+    // clause (authored on the animation segment).
+    expect(segments[1].properties.segmentTypes).toBeUndefined();
 
     // Animation clause should include CONSUME ULTIMATE_ENERGY and ENABLE/DISABLE
     const animClause = segments[0].clause as {

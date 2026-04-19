@@ -7,7 +7,7 @@ import { getStarredOperators, toggleStarredOperator } from '../../utils/starredO
 import {
   getWeaponsByType,
   getGearPiecesByType,
-  getGear,
+  getGearSet,
   getAllConsumables,
   getAllTacticals,
 } from '../../controller/gameDataStore';
@@ -125,6 +125,7 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   [StatType.ATTACK_RANGE]: 'stat.ATTACK_RANGE',
   [StatType.WEIGHT]: 'stat.WEIGHT',
   [StatType.WEAKNESS]: 'stat.WEAKNESS',
+  [StatType.SHIELD]: 'stat.SHIELD',
   [StatType.SLOW]: 'stat.SLOW',
   [StatType.STAGGER_FRAILTY]: 'stat.STAGGER_FRAILTY',
 };
@@ -699,7 +700,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
               id: gp.id,
               name: gp.name,
               icon: gp.icon,
-              rarity: getGear(gp.gearSet)?.rarity ?? 5,
+              rarity: getGearSet(gp.gearSet)?.rarity ?? 5,
             }));
             return (
               <React.Fragment key={ranksKey}>

@@ -116,8 +116,7 @@
                               "objectId": "INFLICTION",
                               "objectQualifier": "CRYO",
                               "of": {
-                                "object": "ENEMY",
-                                "determiner": "THIS"
+                                "object": "ENEMY"
                               }
                             }
                           },

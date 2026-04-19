@@ -14,7 +14,10 @@
         {
           "verb": "CONSUME",
           "objectDeterminer": "THIS",
-          "object": "EVENT"
+          "object": "EVENT",
+          "with": {
+            "stacks": "MAX"
+          }
         },
         {
           "verb": "APPLY",
@@ -38,7 +41,10 @@
         {
           "verb": "CONSUME",
           "objectDeterminer": "THIS",
-          "object": "EVENT"
+          "object": "EVENT",
+          "with": {
+            "stacks": "MAX"
+          }
         },
         {
           "verb": "APPLY",
@@ -62,7 +68,10 @@
         {
           "verb": "CONSUME",
           "objectDeterminer": "THIS",
-          "object": "EVENT"
+          "object": "EVENT",
+          "with": {
+            "stacks": "MAX"
+          }
         },
         {
           "verb": "APPLY",
@@ -86,7 +95,10 @@
         {
           "verb": "CONSUME",
           "objectDeterminer": "THIS",
-          "object": "EVENT"
+          "object": "EVENT",
+          "with": {
+            "stacks": "MAX"
+          }
         },
         {
           "verb": "APPLY",
@@ -110,7 +122,10 @@
         {
           "verb": "CONSUME",
           "objectDeterminer": "THIS",
-          "object": "EVENT"
+          "object": "EVENT",
+          "with": {
+            "stacks": "MAX"
+          }
         },
         {
           "verb": "APPLY",

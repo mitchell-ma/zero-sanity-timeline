@@ -288,7 +288,10 @@
                   "object": "STATUS",
                   "objectId": "REACTION",
                   "objectQualifier": "COMBUSTION",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "APPLY",
@@ -455,7 +458,10 @@
                   "object": "STATUS",
                   "objectId": "REACTION",
                   "objectQualifier": "COMBUSTION",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "APPLY",
@@ -622,7 +628,10 @@
                   "object": "STATUS",
                   "objectId": "REACTION",
                   "objectQualifier": "ELECTRIFICATION",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "APPLY",
@@ -771,7 +780,10 @@
                   "object": "STATUS",
                   "objectId": "REACTION",
                   "objectQualifier": "COMBUSTION",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "DEAL",
@@ -879,7 +891,10 @@
                   "object": "STATUS",
                   "objectId": "REACTION",
                   "objectQualifier": "COMBUSTION",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "DEAL",
@@ -987,7 +1002,10 @@
                   "object": "STATUS",
                   "objectId": "REACTION",
                   "objectQualifier": "ELECTRIFICATION",
-                  "from": "ENEMY"
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
                 },
                 {
                   "verb": "DEAL",

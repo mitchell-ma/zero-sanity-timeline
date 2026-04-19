@@ -128,7 +128,6 @@
   ],
   "properties": {
     "id": "UNREMITTING_P5",
-    "level": 5,
     "name": "Unremitting",
     "to": "OPERATOR",
     "toDeterminer": "THIS",

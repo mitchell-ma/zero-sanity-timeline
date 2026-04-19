@@ -3,7 +3,7 @@
  */
 import { ContentCategory, ContentBrowserItem } from '../../consts/contentBrowserTypes';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
-import { getAllWeapons, getAllGearPieces, getGear, getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectIds, getAllGearEffectTypes, getGearEffectLabel } from '../gameDataStore';
+import { getAllWeapons, getAllGearPieces, getGearSet, getWeapon, getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectIds, getAllGearEffectTypes, getGearEffectLabel } from '../gameDataStore';
 import { getAllConsumables, getAllTacticals } from '../../model/game-data/consumablesStore';
 import { getGearSetData } from '../gameDataStore';
 import { getGears } from '../../consts/gearSetEffects';
@@ -136,7 +136,7 @@ export function getAllContentItems(): ContentBrowserItem[] {
     seenSets.add(key);
     const pieceCount = getAllGearPieces().filter((x) => x.gearSet === key).length;
     const setData = getGearSetData(key);
-    const setEffect = getGear(key);
+    const setEffect = getGearSet(key);
     const rarity = setEffect?.rarity ?? 5;
     items.push({
       id: key,

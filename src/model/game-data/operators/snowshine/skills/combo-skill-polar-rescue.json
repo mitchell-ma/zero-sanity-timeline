@@ -147,6 +147,7 @@
             "subject": "ENEMY",
             "verb": "DEAL",
             "object": "DAMAGE",
+            "objectQualifier": "ANY",
             "toDeterminer": "CONTROLLED",
             "to": "OPERATOR"
           },

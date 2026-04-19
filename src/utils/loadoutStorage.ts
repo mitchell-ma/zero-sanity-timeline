@@ -6,6 +6,7 @@
  * The active loadout ID lives in `zst-active-session`.
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { SheetData, MultiLoadoutBundle, cleanSheetData } from './sheetStorage';
 import { LoadoutNodeType, ViewVariableType } from '../consts/enums';
 
@@ -28,6 +29,8 @@ export type ViewOverride = Record<string, Partial<Record<ViewVariableType, numbe
 
 export interface LoadoutNode {
   id: string;
+  /** Cross-peer identity for collaboration. Stable across clients; unlike `id` which is localStorage-scoped. */
+  uuid: string;
   type: LoadoutNodeType;
   name: string;
   parentId: string | null; // null = root level
@@ -65,7 +68,16 @@ export function loadLoadoutTree(): LoadoutTree {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed?.nodes && Array.isArray(parsed.nodes)) {
-        return parsed as LoadoutTree;
+        const tree = parsed as LoadoutTree;
+        let migrated = false;
+        for (const node of tree.nodes) {
+          if (!node.uuid) {
+            node.uuid = uuidv4();
+            migrated = true;
+          }
+        }
+        if (migrated) saveLoadoutTree(tree);
+        return tree;
       }
     }
   } catch { /* ignore */ }
@@ -139,7 +151,7 @@ export function addLoadout(tree: LoadoutTree, name: string, parentId: string | n
   const siblings = getChildrenOf(tree, parentId);
   const order = siblings.length > 0 ? Math.max(...siblings.map((s) => s.order)) + 1 : 0;
   const uniqueN = uniqueName(tree, name, parentId);
-  const node: LoadoutNode = { id: generateId(), type: LoadoutNodeType.LOADOUT, name: uniqueN, parentId, order };
+  const node: LoadoutNode = { id: generateId(), uuid: uuidv4(), type: LoadoutNodeType.LOADOUT, name: uniqueN, parentId, order };
   return { tree: { nodes: [...tree.nodes, node] }, node };
 }
 
@@ -153,7 +165,7 @@ export function addLoadoutAfter(tree: LoadoutTree, name: string, afterNodeId: st
     n.parentId === parentId && n.order > afterOrder ? { ...n, order: n.order + 1 } : n,
   );
   const uniqueN = uniqueName({ nodes: shifted }, name, parentId);
-  const node: LoadoutNode = { id: generateId(), type: LoadoutNodeType.LOADOUT, name: uniqueN, parentId, order: afterOrder + 1 };
+  const node: LoadoutNode = { id: generateId(), uuid: uuidv4(), type: LoadoutNodeType.LOADOUT, name: uniqueN, parentId, order: afterOrder + 1 };
   return { tree: { nodes: [...shifted, node] }, node };
 }
 
@@ -165,7 +177,7 @@ export function addFolder(tree: LoadoutTree, name: string, parentId: string | nu
   const siblings = getChildrenOf(tree, parentId);
   const order = siblings.length > 0 ? Math.max(...siblings.map((s) => s.order)) + 1 : 0;
   const uniqueN = uniqueName(tree, name, parentId);
-  const node: LoadoutNode = { id: generateId(), type: LoadoutNodeType.FOLDER, name: uniqueN, parentId, order };
+  const node: LoadoutNode = { id: generateId(), uuid: uuidv4(), type: LoadoutNodeType.FOLDER, name: uniqueN, parentId, order };
   return { tree: { nodes: [...tree.nodes, node] }, node };
 }
 
@@ -282,6 +294,12 @@ export function flattenTreeNodes(tree: LoadoutTree, parentId: string | null = nu
   return result;
 }
 
+// ─── UUID lookup ─────────────────────────────────────────────────────────────
+
+export function findNodeByUuid(tree: LoadoutTree, uuid: string): LoadoutNode | undefined {
+  return tree.nodes.find((n) => n.uuid === uuid);
+}
+
 // ─── View helpers ───────────────────────────────────────────────────────────
 
 export function isReadOnlyNode(node: LoadoutNode | null | undefined): boolean {
@@ -322,6 +340,7 @@ export function setLoadoutViews(
 
   const created: LoadoutNode[] = views.map((v, i) => ({
     id: generateId(),
+    uuid: uuidv4(),
     type: LoadoutNodeType.LOADOUT_VIEW,
     name: v.name,
     parentId,
@@ -397,6 +416,7 @@ export function mergeBundle(
     const newViewParentId = node.viewParentId ? oldToNewId.get(node.viewParentId) : undefined;
     const newNode: LoadoutNode = {
       id: newId,
+      uuid: uuidv4(),
       type: node.type,
       name: dedupedName,
       parentId: newParentId,

@@ -62,12 +62,12 @@ import {
   type GearPiece,
 
   // Gear statuses & set effects
-  getGear,
-  getAllGearIds,
-  getAllGears,
+  getGearSet,
+  getAllGearSetIds,
+  getAllGearSets,
   getGearStats,
   getAllGearStatOriginIds,
-  type Gear,
+  type GearSet,
   type GearStat,
 
   // Weapon skills
@@ -165,7 +165,7 @@ import {
 export type {
   Weapon,
   GearPiece,
-  Gear,
+  GearSet,
   GearStat,
   WeaponSkill,
   WeaponSkillStatResult,
@@ -197,7 +197,7 @@ export { registerCustomGearPiece, deregisterCustomGearPiece };
 
 // ── Gear statuses & set effects ─────────────────────────────────────────────
 
-export { getGear, getAllGearIds, getAllGears };
+export { getGearSet, getAllGearSetIds, getAllGearSets };
 export { getGearStats, getAllGearStatOriginIds };
 
 // ── Weapon skills ───────────────────────────────────────────────────────────
@@ -379,7 +379,7 @@ export function getAllStatusLabels(): Record<string, string> {
     }
   }
   // Gear set effects
-  for (const gse of getAllGears()) {
+  for (const gse of getAllGearSets()) {
     if (gse.name && gse.id) labels[gse.id] = gse.name;
   }
   _statusLabels = labels;
@@ -455,7 +455,7 @@ export function getStatusCategoryById(statusId: string): EventCategoryType | und
       if (gs.id === statusId) return gs.categoryType;
     }
   }
-  for (const gse of getAllGears()) {
+  for (const gse of getAllGearSets()) {
     if (gse.id === statusId) return gse.categoryType;
   }
   // Consumables
@@ -479,7 +479,7 @@ export function getAnyStatusSerialized(statusId: string): Record<string, unknown
       if (gs.id === statusId) return gs.serialize() as Record<string, unknown>;
     }
   }
-  for (const gse of getAllGears()) {
+  for (const gse of getAllGearSets()) {
     if (gse.id === statusId) return gse.serialize() as Record<string, unknown>;
   }
   return null;
@@ -509,7 +509,7 @@ export function getAllStatusCategories(): Record<string, string> {
     }
   }
   // Gear set effects
-  for (const gse of getAllGears()) {
+  for (const gse of getAllGearSets()) {
     cats.add(gse.categoryType);
   }
   // Gear statuses

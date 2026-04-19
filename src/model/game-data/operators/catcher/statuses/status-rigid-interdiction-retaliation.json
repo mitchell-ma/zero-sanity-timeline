@@ -34,6 +34,7 @@
           "subject": "ENEMY",
           "verb": "DEAL",
           "object": "DAMAGE",
+          "objectQualifier": "PHYSICAL",
           "toDeterminer": "THIS",
           "to": "OPERATOR"
         }

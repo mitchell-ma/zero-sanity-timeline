@@ -80,7 +80,6 @@
           },
           "clause": [
             {
-              "_note": "Unconditional: stagger + forced Lift always fire.",
               "conditions": [],
               "effects": [
                 {
@@ -110,7 +109,6 @@
               ]
             },
             {
-              "_note": "Path A \u2014 enemy NOT solidified: single base physical hit.",
               "conditions": [
                 {
                   "subject": "ENEMY",
@@ -164,7 +162,6 @@
               ]
             },
             {
-              "_note": "Path B \u2014 enemy IS solidified: single bigger physical hit + Physical Susceptibility. Mutually exclusive with Path A.",
               "conditions": [
                 {
                   "subject": "ENEMY",

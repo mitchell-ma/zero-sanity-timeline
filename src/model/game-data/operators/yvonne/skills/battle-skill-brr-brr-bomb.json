@@ -119,8 +119,7 @@
                             "object": "STATUS",
                             "objectId": "INFLICTION",
                             "of": {
-                              "object": "ENEMY",
-                              "determiner": "THIS"
+                              "object": "ENEMY"
                             },
                             "objectQualifier": "ARTS"
                           }
@@ -260,8 +259,7 @@
                             "object": "STATUS",
                             "objectId": "INFLICTION",
                             "of": {
-                              "object": "ENEMY",
-                              "determiner": "THIS"
+                              "object": "ENEMY"
                             },
                             "objectQualifier": "CRYO"
                           }
@@ -389,8 +387,7 @@
                             "object": "STATUS",
                             "objectId": "INFLICTION",
                             "of": {
-                              "object": "ENEMY",
-                              "determiner": "THIS"
+                              "object": "ENEMY"
                             },
                             "objectQualifier": "NATURE"
                           }

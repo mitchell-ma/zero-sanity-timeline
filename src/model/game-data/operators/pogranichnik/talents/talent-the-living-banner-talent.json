@@ -1,7 +1,6 @@
 {
   "onTriggerClause": [
     {
-      "_note": "When accumulated SP reaches 80, consume 80 stacks and grant Fervent Morale",
       "conditions": [
         {
           "subject": "EVENT",

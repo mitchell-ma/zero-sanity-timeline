@@ -1024,7 +1024,13 @@ export class EventInterpretorController {
       // (they appear inside `conditions`, never inside `effects`). They
       // reach interpret() only if a future JSON authoring error puts
       // them on the effect side; the no-op return is defensive.
+      //
+      // ENABLE / DISABLE are declarative skill-variant gates — consumed
+      // externally by eventValidator (see eventValidator.ts:933 — the
+      // ENABLE/DISABLE system on segment clauses is the sole variant
+      // gating mechanism). No imperative action at interpret time.
       case VerbType.HIT: case VerbType.DEFEAT: case VerbType.PERFORM:
+      case VerbType.ENABLE: case VerbType.DISABLE:
         return true;
       // IGNORE ULTIMATE_ENERGY: route to UE controller's setIgnoreExternalGain
       // so the flag is set at the moment the status's clause is dispatched
@@ -1643,8 +1649,8 @@ export class EventInterpretorController {
       this.controller.createStagger('stagger', ownerEntityId, ctx.frame, typeof v === 'number' ? v : 0, source);
       return true;
     }
-    // APPLY SHIELD — record shield value on target operator via DEC.
-    if (effect.object === ObjectType.SHIELD) {
+    // APPLY STAT SHIELD — record shield value on target operator via DEC.
+    if (effect.object === NounType.STAT && effect.objectId === NounType.SHIELD) {
       if (!this.controller.hasShieldController()) return true;
       const shieldValue = this.resolveWith(effect.with?.value, ctx);
       if (typeof shieldValue !== 'number' || shieldValue <= 0) return true;

@@ -97,6 +97,7 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   // damage-output multiplier. Each APPLY STAT WEAKNESS uses with.multiplier which
   // multiplies this value (e.g. 0.8 × 0.8 = 0.64 for two 20% weakness sources).
   [StatType.WEAKNESS]: 1,
+  [StatType.SHIELD]: 0,
   [StatType.SLOW]: 0,
   [StatType.STAGGER_FRAILTY]: 0,
 };

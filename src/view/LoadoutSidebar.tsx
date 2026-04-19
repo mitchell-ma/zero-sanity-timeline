@@ -34,8 +34,10 @@ interface LoadoutSidebarProps {
   onLoadCommunityLoadout: (loadoutId: string) => void;
   onOpenViewsModal: (parentLoadoutId: string) => void;
   onClearViews: (parentLoadoutId: string) => void;
-  /** Per-view-id flag indicating placement validation errors (warning icon). */
-  viewWarningMap?: Record<string, boolean>;
+  /** Per-view-id list of placement validation messages (empty = no warnings). */
+  viewWarningMap?: Record<string, string[]>;
+  /** UUIDs of loadouts currently being synchronized with collaborators. */
+  syncingLoadoutUuids?: string[];
   sidebarMode: SidebarMode;
   onSidebarModeChange: (mode: SidebarMode) => void;
 }
@@ -80,9 +82,11 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   onOpenViewsModal,
   onClearViews,
   viewWarningMap,
+  syncingLoadoutUuids,
   sidebarMode,
   onSidebarModeChange,
 }, ref) {
+  const syncingUuidSet = useMemo(() => new Set(syncingLoadoutUuids ?? []), [syncingLoadoutUuids]);
   const [filter, setFilter] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -458,14 +462,32 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
             />
           ) : (
             <span className="loadout-node-name">
-              {node.name}
-              {isView && viewWarningMap?.[node.id] && (
+              {syncingUuidSet.has(node.uuid) && (
                 <span
-                  className="loadout-view-warning"
-                  title={t('sidebar.view.invalidTooltip')}
-                  aria-label="invalid permutation"
-                >{'\u26A0'}</span>
+                  className="loadout-node-sync-icon"
+                  title="Synced with collaborators"
+                  aria-label="synced"
+                  style={{ display: 'inline-flex', alignItems: 'center', marginRight: 4, opacity: 0.85 }}
+                >
+                  <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor" aria-hidden>
+                    <path d="M5.5 6a2 2 0 100-4 2 2 0 000 4zm5 0a2 2 0 100-4 2 2 0 000 4zM1 13c0-2.1 2-3.5 4.5-3.5S10 10.9 10 13v1H1v-1zm9 0c0-.8-.2-1.6-.6-2.2.4-.2.8-.3 1.3-.3 2 0 3.8 1.1 3.8 2.7V14H10v-1z"/>
+                  </svg>
+                </span>
               )}
+              {node.name}
+              {isView && (() => {
+                const issues = viewWarningMap?.[node.id];
+                if (!issues || issues.length === 0) return null;
+                const tooltipBody = issues.map((m, i) => `${i + 1}. ${m}`).join('\n');
+                const tooltip = `${t('sidebar.view.invalidTooltip', { count: issues.length })}\n\n${tooltipBody}`;
+                return (
+                  <span
+                    className="loadout-view-warning"
+                    title={tooltip}
+                    aria-label={`${issues.length} placement issue(s)`}
+                  >{'\u26A0'}</span>
+                );
+              })()}
             </span>
           )}
 
@@ -555,6 +577,15 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+          </svg>
+        </button>
+        <button
+          className={`sidebar-mode-btn${sidebarMode === SidebarModeEnum.STATISTICS ? ' sidebar-mode-btn--active' : ''}`}
+          onClick={() => handleIconClick(SidebarModeEnum.STATISTICS)}
+          title={t('sidebar.tooltip.statistics')}
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/>
           </svg>
         </button>
         <button

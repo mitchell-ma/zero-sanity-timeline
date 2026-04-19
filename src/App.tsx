@@ -1,7 +1,9 @@
 import { lazy, Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { useApp } from './app/useApp';
+import { useStatisticsApp } from './app/useStatisticsApp';
 import AppBar from './view/AppBar';
 import LoadoutSidebar from './view/LoadoutSidebar';
+import StatisticsSidebar from './view/StatisticsSidebar';
 import type { SidebarMode } from './view/LoadoutSidebar';
 import { ContentCategory } from './consts/contentBrowserTypes';
 import { operatorWarnings } from './controller/operators/operatorRegistry';
@@ -31,6 +33,8 @@ import ContextMenu from './view/ContextMenu';
 import WarningModal from './view/WarningModal';
 import ConfirmModal from './view/ConfirmModal';
 import CreateViewsModal from './view/CreateViewsModal';
+import CollaborationHostDialog from './view/CollaborationHostDialog';
+import CollaborationJoinDialog from './view/CollaborationJoinDialog';
 import { LoadoutNodeType } from './consts/enums';
 import './App.css';
 
@@ -45,11 +49,13 @@ const SettingsModal = lazy(() => import('./view/SettingsModal'));
 const ExportModal = lazy(() => import('./view/ExportModal'));
 const KeyboardShortcutsModal = lazy(() => import('./view/KeyboardShortcutsModal'));
 const UnifiedCustomizer = lazy(() => import('./view/custom/UnifiedCustomizer'));
+const StatisticsView = lazy(() => import('./view/StatisticsView'));
 
 const UI_STATE_KEY = 'zst-ui-state';
 
 interface UiState {
-  sidebarMode: SidebarMode;
+  activeView: SidebarModeEnum;
+  sidebarOpen: boolean;
 }
 
 function loadUiState(): UiState {
@@ -58,14 +64,17 @@ function loadUiState(): UiState {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
-        const mode = parsed.sidebarMode;
-        return {
-          sidebarMode: mode === SidebarModeEnum.WORKBENCH ? SidebarModeEnum.WORKBENCH : SidebarModeEnum.LOADOUTS,
-        };
+        const mode = parsed.activeView ?? parsed.sidebarMode;
+        const activeView =
+          mode === SidebarModeEnum.WORKBENCH ? SidebarModeEnum.WORKBENCH
+          : mode === SidebarModeEnum.STATISTICS ? SidebarModeEnum.STATISTICS
+          : SidebarModeEnum.LOADOUTS;
+        const sidebarOpen = parsed.sidebarOpen !== false;
+        return { activeView, sidebarOpen };
       }
     }
   } catch { /* ignore */ }
-  return { sidebarMode: SidebarModeEnum.LOADOUTS };
+  return { activeView: SidebarModeEnum.LOADOUTS, sidebarOpen: true };
 }
 
 function saveUiState(state: UiState): void {
@@ -76,14 +85,19 @@ function saveUiState(state: UiState): void {
 
 export default function App() {
   const app = useApp();
+  const stats = useStatisticsApp(app.loadoutTree, app.activeLoadoutId, app.buildSheetData);
   const [expandAnim, setExpandAnim] = useState(false);
-  const [sidebarMode, setSidebarMode] = useState<SidebarMode>(() => loadUiState().sidebarMode);
-  const [workbenchOpen, setWorkbenchOpen] = useState(() => loadUiState().sidebarMode === SidebarModeEnum.WORKBENCH);
+  const [activeView, setActiveView] = useState<SidebarModeEnum>(() => loadUiState().activeView);
+  const [sidebarOpen, setSidebarOpen] = useState(() => loadUiState().sidebarOpen);
+  const sidebarMode: SidebarMode = sidebarOpen ? activeView : null;
+  const [workbenchOpen, setWorkbenchOpen] = useState(() => loadUiState().activeView === SidebarModeEnum.WORKBENCH);
   const [viewsModal, setViewsModal] = useState<{ parentId: string } | null>(null);
   const [workbenchInitial, setWorkbenchInitial] = useState<{ entityType: ContentCategory; data: CustomContentData } | undefined>();
   const [contentRefreshKey, setContentRefreshKey] = useState(0);
   const bumpContentRefresh = useCallback(() => setContentRefreshKey((k) => k + 1), []);
   const draggedRef = useRef(false);
+  const [hostDialogOpen, setHostDialogOpen] = useState(false);
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
 
   // Show warnings for operators that failed to load
   useEffect(() => {
@@ -107,8 +121,8 @@ export default function App() {
 
   // Persist UI selection state on change
   useEffect(() => {
-    saveUiState({ sidebarMode });
-  }, [sidebarMode]);
+    saveUiState({ activeView, sidebarOpen });
+  }, [activeView, sidebarOpen]);
 
   const handleRestore = useCallback(() => {
     if (draggedRef.current) { draggedRef.current = false; return; }
@@ -187,9 +201,6 @@ export default function App() {
   return (
     <div className="app">
       <AppBar
-        activeLoadoutName={app.loadoutTree.nodes.find((n) => n.id === app.activeLoadoutId)?.name ?? ''}
-        onRenameLoadout={app.handleRenameActiveLoadout}
-        onClearAll={() => app.setConfirmClearAll(true)}
         onDevlog={() => app.setDevlogOpen(true)}
         onKeys={() => app.setKeysOpen((p) => !p)}
         interactionMode={app.interactionMode}
@@ -197,6 +208,19 @@ export default function App() {
         lightMode={app.lightMode}
         onToggleTheme={app.handleToggleTheme}
         onSettings={() => app.setSettingsOpen(true)}
+        collaborationStatus={app.collaboration.session?.connectionStatus ?? null}
+        collaborationPeerCount={app.collaboration.session?.peers.length ?? 0}
+        collaborationRoomId={app.collaboration.session?.roomId ?? null}
+        collaborationPeers={app.collaboration.session?.peers.map((p) => ({
+          peerId: p.peerId,
+          displayName: p.displayName,
+          role: p.role,
+          isLocal: p.peerId === app.collaboration.session?.localPeerId,
+        })) ?? []}
+        collaborationReconnect={app.collaboration.session?.reconnect}
+        onHostCollaboration={() => setHostDialogOpen(true)}
+        onJoinCollaboration={() => setJoinDialogOpen(true)}
+        onLeaveCollaboration={() => app.collaboration.leaveRoom()}
       />
 
       <div ref={app.appBodyRef} className="app-body" style={{ '--tl-flex': `${app.splitPct} 0 0`, '--sheet-flex': `${100 - app.splitPct} 0 0` } as React.CSSProperties}>
@@ -218,26 +242,65 @@ export default function App() {
           onOpenViewsModal={(parentId) => setViewsModal({ parentId })}
           onClearViews={app.handleClearLoadoutViews}
           viewWarningMap={app.viewWarningMap}
+          syncingLoadoutUuids={app.collaboration.syncingLoadoutUuids}
           sidebarMode={sidebarMode}
           onSidebarModeChange={(mode) => {
-            setSidebarMode(mode);
-            if (mode === SidebarModeEnum.LOADOUTS) {
-              setWorkbenchOpen(false);
-            } else if (mode === SidebarModeEnum.WORKBENCH) {
+            if (mode === null) {
+              // Collapse rail; keep main view intact.
+              setSidebarOpen(false);
+              return;
+            }
+            setActiveView(mode);
+            setSidebarOpen(true);
+            if (mode === SidebarModeEnum.WORKBENCH) {
               setWorkbenchOpen(true);
               if (!workbenchInitial) setWorkbenchInitial(undefined);
+            } else {
+              setWorkbenchOpen(false);
             }
           }}
         />
 
-        {workbenchOpen && sidebarMode === SidebarModeEnum.WORKBENCH ? (
+        {activeView === SidebarModeEnum.STATISTICS && sidebarOpen && (
+          <StatisticsSidebar
+            tree={stats.statisticsTree}
+            activeId={stats.activeStatisticsId}
+            onTreeChange={stats.handleTreeChange}
+            onSelect={stats.handleSelectStatistics}
+            onNew={stats.handleNewStatistics}
+            onDelete={stats.handleDeleteStatistics}
+            onWarning={app.setWarningMessage}
+          />
+        )}
+
+        {activeView === SidebarModeEnum.STATISTICS ? (
+          <Suspense fallback={<div className="tl-loading" style={{ flex: 1 }} />}>
+            <StatisticsView
+              data={stats.activeStatisticsData}
+              statisticsName={stats.activeStatisticsNode?.name ?? null}
+              loadoutTree={app.loadoutTree}
+              activeLoadoutId={app.activeLoadoutId}
+              resolvedSources={stats.resolvedSources}
+              sourceBundles={stats.sourceBundles}
+              onAddSource={stats.handleAddSource}
+              onRemoveSource={stats.handleRemoveSource}
+              onNewStatistics={stats.handleNewStatistics}
+              onToggleColumn={stats.handleToggleColumn}
+              onToggleOperator={stats.handleToggleOperator}
+              onSetCritMode={stats.handleSetCritMode}
+              onSetComparisonMode={stats.handleSetComparisonMode}
+              onReorderSources={stats.handleReorderSources}
+            />
+          </Suspense>
+        ) : workbenchOpen && activeView === SidebarModeEnum.WORKBENCH ? (
           <Suspense fallback={<div className="tl-loading" style={{ flex: 1 }} />}>
             <UnifiedCustomizer
               initial={workbenchInitial}
               onSave={handleWorkbenchSave}
               onCancel={() => {
                 setWorkbenchOpen(false);
-                setSidebarMode(SidebarModeEnum.LOADOUTS);
+                setActiveView(SidebarModeEnum.LOADOUTS);
+                setSidebarOpen(true);
               }}
               onContentChanged={bumpContentRefresh}
               contentRefreshKey={contentRefreshKey}
@@ -415,6 +478,8 @@ export default function App() {
                     overrides={app.overrides}
                     plannerHidden={app.hiddenPane === 'left'}
                     resourceGraphs={app.resourceGraphs}
+                    onEditLoadout={app.readOnly ? undefined : app.handleEditLoadout}
+                    editingSlotId={app.editingSlot?.slotId}
                   />
                   {(app.hidePreview === 'right' || app.showPreview === 'right') && (
                     <div className="pane-hide-overlay">
@@ -627,6 +692,27 @@ export default function App() {
           />
         );
       })()}
+
+      <CollaborationHostDialog
+        open={hostDialogOpen}
+        tree={app.loadoutTree}
+        defaultDisplayName={app.collaboration.session?.localDisplayName ?? 'Player'}
+        onHost={(displayName, uuids, maxPeers) => {
+          app.collaboration.hostRoom(displayName, uuids, maxPeers);
+          for (const uuid of uuids) app.collaboration.shareLoadout(uuid);
+        }}
+        onClose={() => setHostDialogOpen(false)}
+      />
+
+      <CollaborationJoinDialog
+        open={joinDialogOpen}
+        defaultDisplayName="Player"
+        onJoin={(roomId, displayName) => {
+          app.collaboration.joinRoom(roomId, displayName);
+          setJoinDialogOpen(false);
+        }}
+        onClose={() => setJoinDialogOpen(false)}
+      />
 
     </div>
   );

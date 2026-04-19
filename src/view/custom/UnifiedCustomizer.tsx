@@ -39,7 +39,7 @@ import { deleteCustomOperatorStatus } from '../../controller/custom/customOperat
 import { deleteCustomOperatorTalent } from '../../controller/custom/customOperatorTalentController';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { getGearPiecesBySet, getWeapon, getWeaponIdByName, getWeaponEffectDefs, getGearEffectDefs, getGenericWeaponSkill, getNamedWeaponSkill, getWeaponStats } from '../../controller/gameDataStore';
-import { getGearSetData, getGear } from '../../controller/gameDataStore';
+import { getGearSetData, getGearSet } from '../../controller/gameDataStore';
 import { getGears } from '../../consts/gearSetEffects';
 import { GearSetType, GearCategory, SegmentType, ELEMENT_COLORS, ElementType, UnitType, EventCategoryType, CustomWeaponSkillKind } from '../../consts/enums';
 import type { SkillType, SkillDef, EventSegmentData, EventFrameMarker, TimelineEvent } from '../../consts/viewTypes';
@@ -421,7 +421,7 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
         <div className="uc-view-body">
           {customData ? (
             <div className="ev-readonly">
-              {renderSectionForm(customData, selectedItem.category, noop)}
+              {renderSectionForm(customData, selectedItem.category, noop, (customData as { id?: string }).id)}
             </div>
           ) : (
             <div className="ev-readonly">
@@ -1829,7 +1829,7 @@ function BuiltinGearSetView({ id }: { id: string }) {
   const passiveEntry = getGears(id as GearSetType);
   const dslDefs = getGearEffectDefs(id);
   const rawEffect = useMemo(() => {
-    const ef = getGear(id);
+    const ef = getGearSet(id);
     return ef ? ef.serialize() as Record<string, unknown> : null;
   }, [id]);
   const [activeTab, setActiveTab] = useState<string>(GearCategory.ARMOR);
@@ -2001,15 +2001,12 @@ function BuiltinSkillView({ id }: { id: string }) {
           {(() => {
             const segs = skill.defaultSegments ?? [];
             const totalDur = computeSegmentsSpan(segs);
-            const activeSeg = segs.find(s => s.properties.segmentTypes?.includes(SegmentType.ACTIVE));
             const cooldownSeg = segs.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
-            const activeDur = activeSeg?.properties.duration ?? 0;
             const cooldownDur = cooldownSeg?.properties.duration ?? 0;
             const activationDur = totalDur - cooldownDur;
             return (
               <>
                 <Field label="Activation" value={`${activationDur}f (${formatFlat(activationDur / 120)}s)`} />
-                <Field label="Active" value={`${activeDur}f (${formatFlat(activeDur / 120)}s)`} />
                 <Field label="Cooldown" value={`${cooldownDur}f (${formatFlat(cooldownDur / 120)}s)`} />
               </>
             );

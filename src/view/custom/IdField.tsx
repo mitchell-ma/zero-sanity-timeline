@@ -10,9 +10,13 @@ interface IdFieldProps {
   onChange: (id: string) => void;
   /** The item's original ID (before any edits). Used to exclude self from conflict check. */
   originalId?: string;
+  /** Container class override. Defaults to 'wz-field' (column layout). */
+  fieldClassName?: string;
+  /** Label span class override. Defaults to undefined (no extra class). */
+  labelClassName?: string;
 }
 
-export default function IdField({ value, onChange, originalId }: IdFieldProps) {
+export default function IdField({ value, onChange, originalId, fieldClassName = 'wz-field', labelClassName }: IdFieldProps) {
   const [warning, setWarning] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,8 +33,8 @@ export default function IdField({ value, onChange, originalId }: IdFieldProps) {
   }, [value, originalId]);
 
   return (
-    <label className="wz-field">
-      <span>ID</span>
+    <label className={fieldClassName}>
+      <span className={labelClassName}>ID</span>
       <input
         type="text"
         value={value}

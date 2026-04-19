@@ -17,7 +17,8 @@
           "effects": [
             {
               "verb": "APPLY",
-              "object": "SHIELD",
+              "object": "STAT",
+              "objectId": "SHIELD",
               "toDeterminer": "THIS",
               "to": "OPERATOR",
               "with": {

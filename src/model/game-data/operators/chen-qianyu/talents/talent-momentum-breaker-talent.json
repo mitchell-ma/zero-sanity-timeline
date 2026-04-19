@@ -19,7 +19,10 @@
         {
           "verb": "CONSUME",
           "object": "CHARGE",
-          "from": "ENEMY"
+          "from": "ENEMY",
+          "with": {
+            "stacks": "MAX"
+          }
         },
         {
           "verb": "APPLY",
@@ -49,7 +52,10 @@
         {
           "verb": "CONSUME",
           "object": "CHARGE",
-          "from": "ENEMY"
+          "from": "ENEMY",
+          "with": {
+            "stacks": "MAX"
+          }
         },
         {
           "verb": "APPLY",
@@ -79,7 +85,10 @@
         {
           "verb": "CONSUME",
           "object": "CHARGE",
-          "from": "ENEMY"
+          "from": "ENEMY",
+          "with": {
+            "stacks": "MAX"
+          }
         },
         {
           "verb": "APPLY",

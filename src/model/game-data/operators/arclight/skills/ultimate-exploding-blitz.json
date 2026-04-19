@@ -174,7 +174,6 @@
               ]
             },
             {
-              "_note": "If the enemy already has Electric Infliction, consume it and forcibly apply Electrification.",
               "conditions": [
                 {
                   "subject": "ENEMY",
@@ -211,7 +210,6 @@
               ]
             },
             {
-              "_note": "Otherwise, apply a fresh Electric Infliction stack.",
               "conditions": [
                 {
                   "subject": "ENEMY",
