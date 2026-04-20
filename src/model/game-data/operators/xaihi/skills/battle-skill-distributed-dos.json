@@ -1,8 +1,7 @@
 {
   "properties": {
-    "eventType": "SKILL",
-    "eventCategoryType": "BATTLE",
     "id": "DISTRIBUTED_DOS",
+    "eventCategoryType": "BATTLE",
     "descriptionParams": {
       "heal_value": 324,
       "will_up": 0.76,
@@ -24,7 +23,10 @@
       "1-atk_up": 0.85,
       "-atk_up": -0.15,
       "atk_up-1": -0.85
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "XAIHI",

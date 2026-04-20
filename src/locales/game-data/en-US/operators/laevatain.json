@@ -155,19 +155,19 @@
     "text": "Scorching Heart",
     "dataStatus": "RECONCILED"
   },
-  "op.LAEVATAIN.talent.RE_IGNITION_TALENT.event.description": {
+  "op.LAEVATAIN.talent.RE_IGNITION_T2.event.description": {
     "text": "When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. This effect triggers once every 120s.",
     "dataStatus": "RECONCILED"
   },
-  "op.LAEVATAIN.talent.RE_IGNITION_TALENT.event.name": {
+  "op.LAEVATAIN.talent.RE_IGNITION_T2.event.name": {
     "text": "Re-Ignition (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.LAEVATAIN.talent.SCORCHING_HEART_TALENT.event.description": {
+  "op.LAEVATAIN.talent.SCORCHING_HEART_T1.event.description": {
     "text": "After the controlled operator's Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack of Heat Infliction absorbed gives Laevatain 1 stack of Melting Flame (max stacks: 4). After reaching 4 stacks, DMG dealt by Laevatain ignores 15 Heat Resistance of the enemy for 20s. Laevatain also absorbs Heat Infliction from enemies defeated nearby.",
     "dataStatus": "RECONCILED"
   },
-  "op.LAEVATAIN.talent.SCORCHING_HEART_TALENT.event.name": {
+  "op.LAEVATAIN.talent.SCORCHING_HEART_T1.event.name": {
     "text": "Scorching Heart (T1)",
     "dataStatus": "RECONCILED"
   }

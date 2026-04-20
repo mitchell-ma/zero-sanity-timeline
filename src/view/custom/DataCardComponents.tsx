@@ -8,7 +8,7 @@
 import React, { useState, useCallback, createContext, useContext, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { VerbType, NounType } from '../../dsl/semantics';
-import { splitConditionText, translateEffectParts, translateNounPhrase } from '../../dsl/semanticsTranslation';
+import { splitConditionText, translateEffectParts, translateNounPhrase, translateDslToken } from '../../dsl/semanticsTranslation';
 import { PERMANENT_DURATION, UnitType } from '../../consts/enums';
 import { formatFlat } from '../../controller/info-pane/loadoutPaneController';
 import type { JsonSkillData } from './OperatorEventEditor';
@@ -31,6 +31,10 @@ export interface VaryByLoadout {
   talentOneLevel?: number;
   talentTwoLevel?: number;
   attributeIncreaseLevel?: number;
+  /** Active weapon-skill rank (1–9) for `VARY_BY RANK of WEAPON of THIS
+   *  OPERATOR`. Resolved by the caller from the loadout's weapon slot the
+   *  current card belongs to (skill1/2/3Level). */
+  weaponSkillRank?: number;
   /**
    * Which talent slot TALENT_LEVEL dimensions should resolve against for this
    * card. Set by EventPane when the event's id matches the operator's T2 id;
@@ -50,6 +54,7 @@ function resolveActiveIndex(loadout: VaryByLoadout | undefined, dimension: strin
   if (!loadout || !dimension) return undefined;
   switch (dimension) {
     case NounType.SKILL_LEVEL: return loadout.skillLevel != null ? loadout.skillLevel - 1 : undefined;
+    case NounType.RANK: return loadout.weaponSkillRank != null ? loadout.weaponSkillRank - 1 : undefined;
     case NounType.POTENTIAL:   return loadout.potential;
     case NounType.TALENT_LEVEL: {
       const slot = talentSlot ?? loadout.talentSlot ?? 'one';
@@ -447,7 +452,7 @@ function PropertyTree({ label, value }: { label: string; value: Record<string, u
 // ── PropertiesView ─────────────────────────────────────────────────────────
 
 const OMIT_PROPERTY_KEYS = new Set([
-  'id', 'name', 'description', 'element',
+  'id', 'name', 'description', 'descriptionParams', 'element',
   'toDeterminer', 'targetDeterminer', 'fromDeterminer',
 ]);
 
@@ -709,9 +714,7 @@ function VaryByLeaf({ node, label, editState, basePath, talentSlot }: {
   axisParts.push(String(node.object ?? 'LEVEL').replace(/_/g, ' ').toLowerCase());
   if (node.objectId) axisParts.push(String(node.objectId).replace(/_/g, ' ').toLowerCase());
   const axis = axisParts.join(' ');
-  const ofClause = node.of as { determiner?: string; object?: string } | undefined;
-  const ofParts = ofClause ? [ofClause.determiner, ofClause.object ?? 'OPERATOR'].filter(Boolean).map(s => String(s).toLowerCase()).join(' ') : '';
-  const of = ofParts ? ` of ${ofParts}` : '';
+  const of = node.of ? formatOfChain(node.of as Record<string, unknown>) : '';
   const labelFn = VARY_AXIS_LABELS[String(node.object)] ?? ((i: number) => String(i + 1));
 
   const loadout = useContext(VaryByContext);
@@ -769,10 +772,10 @@ function ConditionLine({ condition }: { condition: Record<string, unknown> }) {
  */
 function formatOfChain(of: Record<string, unknown>): string {
   const parts: string[] = [];
-  if (of.determiner) parts.push(String(of.determiner).replace(/_/g, ' ').toLowerCase());
-  if (of.objectQualifier) parts.push(String(of.objectQualifier).replace(/_/g, ' ').toLowerCase());
-  if (of.objectId) parts.push(String(of.objectId).replace(/_/g, ' ').toLowerCase());
-  else if (of.object) parts.push(String(of.object).replace(/_/g, ' ').toLowerCase());
+  if (of.determiner) parts.push(translateDslToken(String(of.determiner)).toLowerCase());
+  if (of.objectQualifier) parts.push(translateDslToken(String(of.objectQualifier)));
+  if (of.objectId) parts.push(translateDslToken(String(of.objectId)));
+  if (of.object) parts.push(translateDslToken(String(of.object)));
   const phrase = parts.length > 0 ? ` of ${parts.join(' ')}` : '';
   // Recurse into nested of-clause (e.g. "of CRYO INFLICTION → of THIS ENEMY")
   const nested = of.of as Record<string, unknown> | undefined;
@@ -799,9 +802,15 @@ function ValueLeaf({ node, label }: { node: Record<string, unknown>; label?: str
     // Render the full `of` possessor chain including qualifier and nested of-clause,
     // e.g. `stacks of CRYO INFLICTION of this ENEMY`.
     const ofLabel = formatOfChain(node.of as Record<string, unknown>);
-    return <span className="ops-vt-leaf">{label && <span className="ops-prop-tree-leaf-label">{label}</span>} {String(node.object).toLowerCase()}{ofLabel}</span>;
+    const qual = node.objectQualifier ? `${translateDslToken(String(node.objectQualifier))} ` : '';
+    const id = node.objectId ? `${translateDslToken(String(node.objectId))} ` : '';
+    return <span className="ops-vt-leaf">{label && <span className="ops-prop-tree-leaf-label">{label}</span>} {qual}{id}{translateDslToken(String(node.object))}{ofLabel}</span>;
   }
-  if (node.object) return <span className="ops-vt-leaf">{String(node.object).toLowerCase()} stacks</span>;
+  if (node.object) {
+    const qual = node.objectQualifier ? `${translateDslToken(String(node.objectQualifier))} ` : '';
+    const id = node.objectId ? `${translateDslToken(String(node.objectId))} ` : '';
+    return <span className="ops-vt-leaf">{qual}{id}{translateDslToken(String(node.object))} stacks</span>;
+  }
   return <span className="ops-vt-leaf">{JSON.stringify(node)}</span>;
 }
 
@@ -1460,8 +1469,9 @@ export function TabbedSegmentView({ entry, critState, editState }: {
                 type="button"
                 className={`ops-conjoined-seg${safeSeg === si ? ' ops-conjoined-seg--current' : ''}${isActiveSeg ? ' ops-conjoined-seg--active' : ''}`}
                 onClick={() => handleSegChange(si)}
+                title={s.properties?.name || `Segment ${si + 1}`}
               >
-                {s.properties?.name || `Segment ${si + 1}`}
+                <span className="ops-conjoined-seg-label">{s.properties?.name || `Segment ${si + 1}`}</span>
               </button>
             );
           })}
@@ -1587,16 +1597,14 @@ export function TabbedSegmentView({ entry, critState, editState }: {
               }
               return null;
             })()}
-            {segClause && segClause.length > 0 && (
-              <div className="ops-prop-tree">
-                <span className="ops-prop-tree-label">{t('dsl.clauseType.clause')}</span>
-                <FrameClauseView
-                  clauses={segClause as unknown as Record<string, unknown>[]}
-                  editState={editState}
-                  basePath={`segments[${safeSeg}].clause`}
-                />
-              </div>
-            )}
+            <ClauseTabs
+              clause={segClause as unknown[]}
+              onTrigger={(seg.onTriggerClause ?? []) as unknown[]}
+              onEntry={(seg.onEntryClause ?? []) as unknown[]}
+              onExit={(seg.onExitClause ?? []) as unknown[]}
+              editState={editState}
+              basePath={`segments[${safeSeg}]`}
+            />
             {segFrames.map((f, fi) => {
               const fOffset = f.properties?.offset ?? f.offset as { value: unknown; unit: string } | undefined;
               const fOffsetStr = formatDuration(fOffset);

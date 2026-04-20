@@ -1,13 +1,9 @@
 {
   "properties": {
-    "enhancementTypes": [
-      "FINISHER"
-    ],
-    "eventType": "SKILL",
+    "id": "ROD_CASTING_FINISHER",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "PHYSICAL",
-    "id": "ROD_CASTING_FINISHER",
     "descriptionParams": {
       "atk_scale_display": 9,
       "atk_scale1": 1.8,
@@ -21,7 +17,10 @@
       "1-atk_scale2": -6.2,
       "-atk_scale2": -7.2,
       "atk_scale2-1": 6.2
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ALESH",
@@ -86,6 +85,12 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "PERFORM",
+                  "object": "SKILL",
+                  "to": "ENEMY",
+                  "objectId": "FINISHER"
                 }
               ]
             }

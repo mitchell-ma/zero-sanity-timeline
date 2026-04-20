@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "WULFGARD_P1_LONE_WOLF",
+    "id": "LONE_WOLF_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "Str": 15,
@@ -59,8 +61,11 @@
       "-Agi": -15,
       "Agi-1": 14
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "WULFGARD",

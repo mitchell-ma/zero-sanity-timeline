@@ -15,7 +15,7 @@ import type { Interaction } from '../../dsl/semantics';
 import type { StacksConfig, DurationConfig, StatusSegment } from './weaponStatusesStore';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
-import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues, validateSegmentShape } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues, validateSegmentShape, validateEventTypes } from './validationUtils';
 import { LocaleKey, resolveEventName, resolveOptionalEventDescription } from '../../locales/gameDataLocale';
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -43,7 +43,7 @@ function validateLocalEffect(ef: Record<string, unknown>, path: string): string[
 // ── Gear validation ─────────────────────────────────────────────────────────
 
 const VALID_GEAR_TOP_KEYS = new Set(['segments', 'onTriggerClause', 'properties', 'metadata']);
-const VALID_GEAR_PROPS_KEYS = new Set(['id', 'rarity', 'piecesRequired', 'eventType', 'eventCategoryType']);
+const VALID_GEAR_PROPS_KEYS = new Set(['id', 'rarity', 'piecesRequired', 'eventTypes', 'eventCategoryType']);
 
 /** Validate a raw GearSet (set-level effect) JSON entry. */
 export function validateGearSet(json: Record<string, unknown>): string[] {
@@ -80,6 +80,7 @@ export function validateGearSet(json: Record<string, unknown>): string[] {
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_GEAR_PROPS_KEYS, 'properties'));
   errors.push(...checkIdAndName(props, 'properties'));
+  errors.push(...validateEventTypes(props, 'properties'));
 
   const meta = json.metadata as Record<string, unknown> | undefined;
   if (meta) errors.push(...checkKeys(meta, VALID_METADATA_KEYS, 'metadata'));
@@ -90,7 +91,7 @@ export function validateGearSet(json: Record<string, unknown>): string[] {
 // ── GearStat validation ─────────────────────────────────────────────────────
 
 const VALID_GEAR_STAT_TOP_KEYS = new Set(['segments', 'properties', 'metadata']);
-const VALID_GEAR_STAT_PROPS_KEYS = new Set(['id', 'duration', 'stacks', 'cooldownSeconds', 'usageLimit', 'enhancementType', 'eventType', 'eventCategoryType']);
+const VALID_GEAR_STAT_PROPS_KEYS = new Set(['id', 'duration', 'stacks', 'cooldownSeconds', 'usageLimit', 'eventTypes', 'eventCategoryType']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 
@@ -112,6 +113,7 @@ export function validateGearStat(json: Record<string, unknown>): string[] {
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_GEAR_STAT_PROPS_KEYS, 'properties'));
   errors.push(...checkIdAndName(props, 'properties'));
+  errors.push(...validateEventTypes(props, 'properties'));
 
   if (props.duration) {
     const dur = props.duration as Record<string, unknown>;
@@ -154,7 +156,7 @@ export class GearSet {
   readonly rarity: number;
   readonly piecesRequired?: number;
   readonly description?: string;
-  readonly eventType: EventType;
+  readonly eventTypes: EventType[];
   readonly eventCategoryType: string;
   readonly categoryType = EventCategoryType.GEAR;
   readonly originId: string;
@@ -175,7 +177,7 @@ export class GearSet {
       const desc = resolveOptionalEventDescription(gearPrefix);
       if (desc !== undefined) this.description = desc;
     }
-    this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
+    this.eventTypes = (props.eventTypes as EventType[]) ?? [EventType.STATUS];
     this.eventCategoryType = props.eventCategoryType as string;
     this.originId = (meta.originId ?? '') as string;
     this.dataSources = (meta.dataSources ?? []) as string[];
@@ -199,7 +201,7 @@ export class GearSet {
         rarity: this.rarity,
         ...(this.piecesRequired ? { piecesRequired: this.piecesRequired } : {}),
         ...(this.description ? { description: this.description } : {}),
-        eventType: this.eventType,
+        eventTypes: this.eventTypes,
         eventCategoryType: this.eventCategoryType,
       },
       metadata: {
@@ -219,7 +221,7 @@ export class GearSet {
         ...(this.name ? { name: this.name } : {}),
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
-        eventType: EventType.STATUS,
+        eventTypes: [EventType.STATUS],
         eventCategoryType: NounType.GEAR_STAT,
       },
       metadata: {
@@ -251,7 +253,7 @@ export class GearStat {
   readonly stacks: StacksConfig;
   readonly cooldownSeconds?: number;
   readonly usageLimit?: { verb: string; value: number };
-  readonly eventType: EventType;
+  readonly eventTypes: EventType[];
   readonly eventCategoryType: string;
   readonly categoryType = EventCategoryType.GEAR;
   readonly originId: string;
@@ -276,7 +278,7 @@ export class GearStat {
     }) as StacksConfig;
     if (props.cooldownSeconds) this.cooldownSeconds = props.cooldownSeconds as number;
     if (props.usageLimit) this.usageLimit = props.usageLimit as { verb: string; value: number };
-    this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
+    this.eventTypes = (props.eventTypes as EventType[]) ?? [EventType.STATUS];
     this.eventCategoryType = props.eventCategoryType as string;
     this.originId = (meta.originId ?? '') as string;
   }
@@ -301,7 +303,7 @@ export class GearStat {
         duration: this.duration,
         stacks: this.stacks,
         ...(this.cooldownSeconds ? { cooldownSeconds: this.cooldownSeconds } : {}),
-        eventType: this.eventType,
+        eventTypes: this.eventTypes,
         eventCategoryType: this.eventCategoryType,
       },
       ...(this.usageLimit ? { usageLimit: this.usageLimit.value } : {}),

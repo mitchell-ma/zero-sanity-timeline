@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ANTAL_POTENTIAL_3",
+    "id": "APPLIED_ORIGINIUM_THEORY_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "potential_3": 1,
@@ -16,8 +18,10 @@
       "-potential_3_atb": -15,
       "potential_3_atb-1": 14
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ANTAL",

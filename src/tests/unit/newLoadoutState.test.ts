@@ -38,8 +38,8 @@ jest.mock('../../utils/loadoutRegistry', () => ({
 }));
 
 jest.mock('../../utils/enemies', () => ({
-  ALL_ENEMIES: [{ id: 'rhodagn', name: 'Rhodagn' }],
-  DEFAULT_ENEMY: { id: 'rhodagn', name: 'Rhodagn' },
+  ALL_ENEMIES: [{ id: 'RHODAGN', name: 'Rhodagn' }],
+  DEFAULT_ENEMY: { id: 'RHODAGN', name: 'Rhodagn' },
 }));
 
 jest.mock('../../view/OperatorLoadoutHeader', () => ({
@@ -53,7 +53,7 @@ describe('New Loadout State Isolation', () => {
   test('serializeSheet without overrides omits the field', () => {
     const sheet = serializeSheet(
       [null, null, null, null],
-      'rhodagn',
+      'RHODAGN',
       undefined,
       [],
       {},
@@ -68,7 +68,7 @@ describe('New Loadout State Isolation', () => {
   test('serializeSheet with empty overrides omits the field', () => {
     const sheet = serializeSheet(
       [null, null, null, null],
-      'rhodagn',
+      'RHODAGN',
       undefined,
       [],
       {},
@@ -85,7 +85,7 @@ describe('New Loadout State Isolation', () => {
     const overrides = { 'stagger-frailty-node-1-3360': { propertyOverrides: { startFrame: 3400 } } };
     const sheet = serializeSheet(
       [null, null, null, null],
-      'rhodagn',
+      'RHODAGN',
       undefined,
       [],
       {},
@@ -101,7 +101,7 @@ describe('New Loadout State Isolation', () => {
   test('applySheetData returns empty overrides when field is missing', () => {
     const sheet = serializeSheet(
       [null, null, null, null],
-      'rhodagn',
+      'RHODAGN',
       undefined,
       [],
       {},
@@ -116,7 +116,7 @@ describe('New Loadout State Isolation', () => {
   test('applySheetData returns empty overrides when field is empty', () => {
     const sheet = serializeSheet(
       [null, null, null, null],
-      'rhodagn',
+      'RHODAGN',
       undefined,
       [],
       {},
@@ -138,7 +138,7 @@ describe('New Loadout State Isolation', () => {
     };
     const previousSheet = serializeSheet(
       ['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA'],
-      'rhodagn',
+      'RHODAGN',
       undefined,
       [{ uid: 'e1', id: 'test', name: 'test', ownerEntityId: 'slot-0', columnId: 'battle', startFrame: 0, segments: [{ properties: { duration: 264 } }] }],
       {},
@@ -153,7 +153,7 @@ describe('New Loadout State Isolation', () => {
     // Simulate: create new loadout (no overrides passed)
     const newSheet = serializeSheet(
       ['LAEVATAIN', 'AKEKURI', 'ANTAL', 'ARDELIA'],
-      'rhodagn',
+      'RHODAGN',
       undefined,
       [],
       {},

@@ -21,6 +21,7 @@ import {
   PHYSICAL_INFLICTION_COLUMN_IDS,
   REACTION_COLUMNS,
   ELEMENT_TO_INFLICTION_COLUMN,
+  INFLICTION_TO_REACTION,
 } from '../../model/channels';
 import { getStatusById } from '../gameDataStore';
 
@@ -130,6 +131,9 @@ export function resolveColumnIds(
     return Object.values(INFLICTION_COLUMNS);
   }
   if (objectId === NounType.REACTION) {
+    // ARTS qualifier narrows to the 4 elemental (arts) reactions, excluding
+    // SHATTER which is a physical reaction.
+    if (qualifier === AdjectiveType.ARTS) return Object.values(INFLICTION_TO_REACTION);
     if (qualifier) { const c = (REACTION_COLUMNS as Record<string, string>)[qualifier]; return c ? [c] : []; }
     return Object.values(REACTION_COLUMNS);
   }

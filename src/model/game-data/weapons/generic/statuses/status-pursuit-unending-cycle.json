@@ -1,0 +1,83 @@
+{
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 20
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "RANK",
+                  "value": [
+                    0.12,
+                    0.144,
+                    0.168,
+                    0.192,
+                    0.216,
+                    0.24,
+                    0.264,
+                    0.288,
+                    0.336
+                  ],
+                  "of": {
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "UNENDING_CYCLE",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 20
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventCategoryType": "WEAPON",
+    "eventTypes": [
+      "STATUS"
+    ]
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -148,7 +148,10 @@ type InformationPaneProps = {
       enemy: Enemy;
       enemyStats: EnemyStats;
       onEnemyStatsChange: (stats: EnemyStats) => void;
+      onResetEnemyStats?: () => void;
       onClose: () => void;
+      allEnemies?: Enemy[];
+      onSwapEnemy?: (enemyId: string) => void;
     }
   | {
       mode: InfoPaneMode.RESOURCE;
@@ -277,7 +280,10 @@ export default function InformationPane(props: InformationPaneProps) {
           enemy={props.enemy}
           stats={props.enemyStats}
           onStatsChange={props.onEnemyStatsChange}
+          onResetStats={props.onResetEnemyStats}
           onClose={handleClose}
+          allEnemies={props.allEnemies}
+          onSwapEnemy={props.onSwapEnemy}
         />
       ) : props.mode === InfoPaneMode.RESOURCE ? (
         <ResourcePane

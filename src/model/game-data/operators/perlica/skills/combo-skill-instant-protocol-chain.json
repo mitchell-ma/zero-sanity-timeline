@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "INSTANT_PROTOCOL_CHAIN",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
-    "id": "INSTANT_PROTOCOL_CHAIN",
     "descriptionParams": {
       "atk_scale": 1.8,
       "poise": 10,
@@ -21,7 +20,10 @@
       "1-duration": -4,
       "-duration": -5,
       "duration-1": 4
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

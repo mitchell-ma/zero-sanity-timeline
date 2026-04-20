@@ -605,11 +605,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "RAPID_FIRE_AKIMBO_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "HEAT",
-    "id": "RAPID_FIRE_AKIMBO_BATK",
     "descriptionParams": {
       "atk_scale": 1.52,
       "atb": 18,
@@ -623,7 +622,10 @@
       "1-poise": -17,
       "-poise": -18,
       "poise-1": 17
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "WULFGARD",

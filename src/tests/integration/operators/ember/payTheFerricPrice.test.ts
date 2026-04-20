@@ -23,7 +23,7 @@ import type { MiniTimeline } from '../../../../consts/viewTypes';
 const EMBER_JSON = require('../../../../model/game-data/operators/ember/ember.json');
 const EMBER_ID: string = EMBER_JSON.id;
 
-const PAY_THE_FERRIC_PRICE_ID = 'PAY_THE_FERRIC_PRICE';
+const PAY_THE_FERRIC_PRICE_ID = 'PAY_THE_FERRIC_PRICE_T2';
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT_EMBER = 'slot-0';

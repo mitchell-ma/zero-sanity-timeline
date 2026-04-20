@@ -1,6 +1,59 @@
 {
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 10
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "ALL",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.15
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
   "properties": {
-    "id": "ALESH_POTENTIAL_3",
+    "id": "MAY_THE_WILLING_BITE_P3",
+    "to": "TEAM",
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ],
     "level": 3,
     "descriptionParams": {
       "potential_3": 1,
@@ -15,12 +68,13 @@
       "1-Duration": -9,
       "-Duration": -10,
       "Duration-1": 9
-    },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    }
   },
   "metadata": {
     "originId": "ALESH",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
     "dataStatus": "VERIFIED"
   }
 }

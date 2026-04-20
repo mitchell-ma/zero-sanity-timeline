@@ -542,8 +542,8 @@ describe('G. Operator Identity', () => {
   });
 
   test('G4: Talent IDs and attribute increase', () => {
-    expect(mockAntalJson.talents.one).toBe('IMPROVISER_TALENT');
-    expect(mockAntalJson.talents.two).toBe('SUBCONSCIOUS_ACT_TALENT');
+    expect(mockAntalJson.talents.one).toBe('IMPROVISER_T1');
+    expect(mockAntalJson.talents.two).toBe('SUBCONSCIOUS_ACT_T2');
     expect(mockAntalJson.talents.attributeIncrease.id).toBe('KEEN_MIND');
   });
 

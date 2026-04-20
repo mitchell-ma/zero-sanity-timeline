@@ -17,10 +17,12 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
     "eventCategoryType": "PHYSICAL_STATUS",
     "crowdControls": [
       "LIFT"
+    ],
+    "eventTypes": [
+      "STATUS"
     ]
   },
   "metadata": {

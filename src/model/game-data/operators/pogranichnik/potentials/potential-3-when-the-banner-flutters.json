@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "WHEN_THE_BANNER_FLUTTERS",
+    "id": "WHEN_THE_BANNER_FLUTTERS_P3",
     "level": 3,
     "descriptionParams": {
       "atb_gain": 60,
@@ -28,8 +28,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "POGRANICHNIK",

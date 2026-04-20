@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "PEAL_OF_THUNDER",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "PEAL_OF_THUNDER",
     "descriptionParams": {
       "atk_scale": 1.17,
       "poise": 5,
@@ -21,7 +20,10 @@
       "1-usp": -4,
       "-usp": -5,
       "usp-1": 4
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

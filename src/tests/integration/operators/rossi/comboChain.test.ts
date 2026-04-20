@@ -189,8 +189,7 @@ describe('C. Perfect Timing status lifecycle', () => {
     expect(ptEvents.length).toBeGreaterThanOrEqual(1);
   });
 
-  // Skip: PERFECT_TIMING status production requires engine to process combo frame FIRST_MATCH clause
-  it.skip('C2: Empowered combo consumes PERFECT_TIMING status', () => {
+  it('C2: Empowered combo consumes PERFECT_TIMING status', () => {
     const { result } = setupRossi();
     placeComboTriggers(result, 1);
 
@@ -246,8 +245,7 @@ describe('C. Perfect Timing status lifecycle', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('D. Chain validation — maxSkills enforcement', () => {
-  // Skip: empowered combo placement requires PERFECT_TIMING status from engine frame clause processing
-  it.skip('D1: Normal combo → empowered combo in strict mode (overlap bypass in multi-skill window)', () => {
+  it('D1: Normal combo → empowered combo in strict mode (overlap bypass in multi-skill window)', () => {
     const { result } = setupRossi();
     placeComboTriggers(result, 1);
 
@@ -281,7 +279,9 @@ describe('D. Chain validation — maxSkills enforcement', () => {
     );
     const comboVM = viewModels.get(comboCol!.key);
     expect(comboVM).toBeDefined();
-    const rossiCombos = comboVM!.events.filter(ev => ev.ownerEntityId === SLOT_ROSSI);
+    const rossiCombos = comboVM!.events.filter(
+      ev => ev.ownerEntityId === SLOT_ROSSI && ev.columnId === NounType.COMBO,
+    );
     expect(rossiCombos).toHaveLength(2);
   });
 

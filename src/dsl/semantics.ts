@@ -197,6 +197,10 @@ export enum NounType {
   SKILL_LEVEL = "SKILL_LEVEL",
   /** Weapon level (1-indexed, 1–90). Used as VARY_BY axis for weapon base-attack scaling. */
   WEAPON_LEVEL = "WEAPON_LEVEL",
+  /** Weapon skill rank (1-indexed, 1–9 → array[0–8]). Used by `VARY_BY RANK of
+   *  THIS WEAPON` in weapon-skill / weapon-status configs so values scale with
+   *  the rank the wielder selected per-skill in the combat loadout. */
+  RANK = "RANK",
   /** Status level — distinct from stacks; a status can have 1 stack at varying levels. */
   STATUS_LEVEL = "STATUS_LEVEL",
   /** Talent level of the current event's talent slot (resolved from operator's talent key-map). */
@@ -271,6 +275,10 @@ export enum VerbType {
   APPLY = "APPLY",
   /** Remove/spend: status, infliction, reaction, resource (SP, ult energy, cooldown). */
   CONSUME = "CONSUME",
+  /** Capture a copy of a status column's active events into the parent event's
+   *  snapshot map, keyed by column id. Read back via `objectQualifier: SNAPSHOT`
+   *  on ValueStatus / STATUS_LEVEL subjects. No mutation of source events. */
+  SNAPSHOT = "SNAPSHOT",
   /** Deal damage (inline multiplier). */
   DEAL = "DEAL",
   /** Strike a target (cardinality = count). */
@@ -406,11 +414,6 @@ export enum AdjectiveType {
   DODGE = "DODGE",
   ANIMATION = "ANIMATION",
 
-  // Enhancement qualifiers (PERFORM EMPOWERED BATTLE_SKILL)
-  NORMAL = "NORMAL",
-  ENHANCED = "ENHANCED",
-  EMPOWERED = "EMPOWERED",
-  MINOR = "MINOR",
 
   // Stat filter/threshold adjectives (RECOVER HP TO ANY OPERATOR WITH filter { LOWEST HP STAT })
   LOWEST = "LOWEST",
@@ -422,7 +425,16 @@ export enum AdjectiveType {
   //   `{ verb: IS, object: STACKS, objectQualifier: CONSUMED }` resolves to the
   //   number of stacks consumed by the triggering CONSUME effect. Used when an
   //   APPLY following CONSUME wants to scale by the consumed count.
+  //   Reserved for the trigger-bound case (no `of` chain) — event-scoped
+  //   reads use `SNAPSHOT` instead.
   CONSUMED = "CONSUMED",
+
+  // Snapshot qualifier (for ValueStatus / STATUS_LEVEL subjects):
+  //   `{ verb: IS, object: STATUS_LEVEL, objectQualifier: SNAPSHOT,
+  //      of: { object: STATUS, ... } }` reads from the parent event's
+  //   snapshot map (populated by the SNAPSHOT effect verb). Lets a later
+  //   frame query a pre-consume / pre-mutation copy of a status column.
+  SNAPSHOT = "SNAPSHOT",
 
   // Element wildcard for DEAL DAMAGE conditions that fire on any damage type
   //   (e.g. `ENEMY DEAL ANY DAMAGE TO OPERATOR` for reactive retaliation triggers).
@@ -448,6 +460,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   // `object: INFLICTION` / `object: REACTION` to keep DSL data in a single shape.
   [VerbType.APPLY]:      [ObjectType.ARTS_BURST, ObjectType.STATUS, ObjectType.STAT, ObjectType.STAGGER, ObjectType.SUSCEPTIBILITY, ObjectType.FRAGILITY, ObjectType.TIME_STOP, ObjectType.EVENT],
   [VerbType.CONSUME]:    [ObjectType.STATUS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.COOLDOWN, ObjectType.STAGGER, ObjectType.STACKS, ObjectType.EVENT, ObjectType.SKILL, ObjectType.CHARGE],
+  [VerbType.SNAPSHOT]:   [ObjectType.STATUS],
   [VerbType.RECOVER]:    [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.RETURN]:     [ObjectType.SKILL_POINT],
   [VerbType.DEAL]:       [ObjectType.DAMAGE, ObjectType.STAGGER],
@@ -534,7 +547,7 @@ export const OBJECT_QUALIFIERS: Partial<Record<ObjectType, (AdjectiveType | Noun
  *   → "the VULNERABLE INFLICTION STATUS"
  *
  * When the objectId is a free-form status id (e.g. MELTING_FLAME,
- * FORCE_OF_NATURE_TALENT), no qualifier narrowing applies — the objectId
+ * FORCE_OF_NATURE_T1), no qualifier narrowing applies — the objectId
  * alone identifies the status.
  */
 export const OBJECT_ID_QUALIFIERS: Partial<Record<ObjectType, Partial<Record<string, (AdjectiveType | NounType)[]>>>> = {
@@ -610,7 +623,6 @@ export const NOUN_UNITS: Partial<Record<NounType, UnitType[]>> = {
 export const OBJECT_QUALIFIER_MAPPING: Partial<Record<NounType, (AdjectiveType | NounType | DeterminerType)[]>> = {
   [NounType.DAMAGE_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS, NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE, NounType.STAGGER, NounType.SKILL, NounType.FINAL_STRIKE],
   [NounType.DAMAGE_TAKEN_BONUS]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, AdjectiveType.ARTS],
-  [NounType.SKILL]: [AdjectiveType.NORMAL, AdjectiveType.ENHANCED, AdjectiveType.EMPOWERED],
   [NounType.HP]: [AdjectiveType.LOWEST, AdjectiveType.HIGHEST, AdjectiveType.FULL],
 };
 
@@ -671,6 +683,13 @@ export const SUBJECT_VERB_MAPPING: Partial<Record<SubjectType, VerbType[]>> = {
   ],
   [SubjectType.TEAM]: [
     VerbType.HAVE,
+  ],
+  // SKILL-as-subject expresses causal attribution: the skill event (identified
+  // by subjectId — BASIC_ATTACK / BATTLE / COMBO / ULTIMATE) was the actor that
+  // performed the verb. The `of` clause narrows to the skill's owner.
+  // e.g. "BATTLE SKILL of THIS OPERATOR CONSUME ARTS REACTION STATUS from ENEMY".
+  [SubjectType.SKILL]: [
+    VerbType.APPLY, VerbType.CONSUME,
   ],
 };
 
@@ -755,6 +774,10 @@ export const SUBJECT_VERB_OBJECT_MAPPING: Partial<Record<SubjectType, Partial<Re
   },
   [SubjectType.TEAM]: {
     [VerbType.HAVE]: [ObjectType.STATUS],
+  },
+  [SubjectType.SKILL]: {
+    [VerbType.APPLY]: [ObjectType.STATUS],
+    [VerbType.CONSUME]: [ObjectType.STATUS],
   },
 };
 
@@ -978,6 +1001,14 @@ export interface ValueStatus {
   object: NounType.STACKS | NounType.STATUS_LEVEL;
   /** Possessor chain — which status and whose entity. */
   of?: OfClause;
+  /** Variant qualifier on the property reading itself.
+   *   - `CONSUMED` (no `of` chain): resolves to the trigger's consumedStacks
+   *     — the number of stacks consumed by the triggering CONSUME effect.
+   *   - `SNAPSHOT` (with `of` chain): reads from the parent event's snapshot
+   *     map (populated by a SNAPSHOT effect earlier in the event). Used when
+   *     a later frame wants the pre-consume / pre-mutation value of a status
+   *     column captured by an explicit SNAPSHOT verb. */
+  objectQualifier?: AdjectiveType.CONSUMED | AdjectiveType.SNAPSHOT;
 }
 
 /** Binary operation node: applies an operation to two operands. */

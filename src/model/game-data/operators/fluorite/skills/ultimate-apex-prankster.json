@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "APEX_PRANKSTER",
     "eventCategoryType": "ULTIMATE",
     "element": "NATURE",
-    "id": "APEX_PRANKSTER",
     "descriptionParams": {
       "atk_scale1": 2.5,
       "atk_scale2": 2.5,
@@ -29,7 +28,10 @@
       "1-poise": -4,
       "-poise": -5,
       "poise-1": 4
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

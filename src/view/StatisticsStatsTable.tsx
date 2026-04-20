@@ -5,6 +5,9 @@
  * Right-click the pane to open a filter menu that toggles any column or footer
  * stat. Hidden columns are persisted per-sheet on `StatisticsData.hiddenColumns`,
  * so every source in the sheet shows the same columns — comparable side-by-side.
+ *
+ * When `reference` is supplied and `comparisonMode !== RAW`, numeric cells
+ * render as deltas against that reference — mirroring the grouped-mode table.
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
@@ -13,11 +16,19 @@ import type { DamageStatistics, DamageTableColumn } from '../controller/calculat
 import type { ViewOverride } from '../utils/loadoutStorage';
 import { ComparisonModeType, CritMode, ELEMENT_COLORS, ElementType, StatisticsColumnType, ViewVariableType } from '../consts/enums';
 import { NounType } from '../dsl/semantics';
+import { loadSettings } from '../consts/settings';
 import { weaponSkillLevelToPotential } from '../utils/metaIcons';
 import ContextMenu from './ContextMenu';
 import { buildStatisticsFilterItems } from './statisticsFilterItems';
-
-const FPS = 120;
+import {
+  formatDamage,
+  formatSeconds,
+  makeCellContent,
+  makeFormatDelta,
+  makeFormatPct,
+  type CellResult,
+  type RowData,
+} from './statisticsComparison';
 
 /** Skill-damage columns in the body table, in order. */
 const SKILL_COLUMNS: ReadonlyArray<{
@@ -31,23 +42,6 @@ const SKILL_COLUMNS: ReadonlyArray<{
   { columnId: NounType.ULTIMATE,     label: 'Ultimate', filter: StatisticsColumnType.ULTIMATE },
 ];
 
-// ── Formatters ─────────────────────────────────────────────────────────────
-
-function formatDamage(n: number): string {
-  if (n <= 0) return '';
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 10_000)    return `${(n / 1_000).toFixed(1)}K`;
-  return Math.round(n).toLocaleString();
-}
-
-function formatPct(n: number): string {
-  return `${(n * 100).toFixed(1)}%`;
-}
-
-function formatSeconds(frames: number): string {
-  return (frames / FPS).toFixed(1);
-}
-
 function accentFor(element: ElementType): string {
   return ELEMENT_COLORS[element] ?? '#8890a0';
 }
@@ -60,10 +54,12 @@ interface Props {
   tableColumns: DamageTableColumn[];
   hiddenColumns: ReadonlySet<StatisticsColumnType>;
   hiddenOperators: ReadonlySet<string>;
+  hiddenAggregate: boolean;
   critMode: CritMode;
   comparisonMode: ComparisonModeType;
   onToggleColumn: (column: StatisticsColumnType) => void;
   onToggleOperator: (slotId: string) => void;
+  onToggleAggregate: () => void;
   onSetCritMode: (critMode: CritMode) => void;
   onSetComparisonMode: (comparisonMode: ComparisonModeType) => void;
   /**
@@ -75,11 +71,17 @@ interface Props {
   showPermutationCols?: boolean;
   /** Per-slot pinned values used to fill the permutation columns. */
   viewOverride?: ViewOverride;
+  /**
+   * Reference row used for delta formatting when comparisonMode !== RAW.
+   * null / undefined falls back to raw rendering (e.g. the base card, or
+   * when the reference sim is unavailable).
+   */
+  reference?: RowData | null;
 }
 
 export default React.memo(function StatisticsStatsTable({
-  slots, statistics, tableColumns, hiddenColumns, hiddenOperators, critMode, comparisonMode, onToggleColumn, onToggleOperator, onSetCritMode, onSetComparisonMode,
-  showPermutationCols: showPermutationColsProp, viewOverride,
+  slots, statistics, tableColumns, hiddenColumns, hiddenOperators, hiddenAggregate, critMode, comparisonMode, onToggleColumn, onToggleOperator, onToggleAggregate, onSetCritMode, onSetComparisonMode,
+  showPermutationCols: showPermutationColsProp, viewOverride, reference,
 }: Props) {
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -87,6 +89,12 @@ export default React.memo(function StatisticsStatsTable({
     e.preventDefault();
     setCtxMenu({ x: e.clientX, y: e.clientY });
   }, []);
+
+  const { decimalPlaces, numberFormat } = loadSettings();
+  const formatPct = useMemo(() => makeFormatPct(decimalPlaces, numberFormat), [decimalPlaces, numberFormat]);
+  const formatDelta = useMemo(() => makeFormatDelta(decimalPlaces, numberFormat), [decimalPlaces, numberFormat]);
+  const cellContent = useMemo(() => makeCellContent(comparisonMode, formatDelta), [comparisonMode, formatDelta]);
+  const teamPctFormat = useMemo(() => makeFormatPct(1, numberFormat), [numberFormat]);
 
   /** `ownerEntityId → columnId → damage` lookup. */
   const opColumnDamage = useMemo(() => {
@@ -112,6 +120,7 @@ export default React.memo(function StatisticsStatsTable({
   const showTotal    = !hiddenColumns.has(StatisticsColumnType.TOTAL);
   const visibleSkills = SKILL_COLUMNS.filter((c) => !hiddenColumns.has(c.filter));
   const showPermutationCols = showPermutationColsProp ?? !!viewOverride;
+  const isDelta = comparisonMode !== ComparisonModeType.RAW;
 
   // ── Derived grid template ────────────────────────────────────────────────
   // Build the grid-template-columns string from the visible columns so the
@@ -129,7 +138,7 @@ export default React.memo(function StatisticsStatsTable({
     ...visibleSkills.map(() => 'minmax(0, 1fr)'),
   ].filter(Boolean).join(' ');
 
-  if (bodyColumnCount === 0 && allFooterHidden(hiddenColumns, statistics)) {
+  if (bodyColumnCount === 0 && (hiddenAggregate || allFooterHidden(hiddenColumns, statistics))) {
     return (
       <div className="slc-stats slc-stats--empty" onContextMenu={handleContextMenu}>
         <span className="slc-stats-empty">All columns hidden · right-click to restore</span>
@@ -140,12 +149,14 @@ export default React.memo(function StatisticsStatsTable({
             items={buildStatisticsFilterItems({
               hiddenColumns,
               hiddenOperators,
+              hiddenAggregate,
               occupiedSlots,
               critMode,
               comparisonMode,
               statistics,
               onToggleColumn,
               onToggleOperator,
+              onToggleAggregate,
               onSetCritMode,
               onSetComparisonMode,
             })}
@@ -175,10 +186,12 @@ export default React.memo(function StatisticsStatsTable({
             const total = opStats?.totalDamage ?? 0;
             const teamPct = opStats?.teamPct ?? 0;
             const skillBreakdown = opColumnDamage.get(slot.slotId);
+            const refOp = reference?.operatorData.get(slot.slotId);
             const slotOverride = viewOverride?.[slot.slotId];
             const pot = slotOverride?.[ViewVariableType.OPERATOR_POTENTIAL];
             const wpnLevel = slotOverride?.[ViewVariableType.WEAPON_SKILL_3_LEVEL];
             const rank = wpnLevel !== undefined ? weaponSkillLevelToPotential(wpnLevel) : undefined;
+            const totalCell = cellContent(total, refOp?.total, (n) => formatDamage(n));
             return (
               <div
                 key={slot.slotId}
@@ -205,22 +218,26 @@ export default React.memo(function StatisticsStatsTable({
                   </div>
                 )}
                 {showTotal && (
-                  <div className="slc-num-cell">
-                    <span className="slc-num slc-num--lead">{formatDamage(total)}</span>
-                    <span className="slc-pct slc-pct--team">{total > 0 ? formatPct(teamPct) : ''}</span>
+                  <div className={`slc-num-cell${totalCell.dim ? ' slc-num-cell--dim' : ''}`}>
+                    <span className={`slc-num slc-num--lead${totalCell.deltaClass}`}>{totalCell.node}</span>
+                    {!isDelta && total > 0 && (
+                      <span className="slc-pct slc-pct--team">{teamPctFormat(teamPct)}</span>
+                    )}
                   </div>
                 )}
                 {visibleSkills.map((col) => {
                   const dmg = skillBreakdown?.get(col.columnId) ?? 0;
                   const pct = total > 0 ? dmg / total : 0;
-                  const empty = dmg <= 0;
+                  const skillCell = cellContent(dmg, refOp?.skills.get(col.columnId), (n) => formatDamage(n));
                   return (
                     <div
                       key={col.columnId}
-                      className={`slc-num-cell${empty ? ' slc-num-cell--dim' : ''}`}
+                      className={`slc-num-cell${skillCell.dim ? ' slc-num-cell--dim' : ''}`}
                     >
-                      <span className="slc-num">{formatDamage(dmg)}</span>
-                      <span className="slc-pct">{empty ? '' : formatPct(pct)}</span>
+                      <span className={`slc-num${skillCell.deltaClass}`}>{skillCell.node}</span>
+                      {!isDelta && dmg > 0 && (
+                        <span className="slc-pct">{formatPct(pct)}</span>
+                      )}
                     </div>
                   );
                 })}
@@ -230,11 +247,15 @@ export default React.memo(function StatisticsStatsTable({
         </div>
       )}
 
-      <TeamFooter
-        statistics={statistics}
-        durationSec={durationSec}
-        hiddenColumns={hiddenColumns}
-      />
+      {!hiddenAggregate && (
+        <TeamFooter
+          statistics={statistics}
+          durationSec={durationSec}
+          hiddenColumns={hiddenColumns}
+          cellContent={cellContent}
+          reference={reference ?? null}
+        />
+      )}
 
       {ctxMenu && (
         <ContextMenu
@@ -243,12 +264,14 @@ export default React.memo(function StatisticsStatsTable({
           items={buildStatisticsFilterItems({
             hiddenColumns,
             hiddenOperators,
+            hiddenAggregate,
             occupiedSlots,
             critMode,
             comparisonMode,
             statistics,
             onToggleColumn,
             onToggleOperator,
+            onToggleAggregate,
             onSetCritMode,
             onSetComparisonMode,
           })}
@@ -261,69 +284,85 @@ export default React.memo(function StatisticsStatsTable({
 
 // ── Team footer ────────────────────────────────────────────────────────────
 
+type CellContentFn = ReturnType<typeof makeCellContent>;
+
 function TeamFooter({
-  statistics, durationSec, hiddenColumns,
+  statistics, durationSec, hiddenColumns, cellContent, reference,
 }: {
   statistics: DamageStatistics;
   durationSec: number | null;
   hiddenColumns: ReadonlySet<StatisticsColumnType>;
+  cellContent: CellContentFn;
+  reference: RowData | null;
 }) {
   const stats: { key: StatisticsColumnType; render: () => React.ReactNode }[] = [];
 
   if (!hiddenColumns.has(StatisticsColumnType.TEAM_DPS)) {
     stats.push({
       key: StatisticsColumnType.TEAM_DPS,
-      render: () => (
-        <FooterStat
-          label="Team DPS"
-          value={statistics.teamDps != null ? formatDamage(statistics.teamDps) : ''}
-          unit={statistics.teamDps != null ? '/s' : undefined}
-        />
-      ),
+      render: () => {
+        const cell = cellContent(
+          statistics.teamDps,
+          reference?.teamDps,
+          (n) => formatDamage(n),
+        );
+        return <FooterCell label="Team DPS" cell={cell} rawUnit={statistics.teamDps != null ? '/s' : undefined} />;
+      },
     });
   }
   if (!hiddenColumns.has(StatisticsColumnType.CROWD_CONTROL) && statistics.crowdControlPct != null) {
     stats.push({
       key: StatisticsColumnType.CROWD_CONTROL,
-      render: () => (
-        <FooterStat
-          label="Crowd Control"
-          value={(statistics.crowdControlPct! * 100).toFixed(1)}
-          unit="%"
-        />
-      ),
+      render: () => {
+        const cell = cellContent(
+          statistics.crowdControlPct,
+          reference?.crowdControlPct,
+          (n) => (n * 100).toFixed(1),
+          () => false,
+        );
+        return <FooterCell label="Crowd Control" cell={cell} rawUnit="%" />;
+      },
     });
   }
   if (!hiddenColumns.has(StatisticsColumnType.DURATION)) {
     stats.push({
       key: StatisticsColumnType.DURATION,
-      render: () => (
-        <FooterStat
-          label="Duration"
-          value={durationSec != null ? durationSec.toFixed(1) : ''}
-          unit={durationSec != null ? 's' : undefined}
-        />
-      ),
+      render: () => {
+        const cell = cellContent(
+          durationSec,
+          reference?.durationSec,
+          (n) => n.toFixed(1),
+          () => false,
+        );
+        return <FooterCell label="Duration" cell={cell} rawUnit={durationSec != null ? 's' : undefined} />;
+      },
     });
   }
   if (!hiddenColumns.has(StatisticsColumnType.TIME_TO_KILL) && statistics.timeToKill != null) {
     stats.push({
       key: StatisticsColumnType.TIME_TO_KILL,
-      render: () => (
-        <FooterStat
-          label="Time to Kill"
-          value={formatSeconds(statistics.timeToKill!)}
-          unit="s"
-        />
-      ),
+      render: () => {
+        const cell = cellContent(
+          statistics.timeToKill,
+          reference?.timeToKill,
+          (n) => formatSeconds(n),
+          () => false,
+        );
+        return <FooterCell label="Time to Kill" cell={cell} rawUnit="s" />;
+      },
     });
   }
   if (!hiddenColumns.has(StatisticsColumnType.TEAM_TOTAL)) {
     stats.push({
       key: StatisticsColumnType.TEAM_TOTAL,
-      render: () => (
-        <FooterStat label="Team Total" value={formatDamage(statistics.teamTotalDamage)} />
-      ),
+      render: () => {
+        const cell = cellContent(
+          statistics.teamTotalDamage,
+          reference?.teamTotal,
+          (n) => formatDamage(n),
+        );
+        return <FooterCell label="Team Total" cell={cell} />;
+      },
     });
   }
 
@@ -341,13 +380,14 @@ function TeamFooter({
   );
 }
 
-function FooterStat({ label, value, unit }: { label: string; value: string; unit?: string }) {
+function FooterCell({ label, cell, rawUnit }: { label: string; cell: CellResult; rawUnit?: string }) {
+  const isDelta = cell.deltaClass !== '';
   return (
-    <div className="slc-team-stat">
+    <div className={`slc-team-stat${cell.dim ? ' slc-team-stat--dim' : ''}`}>
       <div className="slc-ts-label">{label}</div>
-      <div className="slc-ts-value">
-        {value}
-        {unit && <span className="slc-ts-unit">{unit}</span>}
+      <div className={`slc-ts-value${cell.deltaClass}`}>
+        {cell.node}
+        {!isDelta && rawUnit && cell.node !== '' && <span className="slc-ts-unit">{rawUnit}</span>}
       </div>
     </div>
   );
@@ -364,4 +404,3 @@ function allFooterHidden(
   if (!hidden.has(StatisticsColumnType.TEAM_TOTAL)) return false;
   return true;
 }
-

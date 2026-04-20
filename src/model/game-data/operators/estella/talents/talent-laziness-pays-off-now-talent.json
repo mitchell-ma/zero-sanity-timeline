@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "LAZINESS_PAYS_OFF_NOW_TALENT",
+    "id": "LAZINESS_PAYS_OFF_NOW_T2",
     "descriptionParams": {
       "dmg_down": -0.2,
       "1-dmg_down": 1.2,
@@ -13,8 +13,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ESTELLA",

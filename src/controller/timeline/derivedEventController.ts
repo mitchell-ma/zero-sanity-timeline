@@ -483,7 +483,7 @@ export class DerivedEventController implements ColumnHost {
       const clause = getComboTriggerClause(wiring.operatorId);
       if (!clause?.length) continue;
       const matches = findClauseTriggerMatches(
-        clause, this.allEvents, wiring.slotId, this.stops, this.controlledSlotResolver,
+        clause, this.allEvents, wiring.slotId, this.stops, this.controlledSlotResolver, this.causality,
       );
       // findClauseTriggerMatches already returns matches sorted by frame.
       for (const match of matches) {
@@ -681,6 +681,16 @@ export class DerivedEventController implements ColumnHost {
   }
 
   private _checkOverlapAgainstPriors(ev: TimelineEvent, annotateNew: boolean) {
+    // COMBO events on multi-skill operators (maxSkills > 1) legitimately
+    // stack within an activation window — the dedicated combo validator
+    // handles the cap. Skip the sibling-overlap warning here; pass-3 CD
+    // clamping (clampMultiSkillComboCooldowns) has not run yet at this point
+    // so spans look overlapping even when the next clamp will fix them.
+    if (ev.columnId === NounType.COMBO) {
+      const operatorId = this.slotOperatorMap?.[ev.ownerEntityId];
+      const info = operatorId ? getComboTriggerInfo(operatorId) : undefined;
+      if ((info?.maxSkills ?? 1) > 1) return;
+    }
     const evRange = computeSegmentsSpan(ev.segments);
     const evEnd = ev.startFrame + evRange;
     for (const prev of this.allEvents) {
@@ -1244,22 +1254,47 @@ export class DerivedEventController implements ColumnHost {
    * Called after the queue run when CD resets may have shortened combo events.
    */
   clampComboWindowsToEventEnd() {
-    const windows = this.allEvents.filter(ev => ev.columnId === COMBO_WINDOW_COLUMN_ID);
-    for (const win of windows) {
+    // Partition combos by owning window — when multiple windows overlap on the
+    // same slot (e.g. time-stop extends window 1 past window 2's start), a
+    // combo belongs to the EARLIEST window that covers it (matches the
+    // first-wins semantics of _applyComboWindowToCombos).
+    const sortedWindows = this.allEvents
+      .filter(ev => ev.columnId === COMBO_WINDOW_COLUMN_ID)
+      .slice()
+      .sort((a, b) => a.startFrame - b.startFrame);
+    for (let i = 0; i < sortedWindows.length; i++) {
+      const win = sortedWindows[i];
       const winEnd = win.startFrame + computeSegmentsSpan(win.segments);
-      const combos = this.allEvents.filter(ev =>
-        ev.columnId === NounType.COMBO &&
-        ev.ownerEntityId === win.ownerEntityId &&
-        ev.startFrame >= win.startFrame &&
-        ev.startFrame < winEnd,
-      );
+      // Effective search upper bound: never reach past the NEXT window's start
+      // (on the same slot) — later combos belong to that later window.
+      let effectiveEnd = winEnd;
+      for (let j = i + 1; j < sortedWindows.length; j++) {
+        const next = sortedWindows[j];
+        if (next.ownerEntityId !== win.ownerEntityId) continue;
+        if (next.startFrame > win.startFrame) {
+          effectiveEnd = Math.min(effectiveEnd, next.startFrame);
+          break;
+        }
+      }
+      const combos = this.allEvents
+        .filter(ev =>
+          ev.columnId === NounType.COMBO &&
+          ev.ownerEntityId === win.ownerEntityId &&
+          ev.startFrame >= win.startFrame &&
+          ev.startFrame < effectiveEnd,
+        )
+        .sort((a, b) => a.startFrame - b.startFrame);
       if (combos.length === 0) continue;
-      // Use the earliest combo end that falls before the window end (the CD-reset combo)
-      const comboEnds = combos.map(c => c.startFrame + computeSegmentsSpan(c.segments)).filter(e => e < winEnd);
-      if (comboEnds.length === 0) continue;
-      const clampEnd = Math.min(...comboEnds);
+      // Only the LAST combo's end represents the true window termination —
+      // earlier combos in a multi-skill window have their cooldowns clamped
+      // to the next combo's start (by clampMultiSkillComboCooldowns), which
+      // would otherwise collapse the window onto the next combo's start frame
+      // and flag that combo as outside the window.
+      const lastCombo = combos[combos.length - 1];
+      const lastEnd = lastCombo.startFrame + computeSegmentsSpan(lastCombo.segments);
+      if (lastEnd >= winEnd) continue;
       if (win.segments.length > 0) {
-        win.segments[0].properties.duration = Math.max(0, clampEnd - win.startFrame);
+        win.segments[0].properties.duration = Math.max(0, lastEnd - win.startFrame);
       }
     }
   }

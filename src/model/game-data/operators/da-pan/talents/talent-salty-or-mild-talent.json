@@ -29,7 +29,7 @@
     }
   ],
   "properties": {
-    "id": "SALTY_OR_MILD_TALENT",
+    "id": "SALTY_OR_MILD_T2",
     "maxLevel": {
       "verb": "IS",
       "value": 2
@@ -50,8 +50,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "DA_PAN",

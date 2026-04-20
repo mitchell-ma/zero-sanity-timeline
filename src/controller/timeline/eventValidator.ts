@@ -5,10 +5,11 @@
  * empowered skill prerequisites, and time-stop overlap constraints.
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
-import { EnhancementType, TimeDependency } from '../../consts/enums';
+import { TimeDependency } from '../../consts/enums';
 import { TEAM_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorSkill, getOperatorSkills, getComboTriggerClause } from '../gameDataStore';
+import { getAllOperatorIds } from '../configStore';
 import { getStatusDef } from './configCache';
 import { VerbType, NounType } from '../../dsl/semantics';
 import type { Interaction, Predicate } from '../../dsl/semantics';
@@ -60,17 +61,16 @@ export function hasEnableClauseAtFrame(
  * the variant. If so, the variant is ENABLE-gated and requires an active ENABLE
  * to be placed. Checks JSON skill configs, not placed events.
  */
-function isEnableGated(
+export function isEnableGated(
   events: readonly TimelineEvent[],
   ownerEntityId: string,
   variantId: string,
   slots?: Slot[],
 ): boolean {
-  const slot = slots?.find(s => s.slotId === ownerEntityId);
-  const opId = slot?.operator?.id;
-  if (opId) {
+  const checkOpSkills = (opId: string): boolean => {
     const skillMap = getOperatorSkills(opId);
-    if (skillMap) for (const skill of Array.from(skillMap.values())) {
+    if (!skillMap) return false;
+    for (const skill of Array.from(skillMap.values())) {
       const serialized = skill.serialize() as Record<string, unknown>;
       const segments = serialized.segments as { clause?: { effects?: { verb: string; objectId?: string; objectQualifier?: string }[] }[] }[] | undefined;
       if (!segments) continue;
@@ -82,6 +82,18 @@ function isEnableGated(
           return true;
         }
       }
+    }
+    return false;
+  };
+
+  const slot = slots?.find(s => s.slotId === ownerEntityId);
+  const opId = slot?.operator?.id;
+  if (opId) {
+    if (checkOpSkills(opId)) return true;
+  } else {
+    // No slot context — scan every known operator for a matching ENABLE clause.
+    for (const id of getAllOperatorIds()) {
+      if (checkOpSkills(id)) return true;
     }
   }
   // Fallback: check placed events (for non-operator-owned events or custom skills)
@@ -811,17 +823,19 @@ export function checkComboWindowAvailability(
   }
 
   const windowEnd = eventEndFrame(matchingWindow);
-  // Count only combos whose event (including CD) hasn't ended before atFrame
-  let activeCount = 0;
+  // maxSkills counts TOTAL combos placed in the window, not just currently-
+  // active ones. Earlier combos in a multi-skill window have their CDs clamped
+  // to the next combo's start (by clampMultiSkillComboCooldowns), so "active"
+  // at a later frame would undercount placed slots.
+  let placedCount = 0;
   for (const ev of events) {
     if (ev.columnId === NounType.COMBO && ev.ownerEntityId === ownerEntityId &&
-        ev.startFrame >= matchingWindow.startFrame && ev.startFrame < windowEnd &&
-        eventEndFrame(ev) > atFrame) {
-      activeCount++;
+        ev.startFrame >= matchingWindow.startFrame && ev.startFrame < windowEnd) {
+      placedCount++;
     }
   }
   const max = matchingWindow.maxSkills ?? 1;
-  if (activeCount >= max) {
+  if (placedCount >= max) {
     return { available: false, reason: 'Combo skill limit reached' };
   }
 
@@ -1055,29 +1069,6 @@ export function validateResources(
   return map;
 }
 
-export function validateEmpowered(events: TimelineEvent[], slots: Slot[]): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const ev of events) {
-    if (ev.enhancementType !== EnhancementType.EMPOWERED) continue;
-    const slot = slots.find((s) => s.slotId === ev.ownerEntityId);
-    const opId = slot?.operator?.id;
-    if (!opId) continue;
-    // Empowered activation is governed by activationClause on the skill JSON
-    const clause = getVariantClause(opId, ev.id);
-    if (clause) {
-      const dec = getLastController();
-      const result = evaluateActivationClause(
-        clause, events, ev.ownerEntityId, ev.startFrame,
-        dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
-      );
-      if (!result.pass) {
-        map.set(ev.uid, result.reason ?? t('ctx.activationNotMet'));
-      }
-    }
-  }
-  return map;
-}
-
 export function validateEnhanced(events: TimelineEvent[], slots?: Slot[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
@@ -1248,8 +1239,14 @@ export function validateVariantClauses(
 
     const dec = getLastController();
 
+    // Evaluate one frame before the event starts — activation reflects the
+    // pre-effect world state. Without this, events that CONSUME the very
+    // status they require (e.g. Rossi's empowered combo consuming
+    // PERFECT_TIMING on its animation segment) see a truncated status
+    // window and self-invalidate.
+    const activationFrame = Math.max(0, ev.startFrame - 1);
     const result = evaluateActivationClause(
-      clause, events, ev.ownerEntityId, ev.startFrame,
+      clause, events, ev.ownerEntityId, activationFrame,
       dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
     );
     if (!result.pass) {
@@ -1307,7 +1304,7 @@ export function getAutoFinisherIds(
   for (const brk of staggerBreaks) {
     // Check if a manually placed finisher already exists in this break
     const hasManualFinisher = events.some(
-      (ev) => ev.id === NounType.FINISHER
+      (ev) => ev.category === NounType.FINISHER
         && ev.startFrame >= brk.startFrame && ev.startFrame < brk.endFrame,
     );
     if (hasManualFinisher) continue;
@@ -1316,8 +1313,8 @@ export function getAutoFinisherIds(
     const firstBasic = events
       .filter((ev) =>
         ev.columnId === NounType.BASIC_ATTACK
-        && ev.id !== NounType.FINISHER
-        && ev.id !== NounType.DIVE
+        && ev.category !== NounType.FINISHER
+        && ev.category !== NounType.DIVE
         && ev.startFrame >= brk.startFrame
         && ev.startFrame < brk.endFrame,
       )
@@ -1339,7 +1336,7 @@ export function validateFinisherStaggerBreak(
   staggerBreaks: readonly import('./staggerTimeline').StaggerBreak[],
 ): Map<string, string> {
   const map = new Map<string, string>();
-  const finishers = events.filter((ev) => ev.id === NounType.FINISHER);
+  const finishers = events.filter((ev) => ev.category === NounType.FINISHER);
   if (finishers.length === 0) return map;
 
   for (const ev of finishers) {

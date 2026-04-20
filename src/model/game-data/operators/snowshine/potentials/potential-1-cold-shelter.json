@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "SNOWSHINE_POTENTIAL_1",
+    "id": "COLD_SHELTER_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "potential_1": 1,
@@ -8,8 +10,10 @@
       "-potential_1": -1,
       "potential_1-1": 0
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

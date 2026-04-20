@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "SEETHE",
     "eventCategoryType": "COMBO",
     "element": "HEAT",
-    "id": "SEETHE",
     "descriptionParams": {
       "atk_scale": 5.4,
       "poise": 10,
@@ -36,7 +35,10 @@
           "default": 1
         }
       ]
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

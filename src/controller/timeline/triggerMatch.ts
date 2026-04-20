@@ -27,6 +27,11 @@ import type { ConditionContext } from './conditionEvaluator';
 import type { TimeStopRegion } from './processTimeStop';
 import { VerbType, NounType, DeterminerType, CardinalityConstraintType, AdjectiveType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
+import type { CausalityGraph } from './causalityGraph';
+import { SKILL_COLUMN_ORDER } from '../../model/channels';
+
+/** Set of skill-category column IDs — used for subject:SKILL narrowing. */
+const SKILL_COLUMN_SET: ReadonlySet<string> = new Set<string>(SKILL_COLUMN_ORDER);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -109,6 +114,9 @@ interface VerbHandlerContext {
   clauseEffects?: TriggerEffect[];
   stops?: readonly TimeStopRegion[];
   controlledSlotId?: string | ((frame: number) => string);
+  /** Causality DAG — lets handlers resolve "what event caused this CONSUME / APPLY"
+   *  when the driver condition uses `subject: SKILL` for causal narrowing. */
+  causality?: CausalityGraph;
 }
 
 type VerbHandlerFn = (primaryCond: Predicate, ctx: VerbHandlerContext) => TriggerMatch[];
@@ -255,6 +263,57 @@ function checkSecondary(ctx: VerbHandlerContext, frame: number, triggerEntityId?
   );
 }
 
+/**
+ * When the driver condition's subject is `SKILL` (e.g. "BATTLE SKILL of THIS
+ * OPERATOR CONSUME STATUS ..."), narrow scanned events to those whose causal
+ * source is a skill event matching the subject's id and `of` possessor.
+ *
+ * The source of the action depends on the verb:
+ *   - CONSUME: lastTransitionSource (the event that caused the consume edge)
+ *   - APPLY:   primaryParentOf (the CREATION parent of the applied event)
+ *
+ * Returns true if no SKILL subject was specified (no-op) OR if the causal
+ * lookup matches the narrow. Returns false when the subject is SKILL but no
+ * causality data / source mismatch.
+ */
+function checkSkillSubjectNarrow(
+  cond: Predicate, verb: string, ev: TimelineEvent, ctx: VerbHandlerContext,
+): boolean {
+  if (cond.subject !== NounType.SKILL) return true;
+  if (!ctx.causality) return false;
+
+  const srcUid = verb === VerbType.CONSUME
+    ? ctx.causality.lastTransitionSource(ev.uid)
+    : ctx.causality.primaryParentOf(ev.uid);
+  if (!srcUid) return false;
+
+  const srcEv = ctx.events.find(e => e.uid === srcUid);
+  if (!srcEv) return false;
+  if (!SKILL_COLUMN_SET.has(srcEv.columnId)) return false;
+
+  // subjectId narrows to skill category column (BASIC_ATTACK / BATTLE / COMBO /
+  // ULTIMATE). When omitted, any skill column matches.
+  if (cond.subjectId && cond.subjectId !== srcEv.columnId) return false;
+
+  // `of` possessor: the skill's owner.
+  const ofClause = cond.of as { object?: string; determiner?: string } | undefined;
+  const ofObj = ofClause?.object ?? NounType.OPERATOR;
+  const ofDet = (ofClause?.determiner ?? DeterminerType.THIS) as DeterminerType;
+  if (ofObj === NounType.OPERATOR) {
+    if (ofDet === DeterminerType.THIS && srcEv.ownerEntityId !== ctx.operatorSlotId) return false;
+    if (ofDet === DeterminerType.ANY_OTHER && srcEv.ownerEntityId === ctx.operatorSlotId) return false;
+    if (ofDet === DeterminerType.CONTROLLED) {
+      const resolved = typeof ctx.controlledSlotId === 'function'
+        ? ctx.controlledSlotId(ev.startFrame)
+        : ctx.controlledSlotId;
+      if (resolved && srcEv.ownerEntityId !== resolved) return false;
+    }
+  } else if (ofObj === NounType.ENEMY) {
+    if (srcEv.ownerEntityId !== ENEMY_ID) return false;
+  }
+  return true;
+}
+
 function makeMatch(frame: number, ev: TimelineEvent, effects?: TriggerEffect[]): TriggerMatch {
   return { frame, sourceEntityId: ev.ownerEntityId, sourceSkillId: ev.id, originEntityId: ev.sourceEntityId, sourceColumnId: ev.columnId, sourceEventUid: ev.uid, triggerStacks: ev.statusLevel ?? ev.stacks, effects };
 }
@@ -284,6 +343,8 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
     // Arts Burst: only match infliction events flagged as same-element stacking
     if (primaryCond.object === NounType.ARTS_BURST && !ev.isArtsBurst) continue;
     if (!matchesOwner(ev.ownerEntityId)) continue;
+    // SKILL subject narrow: filter by the causal source event's column/owner.
+    if (!checkSkillSubjectNarrow(primaryCond, verb, ev, ctx)) continue;
     // For CONSUME, the trigger fires at the consumption frame (event end after
     // duration clamping), not the event's original startFrame. The engine clamps
     // a consumed event's duration to the consumption point, so startFrame +
@@ -330,7 +391,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
   if (skillId === NounType.FINAL_STRIKE) {
     for (const ev of ctx.events) {
       if (ev.columnId !== NounType.BASIC_ATTACK) continue;
-      if (ev.id === NounType.FINISHER || ev.id === NounType.DIVE) continue;
+      if (ev.category === NounType.FINISHER || ev.category === NounType.DIVE) continue;
 
       const triggerFrame = getFinalStrikeTriggerFrame(ev, ctx.stops);
       if (triggerFrame == null) continue;
@@ -342,15 +403,15 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
     return matches;
   }
 
-  // FINISHER / DIVE_ATTACK — match events on basic column by skill name
+  // FINISHER / DIVE_ATTACK — match events on basic column by category marker
   if (skillId === NounType.FINISHER || skillId === NounType.DIVE) {
-    const targetName = skillId === NounType.FINISHER ? NounType.FINISHER : NounType.DIVE;
+    const targetCategory = skillId === NounType.FINISHER ? NounType.FINISHER : NounType.DIVE;
     for (const ev of ctx.events) {
-      if (!matchesOwner(ev.ownerEntityId)) continue;
       if (ev.columnId !== NounType.BASIC_ATTACK) continue;
-      if (ev.id !== targetName) continue;
+      if (ev.category !== targetCategory) continue;
 
       const triggerFrame = getFirstEventFrame(ev);
+      if (!matchesOwner(ev.ownerEntityId, triggerFrame)) continue;
       if (!checkSecondary(ctx, triggerFrame, ev.ownerEntityId)) continue;
 
       matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
@@ -701,6 +762,7 @@ export function findClauseTriggerMatches(
   operatorSlotId: string,
   stops?: readonly TimeStopRegion[],
   controlledSlotId?: string | ((frame: number) => string),
+  causality?: CausalityGraph,
 ): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
 
@@ -741,6 +803,7 @@ export function findClauseTriggerMatches(
       clauseEffects: clause.effects,
       stops,
       controlledSlotId,
+      causality,
     };
 
     matches.push(...handler.findMatches(driverCond, ctx));

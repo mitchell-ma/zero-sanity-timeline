@@ -1,0 +1,60 @@
+{
+  "id": "BONEKRUSHER_ARSONIST",
+  "tier": "ADVANCED",
+  "race": "LANDBREAKERS",
+  "location": "GROUND",
+  "attackElement": "HEAT",
+  "baseStats": {
+    "HEAT_RESISTANCE": 0.5,
+    "STAGGER_HP": 170,
+    "STAGGER_RECOVERY": 7,
+    "FINISHER_ATK_MULTIPLIER": 1.25,
+    "FINISHER_SP_GAIN": 35,
+    "ATTACK_RANGE": 7,
+    "WEIGHT": 1.5
+  },
+  "statsByLevel": [
+    {
+      "level": 1,
+      "attributes": {
+        "BASE_HP": 831,
+        "BASE_ATTACK": 49
+      }
+    },
+    {
+      "level": 20,
+      "attributes": {
+        "BASE_HP": 5961,
+        "BASE_ATTACK": 233
+      }
+    },
+    {
+      "level": 40,
+      "attributes": {
+        "BASE_HP": 37721,
+        "BASE_ATTACK": 723
+      }
+    },
+    {
+      "level": 60,
+      "attributes": {
+        "BASE_HP": 148502,
+        "BASE_ATTACK": 1796
+      }
+    },
+    {
+      "level": 80,
+      "attributes": {
+        "BASE_HP": 357214,
+        "BASE_ATTACK": 2703
+      }
+    },
+    {
+      "level": 90,
+      "attributes": {
+        "BASE_HP": 550298,
+        "BASE_ATTACK": 3097
+      }
+    }
+  ]
+}

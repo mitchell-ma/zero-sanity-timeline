@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "FRIENDLY_PRESENCE_TALENT",
+    "id": "FRIENDLY_PRESENCE_T1",
     "descriptionParams": {
       "heal_scale": 0.75,
       "heal_value": 90,
@@ -25,8 +25,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ARDELIA",

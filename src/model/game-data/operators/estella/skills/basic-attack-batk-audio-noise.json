@@ -414,11 +414,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "AUDIO_NOISE_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "AUDIO_NOISE_BATK",
     "descriptionParams": {
       "atk_scale": 0.9,
       "atk_scale2": 0.45,
@@ -436,7 +435,10 @@
       "1-poise": -16,
       "-poise": -17,
       "poise-1": 16
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ESTELLA",

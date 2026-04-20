@@ -34,7 +34,7 @@
     }
   ],
   "properties": {
-    "id": "COMMISERATION_TALENT",
+    "id": "COMMISERATION_T1",
     "descriptionParams": {
       "atb": 15,
       "1-atb": -14,
@@ -61,8 +61,10 @@
       },
       "unit": "SECOND"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ESTELLA",

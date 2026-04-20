@@ -137,92 +137,137 @@
 }
 
 .settings-modal {
+  position: relative;
   background: var(--bg-panel);
-  border: 1px solid var(--border-dim);
+  border: 1px solid var(--border-med);
   border-radius: 4px;
-  width: 420px;
-  max-height: 70vh;
+  width: 460px;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 32px var(--scrim-50);
+  box-shadow: 0 12px 40px var(--scrim-60);
+  overflow: hidden;
+}
+
+/* Left-edge accent rail — HUD signature shared with .chs-vitals-rail.
+   Gradient fade at top/bottom so it feels anchored without hard caps. */
+.settings-rail {
+  position: absolute;
+  left: 0;
+  top: 12%;
+  bottom: 12%;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--accent) 22%,
+    var(--accent) 78%,
+    transparent 100%
+  );
+  box-shadow: 0 0 0.625rem var(--accent-glow);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .settings-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem 0.875rem 1.5rem;
   border-bottom: 1px solid var(--border-dim);
 }
 
 .settings-title {
   font-family: var(--font-display);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 700;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   color: var(--text-primary);
+  text-transform: uppercase;
 }
 
 .settings-close {
-  background: none;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: 2px;
   color: var(--text-muted);
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 0 0.25rem;
+  font-size: 1.125rem;
   line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
 .settings-close:hover {
-  color: var(--text-primary);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .settings-body {
   overflow-y: auto;
-  padding: 1rem;
+  padding: 0.875rem 1rem 1.125rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: 0.25rem;
 }
 
+/* ─── Row / label / control column ───────────────────────── */
 .settings-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 11rem;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
+  padding: 0.125rem 0;
 }
 
 .settings-label {
   font-family: var(--font-display);
   font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.05em;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
   white-space: nowrap;
 }
 
+.settings-control {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+/* ─── Toggle group ───────────────────────────────────────── */
 .settings-toggle-group {
   display: flex;
-  border: 1px solid var(--border-dim);
+  width: 100%;
+  border: 1px solid var(--border-med);
   border-radius: 3px;
   overflow: hidden;
+  background: var(--bg-card);
 }
 
 .settings-toggle-btn {
-  background: var(--bg-card);
+  flex: 1;
+  background: transparent;
   border: none;
   color: var(--text-muted);
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  padding: 0.375rem 0.75rem;
+  letter-spacing: 0.12em;
+  padding: 0.4375rem 0.5rem;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
+  text-transform: uppercase;
 }
 
 .settings-toggle-btn + .settings-toggle-btn {
-  border-left: 1px solid var(--border-dim);
+  border-left: 1px solid var(--border-med);
 }
 
 .settings-toggle-btn:hover {
@@ -235,18 +280,173 @@
   color: var(--bg-root);
 }
 
-.settings-select {
+/* ─── Slide switch (binary boolean) ──────────────────────── */
+.settings-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  padding: 0.25rem 0.125rem;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.settings-switch-track {
+  position: relative;
+  display: inline-block;
+  width: 2.25rem;
+  height: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-med);
+  border-radius: 999px;
+  transition: background 0.18s ease, border-color 0.18s ease;
+  flex-shrink: 0;
+}
+
+.settings-switch-thumb {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  transform: translateY(-50%);
+  width: 0.75rem;
+  height: 0.75rem;
+  background: var(--text-muted);
+  border-radius: 50%;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.18s;
+}
+
+.settings-switch.on .settings-switch-track {
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg-card));
+  border-color: var(--accent);
+}
+
+.settings-switch.on .settings-switch-thumb {
+  background: var(--accent);
+  transform: translate(calc(2.25rem - 1rem - 2px), -50%);
+  box-shadow: 0 0 0.375rem var(--accent-glow);
+}
+
+.settings-switch.on {
+  color: var(--accent);
+}
+
+.settings-switch-label {
+  min-width: 1.75rem;
+  text-align: left;
+}
+
+/* ─── Icon gallery modal ──────────────────────────────── */
+.icon-gallery-modal {
+  width: 640px;
+  max-width: 92vw;
+  max-height: 82vh;
+}
+
+.icon-gallery-group + .icon-gallery-group {
+  margin-top: 0.5rem;
+}
+
+.icon-gallery-group-label {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.icon-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 0.5rem;
+}
+
+.icon-gallery-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.375rem;
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  min-height: 76px;
+}
+
+.icon-gallery-tile:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-med);
+}
+
+.icon-gallery-tile--copied {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.icon-gallery-glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.icon-gallery-name {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.1;
+  word-break: break-word;
+}
+
+.settings-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--bg-card);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+    linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+  background-position:
+    calc(100% - 0.75rem) calc(50% - 2px),
+    calc(100% - 0.5rem) calc(50% - 2px);
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+  border: 1px solid var(--border-med);
   border-radius: 3px;
   color: var(--text-primary);
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 0.375rem 0.5rem;
+  letter-spacing: 0.1em;
+  padding: 0.4375rem 1.5rem 0.4375rem 0.625rem;
+  text-transform: uppercase;
   cursor: pointer;
-  min-width: 80px;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.settings-select:hover {
+  border-color: var(--border-bright);
+  background-color: var(--bg-hover);
+}
+
+.settings-select:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .settings-select:disabled {
@@ -352,6 +552,57 @@
 .feedback-submit:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* ─── About Modal ───────────────────────────────────────── */
+.about-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 4px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px var(--scrim-50);
+}
+
+.about-body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.about-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--overlay-04);
+  border: 1px solid var(--overlay-20);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.about-item:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.about-item svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.about-item-label {
+  flex: 1;
 }
 
 /* ─── Devlog Modal ──────────────────────────────────────── */
@@ -1365,6 +1616,436 @@
   pointer-events: none;
 }
 
+/* ─── Collaboration Session Modal ───────────────────────── */
+/* Shell keeps export-modal visual language; a stable min-height
+ * prevents the modal from jumping when swapping between the
+ * compact JOIN form and the taller HOST form. */
+.collab-session-modal {
+  min-height: 560px;
+}
+
+.collab-mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--overlay-02);
+}
+.collab-mode-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.6875rem 0.875rem;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.18s, background 0.18s, border-color 0.18s, box-shadow 0.18s;
+  overflow: hidden;
+}
+.collab-mode-tab-glyph {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition: color 0.18s, opacity 0.18s;
+}
+.collab-mode-tab:hover:not(.collab-mode-tab--active) {
+  color: var(--text-primary);
+  border-color: var(--overlay-40);
+  background: var(--overlay-04);
+}
+.collab-mode-tab:focus-visible {
+  outline: 1px dashed var(--accent);
+  outline-offset: 2px;
+}
+.collab-mode-tab--active {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent),
+    0 0 18px -4px var(--accent-glow);
+}
+.collab-mode-tab--active .collab-mode-tab-glyph {
+  color: var(--accent);
+  opacity: 1;
+}
+.collab-mode-tab--active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 8px -1px var(--accent-glow);
+}
+
+/* ── Host form — tighter field rail above the list ─────── */
+.collab-host-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0;
+}
+
+/* ── Join form — anchor room code as the visual centerpiece ─ */
+.collab-join-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  padding: 1.25rem 1rem 1.125rem;
+}
+.collab-join-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+.collab-join-field-label {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.collab-join-code-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-root);
+  border: 1px solid var(--border-med);
+  border-radius: 3px;
+  padding: 0.875rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 1.625rem;
+  font-weight: 600;
+  letter-spacing: 0.56em;
+  text-align: center;
+  text-indent: 0.56em; /* offset to keep the text optically centered with tracking */
+  color: var(--accent);
+  outline: none;
+  text-transform: uppercase;
+  caret-color: var(--accent);
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.collab-join-code-input::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 70%, transparent);
+  font-weight: 400;
+}
+.collab-join-code-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--border-med));
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-root));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent),
+              0 0 22px -8px var(--accent-glow);
+}
+.collab-join-field-hint {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+.collab-join-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-root);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.12s, background 0.12s;
+}
+.collab-join-name-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-med));
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg-root));
+}
+.collab-join-name-input::placeholder { color: var(--text-muted); }
+
+.collab-join-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.6875rem 0.875rem;
+  margin-top: auto;
+  border: 1px solid var(--border-dim);
+  border-left: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  background: var(--overlay-02);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.collab-join-note-glyph {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  opacity: 0.8;
+}
+
+/* ── In-session view (room code · peers · actions) ──────── */
+.collab-session-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.collab-session-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--border-dim);
+  border-left: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  background: var(--overlay-02);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+.collab-status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--bg-panel), 0 0 6px -1px currentColor;
+}
+.collab-status-label {
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.collab-status-sep {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+.collab-status-role {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.collab-status-retry {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: #e8732a;
+  margin-left: auto;
+}
+.collab-status-retry--failed { color: #e05555; }
+
+.collab-code-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem 1rem;
+  border: 1px solid var(--border-med);
+  border-left: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg-inset));
+  border-radius: 3px;
+  position: relative;
+}
+.collab-code-block::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent) 55%, transparent) 40%,
+    color-mix(in srgb, var(--accent) 55%, transparent) 60%,
+    transparent 100%
+  );
+  opacity: 0.65;
+  pointer-events: none;
+}
+.collab-code-label {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.collab-code-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.collab-code-value {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.48em;
+  text-indent: 0.48em;
+  color: var(--accent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 35%, transparent);
+  user-select: all;
+  text-transform: uppercase;
+}
+.collab-code-hint {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+.collab-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: var(--overlay-04);
+  border: 1px solid var(--overlay-20);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s, border-color 0.12s, box-shadow 0.12s;
+  flex-shrink: 0;
+}
+.collab-copy-btn:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: 0 0 10px -4px var(--accent-glow);
+}
+.collab-copy-btn--copied,
+.collab-copy-btn--copied:hover {
+  color: #3cc46e;
+  border-color: color-mix(in srgb, #3cc46e 55%, transparent);
+  background: color-mix(in srgb, #3cc46e 12%, transparent);
+  box-shadow: 0 0 10px -4px color-mix(in srgb, #3cc46e 60%, transparent);
+}
+
+.collab-peers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+.collab-peers-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+.collab-peers-label {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.collab-peers-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+.collab-peers-empty {
+  padding: 0.625rem 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.collab-peers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.collab-peer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 2px;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  transition: background 0.1s;
+}
+.collab-peer:hover { background: var(--overlay-04); }
+.collab-peer--local {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.collab-peer--local:hover {
+  background: color-mix(in srgb, var(--accent) 11%, transparent);
+}
+.collab-peer-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.collab-peer-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.collab-peer--local .collab-peer-name { font-weight: 600; }
+.collab-peer-role {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.export-btn--danger {
+  color: #e8a090;
+  border-color: color-mix(in srgb, #e05555 45%, transparent);
+  background: color-mix(in srgb, #e05555 10%, transparent);
+}
+.export-btn--danger:hover {
+  color: var(--bg-panel);
+  background: #e05555;
+  border-color: #e05555;
+  box-shadow: 0 0 0 1px #e05555, 0 0 12px -2px color-mix(in srgb, #e05555 80%, transparent);
+}
+
 /* ─── Warning Modal ────────────────────────────────────── */
 .warning-modal {
   width: 420px;
@@ -1476,6 +2157,7 @@
 /* ─── Icon strip (always visible, narrow) ──────────────── */
 .sidebar-icon-strip {
   flex: 0 0 36px;
+  width: 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2786,7 +3468,6 @@
 .tl-loadout-corner {
   grid-column: 1;
   background: var(--bg-panel);
-  border-right: 1px solid var(--border-dim);
   border-bottom: 2px solid var(--border-dim);
   display: flex;
   flex-direction: column;
@@ -2814,6 +3495,29 @@
   background: var(--overlay-10);
 }
 
+/* Fill variant — icon-only button that fills the corner cell. Subtle by
+   default (no border/bg, dim color); surfaces button chrome on hover. */
+.btn-orientation-toggle--fill {
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  margin: 3px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--text-muted);
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.btn-orientation-toggle--fill:hover {
+  background: var(--overlay-10);
+  border-color: var(--border-dim);
+  color: var(--text-primary);
+}
+
 .tl-loadout-cell {
   position: relative;
   background: var(--bg-panel);
@@ -2822,6 +3526,19 @@
   padding: 0;
   overflow: hidden;
   min-width: 0;
+  /* Fixed row height so the OperatorStatsCard has room to breathe — matches
+     the vertical space the old loadout header used to occupy. */
+  height: 8rem;
+}
+
+/* OperatorStatsCard fills the cell edge-to-edge; suppress the card's own
+   border so the planner grid's borders are the only visible dividers. */
+.tl-loadout-cell > .slc-op-unit {
+  width: 100%;
+  height: 100%;
+}
+.tl-loadout-cell .slc-op-card {
+  border: none;
 }
 
 .tl-loadout-cell:not(.tl-loadout-cell--enemy):not(.tl-loadout-cell--common)::after {
@@ -2844,13 +3561,12 @@
 
 .tl-loadout-cell--enemy {
   position: relative;
-  background: color-mix(in srgb, #cc3333 5%, var(--bg-panel));
 }
 
 /* ─── Group gap: visual separation between operator/enemy groups ── */
 .tl-header-cell.tl-group-start,
 .tl-sub-timeline.tl-group-start {
-  border-left: 4px solid var(--border-bright);
+  border-left: 2px solid var(--border-med);
 }
 
 .tl-loadout-cell--enemy > .lo-cell {
@@ -3254,8 +3970,47 @@
   border-right: 1px solid var(--border-dim);
   border-bottom: 1px solid var(--border-med);
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  gap: 2px;
+  padding: 2px;
+}
+
+.tl-corner > * {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* Inside the stacked corner, the orientation toggle shouldn't fill the whole
+   cell — it shares vertical space with the freeform button. */
+.tl-corner .btn-orientation-toggle--fill {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.btn-freeform {
+  display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1px 3px;
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.btn-freeform:hover {
+  color: var(--text-primary);
+  background: var(--overlay-10);
+  border-color: var(--border-dim);
 }
 
 .corner-label {
@@ -3299,10 +4054,6 @@
   justify-content: center;
   gap: 0.1875rem;
   overflow: hidden;
-}
-
-.tl-header-cell.enemy-header {
-  background: color-mix(in srgb, #cc3333 5%, var(--bg-panel));
 }
 
 .tl-header-cell--empty {
@@ -5428,7 +6179,7 @@
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
+  color: var(--text-primary);
   padding: 0 0.25rem;
   cursor: grab;
   user-select: none;
@@ -9376,6 +10127,10 @@
 }
 
 /* Loadout cells: fill parent in horizontal mode */
+.timeline-outer--horizontal .tl-loadout-cell {
+  /* In horizontal mode cells are grid-row items; let them flex to the row size. */
+  height: auto;
+}
 .timeline-outer--horizontal .tl-loadout-cell .lo-cell {
   aspect-ratio: unset;
   height: 100%;
@@ -9451,7 +10206,7 @@
 .timeline-outer--horizontal .tl-header-cell.tl-group-start,
 .timeline-outer--horizontal .tl-sub-timeline.tl-group-start {
   border-left: none;
-  border-top: 4px solid var(--border-bright);
+  border-top: 2px solid var(--border-med);
 }
 
 /* Gridlines: vertical lines instead of horizontal */
@@ -10806,6 +11561,7 @@
 .ops-conjoined-seg {
   flex: 1;
   min-width: 4.5rem;
+  max-width: 12rem;
   padding: 0.375rem 0.25rem;
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
@@ -10818,6 +11574,14 @@
   align-items: center;
   justify-content: center;
   transition: all 0.12s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ops-conjoined-seg-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
   white-space: nowrap;
 }
 .ops-conjoined-seg:hover {
@@ -10902,6 +11666,7 @@
   position: relative;
   flex: 1;
   min-width: 4.5rem;
+  max-width: 12rem;
   display: flex;
 }
 .ops-conjoined-seg-wrap > .ops-conjoined-seg {
@@ -12429,7 +13194,9 @@
    truly constrained. */
 .csh {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2.5fr);
+  /* Stats table takes the full header when no operators are rendered; the
+     --with-operators modifier re-introduces the operator column on the left. */
+  grid-template-columns: minmax(0, 1fr);
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border-dim);
   width: 100%;
@@ -12438,6 +13205,9 @@
   /* enable container-relative sizing (cqh/cqi) for all descendants so content
      genuinely scales with the widget's size, not the root font-size. */
   container-type: size;
+}
+.csh--with-operators {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.5fr);
 }
 .csh-team,
 .csh-stats {
@@ -12772,6 +13542,357 @@
   width: 1px;
   align-self: stretch;
   background: var(--border-dim);
+}
+
+/* ═══ Combat-header damage strip (.chs) ═══════════════════════════════════
+   Telemetry-style dashboard. Vital block (left) + ranked operator lanes
+   (right). Empty Combo/Ultimate columns vanish into the stacked bar; empty
+   operators collapse to a slim placeholder. Container queries (cqi/cqh)
+   inherit from the .csh wrapper. */
+
+.chs {
+  --chs-rail: 2px;
+  --chs-gap-x: clamp(0.5rem, 1.4cqi, 1.25rem);
+  --chs-gap-y: clamp(0.125rem, 0.8cqh, 0.375rem);
+  --chs-vital-w: clamp(8.75rem, 22cqi, 15rem);
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(0.375rem, 2.4cqh, 0.875rem) clamp(0.5rem, 1.4cqi, 1.125rem);
+  display: grid;
+  grid-template-columns:
+    [vitals] minmax(0, var(--chs-vital-w))
+    [lanes]  minmax(0, 1fr);
+  grid-template-rows:
+    [main]   minmax(0, 1fr)
+    [legend] auto;
+  column-gap: var(--chs-gap-x);
+  row-gap: clamp(0.125rem, 0.6cqh, 0.375rem);
+  position: relative;
+  overflow: hidden;
+}
+.chs::before {
+  /* Subtle scanlines — pure decoration. Pinned to the strip background and
+     pointer-event-free so they never interfere with hit testing. */
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 3px,
+      rgba(255, 255, 255, 0.015) 3px,
+      rgba(255, 255, 255, 0.015) 4px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+.chs > * { position: relative; z-index: 1; }
+
+.chs--empty {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  place-items: center;
+}
+.chs-empty {
+  font-family: var(--font-mono);
+  font-size: clamp(0.625rem, 1.6cqh, 0.8125rem);
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* ─── Vitals block (left) ──────────────────────────────────────────────── */
+.chs-vitals {
+  grid-column: vitals;
+  grid-row: main;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  padding-left: calc(var(--chs-rail) + clamp(0.375rem, 1cqi, 0.75rem));
+}
+.chs-vitals-rail {
+  position: absolute;
+  left: 0; top: 8%; bottom: 8%;
+  width: var(--chs-rail);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--accent) 18%,
+    var(--accent) 82%,
+    transparent 100%
+  );
+  box-shadow: 0 0 0.625rem var(--accent-glow);
+  opacity: 0.85;
+}
+.chs-vitals-grid {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  /* Lead vital occupies the full first row; secondary vitals share a row
+     beneath it. Container query keeps proportions readable at all sizes. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 3.25rem), 1fr));
+  align-content: space-between;
+  row-gap: clamp(0.125rem, 0.8cqh, 0.5rem);
+  column-gap: clamp(0.375rem, 1cqi, 0.75rem);
+}
+.chs-vital {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: clamp(0, 0.2cqh, 0.125rem);
+}
+.chs-vital--lead {
+  grid-column: 1 / -1;
+}
+.chs-vital-label {
+  font-family: var(--font-mono);
+  font-size: clamp(0.4375rem, 1.4cqh, 0.625rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chs-vital-value {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: clamp(0.75rem, 2.8cqh, 1.125rem);
+  color: var(--text-bright);
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chs-vital--lead .chs-vital-value {
+  /* The team total is the headline — pump the size and let the display
+     family do the talking. */
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.25rem, 4.8cqh, 2.25rem);
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  text-shadow: 0 0 1.5rem var(--accent-glow);
+}
+.chs-vital-unit {
+  margin-left: 0.25em;
+  font-size: 0.62em;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+}
+.chs-vital--lead .chs-vital-unit {
+  /* No unit on the lead value (Team Total has no unit suffix), but the rule
+     stays here for safety. */
+  color: color-mix(in srgb, var(--accent) 55%, var(--text-secondary));
+}
+
+/* ─── Operator lanes (right) ───────────────────────────────────────────── */
+.chs-lanes {
+  grid-column: lanes;
+  grid-row: main;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chs-gap-y);
+  min-width: 0;
+  min-height: 0;
+}
+.chs-lane {
+  --accent: var(--text-secondary);
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  /* Fixed-width id column so the bar tracks line up across every lane,
+     regardless of how long each operator name is. Longer names ellipse;
+     the bar always starts at the same x. */
+  grid-template-columns:
+    clamp(4.5rem, 12cqi, 7.5rem)
+    minmax(0, 1fr)
+    clamp(3.25rem, 9cqi, 5.5rem);
+  align-items: center;
+  column-gap: clamp(0.375rem, 1cqi, 0.875rem);
+  padding: 0 clamp(0.125rem, 0.5cqi, 0.5rem);
+  position: relative;
+  transition: background-color 120ms ease;
+}
+.chs-lane + .chs-lane {
+  border-top: 1px dashed var(--border-dim);
+}
+.chs-lane:hover {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.chs-lane--placeholder {
+  grid-template-columns: 1fr;
+  place-items: center;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: clamp(0.4375rem, 1.4cqh, 0.6875rem);
+  letter-spacing: 0.08em;
+}
+
+/* Identifier cluster — rank · element dot · name */
+.chs-lane-id {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.25rem, 0.6cqi, 0.5rem);
+  min-width: 0;
+}
+.chs-lane-rank {
+  font-family: var(--font-mono);
+  font-size: clamp(0.4375rem, 1.5cqh, 0.6875rem);
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  /* Reserve a fixed glyph slot so dots/names align across rows. */
+  min-width: 1.4em;
+  text-align: right;
+}
+.chs-lane--lead .chs-lane-rank {
+  color: var(--accent);
+  text-shadow: 0 0 0.5rem var(--accent-glow);
+}
+.chs-lane-dot {
+  width:  clamp(4px, 1cqh, 0.5rem);
+  height: clamp(4px, 1cqh, 0.5rem);
+  background: var(--accent);
+  box-shadow: 0 0 0.5rem var(--accent);
+  flex-shrink: 0;
+  /* Diamond — feels more "weapon system" than a circle. */
+  transform: rotate(45deg);
+}
+.chs-lane--empty .chs-lane-dot {
+  background: var(--text-muted);
+  box-shadow: none;
+  opacity: 0.4;
+}
+.chs-lane-name {
+  font-family: var(--font-display);
+  font-size: clamp(0.6875rem, 2.4cqh, 1.0625rem);
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.chs-lane--empty .chs-lane-name {
+  color: var(--text-muted);
+}
+
+/* Stacked damage-breakdown bar — the centrepiece. The track is a fixed
+   rail; the bar fills `--bar-fill` of the rail (this operator's share of
+   the leader's total) and is itself segmented by skill type. */
+.chs-lane-bar {
+  min-width: 0;
+  height: clamp(0.4375rem, 1.6cqh, 0.6875rem);
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.chs-bar-track {
+  position: relative;
+  width: var(--bar-fill, 0%);
+  height: 100%;
+  display: flex;
+  background: transparent;
+  transition: width 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.chs-lane--empty .chs-bar-track,
+.chs-lane-bar:has(.chs-bar-track:empty) .chs-bar-track {
+  /* Render a hairline placeholder so empty operators still mark their lane. */
+  width: clamp(0.625rem, 1.5cqi, 1.25rem);
+  background: var(--overlay-04);
+  clip-path: none;
+}
+.chs-bar-seg {
+  height: 100%;
+  flex-shrink: 0;
+  position: relative;
+}
+.chs-bar-seg + .chs-bar-seg {
+  /* Razor-thin separator between segments — keeps adjacent colours readable
+     even when one is dominant. */
+  box-shadow: inset 1px 0 0 0 var(--bg-panel);
+}
+.chs-lane--lead .chs-bar-track {
+  filter: saturate(1.1) brightness(1.05);
+}
+
+/* Total + share */
+.chs-lane-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+.chs-lane-num {
+  font-family: var(--font-mono);
+  font-size: clamp(0.625rem, 2.4cqh, 1rem);
+  font-weight: 500;
+  color: var(--text-bright);
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.chs-lane--lead .chs-lane-num {
+  color: var(--accent);
+  text-shadow: 0 0 0.625rem var(--accent-glow);
+}
+.chs-lane-pct {
+  font-family: var(--font-mono);
+  font-size: clamp(0.4375rem, 1.5cqh, 0.6875rem);
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+.chs-lane-dash {
+  font-family: var(--font-mono);
+  font-size: clamp(0.5rem, 1.8cqh, 0.8125rem);
+  color: var(--text-muted);
+  opacity: 0.55;
+  line-height: 1;
+}
+
+/* ─── Legend (bottom) ──────────────────────────────────────────────────── */
+.chs-legend {
+  grid-column: lanes;
+  grid-row: legend;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(0.375rem, 1cqi, 0.875rem);
+  padding-top: clamp(0.125rem, 0.6cqh, 0.375rem);
+  border-top: 1px dashed var(--border-dim);
+  min-width: 0;
+}
+.chs-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  white-space: nowrap;
+}
+.chs-legend-swatch {
+  width:  clamp(0.4375rem, 1.2cqh, 0.625rem);
+  height: clamp(0.1875rem, 0.5cqh, 0.25rem);
+  flex-shrink: 0;
+}
+.chs-legend-label {
+  font-family: var(--font-mono);
+  font-size: clamp(0.4375rem, 1.4cqh, 0.625rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
 /* ─── Statistics page ───────────────────────────────────────────── */
@@ -13149,6 +14270,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
+  position: relative;
 }
 
 .slc-titlebar {
@@ -13214,9 +14336,11 @@
   border-radius: 2px;
   position: relative;
   overflow: hidden;
-  /* Fluid height: grows/shrinks with viewport within sane bounds so cards have
-     room to breathe and gear/stats scale alongside. */
-  height: clamp(20rem, 46vh, 38rem);
+  /* Height scales with visible operator rows + the team footer. `--row-count`
+     is set by the component to reflect how many operator rows (+ 1 for the
+     team footer) are actually rendered. Scales per row so vertical space isn't
+     wasted; trimmed rows shrink the card further. */
+  height: clamp(8rem, calc((var(--row-count, 5) / 5) * 32vh), 26rem);
 }
 
 /* Corner tick marks */
@@ -13244,33 +14368,57 @@
   min-height: 0;
   container-type: size;
 }
-.slc-cards-row,
-.slc-gear-row {
+.slc-cards-row {
   display: grid;
   /* Cards flex equally to fill the team block's width — no hardcoded cap. */
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(0.25rem, 0.8cqi, 0.5rem);
   min-width: 0;
+  flex: 1 1 0;
+  min-height: 0;
 }
-/* Cards row takes whatever vertical space is left after gear strips. */
-.slc-cards-row { flex: 1 1 0; min-height: 0; }
+
+/* Per-operator unit — operator card on the left, vertical gear strip flush
+   against its right edge. Flex row inside a grid cell; card flexes, gear strip
+   is a narrow fixed column that shares the card's border. */
+.slc-op-unit {
+  --accent: var(--text-secondary);
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  min-width: 0;
+  min-height: 0;
+}
+/* 4:1 flex ratio between the operator card and its gear strip. Both flex so
+   they share the unit's available width proportionally; the strip has a
+   min-width so it never collapses below a usable icon size. */
+.slc-op-unit > .slc-op-card {
+  flex: 4 1 0;
+  min-width: 0;
+}
+.slc-op-unit > .slc-gear-strip {
+  flex: 1 1 0;
+  min-width: 1rem;
+  /* Width is driven by flex here, not the intrinsic clamp on .slc-gear-strip. */
+  width: auto;
+  border-left: none;
+}
 
 /* Operator card — fills its grid cell in both dimensions; aspect-ratio removed
    so cards can grow as tall as the parent allows. Internal content (badges,
    accent bar, vignette) scales via container-query units. */
 .slc-op-card {
-  --accent: var(--text-secondary);
   position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
   overflow: hidden;
-  clip-path: polygon(0 0, calc(100% - 0.625rem) 0, 100% 0.625rem, 100% 100%, 0 100%);
   transition: border-color 140ms ease;
   min-width: 0;
   min-height: 0;
   container-type: size;
 }
 .slc-op-card:hover { border-color: var(--border-med); }
+.slc-op-card--clickable { cursor: pointer; }
 
 .slc-op-splash {
   position: absolute;
@@ -13278,27 +14426,6 @@
   background-size: cover;
   background-position: center 20%;
   filter: saturate(0.95) contrast(1.05);
-}
-.slc-op-splash::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, transparent 75%, var(--scrim-50) 95%, var(--scrim-80) 100%),
-    linear-gradient(180deg, rgba(0,0,0,0.1) 0%, transparent 18%);
-}
-
-/* Diagonal color vignette bleeding from bottom-left — scales with card size. */
-.slc-op-card::after {
-  content: "";
-  position: absolute;
-  left: -12%; bottom: -14%;
-  width: 80%;
-  height: 50%;
-  background: radial-gradient(ellipse at bottom left, var(--accent) 0%, transparent 60%);
-  opacity: 0.22;
-  mix-blend-mode: screen;
-  pointer-events: none;
 }
 
 /* Badges cluster — positioned via % so they hug the card corner regardless
@@ -13308,13 +14435,14 @@
   top: 4%;
   left: 4%;
   display: flex;
-  gap: clamp(2px, 1cqi, 0.3125rem);
+  gap: clamp(2px, 1cqmin, 0.3125rem);
   z-index: 2;
 }
 .slc-op-badge {
-  /* Badge ≈ 22% of the card's shorter dimension, clamped for readability. */
-  width: clamp(0.875rem, 14cqi, 2.25rem);
-  height: clamp(0.875rem, 14cqi, 2.25rem);
+  /* Scale by the card's shorter dimension (cqmin) so wide-but-short cards in
+     the planner don't blow up the badges vertically. */
+  width: clamp(0.875rem, 18cqmin, 1.75rem);
+  height: clamp(0.875rem, 18cqmin, 1.75rem);
   overflow: hidden;
   background: rgba(10,12,16,0.72);
   box-shadow: 0 0 0 1px rgba(0,0,0,0.35);
@@ -13352,57 +14480,50 @@
 }
 .slc-op-badge--ele-arts img { display: none; }
 
-/* Bottom accent bar with triangular tail */
+/* Bottom accent bar — the operator's element color. Parallelogram with a
+   slanted right edge; stays inside the card's bounds (no outer glow) so
+   nothing gets clipped. Grows slightly when the operator is selected. */
 .slc-op-accent {
   position: absolute;
   left: 0;
   bottom: 0;
-  /* Fluid — thin at small cards, proud at large. */
-  height: clamp(2px, 0.8cqh, 4px);
-  width: 62%;
+  height: clamp(6px, 3cqh, 14px);
+  width: 70%;
   background: var(--accent);
-  box-shadow: 0 0 0.75rem var(--accent);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 0.5rem) 100%, 0 100%);
+  transition: height 140ms ease;
   z-index: 2;
+  pointer-events: none;
 }
-.slc-op-accent::after {
-  content: "";
-  position: absolute;
-  left: 100%;
-  top: 0;
-  width: clamp(4px, 4cqi, 0.75rem);
-  height: 100%;
-  background: var(--accent);
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-  opacity: 0.55;
+.slc-op-card--editing .slc-op-accent,
+.slc-op-card--clickable:hover .slc-op-accent {
+  height: clamp(10px, 5cqh, 20px);
 }
 
-/* Gear strip — one per operator. Filled items flex to share the row width;
-   empty items are omitted entirely. Strip disappears when nothing is equipped. */
+/* Gear strip — one per operator. Vertical column sitting to the right of the
+   splash card. Filled items flex to share the column height; empty items are
+   omitted entirely. Strip is hidden when nothing is equipped. */
 .slc-gear-strip {
   background: var(--bg-inset);
   border: 1px solid var(--border-dim);
   display: flex;
+  flex-direction: column;
   align-items: stretch;
-  /* Fluid height — scales with team-block height via cqh. */
-  height: clamp(2rem, 10cqh, 3.25rem);
-  min-width: 0;
-}
-/* When an operator has no items, its grid slot still needs to participate in
-   the cards-row's 4-column layout so gear rows align with cards above. The
-   spacer is an invisible placeholder — no border, no background. */
-.slc-gear-row-spacer {
-  min-width: 0;
+  /* Fluid width — scales with card width via cqi. */
+  width: clamp(1.75rem, 9cqi, 2.75rem);
+  flex-shrink: 0;
+  min-height: 0;
 }
 
 .slc-gear-slot {
   position: relative;
   flex: 1 1 0;
-  min-width: 0;
-  border-right: 1px solid var(--border-dim);
+  min-height: 0;
+  border-bottom: 1px solid var(--border-dim);
   transition: background 120ms, border-color 120ms;
   overflow: hidden;
 }
-.slc-gear-slot:last-child { border-right: none; }
+.slc-gear-slot:last-child { border-bottom: none; }
 .slc-gear-slot:hover {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
@@ -13439,6 +14560,34 @@
     drop-shadow(0 0 2px rgba(255, 255, 255, 0.6));
 }
 .slc-gear-slot--weapon[data-pot="0"] .slc-weapon-pot-badge { opacity: 0.65; }
+
+/* ───── BOTTOM layout ─────────────────────────────────────────
+   When the team block renders gear beneath the cards instead of flush-right,
+   flip the strip back to horizontal and add a 4-column gear-row. Used by
+   inter-loadout (grouped) statistics. */
+.slc-team--bottom .slc-gear-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.25rem, 0.8cqi, 0.5rem);
+  min-width: 0;
+}
+.slc-team--bottom .slc-gear-row-spacer { min-width: 0; }
+
+.slc-team--bottom .slc-gear-strip {
+  flex-direction: row;
+  /* Fluid height — scales with team-block height via cqh. */
+  height: clamp(2rem, 10cqh, 3.25rem);
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+}
+.slc-team--bottom .slc-gear-slot {
+  border-bottom: none;
+  border-right: 1px solid var(--border-dim);
+  min-height: 0;
+  min-width: 0;
+}
+.slc-team--bottom .slc-gear-slot:last-child { border-right: none; }
 
 /* ═══ RIGHT: stats block ═══════════════════════════════════ */
 .slc-stats {
@@ -13488,7 +14637,7 @@
 }
 
 .slc-stats-row {
-  padding: clamp(0.25rem, 1.2cqh, 0.75rem) 0;
+  padding: clamp(0.125rem, 0.6cqh, 0.375rem) 0;
   border-bottom: 1px dashed var(--border-dim);
   flex: 1 1 0;
   min-height: 0;
@@ -13561,6 +14710,41 @@
 .slc-num-cell--dim .slc-num { color: var(--text-muted); }
 .slc-num-cell--dim .slc-pct { opacity: 0; }
 
+/* When the stats card is short (e.g. the combat-sheet header, which is only
+   as tall as one planner loadout row), collapse each cell's number + pct to
+   a single inline row instead of stacking them vertically. Uses the ancestor
+   container query established on .csh / .slc-widget. */
+
+/* Combat-sheet header: equal flex across every operator row + the team
+   footer (1:1:1:1:1 for 4 operators). Grid gets --row-count flex, footer
+   gets 1 — each row inside the grid then claims 1/(rows+1) of the height. */
+.csh .slc-stats-grid {
+  flex-grow: var(--row-count, 4);
+  flex-basis: 0;
+  min-height: 0;
+}
+.csh .slc-team-footer {
+  flex-grow: 1;
+  flex-basis: 0;
+  margin-top: 0;
+  min-height: 0;
+  /* Mirror the body's grid template so footer cells line up with the
+     Operator / Total / Basic / Battle / Combo / Ultimate columns above. */
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) repeat(5, minmax(0, 1fr));
+  gap: 0;
+  padding: 0 0;
+}
+/* Dividers would eat grid slots and misalign the columns; drop them in the
+   combat-sheet header — the grid's column boundaries are the divider. */
+.csh .slc-team-divider { display: none; }
+/* Match the body's num-cell padding + right alignment so every column reads
+   as a single vertical gutter. */
+.csh .slc-team-stat {
+  padding: 0 0.375rem;
+  justify-content: flex-end;
+}
+
 /* ═══ Team footer ═══════════════════════════════════════════ */
 .slc-team-footer {
   margin-top: auto;
@@ -13597,6 +14781,13 @@
   letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
 }
+/* Delta-mode sign colors on the team footer. Scoped to .slc-ts-value so they
+   don't leak into operator rows (.slc-num already has its own delta colors). */
+.slc-ts-value.slc-num--delta-pos { color: var(--green); }
+.slc-ts-value.slc-num--delta-neg { color: var(--red); }
+/* Base row / missing reference → footer stat renders blank. Dim the whole
+   cell so it's obviously not a value, matching .slc-num-cell--dim. */
+.slc-team-stat--dim .slc-ts-value { color: var(--text-muted); opacity: 0.35; }
 .slc-ts-unit {
   font-size: clamp(0.5625rem, 2cqh, 0.875rem);
   color: var(--text-secondary);
@@ -13607,6 +14798,26 @@
   width: 1px;
   align-self: stretch;
   background: var(--border-dim);
+}
+
+/* Compact/fluid mode — when the stats card is short (e.g. the combat-sheet
+   header at one loadout-row tall), collapse stacked cells to inline rows so
+   everything fits on one line per stat. Placed after the base rules so the
+   cascade picks these overrides up. */
+@container (block-size < 13rem) {
+  .slc-num-cell {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.375rem;
+  }
+  .slc-team-stat {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.375rem;
+  }
+  .slc-ts-value {
+    font-size: clamp(0.6875rem, 2.6cqh, 0.9375rem);
+  }
 }
 
 /* ═══ Statistics filter context menu ═══════════════════════════ */
@@ -13635,8 +14846,8 @@
 .slc-widget--grouped {
   display: flex;
   flex-direction: column;
-  /* Override the fluid height used by single-source widgets — grouped
-     grows naturally with its content since it has N stats tables inline. */
+  /* Grouped stacks N inline stats tables vertically, so it manages its own
+     height entirely from content — clear the single-source --row-count clamp. */
   height: auto;
 }
 /* The operator section's height scales with team-block container queries;
@@ -13804,6 +15015,21 @@
   border-radius: 1px;
 }
 .slc-grab-handle:hover > span { background: var(--text-primary); }
+
+/* Card-level grab handle sits in a left-side gutter outside the card, matching
+   the view-group handle's placement. Hidden by default, fades in on hover of
+   the card or while actively dragging. */
+.slc-grab-handle--card {
+  left: -1.25rem;
+}
+.slc:hover .slc-grab-handle--card,
+.slc--dragging .slc-grab-handle--card {
+  opacity: 0.8;
+}
+.slc--dragging {
+  opacity: 0.55;
+  cursor: grabbing;
+}
 
 /* Column-header cells become draggable — grab cursor advertises the
    affordance; the "reordering" class on the parent suppresses per-cell

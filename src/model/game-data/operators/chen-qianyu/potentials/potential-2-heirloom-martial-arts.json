@@ -48,7 +48,9 @@
     }
   ],
   "properties": {
-    "id": "CHEN_QIANYU_POTENTIAL_2",
+    "id": "HEIRLOOM_MARTIAL_ARTS_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Agi": 15,
@@ -60,8 +62,11 @@
       "-PhysicalDamageIncrease": -0.08,
       "PhysicalDamageIncrease-1": -0.92
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

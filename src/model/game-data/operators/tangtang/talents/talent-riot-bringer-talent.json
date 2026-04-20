@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "RIOT_BRINGER_TALENT",
+    "id": "RIOT_BRINGER_T2",
     "descriptionParams": {
       "talent2": 1,
       "dmg_up_water_ult": 0.6,
@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "TANGTANG",

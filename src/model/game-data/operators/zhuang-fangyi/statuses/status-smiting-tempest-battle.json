@@ -1,0 +1,52 @@
+{
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 25
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": []
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
+  "properties": {
+    "id": "SMITING_TEMPEST_BATTLE",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventCategoryType": "SKILL_STATUS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 25
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
+  },
+  "metadata": {
+    "originId": "ZHUANG_FANGYI",
+    "dataStatus": "VERIFIED"
+  }
+}

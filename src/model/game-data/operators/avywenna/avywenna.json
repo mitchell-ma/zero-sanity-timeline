@@ -9,8 +9,8 @@
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "AGILITY",
   "talents": {
-    "one": "EXPEDITED_DELIVERY_TALENT",
-    "two": "TACTFUL_APPROACH_TALENT",
+    "one": "EXPEDITED_DELIVERY_T1",
+    "two": "TACTFUL_APPROACH_T2",
     "attributeIncrease": {
       "id": "STALWART"
     }

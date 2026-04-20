@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "GRAVITY_MODE",
     "eventCategoryType": "BATTLE",
     "element": "NATURE",
-    "id": "GRAVITY_MODE",
     "descriptionParams": {
       "atk_scale_pull": 0.55,
       "atk_scale_explosion": 1.3,
@@ -17,7 +16,10 @@
       "1-poise": -9,
       "-poise": -10,
       "poise-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "GILBERTA",

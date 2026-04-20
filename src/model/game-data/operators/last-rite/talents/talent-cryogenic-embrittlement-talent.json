@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "CRYOGENIC_EMBRITTLEMENT_TALENT",
+    "id": "CRYOGENIC_EMBRITTLEMENT_T2",
     "descriptionParams": {
       "talent_2": 1,
       "rate": 1.5,
@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LAST_RITE",

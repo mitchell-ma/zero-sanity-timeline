@@ -9,8 +9,8 @@
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "talents": {
-    "one": "INFLAMED_FOR_THE_ASSAULT_TALENT",
-    "two": "PAY_THE_FERRIC_PRICE",
+    "one": "INFLAMED_FOR_THE_ASSAULT_T1",
+    "two": "PAY_THE_FERRIC_PRICE_T2",
     "attributeIncrease": {
       "id": "FORGED"
     }

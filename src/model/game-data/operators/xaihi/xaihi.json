@@ -9,8 +9,8 @@
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "INTELLECT",
   "talents": {
-    "one": "EXECUTE_PROCESS_TALENT",
-    "two": "FREEZE_PROTOCOL_TALENT",
+    "one": "EXECUTE_PROCESS_T1",
+    "two": "FREEZE_PROTOCOL_T2",
     "attributeIncrease": {
       "id": "STALWART"
     }

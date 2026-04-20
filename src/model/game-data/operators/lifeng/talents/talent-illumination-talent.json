@@ -86,7 +86,7 @@
     }
   ],
   "properties": {
-    "id": "ILLUMINATION_TALENT",
+    "id": "ILLUMINATION_T1",
     "descriptionParams": {
       "atk_up": 0.0015,
       "1-atk_up": 0.9985,
@@ -99,8 +99,11 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "LIFENG",

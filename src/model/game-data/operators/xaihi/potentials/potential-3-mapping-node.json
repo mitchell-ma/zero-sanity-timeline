@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "XAIHI_POTENTIAL_3",
+    "id": "MAPPING_NODE_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "potential_3": 1,
@@ -8,8 +10,10 @@
       "-potential_3": -1,
       "potential_3-1": 0
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "XAIHI",

@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "CATCHER_POTENTIAL_3",
+    "id": "UNWAVERING_POST_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "potential3_duration": 5,
@@ -8,8 +10,10 @@
       "-potential3_duration": -5,
       "potential3_duration-1": 4
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "CATCHER",

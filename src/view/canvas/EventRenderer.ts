@@ -420,10 +420,15 @@ export function renderEvent(
       // override label, which reflects cumulative count at event-start and may
       // disagree with the trimmed segment's actual stack-count window.
       const segName = seg.properties.name;
-      const trailingMatch = segName.match(TRAILING_NUMERAL_RE);
-      segLabelText = (segName.length * 6 + 8 <= segH)
-        ? segName
-        : (trailingMatch?.[1] ?? segName);
+      const isClamped = presentation.visualActivationDuration != null;
+      if (isClamped) {
+        const trailingMatch = segName.match(TRAILING_NUMERAL_RE);
+        segLabelText = (segName.length * 6 + 8 <= segH)
+          ? segName
+          : (trailingMatch?.[1] ?? segName);
+      } else {
+        segLabelText = segName;
+      }
     } else if (isSingleSeg) {
       const fullLabel = presentation.label;
       if (fullLabel) {

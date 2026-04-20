@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "BREATH_OF_TRANSFORMATION",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
-    "id": "BREATH_OF_TRANSFORMATION",
     "descriptionParams": {
       "atk_scale": 3.6,
       "poise": 10,
@@ -22,17 +21,9 @@
       "-usp_extra": -10,
       "usp_extra-1": 9
     },
-    "suppliedParameters": {
-      "VARY_BY": [
-        {
-          "id": "INFLICTION_STACKS_CONSUMED",
-          "name": "Electric Infliction Stacks Consumed",
-          "lowerRange": 0,
-          "upperRange": 5,
-          "default": 1
-        }
-      ]
-    }
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {
@@ -138,28 +129,20 @@
                       }
                     }
                   }
-                },
+                }
+              ]
+            },
+            {
+              "conditions": [
                 {
-                  "verb": "CONSUME",
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
                   "object": "STATUS",
                   "objectId": "INFLICTION",
-                  "objectQualifier": "ELECTRIC",
-                  "from": "ENEMY",
-                  "with": {
-                    "stacks": {
-                      "verb": "VARY_BY",
-                      "object": "INFLICTION_STACKS_CONSUMED",
-                      "value": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
-                      ]
-                    }
-                  }
-                },
+                  "objectQualifier": "ELECTRIC"
+                }
+              ],
+              "effects": [
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
@@ -170,6 +153,25 @@
                     "isForced": {
                       "verb": "IS",
                       "value": 1
+                    },
+                    "statusLevel": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 1
+                      },
+                      "right": {
+                        "verb": "IS",
+                        "object": "STATUS_LEVEL",
+                        "of": {
+                          "object": "STATUS",
+                          "objectId": "REACTION",
+                          "objectQualifier": "ELECTRIFICATION",
+                          "of": {
+                            "object": "ENEMY"
+                          }
+                        }
+                      }
                     }
                   }
                 },
@@ -180,31 +182,34 @@
                   "to": "OPERATOR",
                   "with": {
                     "value": {
-                      "operation": "ADD",
+                      "operation": "MULT",
                       "left": {
                         "verb": "IS",
                         "value": 10
                       },
                       "right": {
-                        "operation": "MULT",
-                        "left": {
-                          "verb": "IS",
-                          "value": 10
-                        },
-                        "right": {
-                          "verb": "VARY_BY",
-                          "object": "INFLICTION_STACKS_CONSUMED",
-                          "value": [
-                            0,
-                            1,
-                            2,
-                            3,
-                            4,
-                            5
-                          ]
+                        "verb": "IS",
+                        "object": "STACKS",
+                        "of": {
+                          "object": "STATUS",
+                          "objectId": "INFLICTION",
+                          "objectQualifier": "ELECTRIC",
+                          "of": {
+                            "object": "ENEMY"
+                          }
                         }
                       }
                     }
+                  }
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "ELECTRIC",
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
                   }
                 }
               ]
@@ -255,7 +260,7 @@
   ],
   "metadata": {
     "originId": "ZHUANG_FANGYI",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "activationWindow": {
     "properties": {
@@ -265,11 +270,12 @@
       {
         "conditions": [
           {
-            "subjectDeterminer": "ANY",
+            "subjectDeterminer": "CONTROLLED",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "SKILL",
-            "objectId": "FINAL_STRIKE"
+            "objectId": "FINAL_STRIKE",
+            "to": "ENEMY"
           },
           {
             "subject": "ENEMY",
@@ -283,11 +289,12 @@
       {
         "conditions": [
           {
-            "subjectDeterminer": "ANY",
+            "subjectDeterminer": "CONTROLLED",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "SKILL",
-            "objectId": "FINISHER"
+            "objectId": "FINISHER",
+            "to": "ENEMY"
           },
           {
             "subject": "ENEMY",

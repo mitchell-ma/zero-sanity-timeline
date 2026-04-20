@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "PERLICA_POTENTIAL_1",
+    "id": "CRISIS_HANDLING_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "duration": 1.75,
@@ -8,8 +10,10 @@
       "-duration": -1.75,
       "duration-1": 0.75
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "PERLICA",

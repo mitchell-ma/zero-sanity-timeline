@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "TIMELY_SUPPRESSION",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "TIMELY_SUPPRESSION",
     "descriptionParams": {
       "atk_scale": 0.55,
       "atk_scale_1": 2.25,
@@ -37,7 +36,10 @@
       "1-trigger_hp_ratio": 0.6,
       "-trigger_hp_ratio": -0.4,
       "trigger_hp_ratio-1": -0.6
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

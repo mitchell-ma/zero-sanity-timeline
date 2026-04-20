@@ -22,7 +22,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.033333335,
                     0.06,
@@ -35,8 +35,11 @@
                     0.26
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               },

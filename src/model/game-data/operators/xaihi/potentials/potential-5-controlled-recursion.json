@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "XAIHI_POTENTIAL_5",
+    "id": "CONTROLLED_RECURSION_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "atk_up": 1.1,
@@ -16,8 +18,10 @@
       "-wisd_max": -1.1,
       "wisd_max-1": 0.10000000000000009
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "XAIHI",

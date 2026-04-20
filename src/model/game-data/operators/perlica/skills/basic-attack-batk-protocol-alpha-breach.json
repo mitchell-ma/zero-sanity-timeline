@@ -543,11 +543,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "PROTOCOL_ALPHA_BREACH_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "ELECTRIC",
-    "id": "PROTOCOL_ALPHA_BREACH_BATK",
     "descriptionParams": {
       "atk_scale": 1.27,
       "atb": 15,
@@ -561,7 +560,10 @@
       "1-poise": -14,
       "-poise": -15,
       "poise-1": 14
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "PERLICA",

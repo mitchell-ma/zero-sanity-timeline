@@ -9,8 +9,8 @@
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "WILL",
   "talents": {
-    "one": "OBLITERATION_PROTOCOL_TALENT",
-    "two": "CYCLE_PROTOCOL_TALENT",
+    "one": "OBLITERATION_PROTOCOL_T1",
+    "two": "CYCLE_PROTOCOL_T2",
     "attributeIncrease": {
       "id": "KEEN_MIND"
     }

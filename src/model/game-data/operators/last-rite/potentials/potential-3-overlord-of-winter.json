@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "LAST_RITE_POTENTIAL_3",
+    "id": "OVERLORD_OF_WINTER_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "atk_scale2": 1.15,
@@ -16,8 +18,10 @@
       "-atk_scale": -1.15,
       "atk_scale-1": 0.1499999999999999
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LAST_RITE",

@@ -61,6 +61,9 @@ jest.mock('../../controller/calculation/damageTableBuilder', () => {
 
 jest.mock('../../controller/calculation/enemyRegistry', () => ({
   getModelEnemy: () => null,
+  getAllEnemyIds: () => [],
+  getEnemyLevels: () => [],
+  getEnemyConfigById: () => null,
 }));
 
 jest.mock('../../utils/loadoutRegistry', () => ({

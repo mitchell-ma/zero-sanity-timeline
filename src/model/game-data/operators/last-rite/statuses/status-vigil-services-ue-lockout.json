@@ -29,7 +29,6 @@
     "id": "VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
     "eventCategoryType": "TALENT",
     "duration": {
       "value": {
@@ -44,7 +43,11 @@
         "value": 1
       },
       "interactionType": "RESET"
-    }
+    },
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "LAST_RITE",

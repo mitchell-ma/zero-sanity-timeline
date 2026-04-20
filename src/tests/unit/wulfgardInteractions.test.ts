@@ -81,7 +81,7 @@ jest.mock('../../view/InformationPane', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../../model/game-data/operators/wulfgard/wulfgard.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const SCORCHING_FANGS_TALENT_ID: string = require('../../model/game-data/operators/wulfgard/talents/talent-1-scorching-fangs.json').properties.id;
+const SCORCHING_FANGS_TALENT_ID: string = require('../../model/game-data/operators/wulfgard/talents/talent-scorching-fangs-talent.json').properties.id;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadSkillsJson: _loadWulfgardSkills, loadStatusesJson: _loadWulfgardStatuses } = require('../helpers/loadGameData');
 const mockSkillsJson = _loadWulfgardSkills('WULFGARD');
@@ -133,7 +133,6 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
     ...(props.name ? { name: props.name } : {}),
     ...(props.element ? { element: props.element } : {}),
     ...(props.isForced ? { isForced: props.isForced } : {}),
-    ...(props.enhancementTypes ? { enhancementTypes: props.enhancementTypes } : {}),
     target: 'OPERATOR',
     targetDeterminer: 'THIS',
     stacks: {
@@ -668,8 +667,8 @@ describe('H. Operator Identity & Metadata', () => {
   });
 
   test('H4: Talent IDs and attribute increase', () => {
-    expect(mockJson.talents.one).toBe('WULFGARD_TALENT1_SCORCHING_FANGS');
-    expect(mockJson.talents.two).toBe('WULFGARD_TALENT2_CODE_OF_RESTRAINT');
+    expect(mockJson.talents.one).toBe('SCORCHING_FANGS_T1');
+    expect(mockJson.talents.two).toBe('CODE_OF_RESTRAINT_T2');
     expect(mockJson.talents.attributeIncrease.id).toBe('FORGED');
   });
 

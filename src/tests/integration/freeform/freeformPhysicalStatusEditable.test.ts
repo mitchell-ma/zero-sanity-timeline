@@ -30,7 +30,6 @@ import type { MiniTimeline } from '../../../consts/viewTypes';
 const EMPTY_VALIDATION_MAPS = {
   combo: new Map<string, string>(),
   resource: new Map<string, string>(),
-  empowered: new Map<string, string>(),
   enhanced: new Map<string, string>(),
   regularBasic: new Map<string, string>(),
   clause: new Map<string, string>(),

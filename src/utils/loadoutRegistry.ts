@@ -20,10 +20,10 @@ export interface RegistryEntry<T> {
 
 // ─── Icon auto-discovery ────────────────────────────────────────────────────
 
-const operatorIconContext = require.context('../assets/operators', false, /_icon\.png$/);
+const operatorIconContext = require.context('../assets/operators', false, /_icon\.(png|webp)$/);
 const OPERATOR_ICONS: Record<string, string> = {};
 for (const key of operatorIconContext.keys()) {
-  const match = key.match(/\.\/(.+)_icon\.png$/);
+  const match = key.match(/\.\/(.+)_icon\.(png|webp)$/);
   if (match) {
     OPERATOR_ICONS[match[1]] = operatorIconContext(key);
   }

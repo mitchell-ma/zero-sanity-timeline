@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "FLUORITE_POTENTIAL_3",
+    "id": "TRIPLE_SURPRISE_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "duration_potential": 6,
@@ -12,8 +14,10 @@
       "-potential_lv": -3,
       "potential_lv-1": 2
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "FLUORITE",

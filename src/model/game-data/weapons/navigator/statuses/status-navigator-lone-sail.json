@@ -24,7 +24,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.035,
                     0.042,
@@ -37,8 +37,11 @@
                     0.098
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               }
@@ -53,7 +56,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.035,
                     0.042,
@@ -66,8 +69,11 @@
                     0.098
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               }
@@ -81,7 +87,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.02,
                     0.024,
@@ -94,8 +100,11 @@
                     0.056
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               }
@@ -123,8 +132,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "NAVIGATOR",

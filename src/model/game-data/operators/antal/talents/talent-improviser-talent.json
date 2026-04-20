@@ -29,7 +29,7 @@
     }
   ],
   "properties": {
-    "id": "IMPROVISER_TALENT",
+    "id": "IMPROVISER_T1",
     "descriptionParams": {
       "healvalue": 108,
       "cd": 30,
@@ -50,8 +50,11 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "isEnabled": false,

@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "TREMOLO",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
-    "id": "TREMOLO",
     "descriptionParams": {
       "atk_scale": 11,
       "poise": 20,
@@ -13,7 +12,10 @@
       "1-poise": -19,
       "-poise": -20,
       "poise-1": 19
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

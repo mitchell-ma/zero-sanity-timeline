@@ -24,13 +24,9 @@
     }
   ],
   "properties": {
-    "enhancementTypes": [
-      "EMPOWERED"
-    ],
-    "eventType": "SKILL",
+    "id": "THERMITE_TRACERS_EMPOWERED",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
-    "id": "THERMITE_TRACERS_EMPOWERED",
     "descriptionParams": {
       "atk_scale": 0.77,
       "atk_scale_plus": 8.5,
@@ -60,7 +56,10 @@
       "1-poise_extra_bullet_fail": 1,
       "-poise_extra_bullet_fail": 0,
       "poise_extra_bullet_fail-1": -1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {
@@ -284,7 +283,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS"
+                  "objectId": "SCORCHING_FANGS_T1"
                 },
                 {
                   "subjectDeterminer": "THIS",
@@ -325,7 +324,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS",
+                  "objectId": "SCORCHING_FANGS_T1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
@@ -342,7 +341,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR",
+                  "objectId": "SCORCHING_FANGS_MINOR_T1",
                   "toDeterminer": "ALL_OTHER",
                   "to": "OPERATOR",
                   "with": {
@@ -453,7 +452,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS"
+                  "objectId": "SCORCHING_FANGS_T1"
                 },
                 {
                   "subjectDeterminer": "THIS",
@@ -495,7 +494,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS",
+                  "objectId": "SCORCHING_FANGS_T1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
@@ -512,7 +511,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR",
+                  "objectId": "SCORCHING_FANGS_MINOR_T1",
                   "toDeterminer": "ALL_OTHER",
                   "to": "OPERATOR",
                   "with": {
@@ -623,7 +622,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS"
+                  "objectId": "SCORCHING_FANGS_T1"
                 },
                 {
                   "subjectDeterminer": "THIS",
@@ -665,7 +664,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS",
+                  "objectId": "SCORCHING_FANGS_T1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
@@ -682,7 +681,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "WULFGARD_TALENT1_SCORCHING_FANGS_MINOR",
+                  "objectId": "SCORCHING_FANGS_MINOR_T1",
                   "toDeterminer": "ALL_OTHER",
                   "to": "OPERATOR",
                   "with": {

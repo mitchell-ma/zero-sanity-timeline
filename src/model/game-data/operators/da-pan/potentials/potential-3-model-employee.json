@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "DA_PAN_POTENTIAL_3",
+    "id": "MODEL_EMPLOYEE_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "Str": 15,
@@ -12,8 +14,10 @@
       "-PhysicalDamageIncrease": -0.08,
       "PhysicalDamageIncrease-1": -0.92
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "DA_PAN",

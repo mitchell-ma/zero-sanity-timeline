@@ -1224,11 +1224,13 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "SEETHING_WOLFBLOOD_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "SEETHING_WOLFBLOOD_BATK"
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

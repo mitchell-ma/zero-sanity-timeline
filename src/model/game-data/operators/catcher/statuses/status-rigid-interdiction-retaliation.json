@@ -17,9 +17,11 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "element": "PHYSICAL"
+    "element": "PHYSICAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "CATCHER",

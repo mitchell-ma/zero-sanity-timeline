@@ -29,9 +29,9 @@ import { t, tOptional } from '../../locales/locale';
 import { LocaleKey } from '../../locales/gameDataLocale';
 import {
   getNamedWeaponSkill,
-  getWeaponStats, getWeaponIdByName,
+  getWeaponStats,
   getWeaponEffectDefs,
-  getGearPiece, getGearPieceIdByName,
+  getGearPiece,
 } from '../../controller/gameDataStore';
 import { DataCardBody, normalizedDefToData, EffectDefExtraFields, VaryByContext, VaryByLoadout } from '../custom/DataCardComponents';
 
@@ -83,6 +83,36 @@ const STAT_LABEL_KEYS: Record<StatType, string> = {
   [StatType.FINAL_DAMAGE_REDUCTION]: 'stat.FINAL_DAMAGE_REDUCTION',
   [StatType.SKILL_DAMAGE_BONUS]: 'stat.SKILL_DAMAGE_BONUS',
   [StatType.ARTS_DAMAGE_BONUS]: 'stat.ARTS_DAMAGE_BONUS',
+  [StatType.BASIC_ATTACK_PHYSICAL_DAMAGE_BONUS]: 'stat.BASIC_ATTACK_PHYSICAL_DAMAGE_BONUS',
+  [StatType.BASIC_ATTACK_HEAT_DAMAGE_BONUS]: 'stat.BASIC_ATTACK_HEAT_DAMAGE_BONUS',
+  [StatType.BASIC_ATTACK_CRYO_DAMAGE_BONUS]: 'stat.BASIC_ATTACK_CRYO_DAMAGE_BONUS',
+  [StatType.BASIC_ATTACK_NATURE_DAMAGE_BONUS]: 'stat.BASIC_ATTACK_NATURE_DAMAGE_BONUS',
+  [StatType.BASIC_ATTACK_ELECTRIC_DAMAGE_BONUS]: 'stat.BASIC_ATTACK_ELECTRIC_DAMAGE_BONUS',
+  [StatType.BASIC_ATTACK_ARTS_DAMAGE_BONUS]: 'stat.BASIC_ATTACK_ARTS_DAMAGE_BONUS',
+  [StatType.BATTLE_SKILL_PHYSICAL_DAMAGE_BONUS]: 'stat.BATTLE_SKILL_PHYSICAL_DAMAGE_BONUS',
+  [StatType.BATTLE_SKILL_HEAT_DAMAGE_BONUS]: 'stat.BATTLE_SKILL_HEAT_DAMAGE_BONUS',
+  [StatType.BATTLE_SKILL_CRYO_DAMAGE_BONUS]: 'stat.BATTLE_SKILL_CRYO_DAMAGE_BONUS',
+  [StatType.BATTLE_SKILL_NATURE_DAMAGE_BONUS]: 'stat.BATTLE_SKILL_NATURE_DAMAGE_BONUS',
+  [StatType.BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS]: 'stat.BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS',
+  [StatType.BATTLE_SKILL_ARTS_DAMAGE_BONUS]: 'stat.BATTLE_SKILL_ARTS_DAMAGE_BONUS',
+  [StatType.COMBO_SKILL_PHYSICAL_DAMAGE_BONUS]: 'stat.COMBO_SKILL_PHYSICAL_DAMAGE_BONUS',
+  [StatType.COMBO_SKILL_HEAT_DAMAGE_BONUS]: 'stat.COMBO_SKILL_HEAT_DAMAGE_BONUS',
+  [StatType.COMBO_SKILL_CRYO_DAMAGE_BONUS]: 'stat.COMBO_SKILL_CRYO_DAMAGE_BONUS',
+  [StatType.COMBO_SKILL_NATURE_DAMAGE_BONUS]: 'stat.COMBO_SKILL_NATURE_DAMAGE_BONUS',
+  [StatType.COMBO_SKILL_ELECTRIC_DAMAGE_BONUS]: 'stat.COMBO_SKILL_ELECTRIC_DAMAGE_BONUS',
+  [StatType.COMBO_SKILL_ARTS_DAMAGE_BONUS]: 'stat.COMBO_SKILL_ARTS_DAMAGE_BONUS',
+  [StatType.ULTIMATE_PHYSICAL_DAMAGE_BONUS]: 'stat.ULTIMATE_PHYSICAL_DAMAGE_BONUS',
+  [StatType.ULTIMATE_HEAT_DAMAGE_BONUS]: 'stat.ULTIMATE_HEAT_DAMAGE_BONUS',
+  [StatType.ULTIMATE_CRYO_DAMAGE_BONUS]: 'stat.ULTIMATE_CRYO_DAMAGE_BONUS',
+  [StatType.ULTIMATE_NATURE_DAMAGE_BONUS]: 'stat.ULTIMATE_NATURE_DAMAGE_BONUS',
+  [StatType.ULTIMATE_ELECTRIC_DAMAGE_BONUS]: 'stat.ULTIMATE_ELECTRIC_DAMAGE_BONUS',
+  [StatType.ULTIMATE_ARTS_DAMAGE_BONUS]: 'stat.ULTIMATE_ARTS_DAMAGE_BONUS',
+  [StatType.FINAL_STRIKE_PHYSICAL_DAMAGE_BONUS]: 'stat.FINAL_STRIKE_PHYSICAL_DAMAGE_BONUS',
+  [StatType.FINAL_STRIKE_HEAT_DAMAGE_BONUS]: 'stat.FINAL_STRIKE_HEAT_DAMAGE_BONUS',
+  [StatType.FINAL_STRIKE_CRYO_DAMAGE_BONUS]: 'stat.FINAL_STRIKE_CRYO_DAMAGE_BONUS',
+  [StatType.FINAL_STRIKE_NATURE_DAMAGE_BONUS]: 'stat.FINAL_STRIKE_NATURE_DAMAGE_BONUS',
+  [StatType.FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS]: 'stat.FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS',
+  [StatType.FINAL_STRIKE_ARTS_DAMAGE_BONUS]: 'stat.FINAL_STRIKE_ARTS_DAMAGE_BONUS',
   [StatType.HP_BONUS]: 'stat.HP_BONUS',
   [StatType.FLAT_HP]: 'stat.FLAT_HP',
   // ── Damage factor stats ──────────────────────────────────────────────────────
@@ -499,6 +529,10 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
     talentOneLevel: stats.operator.talentOneLevel,
     talentTwoLevel: stats.operator.talentTwoLevel,
     attributeIncreaseLevel: stats.operator.attributeIncreaseLevel,
+    // Weapon rank defaults to the signature-skill slot (skill3Level).
+    // WeaponDetailCards and the named-skill card all target slot 3; generic
+    // weapon-skill cards (skill1/2) are rank-agnostic (single-value VARY_BY).
+    weaponSkillRank: stats.weapon.skill3Level,
   };
 
   return (
@@ -679,7 +713,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           </>
           )}
           {verbose >= InfoLevel.DETAILED && loadout.weaponId && (
-            <WeaponDetailCards weaponName={loadout.weaponId} />
+            <WeaponDetailCards weaponId={loadout.weaponId} />
           )}
         </div>
 
@@ -904,32 +938,23 @@ function StatWithSources({ stat, value, displayValue, sources }: {
 
 // ── Detail card sub-components ──────────────────────────────────────────────
 
-function WeaponDetailCards({ weaponName }: { weaponName: string }) {
-  const weaponId = getWeaponIdByName(weaponName);
+function WeaponDetailCards({ weaponId }: { weaponId: string }) {
   const [openCards, setOpenCards] = useState<Set<number>>(new Set());
   const toggle = (i: number) => setOpenCards(prev => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; });
 
   const cards: { key: string; label: string; data: Record<string, unknown>; extra?: React.ReactNode }[] = [];
 
-  // Weapon skills
-  if (weaponId) {
-    const namedSkill = getNamedWeaponSkill(weaponId);
-    if (namedSkill) {
-      cards.push({ key: `named-${weaponId}`, label: namedSkill.name, data: namedSkill.serialize() as Record<string, unknown> });
-    }
+  const namedSkill = getNamedWeaponSkill(weaponId);
+  if (namedSkill) {
+    cards.push({ key: `named-${weaponId}`, label: namedSkill.name, data: namedSkill.serialize() as Record<string, unknown> });
   }
 
-  // Weapon effect defs
-  const dslDefs = getWeaponEffectDefs(weaponName);
-  for (const def of dslDefs) {
+  for (const def of getWeaponEffectDefs(weaponId)) {
     cards.push({ key: `eff-${def.id}`, label: def.label ?? def.name ?? def.id, data: normalizedDefToData(def), extra: <EffectDefExtraFields def={def} /> });
   }
 
-  // Weapon statuses
-  if (weaponId) {
-    for (const ws of getWeaponStats(weaponId)) {
-      cards.push({ key: `ws-${ws.id}`, label: ws.name, data: ws.serialize() as Record<string, unknown> });
-    }
+  for (const ws of getWeaponStats(weaponId)) {
+    cards.push({ key: `ws-${ws.id}`, label: ws.name, data: ws.serialize() as Record<string, unknown> });
   }
 
   if (cards.length === 0) return null;
@@ -958,7 +983,7 @@ function WeaponDetailCards({ weaponName }: { weaponName: string }) {
 
 function GearPieceDetailCard({ pieceId }: { pieceId: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
-  const piece = pieceId ? getGearPiece(pieceId) ?? getGearPiece(getGearPieceIdByName(pieceId) ?? '') : undefined;
+  const piece = pieceId ? getGearPiece(pieceId) : undefined;
   if (!piece) return null;
 
   return (

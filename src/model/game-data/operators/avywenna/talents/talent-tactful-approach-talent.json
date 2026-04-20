@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "TACTFUL_APPROACH_TALENT",
+    "id": "TACTFUL_APPROACH_T2",
     "descriptionParams": {
       "pulse_vul_rate": 0.1,
       "pulse_vul_duration": 10,
@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "AVYWENNA",

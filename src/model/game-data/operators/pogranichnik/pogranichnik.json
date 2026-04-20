@@ -9,8 +9,8 @@
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "AGILITY",
   "talents": {
-    "one": "THE_LIVING_BANNER_TALENT",
-    "two": "TACTICAL_INSTRUCTION_TALENT",
+    "one": "THE_LIVING_BANNER_T1",
+    "two": "TACTICAL_INSTRUCTION_T2",
     "attributeIncrease": {
       "id": "STALWART"
     }

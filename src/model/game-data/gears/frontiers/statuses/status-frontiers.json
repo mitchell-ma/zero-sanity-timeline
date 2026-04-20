@@ -47,8 +47,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "FRONTIERS_STAT",

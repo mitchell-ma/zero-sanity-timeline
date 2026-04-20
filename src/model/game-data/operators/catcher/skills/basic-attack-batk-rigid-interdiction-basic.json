@@ -353,11 +353,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "RIGID_INTERDICTION_BASIC_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "RIGID_INTERDICTION_BASIC_BATK",
     "descriptionParams": {
       "atk_scale": 1.6,
       "atb": 25,
@@ -371,7 +370,10 @@
       "1-poise": -21,
       "-poise": -22,
       "poise-1": 21
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "CATCHER",

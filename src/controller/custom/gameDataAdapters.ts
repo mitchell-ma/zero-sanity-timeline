@@ -328,7 +328,7 @@ export function skillFromFriendly(skill: CustomSkill, operatorId?: string): Game
       ...(skill.description ? { description: skill.description } : {}),
       ...(skill.durationSeconds ? { duration: dslDuration(skill.durationSeconds) } : {}),
       ...(skill.element ? { element: skill.element } : {}),
-      eventType: EventType.SKILL,
+      eventTypes: [EventType.SKILL],
       eventCategoryType: categoryMap[skill.combatSkillType] ?? NounType.BASIC_ATTACK,
     },
     metadata: {
@@ -568,7 +568,7 @@ export function weaponNamedEffectsToStatuses(weapon: CustomWeapon): GameDataJson
           limit: isNode(ne.maxStacks),
           interactionType: ne.maxStacks > 1 ? StackInteractionType.NONE : StackInteractionType.RESET,
         },
-        eventType: EventType.STATUS,
+        eventTypes: [EventType.STATUS],
         eventCategoryType: NounType.WEAPON,
         ...(ne.cooldownSeconds ? { cooldownSeconds: ne.cooldownSeconds } : {}),
       },
@@ -765,7 +765,7 @@ export function gearSetEffectFromFriendly(gearSet: CustomGearSet): GameDataJson 
       id: gearSetId,
       name: gearSet.setName,
       rarity: gearSet.rarity,
-      eventType: EventType.STATUS,
+      eventTypes: [EventType.STATUS],
       eventCategoryType: NounType.GEAR_STAT,
     },
     metadata: {
@@ -814,7 +814,7 @@ export function gearSetStatusesFromFriendly(gearSet: CustomGearSet): GameDataJso
           interactionType: ef.maxStacks > 1 ? StackInteractionType.NONE : StackInteractionType.RESET,
         },
         ...(ef.cooldownSeconds ? { cooldownSeconds: ef.cooldownSeconds } : {}),
-        eventType: EventType.STATUS,
+        eventTypes: [EventType.STATUS],
         eventCategoryType: NounType.GEAR,
       },
       metadata: {
@@ -961,7 +961,7 @@ function customDefToStatusJson(def: CustomStatusEventDef, originId: string, even
         limit: isNode(maxStacks),
         interactionType: def.stack.interactionType ?? StackInteractionType.NONE,
       },
-      eventType: EventType.STATUS,
+      eventTypes: [EventType.STATUS],
       eventCategoryType,
     },
     metadata: {

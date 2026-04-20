@@ -524,12 +524,11 @@ describe('Last Rite — T1 Hypothermia DSL', () => {
 
     const val = effect.with.value;
     expect(val.operation).toBe(ValueOperation.MULT);
-    // Left: CONSUMED STACKS of CRYO INFLICTION STATUS
+    // Left: CONSUMED STACKS (trigger-bound — resolves to ctx.consumedStacks from the triggering CONSUME)
     expect(val.left.verb).toBe(VerbType.IS);
     expect(val.left.objectQualifier).toBe('CONSUMED');
     expect(val.left.object).toBe(NounType.STACKS);
-    expect(val.left.of.objectId).toBe(NounType.INFLICTION);
-    expect(val.left.of.objectQualifier).toBe(AdjectiveType.CRYO);
+    expect(val.left.of).toBeUndefined();
     // Right: VARY_BY TALENT_LEVEL [0, 0.02, 0.04] (leading 0 = level 0 no benefit)
     expect(val.right.verb).toBe(VerbType.VARY_BY);
     expect(val.right.object).toBe(NounType.TALENT_LEVEL);

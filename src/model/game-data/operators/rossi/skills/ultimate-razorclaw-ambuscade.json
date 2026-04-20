@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "RAZORCLAW_AMBUSCADE",
     "eventCategoryType": "ULTIMATE",
     "element": "HEAT",
-    "id": "RAZORCLAW_AMBUSCADE",
     "descriptionParams": {
       "atk_scale_1": 0.24,
       "atk_scale_2": 2.5,
@@ -37,7 +36,10 @@
       "1-crit_damage_up_to_bleed": 0.4,
       "-crit_damage_up_to_bleed": -0.6,
       "crit_damage_up_to_bleed-1": -0.4
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

@@ -112,7 +112,7 @@
     }
   ],
   "properties": {
-    "id": "ESSENCE_DISINTEGRATION_TALENT",
+    "id": "ESSENCE_DISINTEGRATION_T1",
     "descriptionParams": {
       "atk_up": 0.3,
       "duration": 15,
@@ -143,8 +143,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

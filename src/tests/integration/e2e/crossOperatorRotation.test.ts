@@ -168,7 +168,7 @@ describe('Cross-operator rotation — multi-system E2E', () => {
     placeSkill(app(), SLOT_2, NounType.BATTLE, 5 * FPS);
 
     //  t=8s — freeform SOLIDIFICATION on enemy sourced by Yvonne. This fires
-    //          the FREEZING_POINT_TALENT onTriggerClause (T2 = +0.4 CRIT DMG).
+    //          the FREEZING_POINT_T2 onTriggerClause (T2 = +0.4 CRIT DMG).
     placeFreeformOnEnemy(app(), REACTION_COLUMNS.SOLIDIFICATION, 8 * FPS, YVONNE_ID);
 
     // ── Calc once ───────────────────────────────────────────────────────────

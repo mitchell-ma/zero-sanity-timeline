@@ -1,4 +1,4 @@
-import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, TimeDependency } from './enums';
+import { DamageFactorType, DamageType, ElementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, TimeDependency } from './enums';
 import type { StatusLevel } from './types';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
 
@@ -252,8 +252,12 @@ export interface TimelineEvent {
   operatorPotential?: number;
   /** SP cost consumed when this battle skill event fires. */
   skillPointCost?: number;
-  /** Enhancement tier of this event's skill variant (derived from column definition). */
-  enhancementType?: EnhancementType;
+  /**
+   * Basic-attack sub-category (FINISHER / DIVE / BATK). Set when the event was
+   * placed from a BA variant so callers can identify the kind without relying
+   * on the operator-specific `id` (e.g. JOLTING_ARTS_FINISHER).
+   */
+  category?: import('../dsl/semantics').NounType;
   /** Preconditions for placing this event (OR of predicates). Evaluated by context menu and validation. */
   activationClause?: import('../dsl/semantics').Predicate[];
   /** Maximum number of combo skills allowed within this activation window (default 1). */
@@ -274,6 +278,11 @@ export interface TimelineEvent {
   expectedUptime?: number;
   /** Number of stacks consumed by the CONSUME effect that triggered this event's creation (for STACKS CONSUMED resolution). */
   consumedStacks?: number;
+  /** Snapshots of statuses captured by the SNAPSHOT effect during this event's lifecycle,
+   *  keyed by status column id. Each value is a shallow copy of the active status events
+   *  on that column at snapshot time. Readers with `objectQualifier: SNAPSHOT` reduce over
+   *  this list (e.g. max(statusLevel), sum(stacks)). */
+  snapshotMap?: Record<string, TimelineEvent[]>;
   /** Runtime-resolved stacks.limit at apply time. Stamped by the engine so the
    *  view can render the correct per-loadout cap (e.g. Pog P5 Fervent Morale = 5)
    *  rather than the DEFAULT_VALUE_CONTEXT fallback (= 3). */
@@ -500,8 +509,12 @@ export type MiniTimeline = {
     name?: string;
     /** Display label in the context menu (falls back to COMBAT_SKILL_LABELS or id). */
     displayName?: string;
-    /** Enhancement tier of this variant (NORMAL for base skills, ENHANCED/EMPOWERED for upgraded). */
-    enhancementType?: import('./enums').EnhancementType;
+    /**
+     * Basic-attack sub-category (FINISHER / DIVE / BATK) for variant
+     * identification. Set by columnBuilder for BA categories so engine and
+     * UI can detect the variant kind without relying on a generic `id`.
+     */
+    category?: import('../dsl/semantics').NounType;
     triggerCondition?: string | null;
     /** Segment definitions for this variant. */
     segments?: EventSegmentData[];

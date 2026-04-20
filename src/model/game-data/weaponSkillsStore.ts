@@ -12,7 +12,7 @@ import { EventType } from '../../consts/enums';
 import type { ClauseEffect, ClausePredicate } from './weaponStatusesStore';
 import { resolveEffectStat } from '../enums/stats';
 import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues } from './validationUtils';
-import { LocaleKey, GENERIC_WEAPON_ID, resolveEventName, resolveOptionalEventDescription } from '../../locales/gameDataLocale';
+import { LocaleKey, GENERIC_WEAPON_ID, GAME_ORIGIN_ID, resolveEventName, resolveOptionalEventDescription } from '../../locales/gameDataLocale';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 const VALID_PROPERTIES_KEYS = new Set(['id', 'eventCategoryType']);
@@ -125,10 +125,9 @@ export class WeaponSkill {
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
     const weaponId = (meta.originId ?? '') as string;
     // Weapon-specific (named) skills key under weapon.<weaponId>.skill.<skillId>;
-    // generic weapon skills (shared stat boosts) under the GENERIC namespace.
-    const prefix = this.id
-      ? LocaleKey.weaponSkill(weaponId || GENERIC_WEAPON_ID, this.id)
-      : '';
+    // generic weapon skills (originId === GAME_ORIGIN_ID) under the GENERIC namespace.
+    const localeWeaponId = !weaponId || weaponId === GAME_ORIGIN_ID ? GENERIC_WEAPON_ID : weaponId;
+    const prefix = this.id ? LocaleKey.weaponSkill(localeWeaponId, this.id) : '';
     this.name = prefix ? resolveEventName(prefix) : '';
     this.description = prefix ? (resolveOptionalEventDescription(prefix) ?? '') : '';
     this.eventCategoryType = props.eventCategoryType as string;
@@ -185,7 +184,7 @@ export class WeaponSkill {
         ...(this.name ? { name: this.name } : {}),
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
-        eventType: EventType.STATUS,
+        eventTypes: [EventType.STATUS],
         eventCategoryType: NounType.WEAPON_STAT,
       },
       metadata: {

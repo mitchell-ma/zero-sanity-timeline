@@ -21,11 +21,13 @@ import { aggregateLoadoutStats, StatSourceEntry } from './loadoutAggregator';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import type { MultiplierSource } from '../../model/calculation/damageFormulas';
 import {
+  ALL_DMG_BONUS_STATS,
   calculateDamage,
   DamageParams,
   DamageSubComponents,
   getAmpMultiplier,
   getAttributeBonus,
+  getCombinedDamageBonusStat,
   getDamageBonus,
   getDefenseMultiplier,
   getDmgReductionMultiplier,
@@ -364,6 +366,15 @@ function buildOperatorCalcData(
   };
 }
 
+/** Elements that have a dedicated per-element base resistance stat on enemies.
+ *  ARTS is absent — there is no standalone ARTS_RESISTANCE stat exposed to the
+ *  player; arts hits fall back to AETHER_RESISTANCE internally, which defaults
+ *  to 1.0 for every enemy and is not surfaced in the breakdown. */
+const DISPLAY_BASE_RESISTANCE_ELEMENTS: ElementType[] = [
+  ElementType.PHYSICAL, ElementType.HEAT, ElementType.CRYO,
+  ElementType.NATURE, ElementType.ELECTRIC,
+];
+
 const ALL_DISPLAY_ELEMENTS: ElementType[] = [
   ElementType.PHYSICAL, ElementType.HEAT, ElementType.CRYO,
   ElementType.NATURE, ElementType.ELECTRIC,
@@ -620,61 +631,45 @@ function readResistanceAddback(
   return sum;
 }
 
-/** Combine per-source breakdowns from operator IGNORE + enemy REDUCTION
- *  for `element`. Per-element rows carry ONLY their own per-element stats;
- *  the ARTS umbrella contributions (e.g. Corrosion's ARTS_RESISTANCE_REDUCTION)
- *  are shown in the dedicated ARTS row instead of being duplicated under each
- *  of HEAT/CRYO/NATURE/ELECTRIC. The damage math still sums per-element +
- *  ARTS umbrella for arts elements (see `readResistanceAddback`) — this is a
- *  display-only change so readers see each source exactly once. */
-function buildResistanceSources(
-  element: ElementType,
+/** Operator RESISTANCE_IGNORE per-element source breakdown. One entry per element
+ *  (PHYSICAL/HEAT/CRYO/NATURE/ELECTRIC/ARTS) containing that element's IGNORE stat
+ *  contributions. The ARTS umbrella lives in its own entry rather than being
+ *  duplicated under each arts element — the math still applies both (see
+ *  `readResistanceAddback`), but display surfaces each source exactly once. */
+function buildAllResistanceIgnoreSources(
   operatorRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
-  enemyRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
-  perElIgnoreSources: readonly import('./statAccumulator').StatSource[] | undefined,
-  perElReductionSources: readonly import('./statAccumulator').StatSource[] | undefined,
-): MultiplierSource[] {
-  const result: MultiplierSource[] = [];
-  const perElIgnore = elementResistanceIgnoreStat(element);
-  if (perElIgnore) {
-    result.push(...ampStatToSources(operatorRuntimeDeltas?.[perElIgnore], perElIgnoreSources, perElIgnore));
-  }
-  const perElReduction = elementResistanceReductionStat(element);
-  if (perElReduction) {
-    result.push(...ampStatToSources(enemyRuntimeDeltas?.[perElReduction], perElReductionSources, perElReduction));
-  }
-  return result;
-}
-
-/** Per-element resistance source breakdown for display. Each element row
- *  shows ONLY its per-element IGNORE + REDUCTION. The dedicated ARTS row
- *  surfaces the umbrella ARTS_RESISTANCE_IGNORE + ARTS_RESISTANCE_REDUCTION —
- *  those are NOT duplicated under HEAT/CRYO/NATURE/ELECTRIC even though the
- *  damage math applies them there (see `readResistanceAddback`). This keeps
- *  contributors like Corrosion visible exactly once under ARTS / PHYSICAL. */
-function buildAllResistanceSources(
-  operatorRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
-  enemyRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
   accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
   frameKey: string,
   ownerEntityId: string,
 ): Partial<Record<ElementType, MultiplierSource[]>> {
   const result: Partial<Record<ElementType, MultiplierSource[]>> = {};
   for (const el of ALL_DISPLAY_ELEMENTS) {
-    const perElIgnoreKey = elementResistanceIgnoreStat(el);
-    const perElIgnoreSources = perElIgnoreKey ? mergeStatSources(
-      accumulator?.getFrameStatSources(frameKey, ownerEntityId, perElIgnoreKey),
-      accumulator?.getFrameStatSources(frameKey, TEAM_ID, perElIgnoreKey),
-    ) : undefined;
-    const perElReductionKey = elementResistanceReductionStat(el);
-    const perElReductionSources = perElReductionKey
-      ? accumulator?.getFrameStatSources(frameKey, ENEMY_ID, perElReductionKey)
-      : undefined;
-    const merged = buildResistanceSources(
-      el, operatorRuntimeDeltas, enemyRuntimeDeltas,
-      perElIgnoreSources, perElReductionSources,
+    const key = elementResistanceIgnoreStat(el);
+    if (!key) continue;
+    const sources = mergeStatSources(
+      accumulator?.getFrameStatSources(frameKey, ownerEntityId, key),
+      accumulator?.getFrameStatSources(frameKey, TEAM_ID, key),
     );
-    if (merged.length > 0) result[el] = merged;
+    const entries = ampStatToSources(operatorRuntimeDeltas?.[key], sources, key);
+    if (entries.length > 0) result[el] = entries;
+  }
+  return result;
+}
+
+/** Enemy RESISTANCE_REDUCTION per-element source breakdown. Same shape/semantics
+ *  as `buildAllResistanceIgnoreSources`, reading enemy stat deltas instead. */
+function buildAllResistanceReductionSources(
+  enemyRuntimeDeltas: Partial<Record<StatType, number>> | undefined,
+  accumulator: import('./statAccumulator').StatAccumulator | null | undefined,
+  frameKey: string,
+): Partial<Record<ElementType, MultiplierSource[]>> {
+  const result: Partial<Record<ElementType, MultiplierSource[]>> = {};
+  for (const el of ALL_DISPLAY_ELEMENTS) {
+    const key = elementResistanceReductionStat(el);
+    if (!key) continue;
+    const sources = accumulator?.getFrameStatSources(frameKey, ENEMY_ID, key);
+    const entries = ampStatToSources(enemyRuntimeDeltas?.[key], sources, key);
+    if (entries.length > 0) result[el] = entries;
   }
   return result;
 }
@@ -749,6 +744,17 @@ export function buildDamageTableRows(
   const defMultiplier = getDefenseMultiplier(enemyDef);
   const bossMaxHp = modelEnemy ? modelEnemy.getHp() : null;
 
+  // Snapshot the enemy's per-element resistance multipliers once. Values are
+  // raw multipliers (1.0 = neutral, 0.8 = 20% resist, 1.2 = 20% weakness);
+  // surfaced to the breakdown so each element is shown as a distinct stat
+  // rather than collapsed into a single "Base Resistance" row.
+  const baseResistanceByElement: Partial<Record<ElementType, number>> = {};
+  if (modelEnemy) {
+    for (const el of DISPLAY_BASE_RESISTANCE_ELEMENTS) {
+      baseResistanceByElement[el] = getResistanceMultiplier(modelEnemy, el);
+    }
+  }
+
   // ── Pre-pass: step crit models chronologically per operator ───────────────
   // Events are ordered by column, not by absolute frame. When events overlap
   // (e.g. BATK frame 5 at t=2.5s vs BS frame 1 at t=1.0s), processing
@@ -817,6 +823,11 @@ export function buildDamageTableRows(
 
   for (const ev of events) {
     let effectiveColumnId = isUltEnhanced(ev.id) ? NounType.ULTIMATE : ev.columnId;
+    // Skill-type column for DMG% bonus lookup follows the event's own columnId
+    // (from eventCategoryType) — `_ENHANCED` variants are rotation-attributed
+    // to ULTIMATE but remain their original skill type for BATTLE_SKILL_*,
+    // BASIC_ATTACK_*, COMBO_SKILL_* damage bonuses.
+    let bonusStatColumnId = ev.columnId;
     let col = colLookup.get(`${ev.ownerEntityId}-${effectiveColumnId}`)
       ?? colLookup.get(`${ev.ownerEntityId}-${ev.columnId}`);
 
@@ -838,6 +849,7 @@ export function buildDamageTableRows(
           : NounType.BATTLE;
         col = colLookup.get(`${sourceSlotId}-${sourceSkillCol}`);
         effectiveColumnId = sourceSkillCol;
+        bonusStatColumnId = sourceSkillCol;
         resolvedEntityId = sourceSlotId;
       }
     }
@@ -969,7 +981,7 @@ export function buildDamageTableRows(
 
                 // Damage bonus group
                 const elementBonusStat = getElementDamageBonusStat(element);
-                const skillType = columnIdToSkillType(effectiveColumnId);
+                const skillType = columnIdToSkillType(bonusStatColumnId);
                 const skillTypeBonusStat = getSkillTypeDamageBonusStat(skillType);
                 const isArts = element !== ElementType.PHYSICAL && element !== ElementType.NONE;
                 const isStaggered = statusQuery?.isStaggered(absFrame) ?? false;
@@ -1009,8 +1021,37 @@ export function buildDamageTableRows(
                 const isFinalStrike = frame.frameTypes?.includes(EventFrameType.FINAL_STRIKE) ?? false;
                 const subFinalStrikeDmg = isFinalStrike ? stat(StatType.FINAL_STRIKE_DAMAGE_BONUS) : 0;
 
+                // Combined skill-type × element bonuses
+                // (e.g. BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS). Up to four combos can
+                // contribute to a single hit: skill × active element, skill × ARTS
+                // (for arts elements), FINAL_STRIKE × active element (on final-strike
+                // frames), FINAL_STRIKE × ARTS. A combo only counts when the lookup
+                // resolves to a real enum value AND the skill/hit matches.
+                const combinedStatsToCheck: (StatType | undefined)[] = [
+                  getCombinedDamageBonusStat(skillTypeBonusStat, element),
+                  isArts ? getCombinedDamageBonusStat(skillTypeBonusStat, ElementType.ARTS) : undefined,
+                  isFinalStrike ? getCombinedDamageBonusStat(StatType.FINAL_STRIKE_DAMAGE_BONUS, element) : undefined,
+                  isFinalStrike && isArts ? getCombinedDamageBonusStat(StatType.FINAL_STRIKE_DAMAGE_BONUS, ElementType.ARTS) : undefined,
+                ];
+                const combinedDmgBonusSources: { stat: StatType; value: number }[] = [];
+                let subCombinedDmg = 0;
+                for (const s of combinedStatsToCheck) {
+                  if (!s) continue;
+                  const v = stat(s);
+                  if (v === 0) continue;
+                  combinedDmgBonusSources.push({ stat: s, value: v });
+                  subCombinedDmg += v;
+                }
+
+                // Full snapshot of every DAMAGE_BONUS stat so the breakdown can
+                // render all possible rows (active or inactive).
+                const allDmgBonusStats: Partial<Record<StatType, number>> = {};
+                for (const s of ALL_DMG_BONUS_STATS) {
+                  allDmgBonusStats[s] = stat(s);
+                }
+
                 const multiplierGroup = getDamageBonus(
-                  subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg + subFinalStrikeDmg,
+                  subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg + subFinalStrikeDmg, subCombinedDmg,
                 );
 
                 // Resistance — all values stored as decimal multipliers
@@ -1054,7 +1095,7 @@ export function buildDamageTableRows(
                 }
 
                 // Finisher: applies when the event is a finisher attack during stagger break
-                const isFinisher = ev.id === NounType.FINISHER;
+                const isFinisher = ev.category === NounType.FINISHER;
                 const enemyTier = modelEnemy?.tier ?? EnemyTierType.COMMON;
 
                 // Link bonus depends on stacks and skill type (battle skill vs ultimate)
@@ -1096,27 +1137,20 @@ export function buildDamageTableRows(
                   skillDmgBonus: subSkillDmg,
                   artsDmgBonus: subArtsDmg,
                   staggerDmgBonus: subStaggerDmg,
+                  allDmgBonusStats,
+                  isStaggered,
+                  isFinalStrike,
                   critRate: Math.min(Math.max(stat(StatType.CRITICAL_RATE), 0), 1),
                   critDamage: stat(StatType.CRITICAL_DAMAGE),
                   critMode: critMode ?? CritMode.EXPECTED,
                   isCrit: frameCrit,
                   critSnapshot,
-                  baseResistance,
-                  ignoredResistance: subIgnoredRes,
-                  resistanceSources: buildResistanceSources(
-                    element,
-                    runtimeDeltas,
-                    enemyRuntimeDeltas,
-                    elementResistanceIgnoreStat(element) ? mergeStatSources(
-                      accumulator?.getFrameStatSources(currentFrameKey, resolvedEntityId, elementResistanceIgnoreStat(element)!),
-                      accumulator?.getFrameStatSources(currentFrameKey, TEAM_ID, elementResistanceIgnoreStat(element)!),
-                    ) : undefined,
-                    elementResistanceReductionStat(element)
-                      ? accumulator?.getFrameStatSources(currentFrameKey, ENEMY_ID, elementResistanceReductionStat(element)!)
-                      : undefined,
+                  baseResistanceByElement,
+                  allResistanceIgnoreSources: buildAllResistanceIgnoreSources(
+                    runtimeDeltas, accumulator, currentFrameKey, resolvedEntityId,
                   ),
-                  allResistanceSources: buildAllResistanceSources(
-                    runtimeDeltas, enemyRuntimeDeltas, accumulator, currentFrameKey, resolvedEntityId,
+                  allResistanceReductionSources: buildAllResistanceReductionSources(
+                    enemyRuntimeDeltas, accumulator, currentFrameKey,
                   ),
                   fragilityBonus: subFragilityBonus,
                   fragilitySources: [
@@ -1169,6 +1203,8 @@ export function buildDamageTableRows(
                   ),
                   statContributions: critSnapshot?.statContributions,
                   skillTypeDmgBonusStat: skillTypeBonusStat,
+                  combinedDmgBonus: subCombinedDmg,
+                  combinedDmgBonusSources,
                 };
 
                 // Compute attack with runtime + crit-dependent ATK% adjustment

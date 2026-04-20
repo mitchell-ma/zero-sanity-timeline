@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "LATE_REPLY_TALENT",
+    "id": "LATE_REPLY_T2",
     "descriptionParams": {
       "heal_scale": 0.9,
       "heal_const": 108,
@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "GILBERTA",

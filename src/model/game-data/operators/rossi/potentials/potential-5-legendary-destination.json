@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ROSSI_P5_LEGENDARY_DESTINATION",
+    "id": "LEGENDARY_DESTINATION_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "damage_scale": 1.1,
@@ -24,8 +26,10 @@
       "-potential_5_critical_damage": -0.3,
       "potential_5_critical_damage-1": -0.7
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

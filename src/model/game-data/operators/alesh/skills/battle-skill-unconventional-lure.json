@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "UNCONVENTIONAL_LURE",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "UNCONVENTIONAL_LURE",
     "descriptionParams": {
       "atk_scale": 4.5,
       "poise": 10,
@@ -29,7 +28,10 @@
       "1-atb_4": -44,
       "-atb_4": -45,
       "atb_4-1": 44
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ALESH",

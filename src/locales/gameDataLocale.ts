@@ -93,6 +93,14 @@ export function getAllGameDataEntries(locale: string): Readonly<GameDataLocaleDi
  */
 export const GENERIC_WEAPON_ID = 'GENERIC';
 
+/**
+ * `metadata.originId` value used by base-game / shared content (e.g. generic
+ * weapon stat-boost skills). Distinct from `GENERIC_WEAPON_ID` — the latter
+ * is the *locale namespace*; this is the *originId* convention for content
+ * that doesn't belong to a specific operator/weapon/gear entity.
+ */
+export const GAME_ORIGIN_ID = 'game';
+
 export const LocaleKey = {
   operator: (operatorId: string) => `op.${operatorId}`,
   operatorSkill: (operatorId: string, skillId: string) => `op.${operatorId}.skill.${skillId}`,
@@ -107,6 +115,7 @@ export const LocaleKey = {
   gearStatus: (gearId: string, statusId: string) => `gear.${gearId}.status.${statusId}`,
   consumable: (consumableId: string) => `consumable.${consumableId}`,
   genericStatus: (statusId: string) => `status.${statusId}`,
+  enemy: (enemyId: string) => `enemy.${enemyId}`,
 };
 
 // ── Tier suffix builders ───────────────────────────────────────────────────

@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "EMBER_POTENTIAL_3",
+    "id": "INDOMITABLE_FRONT_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "extracure": 0.5,
@@ -12,8 +14,10 @@
       "-potential_3": -1,
       "potential_3-1": 0
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "EMBER",

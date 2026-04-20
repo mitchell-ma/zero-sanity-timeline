@@ -16,11 +16,13 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "STATUS"
+    "eventCategoryType": "STATUS",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
-    "originId": "EXECUTE_PROCESS_TALENT",
+    "originId": "EXECUTE_PROCESS_T1",
     "dataSources": [
       "ENDFIELD_WIKI"
     ],

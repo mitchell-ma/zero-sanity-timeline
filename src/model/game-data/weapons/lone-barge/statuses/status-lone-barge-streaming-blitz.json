@@ -22,7 +22,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.2,
                     0.24,
@@ -35,13 +35,16 @@
                     0.56
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               },
               "objectId": "DAMAGE_BONUS",
-              "objectQualifier": "ELECTRIC"
+              "objectQualifier": "BATTLE_ELECTRIC"
             }
           ]
         }
@@ -62,12 +65,14 @@
         "verb": "IS",
         "value": 2
       },
-      "interactionType": "NONE"
+      "interactionType": "RESET"
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LONE_BARGE",

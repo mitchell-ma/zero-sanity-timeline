@@ -18,7 +18,7 @@ import type { AppResult } from '../helpers';
 
 // Akekuri is the default operator on slot-1
 const SLOT_AKEKURI = 'slot-1';
-const P1_STATUS_ID = 'AKEKURI_P1_POSITIVE_FEEDBACK';
+const P1_STATUS_ID = 'POSITIVE_FEEDBACK_P1';
 
 function setPotential(app: AppResult, potential: number) {
   const props = app.loadoutProperties[SLOT_AKEKURI];

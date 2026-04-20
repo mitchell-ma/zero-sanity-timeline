@@ -1,6 +1,8 @@
 {
   "properties": {
     "id": "ENDMINISTRATOR_POTENTIAL_5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "cd_minus": 2,
@@ -8,8 +10,10 @@
       "-cd_minus": -2,
       "cd_minus-1": 1
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

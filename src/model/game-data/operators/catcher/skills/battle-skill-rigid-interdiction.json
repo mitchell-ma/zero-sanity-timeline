@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "RIGID_INTERDICTION",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "RIGID_INTERDICTION",
     "descriptionParams": {
       "atk_scale": 4,
       "poise": 20,
@@ -21,7 +20,10 @@
       "1-atb_return_base": -29,
       "-atb_return_base": -30,
       "atb_return_base-1": 29
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "CATCHER",

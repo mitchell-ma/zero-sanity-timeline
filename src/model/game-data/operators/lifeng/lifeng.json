@@ -9,7 +9,7 @@
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "STRENGTH",
   "talents": {
-    "one": "ILLUMINATION_TALENT",
+    "one": "ILLUMINATION_T1",
     "two": "SUBDUER_OF_EVIL_T2",
     "attributeIncrease": {
       "id": "SKIRMISHER"

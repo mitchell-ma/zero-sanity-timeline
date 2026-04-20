@@ -107,35 +107,35 @@
     "text": "Protocol ω: Strike",
     "dataStatus": "RECONCILED"
   },
-  "op.PERLICA.status.PERLICA_POTENTIAL3_SUPERVISORY_DUTIES.event.description": {
+  "op.PERLICA.status.SUPERVISORY_DUTIES_P3.event.description": {
     "text": "After Perlica applies Electrification, ATK +20% for 5s. Max 2 stacks.",
     "dataStatus": "RECONCILED"
   },
-  "op.PERLICA.status.PERLICA_POTENTIAL3_SUPERVISORY_DUTIES.event.name": {
+  "op.PERLICA.status.SUPERVISORY_DUTIES_P3.event.name": {
     "text": "Supervisory Duties",
     "dataStatus": "RECONCILED"
   },
-  "op.PERLICA.status.PERLICA_POTENTIAL3_SUPERVISORY_DUTIES.segment.0.name": {
+  "op.PERLICA.status.SUPERVISORY_DUTIES_P3.segment.0.name": {
     "text": "Supervisory Duties",
     "dataStatus": "RECONCILED"
   },
-  "op.PERLICA.talent.CYCLE_PROTOCOL_TALENT.event.description": {
+  "op.PERLICA.talent.CYCLE_PROTOCOL_T2.event.description": {
     "text": "Combo skill Instant Protocol: Chain improved: When hitting a Vulnerable enemy, the hit chains 1 more time.",
     "dataStatus": "RECONCILED"
   },
-  "op.PERLICA.talent.CYCLE_PROTOCOL_TALENT.event.name": {
+  "op.PERLICA.talent.CYCLE_PROTOCOL_T2.event.name": {
     "text": "Cycle Protocol (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.PERLICA.talent.OBLITERATION_PROTOCOL_TALENT.event.description": {
+  "op.PERLICA.talent.OBLITERATION_PROTOCOL_T1.event.description": {
     "text": "DMG Dealt +20%/+30% to Staggered enemies.",
     "dataStatus": "RECONCILED"
   },
-  "op.PERLICA.talent.OBLITERATION_PROTOCOL_TALENT.event.name": {
+  "op.PERLICA.talent.OBLITERATION_PROTOCOL_T1.event.name": {
     "text": "Obliteration Protocol (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.PERLICA.talent.OBLITERATION_PROTOCOL_TALENT.segment.0.name": {
+  "op.PERLICA.talent.OBLITERATION_PROTOCOL_T1.segment.0.name": {
     "text": "Obliteration Protocol (T1)",
     "dataStatus": "RECONCILED"
   }

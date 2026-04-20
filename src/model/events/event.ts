@@ -8,7 +8,7 @@ export interface Duration {
 }
 
 export abstract class Event {
-  readonly eventType: EventType;
+  readonly eventTypes: EventType[];
   readonly eventOrigin: EventOriginType;
   readonly name: string;
   readonly target: DslTarget;
@@ -24,7 +24,7 @@ export abstract class Event {
   readonly clause: Clause;
 
   constructor(params: {
-    eventType: EventType;
+    eventTypes: EventType[];
     eventOrigin: EventOriginType;
     name?: string;
     target: DslTarget;
@@ -33,7 +33,7 @@ export abstract class Event {
     maxOccurrences?: number;
     clause?: Clause;
   }) {
-    this.eventType = params.eventType;
+    this.eventTypes = params.eventTypes;
     this.eventOrigin = params.eventOrigin;
     this.name = params.name ?? "";
     this.target = params.target;

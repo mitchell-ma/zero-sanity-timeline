@@ -70,12 +70,7 @@
                       "left": {
                         "verb": "IS",
                         "objectQualifier": "CONSUMED",
-                        "object": "STACKS",
-                        "of": {
-                          "object": "STATUS",
-                          "objectId": "INFLICTION",
-                          "objectQualifier": "CRYO"
-                        }
+                        "object": "STACKS"
                       },
                       "right": {
                         "verb": "VARY_BY",
@@ -109,7 +104,7 @@
     }
   ],
   "properties": {
-    "id": "HYPOTHERMIA_TALENT",
+    "id": "HYPOTHERMIA_T1",
     "descriptionParams": {
       "crystal_up": 0.04,
       "duration": 15,
@@ -126,7 +121,6 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
     "eventCategoryType": "TALENT",
     "duration": {
       "value": {
@@ -141,7 +135,10 @@
         "value": 1
       },
       "interactionType": "NONE"
-    }
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LAST_RITE",

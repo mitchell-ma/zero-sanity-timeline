@@ -9,9 +9,9 @@ import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHead
 import { LoadoutProperties, getDefaultLoadoutProperties } from '../view/InformationPane';
 import { ALL_OPERATORS, getUltimateEnergyCost, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
 import { getModelEnemy } from './calculation/enemyRegistry';
-import { BossEnemy } from '../model/enemies/bossEnemy';
 import { ColumnType, StatType, GearSetType } from '../consts/enums';
 import { DEFAULT_STATS } from '../consts/stats';
+import { getEnemyStatsOverride } from '../utils/enemyStatsStorage';
 import { getGearPiece } from './gameDataStore';
 import { filterEventsOnOperatorChange } from './timeline/inputEventController';
 import GENERAL_MECHANICS from '../model/game-data/generalMechanics.json';
@@ -32,7 +32,11 @@ export type EnemyStats = {
 
 export const DEFAULT_ENEMY_LEVEL = 90;
 
-export function getDefaultEnemyStats(enemyId: string, level: number = DEFAULT_ENEMY_LEVEL): EnemyStats {
+/**
+ * Built-in defaults for an enemy at the given level. Ignores any user override
+ * in localStorage — used by the reset button to restore game-authored stats.
+ */
+export function getBuiltInEnemyStats(enemyId: string, level: number = DEFAULT_ENEMY_LEVEL): EnemyStats {
   const model = getModelEnemy(enemyId, level);
   if (!model) {
     return {
@@ -56,8 +60,40 @@ export function getDefaultEnemyStats(enemyId: string, level: number = DEFAULT_EN
     ...model.stats,
     level,
     staggerStartValue: 0,
-    staggerNodes: model instanceof BossEnemy ? model.staggerNodes : 0,
-    staggerNodeRecoverySeconds: model instanceof BossEnemy ? model.staggerNodeRecoverySeconds : 0,
+    staggerNodes: model.staggerNodes,
+    staggerNodeRecoverySeconds: model.staggerNodeRecoverySeconds,
+  };
+}
+
+export function getDefaultEnemyStats(enemyId: string, level: number = DEFAULT_ENEMY_LEVEL): EnemyStats {
+  const override = getEnemyStatsOverride(enemyId);
+  if (override) return override;
+
+  const model = getModelEnemy(enemyId, level);
+  if (!model) {
+    return {
+      ...DEFAULT_STATS,
+      level,
+      [StatType.BASE_DEFENSE]: 100,
+      [StatType.PHYSICAL_RESISTANCE]: 1,
+      [StatType.HEAT_RESISTANCE]: 1,
+      [StatType.ELECTRIC_RESISTANCE]: 1,
+      [StatType.CRYO_RESISTANCE]: 1,
+      [StatType.NATURE_RESISTANCE]: 1,
+      [StatType.STAGGER_HP]: 60,
+      [StatType.STAGGER_RECOVERY]: 6,
+      staggerStartValue: 0,
+      staggerNodes: 0,
+      staggerNodeRecoverySeconds: 0,
+    };
+  }
+  return {
+    ...DEFAULT_STATS,
+    ...model.stats,
+    level,
+    staggerStartValue: 0,
+    staggerNodes: model.staggerNodes,
+    staggerNodeRecoverySeconds: model.staggerNodeRecoverySeconds,
   };
 }
 
@@ -363,7 +399,6 @@ export function attachDefaultSegments(
       if (ev.timeInteraction === undefined && ext.timeInteraction != null) props.timeInteraction = ext.timeInteraction as string;
       if (ev.isPerfectDodge === undefined && ext.isPerfectDodge != null) props.isPerfectDodge = ext.isPerfectDodge as boolean;
       if (ev.timeStop === undefined && ext.timeStop != null) props.timeStop = ext.timeStop as number;
-      if (ev.enhancementType === undefined && ext.enhancementType != null) props.enhancementType = ext.enhancementType as import('../consts/enums').EnhancementType;
       const stacks = findMicroColumnStacks(ev, columns);
       const stackLimit = (stacks?.limit as { value?: number } | undefined)?.value ?? 1;
       if (stackLimit <= 1 && ev.nonOverlappableRange === undefined) {

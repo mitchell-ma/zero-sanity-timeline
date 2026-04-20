@@ -13,7 +13,7 @@
  *    resolving the DSL default (`eventInterpretorController.ts` doApply).
  *
  * 2. Per-hit Force of Nature ramp — each Thunder Strike damage frame applies
- *    FORCE_OF_NATURE_TALENT with `base + hit_count × per_hit` so the AMP
+ *    FORCE_OF_NATURE_T1 with `base + hit_count × per_hit` so the AMP
  *    climbs over the cast.
  *
  * 3. Dynamic final-frame formula — the unconditional final Thunder Strike
@@ -115,7 +115,7 @@ function findBattleSkillEvent(app: AppResult) {
   );
 }
 
-/** All derived FORCE_OF_NATURE_TALENT events on Zhuang Fangyi, ordered by startFrame. */
+/** All derived FORCE_OF_NATURE_T1 events on Zhuang Fangyi, ordered by startFrame. */
 function forceOfNatureEvents(app: AppResult) {
   return app.allProcessedEvents
     .filter(

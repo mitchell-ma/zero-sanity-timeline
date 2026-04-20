@@ -9,9 +9,7 @@
  *   3. Calculation ingestion — when the buff status is active during a damage
  *      frame, its `clause` STAT application surfaces in
  *      `damageRow.params.sub.statSources` (and consequently in the info-pane
- *      damage breakdown). This is the leg that the engine wiring still owes:
- *      assertions here are EXPECTED to fail until weapon/gear STAT ingestion
- *      lands.
+ *      damage breakdown).
  */
 import { act } from '@testing-library/react';
 import { runCalculation } from '../../../controller/calculation/calculationController';

@@ -106,11 +106,13 @@
       },
       "unit": "SECOND"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "STATUS"
+    "eventCategoryType": "STATUS",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
-    "originId": "BARRAGE_OF_TECHNOLOGY_TALENT",
+    "originId": "BARRAGE_OF_TECHNOLOGY_T1",
     "dataSources": [
       "ENDFIELD_WIKI"
     ],

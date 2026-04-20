@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "LAEVATAIN_POTENTIAL_1",
+    "id": "HEART_OF_MELTING_FLAME_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "atb": 20,
@@ -12,8 +14,10 @@
       "-ratio": -1.2,
       "ratio-1": 0.19999999999999996
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LAEVATAIN",

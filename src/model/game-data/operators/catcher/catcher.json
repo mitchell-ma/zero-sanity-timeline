@@ -9,8 +9,8 @@
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "talents": {
-    "one": "RESILIENT_DEFENSE_TALENT",
-    "two": "COMPREHENSIVE_MINDSET_TALENT",
+    "one": "RESILIENT_DEFENSE_T1",
+    "two": "COMPREHENSIVE_MINDSET_T2",
     "attributeIncrease": {
       "id": "FORGED"
     }

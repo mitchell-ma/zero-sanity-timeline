@@ -29,7 +29,7 @@ import {
   INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_ID,
   ENEMY_GROUP_COLUMNS,
 } from '../../../../model/channels';
-import { ColumnType, CritMode, ElementType, EnhancementType, EventStatusType, SegmentType } from '../../../../consts/enums';
+import { ColumnType, CritMode, ElementType, EventStatusType, SegmentType } from '../../../../consts/enums';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
@@ -57,7 +57,10 @@ const ULTIMATE_ID: string = require(
   '../../../../model/game-data/operators/wulfgard/skills/ultimate-wolven-fury.json',
 ).properties.id;
 
-const SF_MINOR_ID = TALENT1_ID + '_MINOR';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const SF_MINOR_ID: string = require(
+  '../../../../model/game-data/operators/wulfgard/talents/talent-scorching-fangs-minor-talent.json',
+).properties.id;
 
 const SLOT_WULFGARD = 'slot-0';
 const SLOT_AKEKURI = 'slot-1';
@@ -333,7 +336,7 @@ describe('D. Empowered Battle Skill', () => {
   function getEmpoweredVariant(app: AppResult) {
     const battleCol = findColumn(app, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
-      v => v.enhancementType === EnhancementType.EMPOWERED,
+      v => v.id.endsWith('_EMPOWERED'),
     );
     return empowered;
   }
@@ -459,7 +462,7 @@ describe('F. Code of Restraint (Talent 2)', () => {
 
     // Strict: empowered battle skill consumes Combustion
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
-    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    const empowered = battleCol?.eventVariants?.find(v => v.id.endsWith('_EMPOWERED'));
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
@@ -472,7 +475,7 @@ describe('F. Code of Restraint (Talent 2)', () => {
       ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
-    expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+    expect(bsEvents[0].id.endsWith('_EMPOWERED')).toBe(true);
 
     const consumed = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.eventStatus === EventStatusType.CONSUMED,
@@ -664,7 +667,7 @@ describe('H. Cross-Mechanic Chains', () => {
 
     // 2. Place empowered battle skill at 4s (Combustion active from ult's forced apply at ~2.77s, 5s duration)
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
-    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    const empowered = battleCol?.eventVariants?.find(v => v.id.endsWith('_EMPOWERED'));
     expect(empowered).toBeDefined();
 
     act(() => {
@@ -730,7 +733,7 @@ describe('H. Cross-Mechanic Chains', () => {
     // 2. Empowered battle skill at 8s — Combustion still active, empowered variant consumes it
     //    P3 trigger: PERFORM EMPOWERED BATTLE_SKILL -> apply SF to self (reset) + SF Minor to ALL_OTHER
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
-    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    const empowered = battleCol?.eventVariants?.find(v => v.id.endsWith('_EMPOWERED'));
     expect(empowered).toBeDefined();
 
     act(() => {
@@ -746,9 +749,8 @@ describe('H. Cross-Mechanic Chains', () => {
     expect(sfAfter.length).toBeGreaterThanOrEqual(1);
 
     // Verify: Scorching Fangs Minor applied to other operators
-    const sfMinorId = TALENT1_ID + '_MINOR';
     const sfMinor = result.current.allProcessedEvents.filter(
-      ev => ev.name === sfMinorId && ev.ownerEntityId !== SLOT_WULFGARD,
+      ev => ev.name === SF_MINOR_ID && ev.ownerEntityId !== SLOT_WULFGARD,
     );
     expect(sfMinor.length).toBeGreaterThanOrEqual(1);
   });
@@ -778,7 +780,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
     startSec: number,
   ) {
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
-    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    const empowered = battleCol?.eventVariants?.find(v => v.id.endsWith('_EMPOWERED'));
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
@@ -806,7 +808,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
 
     // Empowered variant should exist in the column definition but placing it should be invalid
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
-    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    const empowered = battleCol?.eventVariants?.find(v => v.id.endsWith('_EMPOWERED'));
     expect(empowered).toBeDefined();
 
     // Place it anyway — should be flagged as invalid by the validator
@@ -947,7 +949,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
       ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
-    expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+    expect(battles[0].id.endsWith('_EMPOWERED')).toBe(true);
     expect(battles[0].warnings ?? []).toHaveLength(0);
   });
 
@@ -961,7 +963,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
       ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
-    expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+    expect(battles[0].id.endsWith('_EMPOWERED')).toBe(true);
     expect(battles[0].warnings ?? []).toHaveLength(0);
   });
 
@@ -981,7 +983,7 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
       ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(battles).toHaveLength(1);
-    expect(battles[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+    expect(battles[0].id.endsWith('_EMPOWERED')).toBe(true);
     const frames = battles[0].segments.flatMap(
       (s: { frames?: unknown[] }) => s.frames ?? [],
     );
@@ -1013,8 +1015,12 @@ describe('I. Empowered Battle Skill — Activation & Consume Priority', () => {
       CritMode.NEVER,
       result.current.overrides,
     );
+    // Scope to the EBS event explicitly — freeform reactions (the placed
+    // Combustion) now also attribute to SLOT_WULFGARD/BATTLE via sourceEntityId
+    // fallback, so a plain columnId filter would include the reaction rows.
     const ebsRows = calcResult.rows.filter(
-      r => r.ownerEntityId === SLOT_WULFGARD && r.columnId === NounType.BATTLE,
+      r => r.ownerEntityId === SLOT_WULFGARD && r.columnId === NounType.BATTLE
+        && r.eventUid === battles[0].uid,
     );
     // Frames 1-3 produce damage. Frame 4's condition fails (Combustion expired
     // before it could resolve) so the damage-table builder drops the row —
@@ -1084,7 +1090,7 @@ describe('J. Normal vs Empowered — Mutual Exclusivity', () => {
     });
 
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
-    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    const empowered = battleCol?.eventVariants?.find(v => v.id.endsWith('_EMPOWERED'));
 
     // Count heat inflictions BEFORE placing empowered BS
     const heatsBefore = result.current.allProcessedEvents.filter(
@@ -1198,7 +1204,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
     // 2. Empowered BS at 8s — Combustion still active, P3 clause fires:
     //    APPLY SF to self (reset) + SF Minor to ALL_OTHER
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
-    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    const empowered = battleCol?.eventVariants?.find(v => v.id.endsWith('_EMPOWERED'));
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
@@ -1263,7 +1269,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
 
     // 2. Empowered BS at 8s — P3 clause applies SF Minor to teammates
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
-    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    const empowered = battleCol?.eventVariants?.find(v => v.id.endsWith('_EMPOWERED'));
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(
@@ -1363,7 +1369,7 @@ describe('K. Scorching Fangs — Detailed Behavior', () => {
 
     // Empowered BS at 4s → P3 applies SF Minor to Laevatain (~6.07s start, 10s duration → expires ~16s)
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
-    const empowered = battleCol?.eventVariants?.find(v => v.enhancementType === EnhancementType.EMPOWERED);
+    const empowered = battleCol?.eventVariants?.find(v => v.id.endsWith('_EMPOWERED'));
     expect(empowered).toBeDefined();
     act(() => {
       result.current.handleAddEvent(

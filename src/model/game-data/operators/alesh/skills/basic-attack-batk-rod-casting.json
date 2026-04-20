@@ -495,11 +495,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "ROD_CASTING_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "ROD_CASTING_BATK",
     "descriptionParams": {
       "atk_scale": 0.62,
       "atb": 19,
@@ -517,7 +516,10 @@
       "1-poise": -16,
       "-poise": -17,
       "poise-1": 16
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ALESH",

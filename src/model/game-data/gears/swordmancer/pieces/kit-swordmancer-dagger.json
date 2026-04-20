@@ -1,0 +1,104 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "BASE_DEFENSE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 21
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "AGILITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                32,
+                35,
+                38,
+                41
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "STRENGTH",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                21,
+                23,
+                25,
+                27
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.5175,
+                0.56925,
+                0.621,
+                0.67275
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          },
+          "objectQualifier": "ULTIMATE"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "SWORDMANCER_DAGGER",
+    "gearType": "KIT",
+    "gearSet": "SWORDMANCER_STAT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "dataStatus": "RECONCILED"
+  }
+}

@@ -51,7 +51,7 @@ import {
   getWeapon,
   getAllWeapons,
   getWeaponsByType,
-  getWeaponIdByName,
+  findWeaponBySkillId,
   registerCustomWeapon,
   deregisterCustomWeapon,
   type Weapon,
@@ -62,7 +62,6 @@ import {
   getAllGearPieces,
   getGearPiecesBySet,
   getGearPiecesByType,
-  getGearPieceIdByName,
   registerCustomGearPiece,
   deregisterCustomGearPiece,
   type GearPiece,
@@ -142,11 +141,11 @@ export { getOperatorSkills, getOperatorSkill, getOperatorSkillIds, getAllOperato
 export { getOperatorStatuses, getAllOperatorStatusOriginIds, getAllOperatorStatuses };
 
 // Weapons
-export { getWeapon, getAllWeapons, getWeaponsByType, getWeaponIdByName };
+export { getWeapon, getAllWeapons, getWeaponsByType, findWeaponBySkillId };
 export { registerCustomWeapon, deregisterCustomWeapon };
 
 // Gear pieces
-export { getGearPiece, getAllGearPieces, getGearPiecesBySet, getGearPiecesByType, getGearPieceIdByName };
+export { getGearPiece, getAllGearPieces, getGearPiecesBySet, getGearPiecesByType };
 export { registerCustomGearPiece, deregisterCustomGearPiece };
 
 // Gear statuses & set effects
@@ -533,7 +532,6 @@ export interface NormalizedEffectDef {
   stack?: { max?: Record<string, number> };
   buffs?: { stat: string; value?: number; valueMin?: number; valueMax?: number; perStack?: boolean }[];
   isForced?: boolean;
-  enhancementTypes?: string[];
   susceptibility?: Record<string, number[]>;
   eventCategoryType?: string;
   usageLimit?: number;
@@ -898,7 +896,6 @@ export interface SkillConfig {
   properties: {
     duration?: unknown;
     trigger?: unknown;
-    enhancementTypes?: string[];
     dependencyTypes?: string[];
   };
 }
@@ -916,7 +913,6 @@ export interface StatusEventConfig {
     limit: ValueNode;
   };
   susceptibility?: Record<string, number[]>;
-  enhancementTypes?: string[];
   cooldownSeconds?: number;
   isEnabled?: boolean;
   onTriggerClause?: { conditions: Interaction[] }[];
@@ -980,7 +976,6 @@ function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
       },
     } : {}),
     ...(props.susceptibility ? { susceptibility: props.susceptibility as Record<string, number[]> } : {}),
-    ...(props.enhancementTypes ? { enhancementTypes: props.enhancementTypes as string[] } : {}),
     ...(props.cooldownSeconds != null ? { cooldownSeconds: props.cooldownSeconds as number } : {}),
     ...(raw.onTriggerClause
       ? { onTriggerClause: raw.onTriggerClause as StatusEventConfig['onTriggerClause'] }
@@ -1010,7 +1005,6 @@ function parseSkillConfig(skillId: string, raw: Record<string, unknown>): SkillC
     properties: {
       duration: props.duration,
       trigger: props.trigger,
-      enhancementTypes: props.enhancementTypes as string[] | undefined,
       dependencyTypes: props.dependencyTypes as string[] | undefined,
     },
   };

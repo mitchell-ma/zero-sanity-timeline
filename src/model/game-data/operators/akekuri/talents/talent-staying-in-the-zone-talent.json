@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "STAYING_IN_THE_ZONE_TALENT",
+    "id": "STAYING_IN_THE_ZONE_T2",
     "descriptionParams": {
       "combo": 1,
       "imbue_scale": 0.2,
@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "AKEKURI",

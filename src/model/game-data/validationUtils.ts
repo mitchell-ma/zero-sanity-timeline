@@ -4,11 +4,87 @@ import {
   CONSUME_TARGET_MAPPING, OBJECT_QUALIFIER_MAPPING,
 } from '../../dsl/semantics';
 import type { ObjectType } from '../../dsl/semantics';
-import { ArtsReactionType, ElementType, OperatorClassType, PhysicalInflictionType, PhysicalStatusType, SegmentType } from '../../consts/enums';
+import { ArtsReactionType, ElementType, EventType, OperatorClassType, PERMANENT_DURATION, PhysicalInflictionType, PhysicalStatusType, SegmentType, StackInteractionType, UNLIMITED_STACKS } from '../../consts/enums';
 
 // ── Enum value sets for validation ──────────────────────────────────────────
 const VALID_DETERMINERS = new Set<string>(Object.values(DeterminerType));
 const VALID_OPERATOR_CLASSES = new Set<string>(Object.values(OperatorClassType));
+const VALID_EVENT_TYPES = new Set<string>(Object.values(EventType));
+
+/**
+ * Validate `properties.eventTypes`. The field must be an array of EventType
+ * enum values (SKILL, STATUS, AUTOMATIC). Catches the legacy singular
+ * `eventType` form so post-migration regressions surface immediately.
+ */
+export function validateEventTypes(props: Record<string, unknown>, path: string): string[] {
+  const errors: string[] = [];
+  if ('eventType' in props) {
+    errors.push(`${path}.eventType: legacy singular form removed — use "eventTypes": ["STATUS"] (array). For passive events, append "AUTOMATIC".`);
+  }
+  if (!('eventTypes' in props)) return errors;
+  const types = props.eventTypes;
+  if (!Array.isArray(types)) {
+    errors.push(`${path}.eventTypes: must be an array of EventType values`);
+    return errors;
+  }
+  for (const t of types) {
+    if (typeof t !== 'string' || !VALID_EVENT_TYPES.has(t)) {
+      errors.push(`${path}.eventTypes: "${String(t)}" is not a valid EventType (${Array.from(VALID_EVENT_TYPES).join(', ')})`);
+    }
+  }
+  return errors;
+}
+
+/**
+ * Lock the AUTOMATIC tag in for passive-shaped TALENT/POTENTIAL configs so new
+ * authoring can't drift back into inference. Mirrors the scope in
+ * `triggerIndex.ts` passive branch: a def is "passive-shaped" when it is a
+ * TALENT/POTENTIAL with trigger or segments, permanent (or absent) duration,
+ * no counter (NONE + unlimited stacks), and no self-applying `APPLY EVENT` /
+ * `CONSUME EVENT` triggers. When that shape holds, `properties.eventTypes`
+ * MUST include `AUTOMATIC`; the engine seeds the frame-0 presence event off
+ * that flag.
+ */
+export function validateAutomaticTagRequired(
+  json: Record<string, unknown>,
+  path: string,
+): string[] {
+  const props = (json.properties ?? {}) as Record<string, unknown>;
+  const ect = (props.eventCategoryType ?? props.type) as string | undefined;
+  if (ect !== NounType.TALENT && ect !== NounType.POTENTIAL) return [];
+
+  const hasTrigger = Array.isArray(json.onTriggerClause) && (json.onTriggerClause as unknown[]).length > 0;
+  const hasSegments = Array.isArray(json.segments) && (json.segments as unknown[]).length > 0;
+  if (!hasTrigger && !hasSegments) return [];
+
+  const stacks = (props.stacks ?? {}) as Record<string, unknown>;
+  const stackLimitNode = stacks.limit as Record<string, unknown> | undefined;
+  const stackLimit = stackLimitNode?.verb === VerbType.IS && typeof stackLimitNode.value === 'number'
+    ? stackLimitNode.value
+    : typeof stackLimitNode === 'number' ? stackLimitNode : 0;
+  const isCounter = stacks.interactionType === StackInteractionType.NONE && stackLimit >= UNLIMITED_STACKS;
+  if (isCounter) return [];
+
+  const duration = props.duration as { value?: Record<string, unknown> } | undefined;
+  const durNode = duration?.value;
+  const durVal = durNode?.verb === VerbType.IS && typeof durNode.value === 'number' ? durNode.value : undefined;
+  const isPermanent = duration === undefined || durVal === PERMANENT_DURATION || durVal === 0;
+  if (!isPermanent) return [];
+
+  const onTriggerClauses = (json.onTriggerClause ?? []) as { effects?: { verb?: string; object?: string }[] }[];
+  const hasSelfApplyConsume = onTriggerClauses.some(tc =>
+    (tc.effects ?? []).some(e => (e.verb === VerbType.APPLY || e.verb === VerbType.CONSUME) && e.object === NounType.EVENT));
+  if (hasSelfApplyConsume) return [];
+
+  const types = Array.isArray(props.eventTypes) ? (props.eventTypes as string[]) : [];
+  if (types.includes(EventType.AUTOMATIC)) return [];
+
+  return [
+    `${path}.properties.eventTypes: passive ${ect} (permanent duration, no counter, no self-APPLY/CONSUME EVENT trigger) `
+    + `must include "${EventType.AUTOMATIC}" so the engine seeds a frame-0 presence event. `
+    + `Run scripts/migrate_event_types.py or add it manually.`,
+  ];
+}
 
 // ── Shared validation utilities for game-data config loaders ────────────────
 

@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "MORE_SPICE",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "MORE_SPICE",
     "descriptionParams": {
       "atk_scale": 6.5,
       "usp": 10,
@@ -21,7 +20,10 @@
       "1-poise": -14,
       "-poise": -15,
       "poise-1": 14
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "SAR_PROFESSIONAL_TALENT",
+    "id": "SAR_PROFESSIONAL_T2",
     "descriptionParams": {
       "sup": 10,
       "talent_2_sup": 10,
@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

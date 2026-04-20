@@ -300,7 +300,7 @@ describe('Corrosion merge — overlapping reactions on enemy', () => {
     // The breakdown panel's per-element Resistance row would show one stack
     // of "Corrosion" with the merged value, not the older + newer summed.
     for (const row of [at6, at9, at13]) {
-      const arts = row.params!.sub?.allResistanceSources?.['ARTS' as ElementType] ?? [];
+      const arts = row.params!.sub?.allResistanceReductionSources?.['ARTS' as ElementType] ?? [];
       const corrosionEntries = arts.filter(s => /corrosion/i.test(s.label));
       expect(corrosionEntries).toHaveLength(1);
     }
@@ -356,7 +356,7 @@ describe('Corrosion merge — overlapping reactions on enemy', () => {
     expect(bsRow).toBeDefined();
 
     // Exactly one Corrosion source — not two.
-    const arts = bsRow.params!.sub?.allResistanceSources?.['ARTS' as ElementType] ?? [];
+    const arts = bsRow.params!.sub?.allResistanceReductionSources?.['ARTS' as ElementType] ?? [];
     const corrosionEntries = arts.filter(s => /corrosion/i.test(s.label));
     expect(corrosionEntries).toHaveLength(1);
 

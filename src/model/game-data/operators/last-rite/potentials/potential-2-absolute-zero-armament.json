@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "LAST_RITE_POTENTIAL_2",
+    "id": "ABSOLUTE_ZERO_ARMAMENT_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Str": 20,
@@ -59,8 +61,11 @@
       "-CrystDamageIncrease": -0.1,
       "CrystDamageIncrease-1": -0.9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "LAST_RITE",

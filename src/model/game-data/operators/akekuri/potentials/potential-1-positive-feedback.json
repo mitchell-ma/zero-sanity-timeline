@@ -1,6 +1,91 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "RECOVER",
+          "object": "SKILL_POINT"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "value": {
+            "verb": "IS",
+            "value": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "POSITIVE_FEEDBACK_P1",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 10
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
   "properties": {
-    "id": "AKEKURI_POTENTIAL_1",
+    "id": "POSITIVE_FEEDBACK_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 5
+      },
+      "interactionType": "REFRESH"
+    },
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ],
     "level": 1,
     "descriptionParams": {
       "atk_up": 0.1,
@@ -15,9 +100,7 @@
       "1-max_stack": -4,
       "-max_stack": -5,
       "max_stack-1": 4
-    },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    }
   },
   "metadata": {
     "originId": "AKEKURI",

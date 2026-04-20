@@ -22,7 +22,11 @@
     }
   ],
   "properties": {
-    "id": "PURSUIT_UNENDING_CYCLE"
+    "id": "PURSUIT_UNENDING_CYCLE",
+    "descriptionParams": {
+      "atk_up": 0.12,
+      "duration": 20
+    }
   },
   "metadata": {
     "originId": "game",

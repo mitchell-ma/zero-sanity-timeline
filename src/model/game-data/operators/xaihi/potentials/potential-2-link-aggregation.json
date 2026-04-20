@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "XAIHI_POTENTIAL_2",
+    "id": "LINK_AGGREGATION_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "costValue": 0.9,
@@ -8,8 +10,10 @@
       "-costValue": -0.9,
       "costValue-1": -0.09999999999999998
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "XAIHI",

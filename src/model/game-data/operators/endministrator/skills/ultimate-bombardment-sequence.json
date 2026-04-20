@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "BOMBARDMENT_SEQUENCE",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
-    "id": "BOMBARDMENT_SEQUENCE",
     "descriptionParams": {
       "atk_scale": 8,
       "originum_ult_break_scale": 6,
@@ -17,7 +16,10 @@
       "1-poise": -24,
       "-poise": -25,
       "poise-1": 24
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

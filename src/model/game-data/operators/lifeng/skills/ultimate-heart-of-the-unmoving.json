@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "HEART_OF_THE_UNMOVING",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
-    "id": "HEART_OF_THE_UNMOVING",
     "descriptionParams": {
       "atk_scale1": 4,
       "atk_scale2": 4,
@@ -29,7 +28,10 @@
       "1-poise3": -4,
       "-poise3": -5,
       "poise3-1": 4
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

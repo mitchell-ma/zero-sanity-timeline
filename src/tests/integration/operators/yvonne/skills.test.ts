@@ -50,7 +50,7 @@ const FREEZING_POINT_JSON = require('../../../../model/game-data/operators/yvonn
 const FREEZING_POINT_ID: string = FREEZING_POINT_JSON.properties.id;
 
 const EXPERT_MECHCRAFTER_ID: string = require(
-  '../../../../model/game-data/operators/yvonne/statuses/status-expert-mechcrafter.json',
+  '../../../../model/game-data/operators/yvonne/potentials/potential-5-expert-mechcrafter.json',
 ).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 

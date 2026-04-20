@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "THUNDERLANCE_STRIKE",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
-    "id": "THUNDERLANCE_STRIKE",
     "descriptionParams": {
       "atk_scale": 3.8,
       "poise": 10,
@@ -21,7 +20,10 @@
       "1-lance_duration": -29,
       "-lance_duration": -30,
       "lance_duration-1": 29
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

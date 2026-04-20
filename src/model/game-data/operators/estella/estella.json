@@ -9,8 +9,8 @@
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "STRENGTH",
   "talents": {
-    "one": "COMMISERATION_TALENT",
-    "two": "LAZINESS_PAYS_OFF_NOW_TALENT",
+    "one": "COMMISERATION_T1",
+    "two": "LAZINESS_PAYS_OFF_NOW_T2",
     "attributeIncrease": {
       "id": "STALWART"
     }

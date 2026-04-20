@@ -22,7 +22,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.15,
                     0.18,
@@ -35,8 +35,11 @@
                     0.42
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               },
@@ -63,7 +66,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.35,
                     0.42,
@@ -76,8 +79,11 @@
                     0.98
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               }

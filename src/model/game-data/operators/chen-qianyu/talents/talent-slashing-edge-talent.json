@@ -105,7 +105,7 @@
     }
   ],
   "properties": {
-    "id": "SLASHING_EDGE",
+    "id": "SLASHING_EDGE_T1",
     "descriptionParams": {
       "atk": 0.08,
       "duration": 10,
@@ -140,8 +140,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

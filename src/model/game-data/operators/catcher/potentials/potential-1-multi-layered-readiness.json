@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "CATCHER_POTENTIAL_1",
+    "id": "MULTI_LAYERED_READINESS_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "def_scale": 5,
@@ -12,8 +14,10 @@
       "-dmg_base": -300,
       "dmg_base-1": 299
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "CATCHER",

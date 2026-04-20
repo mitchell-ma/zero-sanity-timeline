@@ -45,7 +45,7 @@ function setupTeam() {
   act(() => { view.result.current.handleSwapOperator('slot-1', AKEKURI_ID); });
   act(() => { view.result.current.handleSwapOperator(SLOT_ARDELIA, ARDELIA_ID); });
   act(() => { view.result.current.setInteractionMode(InteractionModeType.FREEFORM); });
-  // Enable Yvonne T2 so FREEZING_POINT_TALENT fires on CRYO apply
+  // Enable Yvonne T2 so FREEZING_POINT_T2 fires on CRYO apply
   act(() => {
     const props = view.result.current.loadoutProperties[SLOT_YVONNE];
     view.result.current.handleStatsChange(SLOT_YVONNE, {

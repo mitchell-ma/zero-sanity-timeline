@@ -36,7 +36,7 @@ const WULFGARD_JSON = require('../../../../model/game-data/operators/wulfgard/wu
 const WULFGARD_ID: string = WULFGARD_JSON.id;
 
 const P5_STATUS_ID: string = require(
-  '../../../../model/game-data/operators/wulfgard/statuses/status-wulfgard-natural-predator.json',
+  '../../../../model/game-data/operators/wulfgard/potentials/potential-5-natural-predator.json',
 ).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 

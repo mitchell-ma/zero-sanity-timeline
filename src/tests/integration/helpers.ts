@@ -81,26 +81,33 @@ export function buildContextMenu(
 
 /**
  * Find an 'addEvent' menu item and return its payload.
- * Optionally filter by variant label.
+ * Optionally filter by variant label or by the variant id on the payload's
+ * `defaultSkill.id` (useful when the display label is locale-driven).
  * Asserts the item exists and is enabled.
  */
 export function getAddEventPayload(
   menuItems: ContextMenuItem[],
-  variantLabel?: string,
+  variantSelector?: string | { variantId: string },
 ): AddEventPayload {
-  const item = variantLabel
-    ? menuItems.find(i => i.actionId === 'addEvent' && i.label === variantLabel)
-    : menuItems.find(i => i.actionId === 'addEvent');
+  const variantId = typeof variantSelector === 'object' ? variantSelector.variantId : undefined;
+  const variantLabel = typeof variantSelector === 'string' ? variantSelector : undefined;
+  const item = variantId
+    ? menuItems.find(
+        i => i.actionId === 'addEvent'
+          && ((i.actionPayload as AddEventPayload | undefined)?.defaultSkill?.id === variantId),
+      )
+    : variantLabel
+      ? menuItems.find(i => i.actionId === 'addEvent' && i.label === variantLabel)
+      : menuItems.find(i => i.actionId === 'addEvent');
 
   if (!item) {
     const available = menuItems
       .filter(i => i.actionId === 'addEvent')
       .map(i => `"${i.label}"${i.disabled ? ` (disabled: ${i.disabledReason})` : ''}`)
       .join(', ');
+    const probe = variantId ?? variantLabel ?? '<any>';
     throw new Error(
-      variantLabel
-        ? `No addEvent menu item with label "${variantLabel}". Available: ${available}`
-        : `No addEvent menu item found. Available items: ${menuItems.map(i => i.label ?? i.actionId).join(', ')}`,
+      `No addEvent menu item matching ${probe}. Available: ${available}`,
     );
   }
 
@@ -133,7 +140,7 @@ export function getMenuPayload(
   app: AppResult,
   col: Column,
   atFrame: number,
-  variantLabel?: string,
+  variantSelector?: string | { variantId: string },
 ): AddEventPayload {
   const items = buildContextMenu(app, col, atFrame);
   if (!items) {
@@ -141,5 +148,5 @@ export function getMenuPayload(
       `Context menu returned null for column ${(col as MiniTimeline).columnId} at frame ${atFrame}`,
     );
   }
-  return getAddEventPayload(items, variantLabel);
+  return getAddEventPayload(items, variantSelector);
 }

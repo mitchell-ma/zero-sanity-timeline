@@ -84,11 +84,11 @@ describe('A. Context Menu Inline Segment Buttons', () => {
 
     const diveItem = menuItems.find(
       (i) => i.actionId === 'addEvent' &&
-        (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === NounType.DIVE,
+        (i.actionPayload as { defaultSkill?: { category?: string } })?.defaultSkill?.category === NounType.DIVE,
     );
     const finisherItem = menuItems.find(
       (i) => i.actionId === 'addEvent' &&
-        (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === NounType.FINISHER,
+        (i.actionPayload as { defaultSkill?: { category?: string } })?.defaultSkill?.category === NounType.FINISHER,
     );
     expect(diveItem?.inlineButtons).toBeUndefined();
     expect(finisherItem?.inlineButtons).toBeUndefined();

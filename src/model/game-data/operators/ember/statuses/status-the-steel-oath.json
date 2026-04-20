@@ -82,8 +82,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS"
+    "eventCategoryType": "SKILL_STATUS",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "RE_IGNITED_OATH",

@@ -43,7 +43,7 @@
     }
   ],
   "properties": {
-    "id": "WULFGARD_P5_NATURAL_PREDATOR",
+    "id": "NATURAL_PREDATOR",
     "to": "OPERATOR",
     "toDeterminer": "THIS",
     "stacks": {
@@ -60,7 +60,9 @@
       },
       "unit": "SECOND"
     },
-    "eventType": "STATUS",
+    "eventTypes": [
+      "STATUS"
+    ],
     "eventCategoryType": "SKILL_STATUS"
   },
   "metadata": {

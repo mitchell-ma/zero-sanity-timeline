@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "AKEKURI_POTENTIAL_2",
+    "id": "PASSIONATE_IDEALIST_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Agi": 10,
@@ -59,8 +61,11 @@
       "-Wisd": -10,
       "Wisd-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "AKEKURI",

@@ -35,87 +35,6 @@
           "conditions": [],
           "effects": [
             {
-              "verb": "IGNORE",
-              "object": "ULTIMATE_ENERGY",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
-            },
-            {
-              "verb": "ENABLE",
-              "object": "SKILL",
-              "objectId": "BASIC_ATTACK",
-              "objectQualifier": "FLAMING_CINDERS_BATK_ENHANCED",
-              "of": {
-                "determiner": "THIS",
-                "object": "OPERATOR"
-              }
-            },
-            {
-              "verb": "DISABLE",
-              "object": "SKILL",
-              "objectId": "BASIC_ATTACK",
-              "objectQualifier": "FLAMING_CINDERS_BATK",
-              "of": {
-                "determiner": "THIS",
-                "object": "OPERATOR"
-              }
-            },
-            {
-              "verb": "DISABLE",
-              "object": "SKILL",
-              "objectId": "BASIC_ATTACK",
-              "objectQualifier": "FINISHER",
-              "of": {
-                "determiner": "THIS",
-                "object": "OPERATOR"
-              }
-            },
-            {
-              "verb": "ENABLE",
-              "object": "SKILL",
-              "objectId": "BATTLE",
-              "objectQualifier": "SMOULDERING_FIRE_ENHANCED",
-              "of": {
-                "determiner": "THIS",
-                "object": "OPERATOR"
-              }
-            },
-            {
-              "verb": "ENABLE",
-              "object": "SKILL",
-              "objectId": "BATTLE",
-              "objectQualifier": "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
-              "of": {
-                "determiner": "THIS",
-                "object": "OPERATOR"
-              }
-            },
-            {
-              "verb": "DISABLE",
-              "object": "SKILL",
-              "objectId": "BATTLE",
-              "objectQualifier": "SMOULDERING_FIRE",
-              "of": {
-                "determiner": "THIS",
-                "object": "OPERATOR"
-              }
-            },
-            {
-              "verb": "DISABLE",
-              "object": "SKILL",
-              "objectId": "BATTLE",
-              "objectQualifier": "SMOULDERING_FIRE_EMPOWERED",
-              "of": {
-                "determiner": "THIS",
-                "object": "OPERATOR"
-              }
-            }
-          ]
-        },
-        {
-          "conditions": [],
-          "effects": [
-            {
               "verb": "CONSUME",
               "object": "ULTIMATE_ENERGY",
               "with": {
@@ -237,7 +156,7 @@
               "verb": "DISABLE",
               "object": "SKILL",
               "objectId": "BASIC_ATTACK",
-              "objectQualifier": "FINISHER",
+              "objectQualifier": "FLAMING_CINDERS_FINISHER",
               "of": {
                 "determiner": "THIS",
                 "object": "OPERATOR"
@@ -251,9 +170,8 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
-    "eventCategoryType": "ULTIMATE",
     "id": "TWILIGHT",
+    "eventCategoryType": "ULTIMATE",
     "descriptionParams": {
       "atk_scale": 6.08,
       "duration": 15,
@@ -267,7 +185,10 @@
       "1-count": -3,
       "-count": -4,
       "count-1": 3
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "LAEVATAIN",

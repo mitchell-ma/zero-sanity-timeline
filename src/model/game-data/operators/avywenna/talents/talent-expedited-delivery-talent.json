@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "EXPEDITED_DELIVERY_TALENT",
+    "id": "EXPEDITED_DELIVERY_T1",
     "descriptionParams": {
       "talent0_usp": 4,
       "1-talent0_usp": -3,
@@ -13,8 +13,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "AVYWENNA",

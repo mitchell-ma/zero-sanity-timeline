@@ -143,7 +143,6 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
     "eventCategoryType": "POTENTIAL",
     "stacks": {
       "limit": {
@@ -151,7 +150,10 @@
         "value": 1
       },
       "interactionType": "RESET"
-    }
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LIFENG",

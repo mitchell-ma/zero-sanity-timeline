@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ANTAL_POTENTIAL_1",
+    "id": "ARTS_TALENT_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "rate": 1.1,
@@ -8,8 +10,10 @@
       "-rate": -1.1,
       "rate-1": 0.10000000000000009
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ANTAL",

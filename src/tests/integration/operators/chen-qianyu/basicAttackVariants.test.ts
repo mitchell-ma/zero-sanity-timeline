@@ -64,7 +64,7 @@ describe('Chen Qianyu — basic attack variants', () => {
     const diveItem = menuItems!.find(
       (i) =>
         i.actionId === 'addEvent' &&
-        ((i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === NounType.DIVE ||
+        ((i.actionPayload as { defaultSkill?: { category?: string } })?.defaultSkill?.category === NounType.DIVE ||
          (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === SOARING_BREAK_DIVE_ID),
     );
     expect(diveItem).toBeDefined();
@@ -82,7 +82,7 @@ describe('Chen Qianyu — basic attack variants', () => {
     const finisherItem = menuItems!.find(
       (i) =>
         i.actionId === 'addEvent' &&
-        ((i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === NounType.FINISHER ||
+        ((i.actionPayload as { defaultSkill?: { category?: string } })?.defaultSkill?.category === NounType.FINISHER ||
          (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === SOARING_BREAK_FINISHER_ID),
     );
     expect(finisherItem).toBeDefined();

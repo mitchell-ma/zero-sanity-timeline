@@ -7,7 +7,7 @@ import type { ClauseEvaluationType } from '../../dsl/semantics';
 import type { Predicate, TriggerEffect } from './triggerMatch';
 import type { LifecycleClauseGroup } from './triggerIndex';
 import type { LoadoutProperties } from '../../view/InformationPane';
-import { QueueFrameType, FrameHookType } from '../../consts/enums';
+import { QueueFrameType, FrameHookType, EventType } from '../../consts/enums';
 export { QueueFrameType, FrameHookType };
 
 // ── Status event definition types ─────────────────────────────────────────
@@ -33,13 +33,13 @@ interface StatusProperties {
   id: string;
   name?: string;
   type?: string;
+  eventTypes?: EventType[];
   eventCategoryType?: string;
   element?: string;
   target?: string;
   to?: string;
   targetDeterminer?: string;
   isForced?: boolean;
-  enhancementTypes?: string[];
   stacks: {
     interactionType: string;
     limit: ValueNode;

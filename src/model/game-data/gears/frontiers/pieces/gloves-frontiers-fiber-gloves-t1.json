@@ -1,0 +1,103 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "BASE_DEFENSE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 42
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "INTELLECT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                65,
+                71,
+                78,
+                84
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "AGILITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                43,
+                47,
+                51,
+                55
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "STAT",
+          "objectId": "ULTIMATE_GAIN_EFFICIENCY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                0.20535714285714285,
+                0.22589286,
+                0.24642856,
+                0.2669643
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "id": "FRONTIERS_FIBER_GLOVES_T1",
+    "gearType": "GLOVES",
+    "gearSet": "FRONTIERS_STAT"
+  },
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "dataStatus": "RECONCILED"
+  }
+}

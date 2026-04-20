@@ -107,6 +107,11 @@ export function runEventQueue(
   if (slotOperatorMap) {
     for (const slotId of Object.keys(slotOperatorMap)) {
       for (const talent of triggerIdx.getTalents(slotId)) {
+        // POTENTIAL defs are aggregated statically by loadoutAggregator via
+        // `getPotentialStats` — baked into the accumulator's base snapshot at
+        // init. Firing their segment clauses here would double-count.
+        const ect = talent.def.properties.eventCategoryType ?? talent.def.properties.type;
+        if (ect === NounType.POTENTIAL) continue;
         const segClauses = Array.isArray(talent.def.segments)
           ? (talent.def.segments as { clause?: unknown[] }[]).flatMap(s => Array.isArray(s.clause) ? s.clause : [])
           : [];

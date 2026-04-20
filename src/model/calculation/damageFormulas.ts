@@ -5,7 +5,7 @@ import {
   StatType,
   PhysicalStatusType,
 } from "../../consts/enums";
-import { NounType, AdjectiveType } from '../../dsl/semantics';
+import { NounType } from '../../dsl/semantics';
 import { StatusLevel, TalentLevel } from "../../consts/types";
 import { Enemy } from "../enemies/enemy";
 import type { StatSourceEntry } from "../../controller/calculation/loadoutAggregator";
@@ -75,6 +75,7 @@ export function getAttributeBonus(
  * - Skill type damage bonus (e.g. BASIC_ATTACK_DAMAGE_BONUS)
  * - Stagger damage bonus (DMG Bonus vs. Staggered — only when target is staggered)
  * - Generic bonuses (SKILL_DAMAGE_BONUS, ARTS_DAMAGE_BONUS)
+ * - Combined skill × element bonuses (e.g. BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS)
  */
 export function getDamageBonus(
   elementDamageBonus: number,
@@ -82,8 +83,9 @@ export function getDamageBonus(
   skillDamageBonus: number,
   artsDamageBonus: number,
   staggerDamageBonus: number = 0,
+  combinedDamageBonus: number = 0,
 ): number {
-  return 1 + elementDamageBonus + skillTypeDamageBonus + skillDamageBonus + artsDamageBonus + staggerDamageBonus;
+  return 1 + elementDamageBonus + skillTypeDamageBonus + skillDamageBonus + artsDamageBonus + staggerDamageBonus + combinedDamageBonus;
 }
 
 /** Map an element to its corresponding damage bonus stat. */
@@ -106,7 +108,6 @@ export function getSkillTypeDamageBonusStat(skillType: string): StatType {
     [NounType.BASIC_ATTACK]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
     [NounType.BATK]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
     [NounType.FINAL_STRIKE]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
-    [AdjectiveType.NORMAL]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
     [NounType.BATTLE]: StatType.BATTLE_SKILL_DAMAGE_BONUS,
     [NounType.COMBO]: StatType.COMBO_SKILL_DAMAGE_BONUS,
     [NounType.ULTIMATE]: StatType.ULTIMATE_DAMAGE_BONUS,
@@ -119,6 +120,94 @@ export function getSkillTypeDamageBonusStat(skillType: string): StatType {
   };
   return map[skillType];
 }
+
+/** Map a base skill-type StatType → the verbose stem used in compound
+ *  {stem}_{ELEMENT}_DAMAGE_BONUS stats. Only the 5 bases that participate in
+ *  the cross product are listed; other skill-type stats (SKILL_DAMAGE_BONUS,
+ *  STAGGER_DAMAGE_BONUS) have no compound variants. */
+const COMBINED_BONUS_STEMS: ReadonlyMap<StatType, string> = new Map([
+  [StatType.BASIC_ATTACK_DAMAGE_BONUS, 'BASIC_ATTACK'],
+  [StatType.BATTLE_SKILL_DAMAGE_BONUS, 'BATTLE_SKILL'],
+  [StatType.COMBO_SKILL_DAMAGE_BONUS, 'COMBO_SKILL'],
+  [StatType.ULTIMATE_DAMAGE_BONUS, 'ULTIMATE'],
+  [StatType.FINAL_STRIKE_DAMAGE_BONUS, 'FINAL_STRIKE'],
+]);
+
+/** Element → token used in compound stat names. `NONE` maps to PHYSICAL to
+ *  match the single-axis element bonus convention. */
+const COMBINED_ELEMENT_TOKEN: Record<ElementType, string> = {
+  [ElementType.NONE]: 'PHYSICAL',
+  [ElementType.PHYSICAL]: 'PHYSICAL',
+  [ElementType.HEAT]: 'HEAT',
+  [ElementType.CRYO]: 'CRYO',
+  [ElementType.NATURE]: 'NATURE',
+  [ElementType.ELECTRIC]: 'ELECTRIC',
+  [ElementType.ARTS]: 'ARTS',
+};
+
+const ALL_STAT_TYPES: ReadonlySet<string> = new Set(Object.values(StatType));
+
+/** Resolve a (skill-type base, element) pair to its compound DAMAGE_BONUS stat
+ *  (e.g. BATTLE_SKILL_DAMAGE_BONUS + ELECTRIC → BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS).
+ *  Returns undefined when either input doesn't participate in the cross product. */
+export function getCombinedDamageBonusStat(
+  skillBaseStat: StatType | undefined,
+  element: ElementType,
+): StatType | undefined {
+  if (!skillBaseStat) return undefined;
+  const stem = COMBINED_BONUS_STEMS.get(skillBaseStat);
+  if (!stem) return undefined;
+  const token = COMBINED_ELEMENT_TOKEN[element];
+  if (!token) return undefined;
+  const key = `${stem}_${token}_DAMAGE_BONUS`;
+  return ALL_STAT_TYPES.has(key) ? (key as StatType) : undefined;
+}
+
+/** Elements tracked as discrete rows in the Damage Bonus breakdown. */
+export const ELEMENT_DMG_BONUS_STATS: readonly (readonly [ElementType, StatType])[] = [
+  [ElementType.PHYSICAL, StatType.PHYSICAL_DAMAGE_BONUS],
+  [ElementType.ARTS, StatType.ARTS_DAMAGE_BONUS],
+  [ElementType.HEAT, StatType.HEAT_DAMAGE_BONUS],
+  [ElementType.CRYO, StatType.CRYO_DAMAGE_BONUS],
+  [ElementType.NATURE, StatType.NATURE_DAMAGE_BONUS],
+  [ElementType.ELECTRIC, StatType.ELECTRIC_DAMAGE_BONUS],
+];
+
+/** Skill-type / situational DMG% stats tracked as discrete rows. */
+export const SKILL_TYPE_DMG_BONUS_STATS: readonly StatType[] = [
+  StatType.BASIC_ATTACK_DAMAGE_BONUS,
+  StatType.BATTLE_SKILL_DAMAGE_BONUS,
+  StatType.COMBO_SKILL_DAMAGE_BONUS,
+  StatType.ULTIMATE_DAMAGE_BONUS,
+  StatType.FINAL_STRIKE_DAMAGE_BONUS,
+  StatType.STAGGER_DAMAGE_BONUS,
+  StatType.SKILL_DAMAGE_BONUS,
+];
+
+/** Skill-type bases that participate in compound (skill × element) DMG% stats. */
+export const COMPOUND_SKILL_BASE_STATS: readonly StatType[] = [
+  StatType.BASIC_ATTACK_DAMAGE_BONUS,
+  StatType.BATTLE_SKILL_DAMAGE_BONUS,
+  StatType.COMBO_SKILL_DAMAGE_BONUS,
+  StatType.ULTIMATE_DAMAGE_BONUS,
+  StatType.FINAL_STRIKE_DAMAGE_BONUS,
+];
+
+/** Every DAMAGE_BONUS StatType surfaced in the breakdown — flat elements,
+ *  skill-type / situational, and the 5×6 compound cross product. */
+export const ALL_DMG_BONUS_STATS: readonly StatType[] = (() => {
+  const list: StatType[] = [
+    ...ELEMENT_DMG_BONUS_STATS.map(([, s]) => s),
+    ...SKILL_TYPE_DMG_BONUS_STATS,
+  ];
+  for (const base of COMPOUND_SKILL_BASE_STATS) {
+    for (const [el] of ELEMENT_DMG_BONUS_STATS) {
+      const s = getCombinedDamageBonusStat(base, el);
+      if (s) list.push(s);
+    }
+  }
+  return list;
+})();
 
 // ── Critical Hit ────────────────────────────────────────────────────────────
 
@@ -485,6 +574,13 @@ export interface DamageSubComponents {
   skillDmgBonus: number;
   artsDmgBonus: number;
   staggerDmgBonus: number;
+  /** Raw stat values for every DAMAGE_BONUS stat — used by the breakdown
+   *  to render all possible rows (active or otherwise). */
+  allDmgBonusStats: Partial<Record<StatType, number>>;
+  /** Whether the enemy is staggered at this frame. */
+  isStaggered: boolean;
+  /** Whether this frame is a final strike (uses FINAL_STRIKE_* stats). */
+  isFinalStrike: boolean;
   // Critical sub-components
   critRate: number;
   critDamage: number;
@@ -498,14 +594,13 @@ export interface DamageSubComponents {
   /** Resolved CHANCE outcome for MANUAL mode. */
   isChance?: boolean;
   // Resistance sub-components
-  baseResistance: number;
-  /** Total ignored-resistance addback for the active element (sum of operator
-   *  RESISTANCE_IGNORE + enemy RESISTANCE_REDUCTION + ARTS umbrella). */
-  ignoredResistance: number;
-  /** Per-element resistance sources for full breakdown — operator IGNORE +
-   *  enemy REDUCTION grouped by element. */
-  resistanceSources: MultiplierSource[];
-  allResistanceSources: Partial<Record<ElementType, MultiplierSource[]>>;
+  /** Enemy's per-element resistance multipliers (PHYSICAL/HEAT/CRYO/NATURE/ELECTRIC).
+   *  Each entry is the raw multiplier (1.0 = neutral, 0.8 = 20% resist, 1.2 = 20% weakness). */
+  baseResistanceByElement: Partial<Record<ElementType, number>>;
+  /** Operator RESISTANCE_IGNORE contributions grouped by element (including ARTS umbrella). */
+  allResistanceIgnoreSources: Partial<Record<ElementType, MultiplierSource[]>>;
+  /** Enemy RESISTANCE_REDUCTION contributions grouped by element (including ARTS umbrella). */
+  allResistanceReductionSources: Partial<Record<ElementType, MultiplierSource[]>>;
   // Fragility sub-components
   fragilityBonus: number;
   fragilitySources: MultiplierSource[];
@@ -540,6 +635,11 @@ export interface DamageSubComponents {
   statContributions?: import('../../controller/calculation/critExpectationModel').StatusStatContribution[];
   /** Which StatType was used for the skill type DMG bonus (for source lookup). */
   skillTypeDmgBonusStat?: StatType;
+  /** Per-combo skill-type × element contributions active on this hit
+   *  (e.g. BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS). Empty when no combo applies. */
+  combinedDmgBonusSources?: { stat: StatType; value: number }[];
+  /** Sum of all combined skill × element DMG bonuses active on this hit. */
+  combinedDmgBonus?: number;
 }
 
 export interface DamageParams {

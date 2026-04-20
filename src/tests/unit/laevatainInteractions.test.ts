@@ -152,7 +152,6 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
     ...(props.name ? { name: props.name } : {}),
     ...(props.element ? { element: props.element } : {}),
     ...(props.isForced ? { isForced: props.isForced } : {}),
-    ...(props.enhancementTypes ? { enhancementTypes: props.enhancementTypes } : {}),
     target: 'OPERATOR',
     targetDeterminer: 'THIS',
     stacks: {

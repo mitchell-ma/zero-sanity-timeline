@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "ONE_MONSTER_CATCH",
     "eventCategoryType": "ULTIMATE",
     "element": "CRYO",
-    "id": "ONE_MONSTER_CATCH",
     "descriptionParams": {
       "atk_scale": 9.8,
       "atb_up": 15,
@@ -36,7 +35,10 @@
           "default": 0
         }
       ]
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

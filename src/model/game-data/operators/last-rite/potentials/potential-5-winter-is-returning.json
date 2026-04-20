@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "LAST_RITE_POTENTIAL_5",
+    "id": "WINTER_IS_RETURNING_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "atb": 5,
@@ -12,8 +14,10 @@
       "-atk_scale": -1.2,
       "atk_scale-1": 0.19999999999999996
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LAST_RITE",

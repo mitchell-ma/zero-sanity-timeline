@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "THUNDERLANCE_INTERDICTION",
     "eventCategoryType": "BATTLE",
     "element": "ELECTRIC",
-    "id": "THUNDERLANCE_INTERDICTION",
     "descriptionParams": {
       "atk_scale": 1.5,
       "poise": 5,
@@ -29,7 +28,10 @@
       "1-poise_lance_ult": -9,
       "-poise_lance_ult": -10,
       "poise_lance_ult-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "AVYWENNA",

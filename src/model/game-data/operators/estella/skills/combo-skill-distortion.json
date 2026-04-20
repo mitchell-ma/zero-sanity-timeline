@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "DISTORTION",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "DISTORTION",
     "descriptionParams": {
       "atk_scale": 3.6,
       "atk_scale2": 6.3,
@@ -29,7 +28,10 @@
       "1-duration": -5,
       "-duration": -6,
       "duration-1": 5
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

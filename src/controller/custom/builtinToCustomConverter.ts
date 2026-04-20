@@ -6,7 +6,7 @@
  * functions to produce editor-compatible types.
  */
 import { GearSetType, ElementType, WeaponType } from '../../consts/enums';
-import { getWeapon, resolveWeaponId, getGearSet, getWeaponStats, getGearStats, getGearPiecesBySet } from '../gameDataStore';
+import { getWeapon, getGearSet, getWeaponStats, getGearStats, getGearPiecesBySet } from '../gameDataStore';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { getOperatorBase, getComboTriggerInfo } from '../gameDataStore';
 import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../dsl/semantics';
@@ -18,18 +18,17 @@ import type { CustomOperator } from '../../model/custom/customOperatorTypes';
 import { weaponToFriendly, gearSetToFriendly, operatorToFriendly } from './gameDataAdapters';
 
 /** Convert a built-in weapon to CustomWeapon format. */
-export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
-  const weaponId = resolveWeaponId(weaponName);
-  const config = weaponId ? getWeapon(weaponId) : undefined;
+export function weaponToCustomWeapon(weaponId: string): CustomWeapon | null {
+  const config = getWeapon(weaponId);
   if (!config) return null;
 
   const weaponJson = config.serialize();
-  const statusObjs = getWeaponStats(weaponId!) ?? [];
+  const statusObjs = getWeaponStats(weaponId) ?? [];
   const statusJsons = statusObjs.map(s => s.serialize());
 
   const friendly = weaponToFriendly(weaponJson, [], statusJsons);
-  friendly.id = `clone_${weaponName.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
-  friendly.name = `${weaponName} (Clone)`;
+  friendly.id = `clone_${weaponId.toLowerCase()}_${Date.now()}`;
+  friendly.name = `${config.name} (Clone)`;
   return friendly;
 }
 

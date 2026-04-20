@@ -65,7 +65,7 @@
     }
   ],
   "properties": {
-    "id": "PAY_THE_FERRIC_PRICE",
+    "id": "PAY_THE_FERRIC_PRICE_T2",
     "descriptionParams": {
       "attack": 0.09,
       "duration": 7,
@@ -96,8 +96,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "EMBER",

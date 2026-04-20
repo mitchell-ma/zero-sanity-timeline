@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "FRIGID_SNOWFIELD",
     "eventCategoryType": "ULTIMATE",
     "element": "CRYO",
-    "id": "FRIGID_SNOWFIELD",
     "descriptionParams": {
       "atk_scale": 4.5,
       "atk_scale_loop": 0.65,
@@ -29,7 +28,10 @@
       "1-forst_allow_count": -1,
       "-forst_allow_count": -2,
       "forst_allow_count-1": 1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

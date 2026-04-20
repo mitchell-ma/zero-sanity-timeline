@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "ORDAINED_BY_HEAVEN_TALENT",
+    "id": "ORDAINED_BY_HEAVEN_T2",
     "descriptionParams": {
       "base_rate": 0.09,
       "sword_rate": 0.01,
@@ -25,14 +25,16 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",
     "dataSources": [
       "ENDFIELD_WIKI"
     ],
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

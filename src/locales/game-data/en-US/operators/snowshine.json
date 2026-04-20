@@ -155,19 +155,19 @@
     "text": "Snow Zone",
     "dataStatus": "RECONCILED"
   },
-  "op.SNOWSHINE.talent.POLAR_SURVIVAL_TALENT.event.description": {
+  "op.SNOWSHINE.talent.POLAR_SURVIVAL_T1.event.description": {
     "text": "Snowfield SAR Assistance treatment values are increased by 15% / 25% at talent level 1 / 2.",
     "dataStatus": "RECONCILED"
   },
-  "op.SNOWSHINE.talent.POLAR_SURVIVAL_TALENT.event.name": {
+  "op.SNOWSHINE.talent.POLAR_SURVIVAL_T1.event.name": {
     "text": "Polar Survival (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.SNOWSHINE.talent.SAR_PROFESSIONAL_TALENT.event.description": {
+  "op.SNOWSHINE.talent.SAR_PROFESSIONAL_T2.event.description": {
     "text": "After each successful retaliation while Saturated Defense's shield is active, Snowshine gains 6 (T1) / 10 (T2) Ultimate Energy. Effect is baked into the Saturated Defense Retaliation status.",
     "dataStatus": "RECONCILED"
   },
-  "op.SNOWSHINE.talent.SAR_PROFESSIONAL_TALENT.event.name": {
+  "op.SNOWSHINE.talent.SAR_PROFESSIONAL_T2.event.name": {
     "text": "SAR Professional (T2)",
     "dataStatus": "RECONCILED"
   }

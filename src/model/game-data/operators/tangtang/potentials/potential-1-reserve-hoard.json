@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "TANGTANG_POTENTIAL_1",
+    "id": "RESERVE_HOARD_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "potential1": 1,
@@ -20,8 +22,10 @@
       "-atk_scale": -1.2,
       "atk_scale-1": 0.19999999999999996
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "TANGTANG",

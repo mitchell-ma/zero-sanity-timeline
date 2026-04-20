@@ -1,19 +1,18 @@
 {
   "properties": {
-    "enhancementTypes": [
-      "FINISHER"
-    ],
-    "eventType": "SKILL",
+    "id": "ALL_OUT_OFFENSIVE_FINISHER",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "PHYSICAL",
-    "id": "ALL_OUT_OFFENSIVE_FINISHER",
     "descriptionParams": {
       "atk_scale": 9,
       "1-atk_scale": -8,
       "-atk_scale": -9,
       "atk_scale-1": 8
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "POGRANICHNIK",
@@ -78,6 +77,12 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "PERFORM",
+                  "object": "SKILL",
+                  "to": "ENEMY",
+                  "objectId": "FINISHER"
                 }
               ]
             }

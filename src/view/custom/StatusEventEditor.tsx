@@ -112,10 +112,6 @@ export default function StatusEventEditor({ value, onChange }: StatusEventEditor
           <CustomSelect className="se-select" value={(props.target as string) ?? ''} options={TARGET_OPTIONS} onChange={(v) => updateProps({ target: v || null })} />
           <CustomSelect className="se-select" value={(props.targetDeterminer as string) ?? ''} options={DETERMINER_OPTIONS} onChange={(v) => updateProps({ targetDeterminer: v || null })} />
         </FormRow>
-        <FormRow label={t('eventViewer.label.enhancement')}>
-          <EnhancementEditor value={(props.enhancementTypes as string[]) ?? []} onChange={(v) => updateProps({ enhancementTypes: v.length ? v : null })} />
-        </FormRow>
-
         <FormDivider />
 
         <DurationEditor
@@ -178,25 +174,6 @@ function FormRow({ label, children }: { label: string; children: React.ReactNode
 
 function FormDivider() {
   return <div className="se-divider" />;
-}
-
-// ── Enhancement types ───────────────────────────────────────────────────────
-
-function EnhancementEditor({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const toggle = (type: string) => {
-    if (value.includes(type)) onChange(value.filter((t) => t !== type));
-    else onChange([...value, type]);
-  };
-  return (
-    <div className="se-enhancement-row">
-      {['EMPOWERED', 'ENHANCED'].map((t) => (
-        <label key={t} className="se-check">
-          <input type="checkbox" checked={value.includes(t)} onChange={() => toggle(t)} />
-          <span>{t.charAt(0) + t.slice(1).toLowerCase()}</span>
-        </label>
-      ))}
-    </div>
-  );
 }
 
 // ── Duration editor ─────────────────────────────────────────────────────────

@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "LIFENG_POTENTIAL_1",
+    "id": "BREAKING_THE_OBSESSION_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "phy_resist_down": 0.05,
@@ -12,8 +14,10 @@
       "-num": -2,
       "num-1": 1
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LIFENG",

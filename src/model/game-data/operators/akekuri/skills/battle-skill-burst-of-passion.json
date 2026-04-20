@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "BURST_OF_PASSION",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
-    "id": "BURST_OF_PASSION",
     "descriptionParams": {
       "atk_scale": 3.2,
       "poise": 10,
@@ -13,7 +12,10 @@
       "1-poise": -9,
       "-poise": -10,
       "poise-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "AKEKURI",

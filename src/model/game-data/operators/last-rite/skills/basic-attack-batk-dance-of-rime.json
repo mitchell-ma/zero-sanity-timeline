@@ -481,11 +481,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "DANCE_OF_RIME_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "DANCE_OF_RIME_BATK",
     "descriptionParams": {
       "atk_scale": 0.77,
       "poise": 25,
@@ -499,7 +498,10 @@
       "1-atb": 1,
       "-atb": 0,
       "atb-1": -1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "LAST_RITE",

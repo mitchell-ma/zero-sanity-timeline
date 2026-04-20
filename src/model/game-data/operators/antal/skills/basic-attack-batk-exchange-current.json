@@ -419,11 +419,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "EXCHANGE_CURRENT_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "ELECTRIC",
-    "id": "EXCHANGE_CURRENT_BATK",
     "descriptionParams": {
       "atk_scale": 1.15,
       "atb": 15,
@@ -437,7 +436,10 @@
       "1-poise": -14,
       "-poise": -15,
       "poise-1": 14
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ANTAL",

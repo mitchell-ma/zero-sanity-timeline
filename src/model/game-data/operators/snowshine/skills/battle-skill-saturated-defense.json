@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "SATURATED_DEFENSE",
     "eventCategoryType": "BATTLE",
     "element": "CRYO",
-    "id": "SATURATED_DEFENSE",
     "descriptionParams": {
       "atk_scale": 4.5,
       "poise": 20,
@@ -21,7 +20,10 @@
       "1-atb_return_base": -29,
       "-atb_return_base": -30,
       "atb_return_base-1": 29
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

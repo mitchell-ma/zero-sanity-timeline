@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "FLASH_AND_DASH",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "FLASH_AND_DASH",
     "descriptionParams": {
       "atk_scale": 1.8,
       "poise": 5,
@@ -21,7 +20,10 @@
       "1-atb": -6.5,
       "-atb": -7.5,
       "atb-1": 6.5
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

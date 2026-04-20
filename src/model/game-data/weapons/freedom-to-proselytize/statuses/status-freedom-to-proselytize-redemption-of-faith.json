@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "FREEDOM_TO_PROSELYTIZE",

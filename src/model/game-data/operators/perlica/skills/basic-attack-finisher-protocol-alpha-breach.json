@@ -1,19 +1,18 @@
 {
   "properties": {
-    "enhancementTypes": [
-      "FINISHER"
-    ],
-    "eventType": "SKILL",
+    "id": "PROTOCOL_ALPHA_BREACH_FINISHER",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "FINISHER",
     "element": "ELECTRIC",
-    "id": "PROTOCOL_ALPHA_BREACH_FINISHER",
     "descriptionParams": {
       "atk_scale": 9,
       "1-atk_scale": -8,
       "-atk_scale": -9,
       "atk_scale-1": 8
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "PERLICA",
@@ -79,6 +78,12 @@
                       }
                     }
                   }
+                },
+                {
+                  "verb": "PERFORM",
+                  "object": "SKILL",
+                  "to": "ENEMY",
+                  "objectId": "FINISHER"
                 }
               ]
             }

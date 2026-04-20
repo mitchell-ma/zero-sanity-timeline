@@ -9,7 +9,7 @@
  *
  * A. Operator status columns
  *    - Laevatain: MELTING_FLAME + SCORCHING_HEART (OPERATOR/THIS)
- *    - Wulfgard: WULFGARD_TALENT1_SCORCHING_FANGS (OPERATOR/THIS)
+ *    - Wulfgard: SCORCHING_FANGS_T1 (OPERATOR/THIS)
  *    - Yvonne: CRYOBLASTING_PISTOLIER_CRIT_RATE (OPERATOR/THIS)
  *
  * B. Enemy-targeted statuses do NOT create operator status columns
@@ -32,7 +32,7 @@ import { StatusType } from '../../consts/enums';
 const MF_ID: string = require('../../model/game-data/operators/laevatain/statuses/status-melting-flame.json').properties.id;
 const SH_ID: string = require('../../model/game-data/operators/laevatain/statuses/status-scorching-heart.json').properties.id;
 const SH_TALENT_ID: string = require('../../model/game-data/operators/laevatain/talents/talent-scorching-heart.json').properties.id;
-const SCORCHING_FANGS_ID: string = require('../../model/game-data/operators/wulfgard/talents/talent-1-scorching-fangs.json').properties.id;
+const SCORCHING_FANGS_ID: string = require('../../model/game-data/operators/wulfgard/talents/talent-scorching-fangs-talent.json').properties.id;
 const CRYOBLASTING_PISTOLIER_CRIT_RATE_ID: string = require('../../model/game-data/operators/yvonne/statuses/status-crit-stacks.json').properties.id;
 const FOCUS_ID: string = require('../../model/game-data/operators/antal/statuses/status-focus.json').properties.id;
 const REALSPACE_STASIS_ID: string = require('../../model/game-data/operators/endministrator/talents/talent-realspace-stasis.json').properties.id;

@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ARDELIA_POTENTIAL_1",
+    "id": "DOLLY_PARADISE_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "rate_vul_base": 0.08,
@@ -8,8 +10,10 @@
       "-rate_vul_base": -0.08,
       "rate_vul_base-1": -0.92
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ARDELIA",

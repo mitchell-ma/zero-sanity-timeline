@@ -14,9 +14,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ResolvedSource, SourceStatsBundle } from '../controller/statistics/statisticsController';
 import type { SimulationResult } from '../controller/statistics/simulateSheet';
-import type { DamageStatistics, DamageTableColumn } from '../controller/calculation/damageTableBuilder';
 import { ComparisonModeType, CritMode, LoadoutNodeType, NumberFormatType, StatisticsColumnType, ViewVariableType, ELEMENT_COLORS, ElementType } from '../consts/enums';
-import { NounType } from '../dsl/semantics';
 import { loadSettings } from '../consts/settings';
 import { weaponSkillLevelToPotential } from '../utils/metaIcons';
 import ContextMenu from './ContextMenu';
@@ -26,159 +24,18 @@ import {
   loadStatisticsColumnOrder,
   saveStatisticsColumnOrder,
 } from './statisticsColumnDefs';
+import {
+  SKILL_COLUMN_ID_BY_FILTER,
+  buildRowData,
+  formatDamage,
+  formatSeconds,
+  makeCellContent,
+  makeFormatDelta,
+  makeFormatPct,
+  resolveReferenceIndex,
+  type RowData,
+} from './statisticsComparison';
 import { t } from '../locales/locale';
-
-const FPS = 120;
-
-/** Maps the skill-filter enum to the corresponding per-slot damage columnId. */
-const SKILL_COLUMN_ID_BY_FILTER: ReadonlyMap<StatisticsColumnType, string> = new Map([
-  [StatisticsColumnType.BASIC,    NounType.BASIC_ATTACK],
-  [StatisticsColumnType.BATTLE,   NounType.BATTLE],
-  [StatisticsColumnType.COMBO,    NounType.COMBO],
-  [StatisticsColumnType.ULTIMATE, NounType.ULTIMATE],
-]);
-
-// ── Formatters ─────────────────────────────────────────────────────────────
-
-function formatDamage(n: number): string {
-  if (n <= 0) return '';
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 10_000)    return `${(n / 1_000).toFixed(1)}K`;
-  return Math.round(n).toLocaleString();
-}
-
-function formatSeconds(frames: number): string {
-  return (frames / FPS).toFixed(1);
-}
-
-function makeFormatPct(decimalPlaces: number, numberFormat: NumberFormatType) {
-  return (n: number): string =>
-    numberFormat === NumberFormatType.DECIMAL
-      ? n.toFixed(decimalPlaces)
-      : `${(n * 100).toFixed(decimalPlaces)}%`;
-}
-
-type DeltaClass = '' | ' slc-num--delta-pos' | ' slc-num--delta-neg';
-
-function makeFormatDelta(decimalPlaces: number, numberFormat: NumberFormatType) {
-  return (current: number, reference: number): { text: string; deltaClass: DeltaClass } => {
-    if (reference === 0) return { text: '', deltaClass: '' };
-    const delta = (current - reference) / reference;
-    if (delta === 0) return { text: '', deltaClass: '' };
-
-    if (numberFormat === NumberFormatType.DECIMAL) {
-      const text = (1 + delta).toFixed(decimalPlaces);
-      return { text, deltaClass: delta > 0 ? ' slc-num--delta-pos' : ' slc-num--delta-neg' };
-    }
-    const body = `${(delta * 100).toFixed(decimalPlaces)}%`;
-    if (delta > 0) return { text: `+${body}`, deltaClass: ' slc-num--delta-pos' };
-    return { text: body, deltaClass: ' slc-num--delta-neg' };
-  };
-}
-
-interface CellResult {
-  node: React.ReactNode;
-  dim: boolean;
-  deltaClass: DeltaClass;
-}
-
-function makeCellContent(
-  mode: ComparisonModeType,
-  formatDelta: ReturnType<typeof makeFormatDelta>,
-) {
-  return (
-    current: number | null | undefined,
-    reference: number | null | undefined,
-    rawRender: (n: number) => React.ReactNode,
-    rawIsEmpty: (n: number) => boolean = (n) => n <= 0,
-  ): CellResult => {
-    if (current == null) return { node: '', dim: true, deltaClass: '' };
-    if (mode === ComparisonModeType.RAW) {
-      if (rawIsEmpty(current)) return { node: '', dim: true, deltaClass: '' };
-      return { node: rawRender(current), dim: false, deltaClass: '' };
-    }
-    if (reference == null) return { node: '', dim: true, deltaClass: '' };
-    const { text, deltaClass } = formatDelta(current, reference);
-    if (text === '') return { node: '', dim: true, deltaClass: '' };
-    return { node: text, dim: false, deltaClass };
-  };
-}
-
-// ── Aggregation helpers ────────────────────────────────────────────────────
-
-function buildSlotColumnDamage(
-  statistics: DamageStatistics,
-  tableColumns: DamageTableColumn[],
-): Map<string, Map<string, number>> {
-  const map = new Map<string, Map<string, number>>();
-  for (const col of tableColumns) {
-    const dmg = statistics.columnTotals.get(col.key) ?? 0;
-    let inner = map.get(col.ownerEntityId);
-    if (!inner) { inner = new Map(); map.set(col.ownerEntityId, inner); }
-    inner.set(col.columnId, (inner.get(col.columnId) ?? 0) + dmg);
-  }
-  return map;
-}
-
-function sumAllSkill(
-  slotColumnDamage: Map<string, Map<string, number>>,
-  columnId: string,
-): number {
-  let total = 0;
-  slotColumnDamage.forEach((inner) => {
-    total += inner.get(columnId) ?? 0;
-  });
-  return total;
-}
-
-interface RowData {
-  sim: SimulationResult;
-  slotColumnDamage: Map<string, Map<string, number>>;
-  teamTotal: number;
-  durationSec: number | null;
-  teamSkills: Map<string, number>;
-  operatorData: Map<string, { total: number; skills: Map<string, number> }>;
-  teamDps: number | null;
-  crowdControlPct: number | null;
-  timeToKill: number | null;
-}
-
-function buildRowData(bundle: SourceStatsBundle): RowData | null {
-  const sim = bundle.simulation;
-  if (!sim) return null;
-
-  const slotColumnDamage = buildSlotColumnDamage(sim.damageStatistics, sim.tableColumns);
-  const teamTotal = sim.damageStatistics.teamTotalDamage;
-  const durationSec =
-    sim.damageStatistics.teamDps != null && sim.damageStatistics.teamDps > 0
-      ? teamTotal / sim.damageStatistics.teamDps
-      : null;
-
-  const teamSkills = new Map<string, number>();
-  SKILL_COLUMN_ID_BY_FILTER.forEach((columnId) => {
-    teamSkills.set(columnId, sumAllSkill(slotColumnDamage, columnId));
-  });
-
-  const operatorData = new Map<string, { total: number; skills: Map<string, number> }>();
-  for (const slot of sim.slots) {
-    if (!slot.operator) continue;
-    const opStats = sim.damageStatistics.operators.find((o) => o.ownerEntityId === slot.slotId);
-    const opTotal = opStats?.totalDamage ?? 0;
-    const skillBreakdown = slotColumnDamage.get(slot.slotId) ?? new Map<string, number>();
-    const skills = new Map<string, number>();
-    SKILL_COLUMN_ID_BY_FILTER.forEach((columnId) => {
-      skills.set(columnId, skillBreakdown.get(columnId) ?? 0);
-    });
-    operatorData.set(slot.slotId, { total: opTotal, skills });
-  }
-
-  return {
-    sim, slotColumnDamage, teamTotal, durationSec, teamSkills, operatorData,
-    teamDps: sim.damageStatistics.teamDps ?? null,
-    crowdControlPct: sim.damageStatistics.crowdControlPct ?? null,
-    timeToKill: sim.damageStatistics.timeToKill ?? null,
-  };
-}
 
 // ── Cell renderers ─────────────────────────────────────────────────────────
 
@@ -372,17 +229,19 @@ interface Props {
   sources: Array<{ resolved: ResolvedSource; bundle: SourceStatsBundle }>;
   hiddenColumns: ReadonlySet<StatisticsColumnType>;
   hiddenOperators: ReadonlySet<string>;
+  hiddenAggregate: boolean;
   critMode: CritMode;
   comparisonMode: ComparisonModeType;
   onToggleColumn: (column: StatisticsColumnType) => void;
   onToggleOperator: (slotId: string) => void;
+  onToggleAggregate: () => void;
   onSetCritMode: (critMode: CritMode) => void;
   onSetComparisonMode: (comparisonMode: ComparisonModeType) => void;
   onReorderSources: (fromIndex: number, toIndex: number) => void;
 }
 
 export default React.memo(function StatisticsGroupedTable({
-  sources, hiddenColumns, hiddenOperators, critMode, comparisonMode, onToggleColumn, onToggleOperator, onSetCritMode, onSetComparisonMode, onReorderSources,
+  sources, hiddenColumns, hiddenOperators, hiddenAggregate, critMode, comparisonMode, onToggleColumn, onToggleOperator, onToggleAggregate, onSetCritMode, onSetComparisonMode, onReorderSources,
 }: Props) {
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
@@ -435,10 +294,23 @@ export default React.memo(function StatisticsGroupedTable({
   const viewSourceOriginalIndicesRef = useRef(viewSourceOriginalIndices);
   viewSourceOriginalIndicesRef.current = viewSourceOriginalIndices;
 
-  const rowDataArr = useMemo(
-    () => viewSources.map(({ bundle }) => buildRowData(bundle)),
-    [viewSources],
-  );
+  // Cache RowData by simulation identity. Simulations are content-hashed in
+  // useStatisticsApp, so unchanged sources return the same `simulation` object
+  // reference even when `viewSources` itself becomes a new array — we reuse
+  // the previously-built RowData instead of re-traversing the full damage
+  // maps on every UI click.
+  const rowDataCacheRef = useRef(new WeakMap<SimulationResult, RowData>());
+  const rowDataArr = useMemo(() => {
+    const cache = rowDataCacheRef.current;
+    return viewSources.map(({ bundle }) => {
+      if (!bundle.simulation) return null;
+      const cached = cache.get(bundle.simulation);
+      if (cached) return cached;
+      const built = buildRowData(bundle);
+      if (built) cache.set(bundle.simulation, built);
+      return built;
+    });
+  }, [viewSources]);
 
   const anySim = viewSources.find((s) => s.bundle.simulation)?.bundle.simulation;
   const occupiedSlots = useMemo(
@@ -451,10 +323,8 @@ export default React.memo(function StatisticsGroupedTable({
   );
 
   const resolveReference = (i: number): RowData | null => {
-    if (comparisonMode === ComparisonModeType.RAW) return null;
-    if (i === 0) return null;
-    if (comparisonMode === ComparisonModeType.DELTA_AGAINST_BASE) return rowDataArr[0];
-    return rowDataArr[i - 1];
+    const refIdx = resolveReferenceIndex(i, comparisonMode);
+    return refIdx == null ? null : rowDataArr[refIdx];
   };
 
   // ── Column drag ─────────────────────────────────────────────────────────
@@ -654,16 +524,18 @@ export default React.memo(function StatisticsGroupedTable({
                   <span /><span /><span />
                 </span>
 
-                <div
-                  className="slc-stats-row slc-stats-row--view-header"
-                  style={{ gridTemplateColumns: gridTemplate } as React.CSSProperties}
-                >
-                  {visibleColumns.map((col) => (
-                    <React.Fragment key={col}>
-                      {renderViewHeaderCell(col, headerCtx)}
-                    </React.Fragment>
-                  ))}
-                </div>
+                {!hiddenAggregate && (
+                  <div
+                    className="slc-stats-row slc-stats-row--view-header"
+                    style={{ gridTemplateColumns: gridTemplate } as React.CSSProperties}
+                  >
+                    {visibleColumns.map((col) => (
+                      <React.Fragment key={col}>
+                        {renderViewHeaderCell(col, headerCtx)}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                )}
 
                 {visibleSlotsForRows.map((slot) => {
                   const subCtx: SubrowCellCtx = {
@@ -698,11 +570,13 @@ export default React.memo(function StatisticsGroupedTable({
           items={buildStatisticsFilterItems({
             hiddenColumns,
             hiddenOperators,
+            hiddenAggregate,
             occupiedSlots,
             critMode,
             comparisonMode,
             onToggleColumn,
             onToggleOperator,
+            onToggleAggregate,
             onSetCritMode,
             onSetComparisonMode,
           })}

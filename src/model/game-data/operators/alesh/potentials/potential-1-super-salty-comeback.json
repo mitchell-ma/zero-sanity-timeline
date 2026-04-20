@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ALESH_POTENTIAL_1",
+    "id": "SUPER_SALTY_COMEBACK_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "potential_1": 1,
@@ -16,8 +18,10 @@
       "-potential_1_atb": -10,
       "potential_1_atb-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ALESH",

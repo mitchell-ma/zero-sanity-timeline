@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "MANTRA_OF_SUNDERING",
     "eventCategoryType": "BATTLE",
     "element": "ELECTRIC",
-    "id": "MANTRA_OF_SUNDERING",
     "descriptionParams": {
       "atk_scale": 0.45,
       "poise": 15,
@@ -49,11 +48,14 @@
       "1-free_sword_limit": -2,
       "-free_sword_limit": -3,
       "free_sword_limit-1": 2
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "segments": [
     {
@@ -90,6 +92,23 @@
               "conditions": [],
               "effects": [
                 {
+                  "verb": "SNAPSHOT",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "ELECTRIFICATION",
+                  "from": "ENEMY"
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "ELECTRIFICATION",
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
+                },
+                {
                   "verb": "APPLY",
                   "object": "STATUS",
                   "objectId": "SUNDERBLADE",
@@ -111,6 +130,7 @@
                         "right": {
                           "verb": "IS",
                           "object": "STATUS_LEVEL",
+                          "objectQualifier": "SNAPSHOT",
                           "of": {
                             "object": "STATUS",
                             "objectId": "ELECTRIFICATION",
@@ -131,6 +151,50 @@
                     "value": {
                       "verb": "IS",
                       "value": 15
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "subjectDeterminer": "THIS",
+                  "subject": "OPERATOR",
+                  "verb": "HAVE",
+                  "object": "POTENTIAL",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 3
+                  }
+                },
+                {
+                  "subject": "STATUS_LEVEL",
+                  "of": {
+                    "object": "STATUS",
+                    "objectId": "REACTION",
+                    "objectQualifier": "ELECTRIFICATION",
+                    "of": {
+                      "object": "ENEMY"
+                    }
+                  },
+                  "verb": "IS",
+                  "cardinalityConstraint": "GREATER_THAN_EQUAL",
+                  "value": {
+                    "verb": "IS",
+                    "value": 1
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "RETURN",
+                  "object": "SKILL_POINT",
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 10
                     }
                   }
                 }
@@ -207,6 +271,7 @@
                           "left": {
                             "verb": "IS",
                             "object": "STATUS_LEVEL",
+                            "objectQualifier": "SNAPSHOT",
                             "of": {
                               "object": "STATUS",
                               "objectId": "ELECTRIFICATION",
@@ -282,7 +347,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "objectId": "FORCE_OF_NATURE_T1",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {
@@ -397,6 +462,7 @@
                           "left": {
                             "verb": "IS",
                             "object": "STATUS_LEVEL",
+                            "objectQualifier": "SNAPSHOT",
                             "of": {
                               "object": "STATUS",
                               "objectId": "ELECTRIFICATION",
@@ -472,7 +538,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "objectId": "FORCE_OF_NATURE_T1",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {
@@ -587,6 +653,7 @@
                           "left": {
                             "verb": "IS",
                             "object": "STATUS_LEVEL",
+                            "objectQualifier": "SNAPSHOT",
                             "of": {
                               "object": "STATUS",
                               "objectId": "ELECTRIFICATION",
@@ -662,7 +729,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "objectId": "FORCE_OF_NATURE_T1",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {
@@ -777,6 +844,7 @@
                           "left": {
                             "verb": "IS",
                             "object": "STATUS_LEVEL",
+                            "objectQualifier": "SNAPSHOT",
                             "of": {
                               "object": "STATUS",
                               "objectId": "ELECTRIFICATION",
@@ -852,7 +920,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "objectId": "FORCE_OF_NATURE_T1",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {
@@ -967,6 +1035,7 @@
                           "left": {
                             "verb": "IS",
                             "object": "STATUS_LEVEL",
+                            "objectQualifier": "SNAPSHOT",
                             "of": {
                               "object": "STATUS",
                               "objectId": "ELECTRIFICATION",
@@ -1042,7 +1111,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "objectId": "FORCE_OF_NATURE_T1",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {
@@ -1157,6 +1226,7 @@
                           "left": {
                             "verb": "IS",
                             "object": "STATUS_LEVEL",
+                            "objectQualifier": "SNAPSHOT",
                             "of": {
                               "object": "STATUS",
                               "objectId": "ELECTRIFICATION",
@@ -1232,7 +1302,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "objectId": "FORCE_OF_NATURE_T1",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {
@@ -1347,6 +1417,7 @@
                           "left": {
                             "verb": "IS",
                             "object": "STATUS_LEVEL",
+                            "objectQualifier": "SNAPSHOT",
                             "of": {
                               "object": "STATUS",
                               "objectId": "ELECTRIFICATION",
@@ -1422,7 +1493,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "objectId": "FORCE_OF_NATURE_T1",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {
@@ -1537,6 +1608,7 @@
                           "left": {
                             "verb": "IS",
                             "object": "STATUS_LEVEL",
+                            "objectQualifier": "SNAPSHOT",
                             "of": {
                               "object": "STATUS",
                               "objectId": "ELECTRIFICATION",
@@ -1612,7 +1684,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "objectId": "FORCE_OF_NATURE_T1",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {
@@ -1716,6 +1788,7 @@
                             "left": {
                               "verb": "IS",
                               "object": "STATUS_LEVEL",
+                              "objectQualifier": "SNAPSHOT",
                               "of": {
                                 "object": "STATUS",
                                 "objectId": "ELECTRIFICATION",
@@ -1796,7 +1869,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FORCE_OF_NATURE_TALENT",
+                  "objectId": "FORCE_OF_NATURE_T1",
                   "to": "OPERATOR",
                   "toDeterminer": "THIS",
                   "with": {

@@ -9,8 +9,8 @@
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "INTELLECT",
   "talents": {
-    "one": "WILDLAND_TREKKER_TALENT",
-    "two": "HANNABIT_WISDOM_TALENT",
+    "one": "WILDLAND_TREKKER_T1",
+    "two": "HANNABIT_WISDOM_T2",
     "attributeIncrease": {
       "id": "SKIRMISHER"
     }

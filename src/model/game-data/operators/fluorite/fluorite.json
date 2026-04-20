@@ -9,8 +9,8 @@
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "INTELLECT",
   "talents": {
-    "one": "LOVE_THE_STAB_AND_TWIST_TALENT",
-    "two": "UNPREDICTABLE_TALENT",
+    "one": "LOVE_THE_STAB_AND_TWIST_T1",
+    "two": "UNPREDICTABLE_T2",
     "attributeIncrease": {
       "id": "SKIRMISHER"
     }

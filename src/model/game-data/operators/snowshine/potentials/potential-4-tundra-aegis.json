@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "SNOWSHINE_POTENTIAL_4",
+    "id": "TUNDRA_AEGIS_P4",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 4,
     "descriptionParams": {
       "Def": 20,
@@ -59,8 +61,11 @@
       "-Will": -20,
       "Will-1": 19
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

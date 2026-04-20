@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ESTELLA_POTENTIAL_3",
+    "id": "DELAYED_WORK_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "distance": 12,
@@ -12,8 +14,10 @@
       "-dmg_up": -0.4,
       "dmg_up-1": -0.6
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ESTELLA",

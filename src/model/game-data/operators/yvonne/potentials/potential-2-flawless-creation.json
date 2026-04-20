@@ -46,7 +46,9 @@
     }
   ],
   "properties": {
-    "id": "YVONNE_POTENTIAL_2",
+    "id": "FLAWLESS_CREATION_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Wisd": 20,
@@ -58,8 +60,11 @@
       "-CriticalRate": -0.07,
       "CriticalRate-1": -0.9299999999999999
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "YVONNE",

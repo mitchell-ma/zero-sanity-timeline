@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ROSSI_P2_GAP_TO_PERFECTION",
+    "id": "GAP_TO_PERFECTION_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Agi": 20,
@@ -12,8 +14,10 @@
       "-CriticalRate": -0.07,
       "CriticalRate-1": -0.9299999999999999
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

@@ -49,7 +49,7 @@ describe('Status micro-column colors', () => {
     expect(inflamed!.color).toBe(DEFAULT_EVENT_COLOR);
 
     // Pay the Ferric Price — talent status, no element
-    const pftp = getStatusMicroColumn(result.current.columns, SLOT, 'PAY_THE_FERRIC_PRICE');
+    const pftp = getStatusMicroColumn(result.current.columns, SLOT, 'PAY_THE_FERRIC_PRICE_T2');
     expect(pftp).toBeDefined();
     expect(pftp!.color).toBe(DEFAULT_EVENT_COLOR);
   });

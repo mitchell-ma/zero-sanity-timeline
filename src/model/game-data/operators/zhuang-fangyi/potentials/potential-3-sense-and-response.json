@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ZHUANG_FANGYI_POTENTIAL_3",
+    "id": "SENSE_AND_RESPONSE_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "sword_duration": 10,
@@ -12,11 +14,13 @@
       "-atb_return": -10,
       "atb_return-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

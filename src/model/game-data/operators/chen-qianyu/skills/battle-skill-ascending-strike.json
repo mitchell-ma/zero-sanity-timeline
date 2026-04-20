@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "ASCENDING_STRIKE",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "ASCENDING_STRIKE",
     "descriptionParams": {
       "atk_scale": 3.8,
       "poise": 10,
@@ -21,7 +20,10 @@
       "1-airborne_coefficient": 1,
       "-airborne_coefficient": 0,
       "airborne_coefficient-1": -1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

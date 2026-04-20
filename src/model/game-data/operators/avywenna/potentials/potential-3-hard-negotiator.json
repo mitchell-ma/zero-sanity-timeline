@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "AVYWENNA_POTENTIAL_3",
+    "id": "HARD_NEGOTIATOR_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "Will": 15,
@@ -12,8 +14,10 @@
       "-PulseDamageIncrease": -0.08,
       "PulseDamageIncrease-1": -0.92
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "AVYWENNA",

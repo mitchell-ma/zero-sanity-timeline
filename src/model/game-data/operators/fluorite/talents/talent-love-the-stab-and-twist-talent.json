@@ -82,7 +82,7 @@
     }
   ],
   "properties": {
-    "id": "LOVE_THE_STAB_AND_TWIST_TALENT",
+    "id": "LOVE_THE_STAB_AND_TWIST_T1",
     "descriptionParams": {
       "dmg_up": 0.2,
       "1-dmg_up": 0.8,
@@ -109,8 +109,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "FLUORITE",

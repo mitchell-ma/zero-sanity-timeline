@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "ESOTERIC_LEGACY",
     "eventCategoryType": "BATTLE",
     "element": "CRYO",
-    "id": "ESOTERIC_LEGACY",
     "descriptionParams": {
       "atk_scale": 3.2,
       "atb": 30,
@@ -21,7 +20,10 @@
       "1-usp": -15,
       "-usp": -16,
       "usp-1": 15
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "LAST_RITE",

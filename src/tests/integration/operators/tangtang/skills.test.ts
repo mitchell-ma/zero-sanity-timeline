@@ -116,9 +116,13 @@ function placeBAVariant(app: AppResult, frame: number, variantId: string) {
   const col = findColumn(app, SLOT_TANGTANG, NounType.BASIC_ATTACK)!;
   const menuItems = buildContextMenu(app, col, frame);
   expect(menuItems).not.toBeNull();
+  // Match by category (FINISHER/DIVE/BATK) — robust across operators since the
+  // FINISHER/DIVE variant's `defaultSkill.id` is now operator-specific
+  // (e.g. SOOTHING_FLOW_FINISHER), but the category marker stays generic.
   const matchById = (i: { actionId?: string; actionPayload?: unknown }) =>
     i.actionId === 'addEvent'
-    && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === variantId;
+    && ((i.actionPayload as { defaultSkill?: { id?: string; category?: string } })?.defaultSkill?.category === variantId
+      || (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === variantId);
   const item = menuItems!.find(matchById);
   expect(item).toBeDefined();
   if (item!.disabled) {

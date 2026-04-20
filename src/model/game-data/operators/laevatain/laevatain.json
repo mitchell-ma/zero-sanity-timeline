@@ -9,8 +9,8 @@
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "STRENGTH",
   "talents": {
-    "one": "SCORCHING_HEART_TALENT",
-    "two": "RE_IGNITION_TALENT",
+    "one": "SCORCHING_HEART_T1",
+    "two": "RE_IGNITION_T2",
     "attributeIncrease": {
       "id": "KEEN_MIND"
     }

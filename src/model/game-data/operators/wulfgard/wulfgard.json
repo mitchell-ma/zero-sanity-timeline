@@ -9,8 +9,8 @@
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "AGILITY",
   "talents": {
-    "one": "WULFGARD_TALENT1_SCORCHING_FANGS",
-    "two": "WULFGARD_TALENT2_CODE_OF_RESTRAINT",
+    "one": "SCORCHING_FANGS_T1",
+    "two": "CODE_OF_RESTRAINT_T2",
     "attributeIncrease": {
       "id": "FORGED"
     }

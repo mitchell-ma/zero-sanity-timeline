@@ -111,39 +111,39 @@
     "text": "Unconventional Lure",
     "dataStatus": "RECONCILED"
   },
-  "op.ALESH.status.MAY_THE_WILLING_BITE.event.description": {
+  "op.ALESH.status.MAY_THE_WILLING_BITE_P3.event.description": {
     "text": "After Alesh catches a Rare Fin via Auger Angling, the entire team gains ATK +15% for 10s. Does not stack.",
     "dataStatus": "RECONCILED"
   },
-  "op.ALESH.status.MAY_THE_WILLING_BITE.event.name": {
+  "op.ALESH.status.MAY_THE_WILLING_BITE_P3.event.name": {
     "text": "May the Willing Bite",
     "dataStatus": "RECONCILED"
   },
-  "op.ALESH.status.MAY_THE_WILLING_BITE.segment.0.name": {
+  "op.ALESH.status.MAY_THE_WILLING_BITE_P3.segment.0.name": {
     "text": "May the Willing Bite",
     "dataStatus": "RECONCILED"
   },
-  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS.event.description": {
+  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS_T1.event.description": {
     "text": "After a nearby enemy is Solidified or hit with Originium Crystals, Alesh gains 3/4 Ultimate Energy (L1/L2). If Alesh himself triggered the Solidification, he gains an additional 6/8 Ultimate Energy. Per-wiki: this effect can only trigger once every 3s — not yet enforced by the engine.",
     "dataStatus": "RECONCILED"
   },
-  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS.event.name": {
+  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS_T1.event.name": {
     "text": "Flash-frozen for Freshness (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS.segment.0.name": {
+  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS_T1.segment.0.name": {
     "text": "Flash-frozen for Freshness",
     "dataStatus": "RECONCILED"
   },
-  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS.segment.1.name": {
+  "op.ALESH.talent.FLASH_FROZEN_FOR_FRESHNESS_T1.segment.1.name": {
     "text": "Cooldown",
     "dataStatus": "RECONCILED"
   },
-  "op.ALESH.talent.VETERAN_ANGLER_TALENT.event.description": {
+  "op.ALESH.talent.VETERAN_ANGLER_T2.event.description": {
     "text": "Combo skill Auger Angling improved: Every 10 Intellect grants Rare Fin catching chance +0.2% (max: +30%).",
     "dataStatus": "RECONCILED"
   },
-  "op.ALESH.talent.VETERAN_ANGLER_TALENT.event.name": {
+  "op.ALESH.talent.VETERAN_ANGLER_T2.event.name": {
     "text": "Veteran Angler (T2)",
     "dataStatus": "RECONCILED"
   }

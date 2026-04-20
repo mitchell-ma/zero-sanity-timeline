@@ -49,10 +49,12 @@ const WarningIcon = React.memo(function WarningIcon({ messages }: { messages: st
   );
 });
 
-/** Match trailing arabic digits or reaction StatusLevel roman (I–IV) at end of label. */
-const TRAILING_NUMERAL_RE = /\s+((?:IV|III|II|I)|(?:\d+))$/;
+/** Match trailing arabic digits or reaction StatusLevel roman II–IV at end of label.
+ *  Singular roman "I" is intentionally excluded — collapsing a full label to just "I"
+ *  carries no information, so we let the full label render and fade via CSS mask instead. */
+const TRAILING_NUMERAL_RE = /\s+((?:IV|III|II)|(?:\d+))$/;
 /** If a label has a trailing numeral/roman, return just that suffix; otherwise undefined. */
-function extractTrailingNumeral(label: string): string | undefined {
+export function extractTrailingNumeral(label: string): string | undefined {
   const m = label.match(TRAILING_NUMERAL_RE);
   return m?.[1] || undefined;
 }

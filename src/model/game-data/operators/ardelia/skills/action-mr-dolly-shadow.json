@@ -1,8 +1,10 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "MR_DOLLY_SHADOW",
     "eventCategoryType": "ACTION",
-    "id": "MR_DOLLY_SHADOW"
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

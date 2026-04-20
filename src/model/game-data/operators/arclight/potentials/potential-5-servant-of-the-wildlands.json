@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ARCLIGHT_POTENTIAL_5",
+    "id": "SERVANT_OF_THE_WILDLANDS_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "count": 2,
@@ -8,8 +10,10 @@
       "-count": -2,
       "count-1": 1
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ARCLIGHT",

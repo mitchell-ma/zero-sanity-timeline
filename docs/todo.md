@@ -1,9 +1,5 @@
 # TODO
 
-## Reactions should be drag-resizable below default duration
-
-Combustion can be ctrl-drag extended but not shrunk below its default duration. Corrosion cannot be drag-edited at all. Audit all REACTION columns for drag-resize parity — both shrinking below default and extending above it should work consistently.
-
 ## Unify physical status onto the generic APPLY STATUS path
 
 Physical status (LIFT / KNOCK_DOWN / CRUSH / BREACH) is handled by bespoke methods (`applyPhysicalStatus` / `applyLiftOrKnockDown` / `applyCrush` / `applyBreach` in `eventInterpretorController.ts`) rather than going through `doApply`'s shared `applyEventFromCtx` helper used by INFLICTION / REACTION / STATUS. Consequences: every freeform-editability improvement (uid reuse via `freeformUidFor`, wrapper-duration inheritance for segment resize, creationInteractionMode propagation) has had to be re-implemented on the physical path, and future work will re-introduce the same class of bug.

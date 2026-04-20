@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "ANTAL_POTENTIAL_4",
+    "id": "GRANNYS_REMINDER_P4",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 4,
     "descriptionParams": {
       "Wisd": 10,
@@ -59,8 +61,11 @@
       "-MaxHp": -0.1,
       "MaxHp-1": -0.9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "ANTAL",

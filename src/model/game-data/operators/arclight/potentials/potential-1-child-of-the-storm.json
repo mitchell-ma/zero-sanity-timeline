@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ARCLIGHT_POTENTIAL_1",
+    "id": "CHILD_OF_THE_STORM_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "atb": 10,
@@ -8,8 +10,10 @@
       "-atb": -10,
       "atb-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ARCLIGHT",

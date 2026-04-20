@@ -119,19 +119,19 @@
     "text": "Animation",
     "dataStatus": "RECONCILED"
   },
-  "op.ESTELLA.talent.COMMISERATION_TALENT.event.description": {
+  "op.ESTELLA.talent.COMMISERATION_T1.event.description": {
     "text": "When triggering Shatter, the next battle skill Onomatopoeia cast returns 7.5 SP. This effect cannot stack.",
     "dataStatus": "RECONCILED"
   },
-  "op.ESTELLA.talent.COMMISERATION_TALENT.event.name": {
+  "op.ESTELLA.talent.COMMISERATION_T1.event.name": {
     "text": "Commiseration (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.ESTELLA.talent.LAZINESS_PAYS_OFF_NOW_TALENT.event.description": {
+  "op.ESTELLA.talent.LAZINESS_PAYS_OFF_NOW_T2.event.description": {
     "text": "Ignores Cryo Infliction and takes -10% (T1) / -20% (T2) Cryo DMG.",
     "dataStatus": "RECONCILED"
   },
-  "op.ESTELLA.talent.LAZINESS_PAYS_OFF_NOW_TALENT.event.name": {
+  "op.ESTELLA.talent.LAZINESS_PAYS_OFF_NOW_T2.event.name": {
     "text": "Laziness Pays Off Now (T2)",
     "dataStatus": "RECONCILED"
   }

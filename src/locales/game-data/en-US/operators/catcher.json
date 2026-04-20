@@ -143,23 +143,23 @@
     "text": "Retaliation",
     "dataStatus": "RECONCILED"
   },
-  "op.CATCHER.talent.COMPREHENSIVE_MINDSET_TALENT.event.description": {
+  "op.CATCHER.talent.COMPREHENSIVE_MINDSET_T2.event.description": {
     "text": "Ultimate Textbook Assault improved: Final hit creates 2/3 shockwave(s) at talent level 1/2, each dealing 30%/45% ATK of Physical DMG.",
     "dataStatus": "RECONCILED"
   },
-  "op.CATCHER.talent.COMPREHENSIVE_MINDSET_TALENT.event.name": {
+  "op.CATCHER.talent.COMPREHENSIVE_MINDSET_T2.event.name": {
     "text": "Comprehensive Mindset (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.CATCHER.talent.RESILIENT_DEFENSE_TALENT.event.description": {
+  "op.CATCHER.talent.RESILIENT_DEFENSE_T1.event.description": {
     "text": "For every 10 Will, DEF +1.2.",
     "dataStatus": "RECONCILED"
   },
-  "op.CATCHER.talent.RESILIENT_DEFENSE_TALENT.event.name": {
+  "op.CATCHER.talent.RESILIENT_DEFENSE_T1.event.name": {
     "text": "Resilient Defense (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.CATCHER.talent.RESILIENT_DEFENSE_TALENT.segment.0.name": {
+  "op.CATCHER.talent.RESILIENT_DEFENSE_T1.segment.0.name": {
     "text": "Resilient Defense (T1)",
     "dataStatus": "RECONCILED"
   }

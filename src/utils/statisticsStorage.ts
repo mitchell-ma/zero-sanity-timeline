@@ -75,6 +75,9 @@ export interface StatisticsData {
   hiddenColumns?: StatisticsColumnType[];
   /** Operator slot ids whose stats rows are hidden. Absent = all rows visible. */
   hiddenOperators?: string[];
+  /** When true, the team-aggregate row above per-operator rows is hidden.
+   *  Absent or false = aggregate visible. Only affects grouped view layout. */
+  hiddenAggregate?: boolean;
   /** Crit mode applied when simulating sources. Absent = EXPECTED. */
   critMode?: CritMode;
   /** Comparison mode for numeric cells. Absent = RAW. */
@@ -386,6 +389,10 @@ export function toggleOperator(data: StatisticsData, slotId: string): Statistics
     ...data,
     hiddenOperators: has ? current.filter((s) => s !== slotId) : [...current, slotId],
   };
+}
+
+export function toggleAggregate(data: StatisticsData): StatisticsData {
+  return { ...data, hiddenAggregate: !data.hiddenAggregate };
 }
 
 export function setCritMode(data: StatisticsData, critMode: CritMode): StatisticsData {

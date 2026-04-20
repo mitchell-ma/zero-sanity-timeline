@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "GILBERTA_POTENTIAL_3",
+    "id": "QUICK_GENTLE_STEPS_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "add": 0.05,
@@ -8,8 +10,10 @@
       "-add": -0.05,
       "add-1": -0.95
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "GILBERTA",

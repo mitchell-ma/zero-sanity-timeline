@@ -1,7 +1,13 @@
 import type { DamageParams, DamageSubComponents, StatusDamageParams } from '../../model/calculation/damageFormulas';
-import { getElementDamageBonusStat } from '../../model/calculation/damageFormulas';
+import {
+  COMPOUND_SKILL_BASE_STATS,
+  ELEMENT_DMG_BONUS_STATS,
+  SKILL_TYPE_DMG_BONUS_STATS,
+  getCombinedDamageBonusStat,
+  getCritMultiplier,
+  getExpectedCritMultiplier,
+} from '../../model/calculation/damageFormulas';
 import type { DamageTableRow } from '../calculation/damageTableBuilder';
-import { getCritMultiplier, getExpectedCritMultiplier } from '../../model/calculation/damageFormulas';
 import { CritMode, ElementType, NumberFormatType, StatType } from '../../consts/enums';
 import type { StatusStatContribution } from '../calculation/critExpectationModel';
 
@@ -79,6 +85,38 @@ const ELEMENT_DMG_LABELS: Record<ElementType, string> = {
   [ElementType.ARTS]: 'Arts DMG%',
 };
 
+const COMBINED_STEM_LABELS: Readonly<Record<string, string>> = {
+  BASIC_ATTACK: 'Basic ATK',
+  BATTLE_SKILL: 'Battle Skill',
+  COMBO_SKILL: 'Combo Skill',
+  ULTIMATE: 'Ultimate',
+  FINAL_STRIKE: 'Final Strike',
+};
+
+const COMBINED_ELEMENT_LABELS: Readonly<Record<string, string>> = {
+  PHYSICAL: 'Physical', HEAT: 'Heat', CRYO: 'Cryo',
+  NATURE: 'Nature', ELECTRIC: 'Electric', ARTS: 'Arts',
+};
+
+/** Build a display label for a compound skill×element DMG% stat by splitting
+ *  its enum name (e.g. BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS → "Battle Skill ×
+ *  Electric DMG%"). Falls back to the raw enum string if the split fails. */
+function combinedStatLabel(stat: StatType): string {
+  const str = stat as string;
+  const suffix = '_DAMAGE_BONUS';
+  if (!str.endsWith(suffix)) return str;
+  const body = str.slice(0, -suffix.length);
+  for (const token of Object.keys(COMBINED_ELEMENT_LABELS)) {
+    const suffixToken = `_${token}`;
+    if (body.endsWith(suffixToken)) {
+      const stem = body.slice(0, -suffixToken.length);
+      const stemLabel = COMBINED_STEM_LABELS[stem] ?? stem;
+      return `${stemLabel} × ${COMBINED_ELEMENT_LABELS[token]} DMG%`;
+    }
+  }
+  return str;
+}
+
 
 /** Build sub-branch entries for a runtime status contribution (stacks, per-stack, uptime). */
 function buildContributionSubEntries(c: StatusStatContribution, critMode: CritMode): MultiplierEntry[] {
@@ -150,39 +188,80 @@ function buildSourceSubEntries(
   });
 }
 
-/** Order: Physical, Arts, Heat, Cryo, Nature, Electric */
-function buildDamageBonusSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
-  const entries: MultiplierEntry[] = [];
-  // Physical
-  const physEntry = makeElementEntry(sub, ElementType.PHYSICAL);
-  entries.push(physEntry);
-  // Arts DMG% — applies only to arts-element hits (Heat, Cryo, Nature, Electric)
-  const isArtsActive = sub.element !== ElementType.PHYSICAL && sub.element !== ElementType.NONE;
-  const artsEntry = makeSubEntry('Arts DMG%', sub.artsDmgBonus, isArtsActive ? 'Arts damage bonus' : 'Does not apply to this hit');
-  if (isArtsActive) {
-    artsEntry.subEntries = buildSourceSubEntries(sub, StatType.ARTS_DAMAGE_BONUS);
-  } else {
-    artsEntry.cssClass = 'dmg-breakdown-neutral';
-  }
-  entries.push(artsEntry);
-  // Heat, Cryo, Nature, Electric
-  for (const el of [ElementType.HEAT, ElementType.CRYO, ElementType.NATURE, ElementType.ELECTRIC]) {
-    entries.push(makeElementEntry(sub, el));
-  }
-  return entries;
+const SKILL_TYPE_ROW_LABELS: Readonly<Record<string, string>> = {
+  [StatType.BASIC_ATTACK_DAMAGE_BONUS]: 'Basic ATK DMG%',
+  [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 'Battle Skill DMG%',
+  [StatType.COMBO_SKILL_DAMAGE_BONUS]: 'Combo Skill DMG%',
+  [StatType.ULTIMATE_DAMAGE_BONUS]: 'Ultimate DMG%',
+  [StatType.FINAL_STRIKE_DAMAGE_BONUS]: 'Final Strike DMG%',
+  [StatType.STAGGER_DAMAGE_BONUS]: 'Stagger DMG%',
+  [StatType.SKILL_DAMAGE_BONUS]: 'Skill DMG%',
+};
+
+function isElementActive(el: ElementType, hitElement: ElementType): boolean {
+  if (el === ElementType.PHYSICAL) return hitElement === ElementType.PHYSICAL || hitElement === ElementType.NONE;
+  if (el === ElementType.ARTS) return hitElement !== ElementType.PHYSICAL && hitElement !== ElementType.NONE;
+  return el === hitElement;
 }
 
-function makeElementEntry(sub: DamageSubComponents, el: ElementType): MultiplierEntry {
-  const value = sub.allElementDmgBonuses[el] ?? 0;
-  const isActive = el === sub.element || (el === ElementType.PHYSICAL && sub.element === ElementType.NONE);
-  const label = ELEMENT_DMG_LABELS[el];
-  const entry = makeSubEntry(label, value, isActive ? 'Active element bonus' : 'Does not apply to this hit');
-  if (isActive) {
-    entry.subEntries = buildSourceSubEntries(sub, getElementDamageBonusStat(el));
-  } else {
+function isSkillTypeActive(stat: StatType, sub: DamageSubComponents): boolean {
+  if (stat === StatType.SKILL_DAMAGE_BONUS) return true;
+  if (stat === StatType.STAGGER_DAMAGE_BONUS) return sub.isStaggered;
+  if (stat === StatType.FINAL_STRIKE_DAMAGE_BONUS) return sub.isFinalStrike;
+  return sub.skillTypeDmgBonusStat === stat;
+}
+
+function makeDmgBonusRow(
+  sub: DamageSubComponents,
+  stat: StatType,
+  label: string,
+  active: boolean,
+): MultiplierEntry {
+  const value = sub.allDmgBonusStats[stat] ?? 0;
+  const entry = makeSubEntry(label, value, active ? 'Active on this hit' : 'Does not apply to this hit');
+  // Surface per-source attribution regardless of active state — users want to
+  // see what's contributing to a stat even when it doesn't apply to this hit.
+  // Inactive rows grey the entry + sub-sources for visual consistency with
+  // other per-element factors (Amp, Susceptibility, Fragility, Resistance).
+  entry.subEntries = buildSourceSubEntries(sub, stat);
+  if (!active) {
     entry.cssClass = 'dmg-breakdown-neutral';
+    entry.subEntries?.forEach((ss) => {
+      ss.cssClass = 'dmg-breakdown-neutral';
+      ss.subEntries?.forEach((sss) => { sss.cssClass = 'dmg-breakdown-neutral'; });
+    });
   }
   return entry;
+}
+
+/** Build the full Damage Bonus breakdown: every possible DMG% row
+ *  (element, skill-type, generic skill, and compound skill×element).
+ *  Inactive rows are rendered but greyed out. */
+function buildDamageBonusSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
+  const entries: MultiplierEntry[] = [];
+
+  // Element rows
+  for (const [el, stat] of ELEMENT_DMG_BONUS_STATS) {
+    entries.push(makeDmgBonusRow(sub, stat, ELEMENT_DMG_LABELS[el], isElementActive(el, sub.element)));
+  }
+
+  // Skill-type / situational rows (includes generic Skill DMG%)
+  for (const stat of SKILL_TYPE_DMG_BONUS_STATS) {
+    entries.push(makeDmgBonusRow(sub, stat, SKILL_TYPE_ROW_LABELS[stat] ?? stat, isSkillTypeActive(stat, sub)));
+  }
+
+  // Compound skill × element rows (30 total)
+  for (const base of COMPOUND_SKILL_BASE_STATS) {
+    const baseActive = isSkillTypeActive(base, sub);
+    for (const [el] of ELEMENT_DMG_BONUS_STATS) {
+      const stat = getCombinedDamageBonusStat(base, el);
+      if (!stat) continue;
+      const active = baseActive && isElementActive(el, sub.element);
+      entries.push(makeDmgBonusRow(sub, stat, combinedStatLabel(stat), active));
+    }
+  }
+
+  return entries;
 }
 
 const BREAKDOWN_ELEMENTS: { el: ElementType; label: string }[] = [
@@ -234,6 +313,120 @@ function buildPerElementSubEntries(
     }
     return entry;
   });
+}
+
+/** Elements surfaced as dedicated base-resistance rows. Mirrors the enemy
+ *  stat sheet — no ARTS row because AETHER_RESISTANCE is not an exposed stat. */
+const RESISTANCE_BASE_ELEMENTS: { el: ElementType; label: string }[] = [
+  { el: ElementType.PHYSICAL, label: 'Physical' },
+  { el: ElementType.HEAT,     label: 'Heat' },
+  { el: ElementType.CRYO,     label: 'Cryo' },
+  { el: ElementType.NATURE,   label: 'Nature' },
+  { el: ElementType.ELECTRIC, label: 'Electric' },
+];
+
+/** Elements that can carry RESISTANCE_IGNORE / RESISTANCE_REDUCTION sources.
+ *  ARTS is kept because it's the umbrella stat applied to arts-element hits. */
+const RESISTANCE_MODIFIER_ELEMENTS: { el: ElementType; label: string }[] = [
+  ...RESISTANCE_BASE_ELEMENTS,
+  { el: ElementType.ARTS, label: 'Arts' },
+];
+
+/** Whether a modifier source tagged with `el` applies to a hit of `activeElement`.
+ *  Matches the damage math in `readResistanceAddback`: per-element stat applies
+ *  exactly when `el === activeElement` (with NONE aliasing PHYSICAL), plus the
+ *  ARTS umbrella applies to any arts element (HEAT/CRYO/NATURE/ELECTRIC). */
+function isResistanceSourceActive(el: ElementType, activeElement: ElementType): boolean {
+  const isArtsHit = activeElement === ElementType.HEAT || activeElement === ElementType.CRYO
+    || activeElement === ElementType.NATURE || activeElement === ElementType.ELECTRIC;
+  if (el === activeElement) return true;
+  if (el === ElementType.PHYSICAL && activeElement === ElementType.NONE) return true;
+  if (el === ElementType.ARTS && isArtsHit) return true;
+  return false;
+}
+
+/** Build per-element rows for a RESISTANCE_IGNORE/REDUCTION source map. One row
+ *  per element (matches the base-resistance section above); each row's value is
+ *  the sum of its element's sources, and individual contributors (e.g. Storm of
+ *  Transformation P5) are nested as sub-entries under their element. Inactive
+ *  elements are kept visible but greyed. Returns `{ entries, activeTotal }`
+ *  where `activeTotal` is the sum over active elements — matches the damage
+ *  math (per-element + ARTS umbrella for arts hits). */
+function buildResistanceModifierRows(
+  sourcesByEl: Partial<Record<ElementType, import('../../model/calculation/damageFormulas').MultiplierSource[]>>,
+  activeElement: ElementType,
+): { entries: MultiplierEntry[]; activeTotal: number } {
+  const entries: MultiplierEntry[] = [];
+  let activeTotal = 0;
+  for (const { el, label } of RESISTANCE_MODIFIER_ELEMENTS) {
+    const sources = sourcesByEl[el] ?? [];
+    const total = sources.reduce((sum, s) => sum + s.value, 0);
+    const active = isResistanceSourceActive(el, activeElement);
+    const row = makeSubEntry(label, total, active ? 'Active element' : 'Does not apply to this hit');
+    if (sources.length > 0) {
+      row.subEntries = sources.map((s) => {
+        const sub = makeSubEntry(s.label, s.value, '');
+        if (s.subSources?.length) {
+          sub.subEntries = s.subSources.map((ss) => makeSubEntry(ss.label, ss.value, ''));
+        }
+        return sub;
+      });
+    }
+    if (!active) {
+      row.cssClass = 'dmg-breakdown-neutral';
+      row.subEntries?.forEach((ss) => {
+        ss.cssClass = 'dmg-breakdown-neutral';
+        ss.subEntries?.forEach((sss) => { sss.cssClass = 'dmg-breakdown-neutral'; });
+      });
+    } else {
+      activeTotal += total;
+    }
+    entries.push(row);
+  }
+  return { entries, activeTotal };
+}
+
+/** Build the Resistance branch sub-entries:
+ *   1. Per-element base resistance rows (enemy's own stat, one per element).
+ *   2. Aggregate "Resistance Ignore" row (operator modifiers).
+ *   3. Aggregate "Resistance Reduction" row (enemy debuffs).
+ *  The old "Base Resistance" parent row is gone — enemies don't have a single
+ *  base-resistance stat, they have five independent per-element values. */
+function buildResistanceSubEntries(sub: DamageSubComponents): MultiplierEntry[] {
+  const entries: MultiplierEntry[] = [];
+
+  for (const { el, label } of RESISTANCE_BASE_ELEMENTS) {
+    const mult = sub.baseResistanceByElement[el] ?? 1;
+    const active = isResistanceSourceActive(el, sub.element);
+    const entry = makeSubEntry(
+      label,
+      mult,
+      active ? 'Active element' : 'Does not apply to this hit',
+      'multiplier',
+    );
+    if (!active) entry.cssClass = 'dmg-breakdown-neutral';
+    entries.push(entry);
+  }
+
+  const ignore = buildResistanceModifierRows(sub.allResistanceIgnoreSources, sub.element);
+  const ignoreEntry = makeSubEntry(
+    'Resistance Ignore',
+    ignore.activeTotal,
+    'Operator stats ignoring enemy resistance',
+  );
+  ignoreEntry.subEntries = ignore.entries;
+  entries.push(ignoreEntry);
+
+  const reduction = buildResistanceModifierRows(sub.allResistanceReductionSources, sub.element);
+  const reductionEntry = makeSubEntry(
+    'Resistance Reduction',
+    reduction.activeTotal,
+    'Enemy debuffs reducing its own resistance',
+  );
+  reductionEntry.subEntries = reduction.entries;
+  entries.push(reductionEntry);
+
+  return entries;
 }
 
 function buildCritRateSourceEntries(sub: DamageSubComponents): MultiplierEntry[] {
@@ -387,13 +580,8 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
       label: 'Damage Bonus',
       value: params.multiplierGroup,
       format: 'multiplier',
-      source: '1 + Element DMG% + Skill Type DMG% + Skill DMG% + Arts DMG%',
-      subEntries: sub ? [
-        ...buildDamageBonusSubEntries(sub),
-        { ...makeSubEntry('Skill Type DMG%', sub.skillTypeDmgBonus, 'Basic/Battle/Combo/Ultimate DMG bonus'), subEntries: sub.skillTypeDmgBonusStat ? buildSourceSubEntries(sub, sub.skillTypeDmgBonusStat) : undefined },
-        { ...makeSubEntry('Skill DMG%', sub.skillDmgBonus, 'Generic skill damage bonus'), subEntries: buildSourceSubEntries(sub, StatType.SKILL_DAMAGE_BONUS) },
-        ...(sub.staggerDmgBonus > 0 ? [{ ...makeSubEntry('Stagger DMG%', sub.staggerDmgBonus, 'DMG Bonus vs. Staggered'), subEntries: buildSourceSubEntries(sub, StatType.STAGGER_DAMAGE_BONUS) }] : []),
-      ] : undefined,
+      source: '1 + Element DMG% + Skill Type DMG% + Skill DMG% + Arts DMG% + Skill × Element DMG%',
+      subEntries: sub ? buildDamageBonusSubEntries(sub) : undefined,
     },
     {
       label: 'Crit',
@@ -485,10 +673,7 @@ export function buildMultiplierEntries(params: DamageParams, foldedFrames?: Dama
       source: params.resistanceMultiplier < 0.999 ? 'Enemy resists this element'
         : params.resistanceMultiplier > 1.001 ? 'Enemy weak to this element'
         : 'No elemental resistance',
-      subEntries: sub?.allResistanceSources ? [
-        makeSubEntry('Base Resistance', sub.baseResistance, 'Enemy elemental resistance', 'multiplier'),
-        ...buildPerElementSubEntries(sub.allResistanceSources, sub.element),
-      ] : undefined,
+      subEntries: sub ? buildResistanceSubEntries(sub) : undefined,
     },
     ...((params.specialMultiplier ?? 1) !== 1 ? [{
       label: 'Special',

@@ -19,13 +19,6 @@ import CollaborationMenu from './CollaborationMenu';
 
 export type SidebarMode = SidebarModeEnum | null;
 
-interface CollaborationPeerDescriptor {
-  peerId: string;
-  displayName: string;
-  role: string;
-  isLocal: boolean;
-}
-
 interface CollaborationReconnectInfo {
   attempt: number;
   nextRetryAt: number | null;
@@ -37,7 +30,7 @@ interface LoadoutSidebarProps {
   activeLoadoutId: string | null;
   onTreeChange: (tree: LoadoutTree) => void;
   onSelectLoadout: (id: string) => void;
-  onNewLoadout: (parentId: string | null) => void;
+  onNewLoadout: (parentId: string | null) => { id: string; name: string } | void;
   onDuplicateLoadout: (sourceId: string) => void;
   onDeleteLoadout: (loadoutIds: string[], nodeId: string) => void;
   onDownloadLoadout: (loadoutId: string) => void;
@@ -55,12 +48,8 @@ interface LoadoutSidebarProps {
   collaborationStatus?: ConnectionStatus | null;
   collaborationPeerCount?: number;
   collaborationRoomId?: string | null;
-  collaborationPeers?: CollaborationPeerDescriptor[];
   collaborationReconnect?: CollaborationReconnectInfo;
-  onHostCollaboration?: () => void;
-  onJoinCollaboration?: () => void;
-  onLeaveCollaboration?: () => void;
-  onManageSharedLoadouts?: () => void;
+  onOpenCollaborationSession?: () => void;
   sidebarMode: SidebarMode;
   onSidebarModeChange: (mode: SidebarMode) => void;
 }
@@ -109,12 +98,8 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   collaborationStatus,
   collaborationPeerCount,
   collaborationRoomId,
-  collaborationPeers,
   collaborationReconnect,
-  onHostCollaboration,
-  onJoinCollaboration,
-  onLeaveCollaboration,
-  onManageSharedLoadouts,
+  onOpenCollaborationSession,
   sidebarMode,
   onSidebarModeChange,
 }, ref) {
@@ -187,7 +172,11 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   );
 
   const handleAddLoadout = useCallback((parentId: string | null) => {
-    onNewLoadout(parentId);
+    const created = onNewLoadout(parentId);
+    if (created) {
+      setRenamingId(created.id);
+      setRenameValue(created.name);
+    }
   }, [onNewLoadout]);
 
   const handleAddFolder = useCallback((parentId: string | null) => {
@@ -615,7 +604,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
           title={t('sidebar.tooltip.loadouts')}
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+            <path d="M3 5h10v3H3zm4 5h12v3H7zm-4 5h8v3H3z"/>
           </svg>
         </button>
         <button
@@ -687,17 +676,13 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
                 <path d="M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85a1.007 1.007 0 00-.115-.1zM12 6.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"/>
               </svg>
             </button>
-            {onHostCollaboration && onJoinCollaboration && onLeaveCollaboration && (
+            {onOpenCollaborationSession && (
               <CollaborationMenu
                 status={collaborationStatus ?? null}
                 peerCount={collaborationPeerCount ?? 0}
                 roomId={collaborationRoomId ?? null}
-                peers={collaborationPeers ?? []}
                 reconnect={collaborationReconnect}
-                onHost={onHostCollaboration}
-                onJoin={onJoinCollaboration}
-                onLeave={onLeaveCollaboration}
-                onManageSharedLoadouts={onManageSharedLoadouts}
+                onOpenSession={onOpenCollaborationSession}
               />
             )}
           </div>

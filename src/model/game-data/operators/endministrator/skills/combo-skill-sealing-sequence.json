@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "SEALING_SEQUENCE",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "SEALING_SEQUENCE",
     "descriptionParams": {
       "atk_scale": 1,
       "atk_scale_trigger": 4,
@@ -29,7 +28,10 @@
       "1-duration": -4,
       "-duration": -5,
       "duration-1": 4
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

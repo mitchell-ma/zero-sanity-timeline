@@ -143,7 +143,7 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/pathfinders_beacon_icon.png",
+    "icon": "weapons/pathfinders_beacon_icon.webp",
     "dataStatus": "RECONCILED"
   }
 }

@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "LIFENG_POTENTIAL_2",
+    "id": "SELF_REFINEMENT_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Str": 15,
@@ -20,8 +22,10 @@
       "-Will": -15,
       "Will-1": 14
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LIFENG",

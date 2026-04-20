@@ -62,8 +62,10 @@
       "interactionType": "RESET"
     },
     "cooldownSeconds": 15,
-    "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "SWORDMANCER_STAT",

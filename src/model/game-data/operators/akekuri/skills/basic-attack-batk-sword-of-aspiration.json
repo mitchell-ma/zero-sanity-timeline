@@ -515,11 +515,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "SWORD_OF_ASPIRATION_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "SWORD_OF_ASPIRATION_BATK",
     "descriptionParams": {
       "atk_scale": 0.73,
       "atb": 0,
@@ -537,7 +536,10 @@
       "1-atk_scale_2": 0.6599999999999999,
       "-atk_scale_2": -0.34,
       "atk_scale_2-1": -0.6599999999999999
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "AKEKURI",

@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "TURBID_AVATAR",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "TURBID_AVATAR",
     "descriptionParams": {
       "atk_scale": 0.86,
       "poise": 10,
@@ -25,7 +24,10 @@
       "1-duration": -11,
       "-duration": -12,
       "duration-1": 11
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "LIFENG",

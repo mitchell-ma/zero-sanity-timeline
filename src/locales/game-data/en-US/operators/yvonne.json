@@ -155,35 +155,35 @@
     "text": "Cryoblasting Pistolier (Crit Rate)",
     "dataStatus": "RECONCILED"
   },
-  "op.YVONNE.status.EXPERT_MECHCRAFTER.event.description": {
+  "op.YVONNE.status.EXPERT_MECHCRAFTER_P5.event.description": {
     "text": "During Cryoblasting Pistolier, ATK +10% and Critical DMG Dealt +30%.",
     "dataStatus": "RECONCILED"
   },
-  "op.YVONNE.status.EXPERT_MECHCRAFTER.event.name": {
+  "op.YVONNE.status.EXPERT_MECHCRAFTER_P5.event.name": {
     "text": "Expert Mechcrafter",
     "dataStatus": "RECONCILED"
   },
-  "op.YVONNE.status.EXPERT_MECHCRAFTER.segment.0.name": {
+  "op.YVONNE.status.EXPERT_MECHCRAFTER_P5.segment.0.name": {
     "text": "Expert Mechcrafter",
     "dataStatus": "RECONCILED"
   },
-  "op.YVONNE.talent.BARRAGE_OF_TECHNOLOGY_TALENT.event.description": {
+  "op.YVONNE.talent.BARRAGE_OF_TECHNOLOGY_T1.event.description": {
     "text": "Battle skill Brr-Brr-Bomb β improved: After applying Solidification, the next basic attack directly becomes a Final Strike with DMG Dealt +{dmg_up:0%}.",
     "dataStatus": "RECONCILED"
   },
-  "op.YVONNE.talent.BARRAGE_OF_TECHNOLOGY_TALENT.event.name": {
+  "op.YVONNE.talent.BARRAGE_OF_TECHNOLOGY_T1.event.name": {
     "text": "Barrage of Technology (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.YVONNE.talent.FREEZING_POINT_TALENT.event.description": {
+  "op.YVONNE.talent.FREEZING_POINT_T2.event.description": {
     "text": "Against enemies with active Cryo Infliction, gains Critical DMG Dealt +{inflict_up:0%}. Effect is doubled against enemies with Solidification.",
     "dataStatus": "RECONCILED"
   },
-  "op.YVONNE.talent.FREEZING_POINT_TALENT.event.name": {
+  "op.YVONNE.talent.FREEZING_POINT_T2.event.name": {
     "text": "Freezing Point (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.YVONNE.talent.FREEZING_POINT_TALENT.segment.0.name": {
+  "op.YVONNE.talent.FREEZING_POINT_T2.segment.0.name": {
     "text": "Freezing Point (T2)",
     "dataStatus": "RECONCILED"
   }

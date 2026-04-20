@@ -127,7 +127,7 @@ describe('Enemy Action — Reactive Triggers', () => {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const EMBER_ID: string = require('../../../model/game-data/operators/ember/ember.json').id;
     /* eslint-enable @typescript-eslint/no-require-imports */
-    const PAY_THE_FERRIC_PRICE_ID = 'PAY_THE_FERRIC_PRICE';
+    const PAY_THE_FERRIC_PRICE_ID = 'PAY_THE_FERRIC_PRICE_T2';
 
     const { result } = renderHook(() => useApp());
     act(() => { result.current.handleSwapOperator(SLOT_0, EMBER_ID); });
@@ -144,7 +144,7 @@ describe('Enemy Action — Reactive Triggers', () => {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const EMBER_ID: string = require('../../../model/game-data/operators/ember/ember.json').id;
     /* eslint-enable @typescript-eslint/no-require-imports */
-    const PAY_THE_FERRIC_PRICE_ID = 'PAY_THE_FERRIC_PRICE';
+    const PAY_THE_FERRIC_PRICE_ID = 'PAY_THE_FERRIC_PRICE_T2';
     const { NounType } = require('../../../dsl/semantics');
     const { findColumn } = require('../helpers');
 

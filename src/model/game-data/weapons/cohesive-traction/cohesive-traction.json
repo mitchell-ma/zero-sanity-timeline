@@ -143,7 +143,7 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/cohesive_traction_icon.png",
+    "icon": "weapons/cohesive_traction_icon.webp",
     "dataStatus": "RECONCILED"
   }
 }

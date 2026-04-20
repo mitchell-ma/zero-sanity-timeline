@@ -127,15 +127,15 @@
     "text": "Originium Crystals Shatter",
     "dataStatus": "RECONCILED"
   },
-  "op.ENDMINISTRATOR.talent.ESSENCE_DISINTEGRATION_TALENT.event.description": {
+  "op.ENDMINISTRATOR.talent.ESSENCE_DISINTEGRATION_T1.event.description": {
     "text": "When the Originium Crystals attached to the enemy are consumed, the Endministrator gains ATK +30% for 15s. This effect cannot stack.",
     "dataStatus": "RECONCILED"
   },
-  "op.ENDMINISTRATOR.talent.ESSENCE_DISINTEGRATION_TALENT.event.name": {
+  "op.ENDMINISTRATOR.talent.ESSENCE_DISINTEGRATION_T1.event.name": {
     "text": "Essence Disintegration (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.ENDMINISTRATOR.talent.ESSENCE_DISINTEGRATION_TALENT.segment.0.name": {
+  "op.ENDMINISTRATOR.talent.ESSENCE_DISINTEGRATION_T1.segment.0.name": {
     "text": "Essence Disintegration (T1)",
     "dataStatus": "RECONCILED"
   },

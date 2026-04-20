@@ -553,7 +553,6 @@ def generate_basic_attack_skeleton(
     skill_name: str,
     skill_id: str,
     category: str,  # BASIC_ATTACK, etc.
-    enhancement_types: list = None,
 ):
     """Generate a basic attack skeleton with multiple segments."""
     out_segments = []
@@ -608,7 +607,7 @@ def generate_basic_attack_skeleton(
         "segments": out_segments,
         "properties": {
             "name": skill_name,
-            "eventType": "COMBAT_SKILL",
+            "eventTypes": ["SKILL"],
             "eventCategoryType": category,
             "element": element,
             "id": skill_id,
@@ -617,9 +616,6 @@ def generate_basic_attack_skeleton(
             "originId": operator_id,
         },
     }
-    if enhancement_types:
-        result["properties"]["enhancementTypes"] = enhancement_types
-
     return result
 
 
@@ -631,7 +627,6 @@ def generate_battle_skill_skeleton(
     element: str,
     skill_name: str,
     skill_id: str,
-    enhancement_types: list = None,
 ):
     """Generate battle skill skeleton (entity-based or channeling-based)."""
     offsets = compute_frame_offsets(seg, sd_dir)
@@ -674,7 +669,7 @@ def generate_battle_skill_skeleton(
     result = {
         "properties": {
             "name": skill_name,
-            "eventType": "COMBAT_SKILL",
+            "eventTypes": ["SKILL"],
             "eventCategoryType": "BATTLE_SKILL",
             "element": element,
             "id": skill_id,
@@ -682,9 +677,6 @@ def generate_battle_skill_skeleton(
         "metadata": {"originId": operator_id},
         "segments": [build_segment(duration, element, frames)],
     }
-    if enhancement_types:
-        result["properties"]["enhancementTypes"] = enhancement_types
-
     cost = build_cost_clause(ws)
     if cost:
         result["clause"] = cost
@@ -841,7 +833,7 @@ def generate_combo_skeleton(
     result = {
         "properties": {
             "name": skill_name,
-            "eventType": "COMBAT_SKILL",
+            "eventTypes": ["SKILL"],
             "eventCategoryType": "COMBO_SKILL",
             "element": element,
             "id": skill_id,
@@ -905,7 +897,7 @@ def generate_ultimate_skeleton(
     result = {
         "properties": {
             "name": skill_name,
-            "eventType": "COMBAT_SKILL",
+            "eventTypes": ["SKILL"],
             "eventCategoryType": "ULTIMATE_SKILL",
             "id": skill_id,
         },
@@ -956,7 +948,6 @@ def generate_single_hit_skeleton(
     skill_name: str,
     skill_id: str,
     category: str,
-    enhancement_types: list = None,
 ):
     """Generate skeleton for dive/finisher (single-segment, simple)."""
     offsets = compute_frame_offsets(seg, sd_dir)
@@ -979,7 +970,7 @@ def generate_single_hit_skeleton(
     result = {
         "properties": {
             "name": skill_name,
-            "eventType": "COMBAT_SKILL",
+            "eventTypes": ["SKILL"],
             "eventCategoryType": category,
             "element": element,
             "id": skill_id,
@@ -987,8 +978,6 @@ def generate_single_hit_skeleton(
         "metadata": {"originId": operator_id},
         "segments": [build_segment(duration, element, frames)],
     }
-    if enhancement_types:
-        result["properties"]["enhancementTypes"] = enhancement_types
     return result
 
 
@@ -1224,8 +1213,7 @@ def main():
             skill_name="TODO_ENHANCED_BA_NAME",
             skill_id="TODO_ENHANCED_BA_ID",
             category="BASIC_ATTACK",
-            enhancement_types=["ENHANCED"],
-        )
+            )
         generated["enhanced_basic_attack"] = skeleton
         print("=== ENHANCED BASIC ATTACK ===")
         print(f"  Segments: {len(skeleton['segments'])}")
@@ -1255,8 +1243,7 @@ def main():
             skeleton = generate_single_hit_skeleton(
                 seg, ws, args.skilldata, args.operator, args.element,
                 skill_name="TODO_DIVE_NAME", skill_id="TODO_DIVE_ID",
-                category="BASIC_ATTACK", enhancement_types=["DIVE"],
-            )
+                category="BASIC_ATTACK", )
             generated["dive"] = skeleton
             print("=== DIVE ATTACK ===")
             s = skeleton["segments"][0]
@@ -1275,8 +1262,7 @@ def main():
             skeleton = generate_single_hit_skeleton(
                 seg, ws, args.skilldata, args.operator, args.element,
                 skill_name="TODO_FINISHER_NAME", skill_id="TODO_FINISHER_ID",
-                category="BASIC_ATTACK", enhancement_types=["FINISHER"],
-            )
+                category="BASIC_ATTACK", )
             generated["finisher"] = skeleton
             print("=== FINISHER ===")
             s = skeleton["segments"][0]
@@ -1317,8 +1303,7 @@ def main():
             skeleton = generate_battle_skill_skeleton(
                 seg, ws, args.skilldata, args.operator, args.element,
                 skill_name="TODO_EBS_NAME", skill_id="TODO_EBS_ID",
-                enhancement_types=["ENHANCED"],
-            )
+                )
             generated["enhanced_battle_skill"] = skeleton
             print("=== ENHANCED BATTLE SKILL ===")
             s = skeleton["segments"][0]

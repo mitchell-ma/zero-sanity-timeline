@@ -127,19 +127,19 @@
     "text": "Wooly Party",
     "dataStatus": "RECONCILED"
   },
-  "op.ARDELIA.talent.FRIENDLY_PRESENCE_TALENT.event.description": {
+  "op.ARDELIA.talent.FRIENDLY_PRESENCE_T1.event.description": {
     "text": "The battle skill Dolly Rush creates 3 Shadows of Mr. Dolly after hitting the enemy. The copies of Mr. Dolly scattered by the ultimate Wooly Party also have a 10% chance to create Shadows of Mr. Dolly when they fall to the ground. When the controlled operator touches a Shadow of Mr. Dolly, Ardelia restores the said operator's HP by [63 + Will×0.53]. If the controlled operator is already at max HP, then restore the HP of the teammate with lowest percentage HP. Shadows of Mr. Dolly last for 10s and up to 10 can exist in the battlefield.",
     "dataStatus": "RECONCILED"
   },
-  "op.ARDELIA.talent.FRIENDLY_PRESENCE_TALENT.event.name": {
+  "op.ARDELIA.talent.FRIENDLY_PRESENCE_T1.event.name": {
     "text": "Friendly Presence (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.ARDELIA.talent.MOUNTAINPEAK_SURFER_TALENT.event.description": {
+  "op.ARDELIA.talent.MOUNTAINPEAK_SURFER_T2.event.description": {
     "text": "Battle skill Dolly Rush improved: Triggering the additional effect while an enemy with Corrosion is nearby immediately casts the battle skill again. This effect only triggers once per active battle skill casting.",
     "dataStatus": "RECONCILED"
   },
-  "op.ARDELIA.talent.MOUNTAINPEAK_SURFER_TALENT.event.name": {
+  "op.ARDELIA.talent.MOUNTAINPEAK_SURFER_T2.event.name": {
     "text": "Mountainpeak Surfer (T2)",
     "dataStatus": "RECONCILED"
   }

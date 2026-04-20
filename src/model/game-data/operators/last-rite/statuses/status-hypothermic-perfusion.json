@@ -49,7 +49,6 @@
     "id": "HYPOTHERMIC_PERFUSION",
     "to": "OPERATOR",
     "toDeterminer": "CONTROLLED",
-    "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
     "duration": {
       "value": {
@@ -64,7 +63,10 @@
         "value": 1
       },
       "interactionType": "RESET"
-    }
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "onTriggerClause": [
     {

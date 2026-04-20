@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "TINY_SURPRISE",
     "eventCategoryType": "BATTLE",
     "element": "NATURE",
-    "id": "TINY_SURPRISE",
     "descriptionParams": {
       "atk_scale": 4.2,
       "poise": 10,
@@ -25,7 +24,10 @@
       "1-boom_up": 0.7,
       "-boom_up": -0.3,
       "boom_up-1": -0.7
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "FLUORITE",

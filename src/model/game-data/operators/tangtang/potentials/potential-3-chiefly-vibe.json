@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "TANGTANG_POTENTIAL_3",
+    "id": "CHIEFLY_VIBE_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "potential3": 1,
@@ -24,8 +26,10 @@
       "-normalskill_atk_scale01": -1.1,
       "normalskill_atk_scale01-1": 0.10000000000000009
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "TANGTANG",

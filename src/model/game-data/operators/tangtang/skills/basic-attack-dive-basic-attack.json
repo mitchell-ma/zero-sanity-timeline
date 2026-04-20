@@ -1,13 +1,9 @@
 {
   "properties": {
-    "enhancementTypes": [
-      "DIVE"
-    ],
-    "eventType": "SKILL",
+    "id": "ILL_BLOW_YOUR_MIND_DIVE",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",
     "element": "CRYO",
-    "id": "ILL_BLOW_YOUR_MIND_DIVE",
     "descriptionParams": {
       "atk_scale": 0.45,
       "atb": 0,
@@ -17,7 +13,10 @@
       "1-atb": 1,
       "-atb": 0,
       "atb-1": -1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "TANGTANG",

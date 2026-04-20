@@ -91,7 +91,7 @@
     }
   ],
   "properties": {
-    "id": "UNPREDICTABLE_TALENT",
+    "id": "UNPREDICTABLE_T2",
     "descriptionParams": {
       "atk_up": 0.2,
       "probability": 0.2,
@@ -126,8 +126,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "FLUORITE",

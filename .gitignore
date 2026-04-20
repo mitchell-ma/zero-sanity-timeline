@@ -31,6 +31,8 @@ yarn-error.log*
 .claude-temp
 .claude-secrets
 .playwright-mcp
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
 
 # wrangler files
 .wrangler

@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "GILBERTA_POTENTIAL_1",
+    "id": "ABOVE_THE_CLOUDS_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "potential": 1,
@@ -16,8 +18,10 @@
       "-radius": -6.3,
       "radius-1": 5.3
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "GILBERTA",

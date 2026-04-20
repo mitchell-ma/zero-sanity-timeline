@@ -136,8 +136,8 @@ describe('A. Basic Attack', () => {
     const variants = col!.eventVariants;
     expect(variants).toBeDefined();
 
-    const dive = variants!.find(v => v.id === BasicAttackType.DIVE);
-    const finisher = variants!.find(v => v.id === BasicAttackType.FINISHER);
+    const dive = variants!.find(v => v.category === NounType.DIVE);
+    const finisher = variants!.find(v => v.category === NounType.FINISHER);
     expect(dive).toBeDefined();
     expect(finisher).toBeDefined();
   });

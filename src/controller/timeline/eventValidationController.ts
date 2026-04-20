@@ -13,7 +13,6 @@ import {
   computeTimeStopRegions,
   validateComboWindows,
   validateResources,
-  validateEmpowered,
   validateEnhanced,
   validateDisabledVariants,
   validateVariantClauses,
@@ -28,7 +27,6 @@ import {
 export interface ValidationMaps {
   combo: Map<string, string>;
   resource: Map<string, string>;
-  empowered: Map<string, string>;
   enhanced: Map<string, string>;
   regularBasic: Map<string, string>;
   clause: Map<string, string>;
@@ -68,7 +66,6 @@ export function computeAllValidations(
     resource: resourceGraphs
       ? validateResources(events, resourceGraphs, slots, draggingIds ?? undefined)
       : EMPTY_MAP,
-    empowered: validateEmpowered(events, slots),
     enhanced: validateEnhanced(events, slots),
     regularBasic: validateDisabledVariants(events),
     clause: validateVariantClauses(events, slots),
@@ -105,7 +102,6 @@ export function aggregateEventWarnings(
   let result: string | null = null;
   const c = maps.combo.get(eventId);
   const r = maps.resource.get(eventId);
-  const em = maps.empowered.get(eventId);
   const en = maps.enhanced.get(eventId);
   const rb = maps.regularBasic.get(eventId);
   const cl = maps.clause.get(eventId);
@@ -113,11 +109,10 @@ export function aggregateEventWarnings(
   const ts = maps.timeStop.get(eventId);
   const inf = maps.infliction.get(eventId);
 
-  if (c || r || em || en || rb || cl || fs || ts || inf) {
+  if (c || r || en || rb || cl || fs || ts || inf) {
     let s = '';
     if (c) s += c;
     if (r) s += (s ? '\n' : '') + r;
-    if (em) s += (s ? '\n' : '') + em;
     if (en) s += (s ? '\n' : '') + en;
     if (rb) s += (s ? '\n' : '') + rb;
     if (cl) s += (s ? '\n' : '') + cl;

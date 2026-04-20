@@ -48,7 +48,9 @@
     }
   ],
   "properties": {
-    "id": "TANGTANG_POTENTIAL_2",
+    "id": "RIVERS_DAUGHTER_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Agi": 20,
@@ -60,8 +62,11 @@
       "-CrystDamageIncrease": -0.1,
       "CrystDamageIncrease-1": -0.9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "TANGTANG",

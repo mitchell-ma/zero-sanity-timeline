@@ -21,7 +21,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { EnhancementType, EventStatusType } from '../../../../consts/enums';
+import { EventStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import {
@@ -69,7 +69,7 @@ function placeReaction(result: { current: AppResult }, reactionCol: string, star
 function placeEmpoweredBS(result: { current: AppResult }, startSec: number) {
   const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
   const empowered = battleCol?.eventVariants?.find(
-    v => v.enhancementType === EnhancementType.EMPOWERED,
+    v => v.id.endsWith('_EMPOWERED'),
   );
   expect(empowered).toBeDefined();
   act(() => {
@@ -106,7 +106,7 @@ describe('A. Empowered BS Consumes Reaction', () => {
       ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
-    expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+    expect(bsEvents[0].id.endsWith('_EMPOWERED')).toBe(true);
 
     // Controller: Combustion consumed
     const combustionEvents = result.current.allProcessedEvents.filter(
@@ -123,7 +123,7 @@ describe('A. Empowered BS Consumes Reaction', () => {
     const battleVM = viewModels.get(battleCol!.key);
     expect(battleVM).toBeDefined();
     expect(battleVM!.events.some(
-      ev => ev.enhancementType === EnhancementType.EMPOWERED,
+      ev => ev.id.endsWith('_EMPOWERED'),
     )).toBe(true);
   });
 
@@ -137,7 +137,7 @@ describe('A. Empowered BS Consumes Reaction', () => {
     const bsEvents = result.current.allProcessedEvents.filter(
       ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
-    expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+    expect(bsEvents[0].id.endsWith('_EMPOWERED')).toBe(true);
 
     const electEvents = result.current.allProcessedEvents.filter(
       ev => ev.columnId === REACTION_COLUMNS.ELECTRIFICATION && ev.eventStatus === EventStatusType.CONSUMED,
@@ -161,7 +161,7 @@ describe('B. Negative — Normal BS', () => {
       ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
     expect(bsEvents).toHaveLength(1);
-    expect(bsEvents[0].enhancementType).not.toBe(EnhancementType.EMPOWERED);
+    expect(bsEvents[0].id.endsWith('_EMPOWERED')).toBe(false);
 
     // View: BS event appears in battle column VM
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
@@ -190,7 +190,7 @@ describe('C. Potential Independence', () => {
     const bsEvents = result.current.allProcessedEvents.filter(
       ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
-    expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+    expect(bsEvents[0].id.endsWith('_EMPOWERED')).toBe(true);
   });
 
   it('C2: At P0, empowered BS still consumes reaction (not potential-gated)', () => {
@@ -203,6 +203,6 @@ describe('C. Potential Independence', () => {
     const bsEvents = result.current.allProcessedEvents.filter(
       ev => ev.ownerEntityId === SLOT_WULFGARD && ev.columnId === NounType.BATTLE,
     );
-    expect(bsEvents[0].enhancementType).toBe(EnhancementType.EMPOWERED);
+    expect(bsEvents[0].id.endsWith('_EMPOWERED')).toBe(true);
   });
 });

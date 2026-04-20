@@ -19,7 +19,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
+import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
 import { OPERATOR_STATUS_COLUMN_ID } from '../../../../model/channels';
@@ -76,11 +76,11 @@ function addEmpoweredBattleSkill(ref: AppRef, atSecond: number) {
   const col = findColumn(ref.current, SLOT_LAEVATAIN, NounType.BATTLE);
   expect(col).toBeDefined();
   const empoweredVariant = col!.eventVariants?.find(
-    (v) => v.enhancementType === EnhancementType.EMPOWERED,
+    (v) => v.id.endsWith('_EMPOWERED'),
   );
   expect(empoweredVariant).toBeDefined();
   const atFrame = atSecond * FPS;
-  const payload = getMenuPayload(ref.current, col!, atFrame, empoweredVariant!.displayName);
+  const payload = getMenuPayload(ref.current, col!, atFrame, { variantId: empoweredVariant!.id });
   act(() => {
     ref.current.handleAddEvent(
       payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,
@@ -179,11 +179,11 @@ describe('Melting Flame stacking — freeform add', () => {
 
     // Verify empowered variant is available
     const empoweredVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.EMPOWERED,
+      (v) => v.id.endsWith('_EMPOWERED'),
     );
     expect(empoweredVariant).toBeDefined();
     const empoweredItem = battleMenu!.find(
-      (i) => i.actionId === 'addEvent' && i.label === empoweredVariant!.displayName,
+      (i) => i.actionId === 'addEvent' && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === empoweredVariant!.id,
     );
     expect(empoweredItem).toBeDefined();
     expect(empoweredItem!.disabled).toBeFalsy();

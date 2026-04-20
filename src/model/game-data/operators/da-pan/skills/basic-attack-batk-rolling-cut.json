@@ -414,11 +414,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "ROLLING_CUT_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "ROLLING_CUT_BATK",
     "descriptionParams": {
       "atk_scale": 1.36,
       "poise": 20,
@@ -436,7 +435,10 @@
       "1-atk_scale_2": 0.25,
       "-atk_scale_2": -0.75,
       "atk_scale_2-1": -0.25
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "DA_PAN",

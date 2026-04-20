@@ -43,7 +43,7 @@
     }
   ],
   "properties": {
-    "id": "OBLITERATION_PROTOCOL_TALENT",
+    "id": "OBLITERATION_PROTOCOL_T1",
     "descriptionParams": {
       "dmg": 0.3,
       "1-dmg": 0.7,
@@ -70,8 +70,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "PERLICA",

@@ -2,7 +2,6 @@
   "properties": {
     "id": "HYPOTHERMIC_PERFUSION_MIRAGE",
     "to": "ENEMY",
-    "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
     "element": "CRYO",
     "duration": {
@@ -18,7 +17,10 @@
         "value": 1
       },
       "interactionType": "RESET"
-    }
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "segments": [
     {

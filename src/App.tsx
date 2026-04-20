@@ -33,10 +33,10 @@ import ContextMenu from './view/ContextMenu';
 import WarningModal from './view/WarningModal';
 import ConfirmModal from './view/ConfirmModal';
 import CreateViewsModal from './view/CreateViewsModal';
-import CollaborationHostDialog from './view/CollaborationHostDialog';
-import CollaborationJoinDialog from './view/CollaborationJoinDialog';
+import CollaborationSessionModal from './view/CollaborationSessionModal';
 import CollaborationManageLoadoutsDialog from './view/CollaborationManageLoadoutsDialog';
-import { LoadoutNodeType } from './consts/enums';
+import { CollabSessionMode, CollaborationRole, LoadoutNodeType } from './consts/enums';
+import { getPersistedCollabRole } from './app/useCollaboration';
 import './App.css';
 
 type CustomContentData = CustomWeapon | CustomGearSet | CustomOperator | CustomSkill
@@ -46,7 +46,9 @@ const CombatPlanner = lazy(() => import('./view/CombatPlanner'));
 const CombatSheet = lazy(() => import('./view/CombatSheet'));
 const InformationPane = lazy(() => import('./view/InformationPane'));
 const DevlogModal = lazy(() => import('./view/DevlogModal'));
+const AboutModal = lazy(() => import('./view/AboutModal'));
 const SettingsModal = lazy(() => import('./view/SettingsModal'));
+const IconGalleryModal = lazy(() => import('./view/IconGalleryModal'));
 const FeedbackModal = lazy(() => import('./view/FeedbackModal'));
 const ExportModal = lazy(() => import('./view/ExportModal'));
 const KeyboardShortcutsModal = lazy(() => import('./view/KeyboardShortcutsModal'));
@@ -100,9 +102,10 @@ export default function App() {
   const [contentRefreshKey, setContentRefreshKey] = useState(0);
   const bumpContentRefresh = useCallback(() => setContentRefreshKey((k) => k + 1), []);
   const draggedRef = useRef(false);
-  const [hostDialogOpen, setHostDialogOpen] = useState(false);
-  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [sessionModal, setSessionModal] = useState<{ mode: CollabSessionMode } | null>(null);
   const [manageLoadoutsDialogOpen, setManageLoadoutsDialogOpen] = useState(false);
+  const [iconGalleryOpen, setIconGalleryOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   // Suppress browser context menu globally
   useEffect(() => {
@@ -193,11 +196,7 @@ export default function App() {
   return (
     <div className="app">
       <AppBar
-        onDevlog={() => app.setDevlogOpen(true)}
-        onKeys={() => app.setKeysOpen((p) => !p)}
-        onFeedback={() => app.setFeedbackOpen(true)}
-        interactionMode={app.interactionMode}
-        onToggleInteractionMode={() => app.setInteractionMode(m => m === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT)}
+        onAbout={() => setAboutOpen(true)}
         lightMode={app.lightMode}
         onToggleTheme={app.handleToggleTheme}
         onSettings={() => app.setSettingsOpen(true)}
@@ -226,17 +225,16 @@ export default function App() {
           collaborationStatus={app.collaboration.session?.connectionStatus ?? null}
           collaborationPeerCount={app.collaboration.session?.peers.length ?? 0}
           collaborationRoomId={app.collaboration.session?.roomId ?? null}
-          collaborationPeers={app.collaboration.session?.peers.map((p) => ({
-            peerId: p.peerId,
-            displayName: p.displayName,
-            role: p.role,
-            isLocal: p.peerId === app.collaboration.session?.localPeerId,
-          })) ?? []}
           collaborationReconnect={app.collaboration.session?.reconnect}
-          onHostCollaboration={() => setHostDialogOpen(true)}
-          onJoinCollaboration={() => setJoinDialogOpen(true)}
-          onLeaveCollaboration={() => app.collaboration.leaveRoom()}
-          onManageSharedLoadouts={() => setManageLoadoutsDialogOpen(true)}
+          onOpenCollaborationSession={() => {
+            // Default the modal to whichever role the user had in their most
+            // recent persisted session (refresh/failed-reconnect within TTL);
+            // JOIN for first-timers and anyone who explicitly left.
+            const mode = getPersistedCollabRole() === CollaborationRole.HOST
+              ? CollabSessionMode.HOST
+              : CollabSessionMode.JOIN;
+            setSessionModal({ mode });
+          }}
           sidebarMode={sidebarMode}
           onSidebarModeChange={(mode) => {
             if (mode === null) {
@@ -281,6 +279,7 @@ export default function App() {
               onNewStatistics={stats.handleNewStatistics}
               onToggleColumn={stats.handleToggleColumn}
               onToggleOperator={stats.handleToggleOperator}
+              onToggleAggregate={stats.handleToggleAggregate}
               onSetCritMode={stats.handleSetCritMode}
               onSetComparisonMode={stats.handleSetComparisonMode}
               onReorderSources={stats.handleReorderSources}
@@ -312,6 +311,7 @@ export default function App() {
                     columns={app.columns}
                     visibleSkills={app.visibleSkills}
                     loadouts={app.loadouts}
+                    loadoutProperties={app.loadoutProperties}
                     zoom={app.zoom}
                     onZoom={app.handleZoom}
                     orientation={app.orientation}
@@ -333,8 +333,6 @@ export default function App() {
                     editingSlotId={app.editingSlot?.slotId}
                     allOperators={app.allOperators}
                     onSwapOperator={app.handleSwapOperator}
-                    allEnemies={app.allEnemies}
-                    onSwapEnemy={app.handleSwapEnemy}
                     onEditEnemy={app.handleEditEnemy}
                     resourceGraphs={app.resourceGraphs}
                     onEditResource={app.handleEditResource}
@@ -364,6 +362,7 @@ export default function App() {
                     showRealTime={app.showRealTime}
                     onToggleRealTime={app.handleToggleRealTime}
                     interactionMode={app.interactionMode}
+                    onToggleInteractionMode={() => app.setInteractionMode(m => m === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT)}
                     staggerBreaks={app.staggerBreaks}
                     contentFrames={app.contentFrames}
                     spInsufficiencyZones={app.spInsufficiencyZones}
@@ -372,6 +371,7 @@ export default function App() {
                     editingEventId={app.editingEventId}
 
                     infoPaneOpen={!!(app.editingEventId || app.editingSlot || app.editingEnemyOpen || app.editingResourceKey || app.editingDamageRow)}
+                    onRequestCloseInfoPane={app.requestCloseInfoPane}
                   />
                   {(app.hidePreview === 'left' || app.showPreview === 'left') && (
                     <div className="pane-hide-overlay">
@@ -561,6 +561,9 @@ export default function App() {
             enemy={app.enemy}
             enemyStats={app.enemyStats}
             onEnemyStatsChange={app.handleEnemyStatsChange}
+            onResetEnemyStats={app.handleResetEnemyStats}
+            allEnemies={app.allEnemies}
+            onSwapEnemy={app.handleSwapEnemy}
             onClose={app.handleCloseEnemyPane}
             triggerClose={app.infoPaneClosing}
             pinned={app.infoPanePinned}
@@ -606,6 +609,13 @@ export default function App() {
           />
         ) : null}
 
+        <AboutModal
+          open={aboutOpen}
+          onClose={() => setAboutOpen(false)}
+          onDevlog={() => app.setDevlogOpen(true)}
+          onFeedback={() => app.setFeedbackOpen(true)}
+          onKeys={() => app.setKeysOpen(true)}
+        />
         <DevlogModal open={app.devlogOpen} onClose={() => app.setDevlogOpen(false)} />
         <FeedbackModal open={app.feedbackOpen} onClose={() => app.setFeedbackOpen(false)} />
         <SettingsModal
@@ -613,6 +623,10 @@ export default function App() {
           onClose={() => app.setSettingsOpen(false)}
           settings={app.settings}
           onUpdate={app.handleUpdateSetting}
+        />
+        <IconGalleryModal
+          open={iconGalleryOpen}
+          onClose={() => setIconGalleryOpen(false)}
         />
         {app.keysOpen && <KeyboardShortcutsModal onClose={() => app.setKeysOpen(false)} />}
         <ExportModal
@@ -688,25 +702,33 @@ export default function App() {
         );
       })()}
 
-      <CollaborationHostDialog
-        open={hostDialogOpen}
+      <CollaborationSessionModal
+        open={sessionModal !== null}
+        initialMode={sessionModal?.mode ?? CollabSessionMode.JOIN}
+        session={app.collaboration.session ? {
+          roomId: app.collaboration.session.roomId,
+          status: app.collaboration.session.connectionStatus,
+          peers: app.collaboration.session.peers.map((p) => ({
+            peerId: p.peerId,
+            displayName: p.displayName,
+            role: p.role,
+            isLocal: p.peerId === app.collaboration.session?.localPeerId,
+          })),
+          reconnect: app.collaboration.session.reconnect,
+        } : null}
         tree={app.loadoutTree}
-        defaultDisplayName={app.collaboration.session?.localDisplayName ?? 'Host'}
+        defaultHostDisplayName={app.collaboration.session?.localDisplayName ?? 'Host'}
+        defaultJoinDisplayName="Player"
         onHost={(displayName, uuids, maxPeers) => {
           app.collaboration.hostRoom(displayName, uuids, maxPeers);
           for (const uuid of uuids) app.collaboration.shareLoadout(uuid);
         }}
-        onClose={() => setHostDialogOpen(false)}
-      />
-
-      <CollaborationJoinDialog
-        open={joinDialogOpen}
-        defaultDisplayName="Player"
         onJoin={(roomId, displayName) => {
           app.collaboration.joinRoom(roomId, displayName);
-          setJoinDialogOpen(false);
         }}
-        onClose={() => setJoinDialogOpen(false)}
+        onLeave={() => app.collaboration.leaveRoom()}
+        onManageSharedLoadouts={() => setManageLoadoutsDialogOpen(true)}
+        onClose={() => setSessionModal(null)}
       />
 
       <CollaborationManageLoadoutsDialog

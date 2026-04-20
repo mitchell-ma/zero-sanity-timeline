@@ -10,9 +10,28 @@ import {
   isQualifiedId,
 } from '../../dsl/semantics';
 import type { ValueVariable as ValueVariableType, ValueStat as ValueStatType, ValueIdentity as ValueIdentityType } from '../../dsl/semantics';
+import type { TimelineEvent } from '../../consts/viewTypes';
 import { ElementType, StatusType } from '../../consts/enums';
-import { ENEMY_ID } from '../../model/channels';
+import {
+  ENEMY_ID, REACTION_COLUMNS, ELEMENT_TO_INFLICTION_COLUMN, PHYSICAL_INFLICTION_COLUMN_IDS,
+} from '../../model/channels';
 import type { LoadoutProperties } from '../../view/InformationPane';
+
+/** Mirror of `resolveColumnId` in controller/timeline/columnResolution for the
+ *  STATUS branch. Inlined to avoid a cycle (columnResolution → gameDataStore →
+ *  operatorStatusesStore → valueResolver). Keep in sync with that module's STATUS path. */
+function resolveStatusColumnId(objectId?: string, qualifier?: string): string | undefined {
+  if (!objectId) return undefined;
+  if (objectId === NounType.INFLICTION) {
+    if (!qualifier) return undefined;
+    return ELEMENT_TO_INFLICTION_COLUMN[qualifier]
+      ?? (PHYSICAL_INFLICTION_COLUMN_IDS.has(qualifier) ? qualifier : undefined);
+  }
+  if (objectId === NounType.REACTION) {
+    return qualifier ? (REACTION_COLUMNS as Record<string, string>)[qualifier] : undefined;
+  }
+  return objectId;
+}
 
 // ── Resolution context ──────────────────────────────────────────────────────
 
@@ -35,6 +54,11 @@ export interface ValueResolutionContext {
   potential: number;
   /** Talent level for the current event's talent slot (resolved from operator's talent key-map). */
   talentLevel?: number;
+  /** Weapon skill rank (1–9) for the current weapon-skill clause — used by
+   *  `VARY_BY RANK of THIS WEAPON`. Defaults to 9 (max) when unset so
+   *  passive-stat paths that bypass this context keep resolving to the max
+   *  rank entry, matching pre-migration behavior. */
+  weaponSkillRank?: number;
   /** Aggregated operator stats keyed by StatType string. */
   stats: Partial<Record<string, number>>;
   /** Context for the SOURCE operator (talent owner), when different from the current operator. */
@@ -51,6 +75,11 @@ export interface ValueResolutionContext {
   getEventStacks?: (statusId: string) => number;
   /** Runtime: number of stacks consumed by the triggering CONSUME effect (for STACKS of STATUS CONSUMED). */
   consumedStacks?: number;
+  /** Per-event snapshot map (column id → shallow copies of active status events).
+   *  Populated by the SNAPSHOT effect verb and threaded into the value context so
+   *  queries with `objectQualifier: SNAPSHOT` on the outer ValueStatus node reduce
+   *  over the captured event list (max statusLevel / sum stacks). */
+  snapshotMap?: Record<string, TimelineEvent[]>;
 }
 
 /** Default context when no loadout is available (uses max skill level, no potential). */
@@ -59,6 +88,18 @@ export const DEFAULT_VALUE_CONTEXT: ValueResolutionContext = {
   potential: 0,
   stats: {},
 };
+
+/** Walk the of-chain and return the first determiner found. Used for
+ *  resolving SOURCE vs THIS when the determiner is nested (e.g. `of WEAPON of
+ *  SOURCE OPERATOR`). */
+function ofChainDeterminer(of: { determiner?: string; of?: unknown } | undefined): string | undefined {
+  let cur = of;
+  while (cur) {
+    if (cur.determiner) return cur.determiner;
+    cur = cur.of as { determiner?: string; of?: unknown } | undefined;
+  }
+  return undefined;
+}
 
 // ── Variable index resolution ───────────────────────────────────────────────
 
@@ -70,6 +111,7 @@ export const DEFAULT_VALUE_CONTEXT: ValueResolutionContext = {
 function getVariableArrayIndex(object: string, ctx: ValueResolutionContext, objectId?: string): number | undefined {
   switch (object) {
     case NounType.SKILL_LEVEL:  return ctx.skillLevel - 1;
+    case NounType.RANK:         return (ctx.weaponSkillRank ?? 9) - 1;
     case NounType.POTENTIAL:   return ctx.potential;
     case NounType.TALENT_LEVEL: return ctx.talentLevel ?? 0;
     default: {
@@ -102,8 +144,10 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
   }
 
   if (isValueVariable(node)) {
-    // Resolve against SOURCE context when of.determiner is SOURCE
-    const resolveCtx = (node as ValueVariableType).of?.determiner === DeterminerType.SOURCE && ctx.sourceContext
+    // Resolve against SOURCE context when any determiner in the of-chain is
+    // SOURCE (e.g. `RANK of WEAPON of SOURCE OPERATOR` reaches SOURCE through
+    // the nested operator clause, not directly on WEAPON).
+    const resolveCtx = ofChainDeterminer((node as ValueVariableType).of) === DeterminerType.SOURCE && ctx.sourceContext
       ? ctx.sourceContext : ctx;
     // Array lookup: index by dependency
     if (Array.isArray(node.value)) {
@@ -148,12 +192,15 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
   }
 
   if (isValueStatus(node)) {
-    // CONSUMED STACKS of <STATUS> → stacks consumed by the triggering CONSUME effect
-    if ((node as { objectQualifier?: string }).objectQualifier === AdjectiveType.CONSUMED && ctx.consumedStacks != null) {
-      return ctx.consumedStacks;
-    }
+    const outerQualifier = (node as { objectQualifier?: string }).objectQualifier;
     const ofClause = node.of;
-    if (!ofClause) return 0;
+    if (!ofClause) {
+      // CONSUMED STACKS with no `of` chain → stacks consumed by the triggering CONSUME effect.
+      if (outerQualifier === AdjectiveType.CONSUMED && ctx.consumedStacks != null) {
+        return ctx.consumedStacks;
+      }
+      return 0;
+    }
     // DSL grammar uses objectQualifier + objectId (e.g. ELECTRIC + SUSCEPTIBILITY).
     // The storage column ID is the composed form (ELECTRIC_SUSCEPTIBILITY).
     const qualifier = (ofClause as { objectQualifier?: string }).objectQualifier;
@@ -161,6 +208,29 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
       ? `${qualifier}_${ofClause.objectId}`
       : ofClause.objectId;
     if (!statusId) return 0;
+    // SNAPSHOT qualifier on the outer node → read from the parent event's snapshot map
+    // (populated by SNAPSHOT effect verb). Reduce the captured TimelineEvent[] to the
+    // requested property: max(statusLevel) or sum(stacks). Keyed by the resolved column
+    // id so both legacy (`objectId: ELECTRIFICATION`) and canonical (`objectId: REACTION,
+    // objectQualifier: ELECTRIFICATION`) forms agree on lookup.
+    if (outerQualifier === AdjectiveType.SNAPSHOT) {
+      const snapKey = resolveStatusColumnId(ofClause.objectId, qualifier) ?? statusId;
+      const snap = ctx.snapshotMap?.[snapKey];
+      if (snap && snap.length > 0) {
+        if (node.object === NounType.STATUS_LEVEL) {
+          let maxLevel = 0;
+          for (const ev of snap) {
+            const lvl = ev.statusLevel ?? 0;
+            if (lvl > maxLevel) maxLevel = lvl;
+          }
+          return maxLevel;
+        }
+        let total = 0;
+        for (const ev of snap) total += ev.stacks ?? 1;
+        return total;
+      }
+      return 0;
+    }
     // STACKS of <STATUS> of EVENT → consumed stacks on the current event
     if (ofClause.object === NounType.EVENT && ctx.getEventStacks) {
       return ctx.getEventStacks(statusId);
@@ -169,18 +239,24 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
     if (!ctx.statusQuery || ctx.frame == null) return 0;
     const owner = ofClause.of?.object === NounType.ENEMY ? ENEMY_ID : ctx.ownerEntityId;
     if (!owner) return 0;
+    // REACTION columns drop the suffix (e.g. ELECTRIFICATION_REACTION → ELECTRIFICATION),
+    // so the hand-rolled `${qualifier}_${objectId}` mis-keys the lookup. Re-resolve to the
+    // actual column id for the REACTION case; INFLICTION / SUSCEPTIBILITY are already correct.
+    const queryStatusId = ofClause.objectId === NounType.REACTION
+      ? (resolveStatusColumnId(ofClause.objectId, qualifier) ?? statusId)
+      : statusId;
     // Susceptibility is a specialization: generic SUSCEPTIBILITY events can carry
     // per-element values, so the query expands qualified ids to element lookups.
     if (owner === ENEMY_ID
         && ctx.statusQuery.getActiveSusceptibilityStacks
-        && isQualifiedId(statusId, StatusType.SUSCEPTIBILITY)) {
-      const element = statusId.slice(0, -(StatusType.SUSCEPTIBILITY.length + 1)) as ElementType;
+        && isQualifiedId(queryStatusId, StatusType.SUSCEPTIBILITY)) {
+      const element = queryStatusId.slice(0, -(StatusType.SUSCEPTIBILITY.length + 1)) as ElementType;
       return ctx.statusQuery.getActiveSusceptibilityStacks(ctx.frame, element);
     }
     if (node.object === NounType.STATUS_LEVEL) {
-      return ctx.statusQuery.getActiveStatusLevel?.(ctx.frame, owner, statusId) ?? 0;
+      return ctx.statusQuery.getActiveStatusLevel?.(ctx.frame, owner, queryStatusId) ?? 0;
     }
-    return ctx.statusQuery.getActiveStatusStacks(ctx.frame, owner, statusId);
+    return ctx.statusQuery.getActiveStatusStacks(ctx.frame, owner, queryStatusId);
   }
 
   if (isValueExpression(node)) {

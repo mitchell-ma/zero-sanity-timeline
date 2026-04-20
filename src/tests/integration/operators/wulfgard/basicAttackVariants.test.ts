@@ -180,7 +180,7 @@ describe('B. Basic Attack Categories (DIVE, FINISHER)', () => {
     expect(basicCol).toBeDefined();
     expect(basicCol!.eventVariants).toBeDefined();
     const dive = basicCol!.eventVariants!.find(
-      v => v.id === BasicAttackType.DIVE,
+      v => v.category === NounType.DIVE,
     );
     expect(dive).toBeDefined();
   });
@@ -191,7 +191,7 @@ describe('B. Basic Attack Categories (DIVE, FINISHER)', () => {
     expect(basicCol).toBeDefined();
     expect(basicCol!.eventVariants).toBeDefined();
     const finisher = basicCol!.eventVariants!.find(
-      v => v.id === BasicAttackType.FINISHER,
+      v => v.category === NounType.FINISHER,
     );
     expect(finisher).toBeDefined();
   });
@@ -199,7 +199,7 @@ describe('B. Basic Attack Categories (DIVE, FINISHER)', () => {
   it('B3: DIVE placement produces event with correct structure', () => {
     const { result } = setupWulfgard();
     const basicCol = findColumn(result.current, SLOT_WULFGARD, NounType.BASIC_ATTACK);
-    const dive = basicCol!.eventVariants!.find(v => v.id === BasicAttackType.DIVE);
+    const dive = basicCol!.eventVariants!.find(v => v.category === NounType.DIVE);
     expect(dive).toBeDefined();
 
     act(() => {
@@ -232,7 +232,7 @@ describe('B. Basic Attack Categories (DIVE, FINISHER)', () => {
   it('B4: FINISHER placement produces event with correct structure', () => {
     const { result } = setupWulfgard();
     const basicCol = findColumn(result.current, SLOT_WULFGARD, NounType.BASIC_ATTACK);
-    const finisher = basicCol!.eventVariants!.find(v => v.id === BasicAttackType.FINISHER);
+    const finisher = basicCol!.eventVariants!.find(v => v.category === NounType.FINISHER);
     expect(finisher).toBeDefined();
 
     act(() => {

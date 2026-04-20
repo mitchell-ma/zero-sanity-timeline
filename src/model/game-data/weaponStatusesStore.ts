@@ -9,8 +9,8 @@ import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
 import { NounType, VerbType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
-import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues, validateSegmentShape } from './validationUtils';
-import { LocaleKey, GENERIC_WEAPON_ID, resolveEventName, resolveOptionalEventDescription } from '../../locales/gameDataLocale';
+import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, validateEffect as validateEffectSemantics, validateNonNegativeValues, validateSegmentShape, validateEventTypes } from './validationUtils';
+import { LocaleKey, GENERIC_WEAPON_ID, GAME_ORIGIN_ID, resolveEventName, resolveOptionalEventDescription } from '../../locales/gameDataLocale';
 
 // ── DSL value types ─────────────────────────────────────────────────────────
 
@@ -37,6 +37,9 @@ interface TriggerClause {
 export interface StacksConfig {
   limit: ValueNode;
   interactionType: string;
+  /** Cap on statusLevel for status events on this column (e.g. ELECTRIFICATION → 4).
+   *  Reactions and infliction-derived statuses use this; absent for plain statuses. */
+  level?: ValueNode;
 }
 
 export interface DurationConfig {
@@ -57,7 +60,7 @@ export interface StatusSegment {
 
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'to', 'toDeterminer', 'duration', 'stacks', 'eventTypes', 'eventCategoryType']);
 const VALID_TOP_KEYS = new Set(['segments', 'onTriggerClause', 'onExitClause', 'properties', 'metadata']);
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
@@ -125,6 +128,7 @@ export function validateWeaponStat(json: Record<string, unknown>): string[] {
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
   errors.push(...checkIdAndName(props, 'properties'));
+  errors.push(...validateEventTypes(props, 'properties'));
   if (props.to !== undefined && typeof props.to !== 'string') errors.push('properties.to: must be a string');
   if (props.toDeterminer !== undefined && typeof props.toDeterminer !== 'string') errors.push('properties.toDeterminer: must be a string');
 
@@ -169,7 +173,7 @@ export class WeaponStat {
   readonly toDeterminer: string;
   readonly duration: DurationConfig;
   readonly stacks: StacksConfig;
-  readonly eventType: EventType;
+  readonly eventTypes: EventType[];
   readonly eventCategoryType: string;
   readonly categoryType = EventCategoryType.WEAPON;
   readonly originId: string;
@@ -183,9 +187,8 @@ export class WeaponStat {
     this.onExitClause = (json.onExitClause ?? []) as ClausePredicate[];
     this.id = (props.id ?? '') as string;
     const weaponId = (meta.originId ?? '') as string;
-    const prefix = this.id
-      ? LocaleKey.weaponStatus(weaponId || GENERIC_WEAPON_ID, this.id)
-      : '';
+    const localeWeaponId = !weaponId || weaponId === GAME_ORIGIN_ID ? GENERIC_WEAPON_ID : weaponId;
+    const prefix = this.id ? LocaleKey.weaponStatus(localeWeaponId, this.id) : '';
     this.name = prefix ? resolveEventName(prefix) : '';
     if (prefix) {
       const desc = resolveOptionalEventDescription(prefix);
@@ -198,7 +201,7 @@ export class WeaponStat {
       limit: { verb: VerbType.IS, value: 1 },
       interactionType: 'NONE',
     }) as StacksConfig;
-    this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
+    this.eventTypes = (props.eventTypes as EventType[]) ?? [EventType.STATUS];
     this.eventCategoryType = props.eventCategoryType as string;
     this.originId = (meta.originId ?? '') as string;
   }
@@ -226,7 +229,7 @@ export class WeaponStat {
         toDeterminer: this.toDeterminer,
         duration: this.duration,
         stacks: this.stacks,
-        eventType: this.eventType,
+        eventTypes: this.eventTypes,
         eventCategoryType: this.eventCategoryType,
       },
       metadata: {

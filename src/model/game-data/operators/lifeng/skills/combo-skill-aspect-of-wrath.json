@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "ASPECT_OF_WRATH",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "ASPECT_OF_WRATH",
     "descriptionParams": {
       "atk_scale": 1.05,
       "poise": 10,
@@ -25,7 +24,10 @@
       "1-duration": -19,
       "-duration": -20,
       "duration-1": 19
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

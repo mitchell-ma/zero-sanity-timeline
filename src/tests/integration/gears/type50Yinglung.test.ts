@@ -8,7 +8,7 @@
  *   2. Trigger (any operator PERFORM BATTLE) — cast a battle skill; the
  *      wearer receives the TYPE_50_YINGLUNG buff.
  *   3. Buff's STAT clause (COMBO_SKILL_DAMAGE_BONUS +0.2, consumed on next
- *      combo cast) flows into the damage breakdown — EXPECTED to fail.
+ *      combo cast) flows into the damage breakdown.
  */
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../../app/useApp';
@@ -76,7 +76,7 @@ describe('Type 50 Yinglung — gear set E2E', () => {
       expect(contribution).toBeGreaterThan(0);
 
       const entries = breakdownFor(row);
-      const entry = findEntry(entries, 'Skill Type DMG%');
+      const entry = findEntry(entries, 'Combo Skill DMG%');
       expect(entry).toBeDefined();
     });
   });

@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "ESTELLA_POTENTIAL_4",
+    "id": "LIFE_OVER_MISSION_P4",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 4,
     "descriptionParams": {
       "Will": 10,
@@ -59,8 +61,11 @@
       "-Str": -10,
       "Str-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "ESTELLA",

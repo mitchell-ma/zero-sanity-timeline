@@ -51,8 +51,10 @@
       "verb": "IS",
       "value": 1
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "CATASTROPHE_STAT",

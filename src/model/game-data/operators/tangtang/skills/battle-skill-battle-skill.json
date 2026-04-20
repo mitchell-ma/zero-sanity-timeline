@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "BATTLE",
     "eventCategoryType": "BATTLE",
     "element": "CRYO",
-    "id": "BATTLE",
     "descriptionParams": {
       "atk_scale_1": 0.36,
       "display_atk_scale1": 1.8,
@@ -53,7 +52,10 @@
       "1-duration_tornado": -2,
       "-duration_tornado": -3,
       "duration_tornado-1": 2
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "TANGTANG",

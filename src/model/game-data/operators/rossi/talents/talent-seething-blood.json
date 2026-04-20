@@ -242,7 +242,7 @@
     }
   ],
   "properties": {
-    "id": "SEETHING_BLOOD_TALENT",
+    "id": "SEETHING_BLOOD_T2",
     "descriptionParams": {
       "2": 1,
       "talent_2_2": 1,
@@ -275,7 +275,6 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
     "eventCategoryType": "TALENT",
     "duration": {
       "value": {
@@ -290,7 +289,10 @@
         "value": 99999
       },
       "interactionType": "RESET"
-    }
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

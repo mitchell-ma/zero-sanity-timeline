@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "FRONTLINE_SUPPORT",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "FRONTLINE_SUPPORT",
     "descriptionParams": {
       "atk_scale": 2.3,
       "heal_base": 675,
@@ -36,7 +35,10 @@
           "default": 1
         }
       ]
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "onEntryClause": [
     {

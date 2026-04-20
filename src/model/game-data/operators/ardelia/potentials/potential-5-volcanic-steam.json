@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ARDELIA_POTENTIAL_5",
+    "id": "VOLCANIC_STEAM_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "potential5_duration": 4,
@@ -16,8 +18,10 @@
       "-coolDown": 2,
       "coolDown-1": -3
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ARDELIA",

@@ -1,8 +1,7 @@
 {
   "properties": {
-    "eventType": "SKILL",
-    "eventCategoryType": "COMBO",
     "id": "FLASHFREEZER",
+    "eventCategoryType": "COMBO",
     "descriptionParams": {
       "atk_scale_tick": 1,
       "atk_scale_boom": 2,
@@ -36,7 +35,10 @@
       "1-usp_extra": -9,
       "-usp_extra": -10,
       "usp_extra-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

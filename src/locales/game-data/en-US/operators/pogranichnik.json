@@ -155,19 +155,19 @@
     "text": "Steel Oath (Harass)",
     "dataStatus": "RECONCILED"
   },
-  "op.POGRANICHNIK.talent.TACTICAL_INSTRUCTION_TALENT.event.description": {
+  "op.POGRANICHNIK.talent.TACTICAL_INSTRUCTION_T2.event.description": {
     "text": "Ultimate Shieldguard Banner, Forward improved: Any operator triggering the ultimate's subsequent effects also gains Fervent Morale for 10s. Requires activation of talent: The Living Banner.",
     "dataStatus": "RECONCILED"
   },
-  "op.POGRANICHNIK.talent.TACTICAL_INSTRUCTION_TALENT.event.name": {
+  "op.POGRANICHNIK.talent.TACTICAL_INSTRUCTION_T2.event.name": {
     "text": "Tactical Instruction (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.POGRANICHNIK.talent.THE_LIVING_BANNER_TALENT.event.description": {
+  "op.POGRANICHNIK.talent.THE_LIVING_BANNER_T1.event.description": {
     "text": "During battle, recovering {atb_gain:0} SP with his own skills grants Fervent Morale for {duration:0}s. Fervent Morale effects: ATK +{atk_up:0%} and Arts Intensity +{physpell_up:0}. This effect can reach 3 stacks. Duration of each stack is counted separately.",
     "dataStatus": "RECONCILED"
   },
-  "op.POGRANICHNIK.talent.THE_LIVING_BANNER_TALENT.event.name": {
+  "op.POGRANICHNIK.talent.THE_LIVING_BANNER_T1.event.name": {
     "text": "The Living Banner (T1)",
     "dataStatus": "RECONCILED"
   }

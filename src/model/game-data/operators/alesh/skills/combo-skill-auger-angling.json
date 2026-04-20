@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "AUGER_ANGLING",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "AUGER_ANGLING",
     "descriptionParams": {
       "atk_scale_display": 3,
       "atk_scale_1": 0.75,
@@ -45,7 +44,10 @@
       "1-usp_normal": -9,
       "-usp_normal": -10,
       "usp_normal-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {
@@ -318,7 +320,7 @@
                         {
                           "verb": "APPLY",
                           "object": "STATUS",
-                          "objectId": "MAY_THE_WILLING_BITE",
+                          "objectId": "MAY_THE_WILLING_BITE_P3",
                           "to": "TEAM"
                         }
                       ]

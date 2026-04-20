@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "AVYWENNA_POTENTIAL_5",
+    "id": "CARROT_AND_SHARP_STICK_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "rate": 1.15,
@@ -12,8 +14,10 @@
       "-potential_5_rate": -1.15,
       "potential_5_rate-1": 0.1499999999999999
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "AVYWENNA",

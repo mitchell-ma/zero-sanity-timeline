@@ -3,12 +3,18 @@
     {
       "conditions": [
         {
+          "subject": "SKILL",
           "subjectDeterminer": "THIS",
-          "subject": "OPERATOR",
+          "subjectId": "BATTLE",
+          "of": {
+            "object": "OPERATOR",
+            "determiner": "THIS"
+          },
           "verb": "CONSUME",
           "object": "STATUS",
           "objectId": "REACTION",
-          "to": "ENEMY",
+          "objectQualifier": "ARTS",
+          "from": "ENEMY",
           "with": {
             "stacks": "MAX"
           }
@@ -68,7 +74,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.16,
                     0.192,
@@ -81,8 +87,11 @@
                     0.448
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               },

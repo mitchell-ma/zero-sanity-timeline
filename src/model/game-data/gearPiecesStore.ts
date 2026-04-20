@@ -202,8 +202,6 @@ function resolveGearIcon(pieceId: string): string | undefined {
 const gearPieceCache = new Map<string, GearPiece>();
 /** Gear set → piece IDs index. */
 const gearSetIndex = new Map<string, string[]>();
-/** Name → ID index for legacy name-based lookups. */
-const gearNameIndex = new Map<string, string>();
 /** Custom gear piece overlay. */
 const customGearPieceCache = new Map<string, GearPiece>();
 
@@ -215,7 +213,6 @@ for (const key of gearPiecesContext.keys()) {
   if (piece.id) {
     piece.icon = resolveGearIcon(piece.id);
     gearPieceCache.set(piece.id, piece);
-    gearNameIndex.set(piece.name, piece.id);
     const list = gearSetIndex.get(piece.gearSet) ?? [];
     list.push(piece.id);
     gearSetIndex.set(piece.gearSet, list);
@@ -225,14 +222,6 @@ for (const key of gearPiecesContext.keys()) {
 /** Get a gear piece by ID. Checks custom first, then built-in. */
 export function getGearPiece(pieceId: string): GearPiece | undefined {
   return customGearPieceCache.get(pieceId) ?? gearPieceCache.get(pieceId);
-}
-
-/** Get a gear piece ID by display name. */
-export function getGearPieceIdByName(name: string): string | undefined {
-  let customMatch: string | undefined;
-  customGearPieceCache.forEach((p, id) => { if (p.name === name) customMatch = id; });
-  if (customMatch) return customMatch;
-  return gearNameIndex.get(name);
 }
 
 /** Get all gear piece IDs (custom + built-in). */
@@ -279,18 +268,10 @@ export function registerCustomGearPiece(json: Record<string, unknown>, icon?: st
   const piece = GearPiece.deserialize(json, 'custom');
   piece.icon = icon ?? resolveGearIcon(piece.id);
   customGearPieceCache.set(piece.id, piece);
-  gearNameIndex.set(piece.name, piece.id);
   return piece;
 }
 
 /** Deregister a custom gear piece by ID. */
 export function deregisterCustomGearPiece(pieceId: string): void {
-  const piece = customGearPieceCache.get(pieceId);
-  if (piece) {
-    customGearPieceCache.delete(pieceId);
-    if (gearNameIndex.get(piece.name) === pieceId) {
-      gearNameIndex.delete(piece.name);
-      gearPieceCache.forEach((p, id) => { if (p.name === piece.name) gearNameIndex.set(p.name, id); });
-    }
-  }
+  customGearPieceCache.delete(pieceId);
 }

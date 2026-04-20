@@ -111,19 +111,19 @@
     "text": "Tiny Surprise",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.status.CRAVER_OF_CHAOS.event.description": {
+  "op.FLUORITE.status.CRAVER_OF_CHAOS_P5.event.description": {
     "text": "P5: When any operator applies Cryo or Nature Infliction, Fluorite's Combo Skill cooldown is reduced by 1s. Can only trigger once per 1s.",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.status.CRAVER_OF_CHAOS.event.name": {
+  "op.FLUORITE.status.CRAVER_OF_CHAOS_P5.event.name": {
     "text": "Craver of Chaos (P5)",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.status.CRAVER_OF_CHAOS.segment.0.name": {
+  "op.FLUORITE.status.CRAVER_OF_CHAOS_P5.segment.0.name": {
     "text": "Craver of Chaos (P5)",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.status.CRAVER_OF_CHAOS.segment.1.name": {
+  "op.FLUORITE.status.CRAVER_OF_CHAOS_P5.segment.1.name": {
     "text": "Cooldown",
     "dataStatus": "RECONCILED"
   },
@@ -151,27 +151,27 @@
     "text": "Improvised Explosive (Detonated)",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.talent.LOVE_THE_STAB_AND_TWIST_TALENT.event.description": {
+  "op.FLUORITE.talent.LOVE_THE_STAB_AND_TWIST_T1.event.description": {
     "text": "Fluorite gains DMG Dealt +{dmg_up:0%} against Slowed targets.",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.talent.LOVE_THE_STAB_AND_TWIST_TALENT.event.name": {
+  "op.FLUORITE.talent.LOVE_THE_STAB_AND_TWIST_T1.event.name": {
     "text": "Love the Stab and Twist (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.talent.LOVE_THE_STAB_AND_TWIST_TALENT.segment.0.name": {
+  "op.FLUORITE.talent.LOVE_THE_STAB_AND_TWIST_T1.segment.0.name": {
     "text": "Love the Stab and Twist (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.talent.UNPREDICTABLE_TALENT.event.description": {
+  "op.FLUORITE.talent.UNPREDICTABLE_T2.event.description": {
     "text": "Grants {probability:0%} chance of Arts DMG immunity and grants Fluorite ATK +{atk_up:0%} for {duration:0}s. This effect cannot stack.",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.talent.UNPREDICTABLE_TALENT.event.name": {
+  "op.FLUORITE.talent.UNPREDICTABLE_T2.event.name": {
     "text": "Unpredictable (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.FLUORITE.talent.UNPREDICTABLE_TALENT.segment.0.name": {
+  "op.FLUORITE.talent.UNPREDICTABLE_T2.segment.0.name": {
     "text": "Unpredictable (T2)",
     "dataStatus": "RECONCILED"
   }

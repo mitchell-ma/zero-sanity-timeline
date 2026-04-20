@@ -7,9 +7,9 @@
  */
 import { Interaction, CardinalityConstraintType, NounType, DeterminerType, VerbType, AdjectiveType, type ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
-import { StatusType, UnitType } from '../../consts/enums';
+import { StatusType, UnitType, EventStatusType } from '../../consts/enums';
 import { StatType } from '../../model/enums/stats';
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { ENEMY_ID, PHYSICAL_STATUS_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, REACTION_COLUMNS, INFLICTION_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, SKILL_COLUMN_ORDER, ENEMY_ACTION_COLUMN_ID } from '../../model/channels';
 import { EnemyActionType } from '../../consts/enums';
 import { TEAM_ID } from '../slot/commonSlotController';
@@ -73,6 +73,13 @@ export interface ConditionContext {
    *  `properties.id`. Used by `THIS EVENT IS OCCURRENCE` to count prior
    *  instances of the same trigger status on the resolved owner. */
   currentTriggerStatusId?: string;
+  /** Live ref to parent event's SNAPSHOT map. Forwarded from InterpretContext so
+   *  `subject: STATUS_LEVEL` conditions with `objectQualifier: SNAPSHOT` reduce over
+   *  the captured TimelineEvent[] list — see `evaluateStatusLevelSubject`. */
+  snapshotMap?: Record<string, TimelineEvent[]>;
+  /** Causality DAG — enables `subject: SKILL` CONSUME/APPLY conditions to
+   *  resolve the source event that caused a given consume/apply action. */
+  causality?: import('./causalityGraph').CausalityGraph;
 }
 
 // ── Subject resolution ───────────────────────────────────────────────────
@@ -549,11 +556,125 @@ function evaluateStacksSubject(cond: Interaction, ctx: ConditionContext): boolea
   return count > 0;
 }
 
+// ── STATUS_LEVEL subject ────────────────────────────────────────────────
+
+/** Evaluate "[SNAPSHOT] STATUS_LEVEL of X of OWNER IS >= N".
+ *  Mirrors evaluateStacksSubject but reads max statusLevel instead of stack count.
+ *  When `objectQualifier: SNAPSHOT` is set on the subject, reduces over the per-event
+ *  snapshot map (populated by the SNAPSHOT effect verb) instead of live state —
+ *  used when an earlier frame snapshotted the status and a later condition still
+ *  needs the captured level. */
+function evaluateStatusLevelSubject(cond: Interaction, ctx: ConditionContext): boolean {
+  const ofClause = cond.of as { object?: string; objectId?: string; objectQualifier?: string; determiner?: string; of?: { object?: string; determiner?: string } } | undefined;
+  const statusId = ofClause?.objectId;
+  const qualifier = ofClause?.objectQualifier;
+  const columnIds = resolveColumnIds(NounType.STATUS, statusId, qualifier);
+  if (columnIds.length === 0) return false;
+  const ownerSubject = ofClause?.of?.object ?? NounType.ENEMY;
+  const ownerDeterminer = ofClause?.of?.determiner;
+  const ownerEntityId = resolveEntityId(ownerSubject as string, ctx, ownerDeterminer);
+  const subjectQualifier = (cond as unknown as { objectQualifier?: string }).objectQualifier;
+  let level = 0;
+  if (subjectQualifier === AdjectiveType.SNAPSHOT) {
+    for (const colId of columnIds) {
+      const snap = ctx.snapshotMap?.[colId];
+      if (!snap) continue;
+      for (const ev of snap) {
+        const lvl = ev.statusLevel ?? 0;
+        if (lvl > level) level = lvl;
+      }
+    }
+  } else {
+    for (const colId of columnIds) {
+      const active = activeEventsAtFrame(ctx.events, colId, ownerEntityId, ctx.frame);
+      for (const ev of active) {
+        const lvl = ev.statusLevel ?? 0;
+        if (lvl > level) level = lvl;
+      }
+    }
+  }
+  if (cond.value != null) {
+    const valueCtx = ctx.potential != null ? { ...DEFAULT_VALUE_CONTEXT, potential: ctx.potential } : DEFAULT_VALUE_CONTEXT;
+    const target = resolveValueNode(cond.value!, valueCtx) ?? 0;
+    switch (cond.cardinalityConstraint) {
+      case CardinalityConstraintType.EXACTLY: return level === target;
+      case CardinalityConstraintType.GREATER_THAN: return level > target;
+      case CardinalityConstraintType.GREATER_THAN_EQUAL: return level >= target;
+      case CardinalityConstraintType.LESS_THAN: return level < target;
+      case CardinalityConstraintType.LESS_THAN_EQUAL: return level <= target;
+    }
+  }
+  return level > 0;
+}
+
 // ── Public API ───────────────────────────────────────────────────────────
 
 /**
  * Evaluate a single interaction condition against the current timeline state.
  */
+/**
+ * Evaluate "SKILL [X] of [OWNER] {CONSUME|APPLY} STATUS [Y]" — true when
+ * the events timeline contains a target event (CONSUMED or APPLIED) whose
+ * causal source is a skill-category event matching the subject narrow.
+ *
+ * Used by segment-clause gates that want to gate effects on "has our battle
+ * skill consumed the reaction yet at this frame?".
+ *
+ * Verb semantics:
+ *   - CONSUME: look at consumed events whose lastTransitionSource links back
+ *              to a skill event of the narrowed category + owner.
+ *   - APPLY:   look at events whose primaryParentOf (CREATION) links back
+ *              to such a skill event.
+ */
+function evaluateSkillAction(cond: Interaction, ctx: ConditionContext): boolean {
+  if (!ctx.causality) return false;
+  const verb = cond.verb as string;
+  const isConsume = verb === VerbType.CONSUME;
+  const isApply = verb === VerbType.APPLY;
+  if (!isConsume && !isApply) return false;
+
+  const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.objectQualifier);
+  if (columnIds.length === 0) return false;
+  const colSet = new Set(columnIds);
+
+  // Resolve the skill's owner per the `of` clause. Defaults to THIS OPERATOR.
+  const ofClause = (cond as unknown as { of?: { object?: string; determiner?: string } }).of;
+  const ofObj = (ofClause?.object ?? NounType.OPERATOR) as string;
+  const ofDet = (ofClause?.determiner ?? DeterminerType.THIS) as string;
+  const requiredOwner = ofObj === NounType.ENEMY
+    ? ENEMY_ID
+    : ofObj === NounType.OPERATOR
+      ? (ofDet === DeterminerType.CONTROLLED
+          ? ctx.getControlledSlotAtFrame?.(ctx.frame) ?? ctx.sourceEntityId
+          : ctx.sourceEntityId)
+      : ctx.sourceEntityId;
+
+  const wantedSkillCol = cond.subjectId; // optional narrow
+
+  for (const ev of ctx.events) {
+    if (!colSet.has(ev.columnId)) continue;
+    // Temporal gate: the action must have already happened by ctx.frame.
+    // CONSUME fires at the event's end (start + clamped duration); APPLY
+    // fires at startFrame.
+    const actionFrame = isConsume
+      ? ev.startFrame + computeSegmentsSpan(ev.segments)
+      : ev.startFrame;
+    if (actionFrame > ctx.frame) continue;
+    if (isConsume && ev.eventStatus !== EventStatusType.CONSUMED) continue;
+    const srcUid = isConsume
+      ? ctx.causality.lastTransitionSource(ev.uid)
+      : ctx.causality.primaryParentOf(ev.uid);
+    if (!srcUid) continue;
+    const srcEv = ctx.events.find(e => e.uid === srcUid);
+    if (!srcEv) continue;
+    if (!SKILL_COLUMN_ORDER.includes(srcEv.columnId as never)) continue;
+    if (wantedSkillCol && srcEv.columnId !== wantedSkillCol) continue;
+    if (srcEv.ownerEntityId !== requiredOwner) continue;
+    return true;
+  }
+  return false;
+}
+
 export function evaluateInteraction(cond: Interaction, ctx: ConditionContext): boolean {
   // PARAMETER conditions are subject-based, not verb-based
   if ((cond.subject as string) === NounType.PARAMETER) {
@@ -564,6 +685,21 @@ export function evaluateInteraction(cond: Interaction, ctx: ConditionContext): b
   // STACKS subject: count-based assertion — "STACKS of X of OWNER IS >= N"
   if ((cond.subject as string) === NounType.STACKS) {
     return evaluateStacksSubject(cond, ctx);
+  }
+
+  // STATUS_LEVEL subject: level-based assertion — "[CONSUMED] STATUS_LEVEL of X of OWNER IS >= N"
+  if ((cond.subject as string) === NounType.STATUS_LEVEL) {
+    const result = evaluateStatusLevelSubject(cond, ctx);
+    return cond.negated ? !result : result;
+  }
+
+  // SKILL subject: causal attribution — "BATTLE SKILL of THIS OPERATOR CONSUME
+  // ARTS REACTION STATUS from ENEMY". True when a matching consumed/applied
+  // event traces back to a skill of the narrowed category + owner.
+  if ((cond.subject as string) === NounType.SKILL
+      && (cond.verb === VerbType.CONSUME || cond.verb === VerbType.APPLY)) {
+    const result = evaluateSkillAction(cond, ctx);
+    return cond.negated ? !result : result;
   }
 
   let result: boolean;

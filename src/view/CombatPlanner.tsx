@@ -10,8 +10,8 @@ import { createPortal } from 'react-dom';
 // EventBlock rendering moved to TimelineColumn
 import { wouldOverlapNonOverlappable } from '../controller/timeline/inputEventController';
 import { DragState, computeInvalidSet, computeOverlapInvalidSet, clampDragDelta } from './combatPlannerDragUtils';
-import OperatorLoadoutHeader, { OperatorLoadoutState, DropdownTierBar } from './OperatorLoadoutHeader';
-import { ENEMY_TIERS } from '../utils/enemies';
+import { OperatorLoadoutState } from './OperatorLoadoutHeader';
+import OperatorStatsCard from './OperatorStatsCard';
 import {
   pxPerFrame as getPxPerFrame,
   frameToPx,
@@ -27,11 +27,12 @@ import {
   TOTAL_FRAMES,
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
-import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
+import { OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID, REACTION_COLUMN_IDS } from '../model/channels';
+import { eventDuration } from '../consts/viewTypes';
 import { t } from '../locales/locale';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { TimelineSourceType, InteractionModeType, ColumnType, DamageType, EventCategoryType } from '../consts/enums';
-import { localizeColumnLabel } from '../consts/timelineColumnLabels';
+import { localizeColumnLabel, localizeColumnLabelMenu } from '../consts/timelineColumnLabels';
 import {
   Operator,
   Enemy,
@@ -69,7 +70,6 @@ import { getAxisMap, type Orientation } from '../utils/axisMap';
 
 
 const MIN_SLOT_COLS = 4;
-const EMPTY_WEAPON_TYPES: string[] = [];
 const EMPTY_COMBO_WINDOW_EVENTS: TimelineEvent[] = [];
 
 /** DOM tag names for editable elements where global shortcuts should be suppressed. */
@@ -96,6 +96,7 @@ interface CombatPlannerProps {
   columns: Column[];
   visibleSkills: VisibleSkills;
   loadouts: Record<string, OperatorLoadoutState>;
+  loadoutProperties: Record<string, import('./InformationPane').LoadoutProperties>;
   zoom: number;
   onZoom: (deltaY: number) => void;
   orientation?: Orientation;
@@ -117,8 +118,6 @@ interface CombatPlannerProps {
   editingSlotId?: string | null;
   allOperators?: Operator[];
   onSwapOperator?: (slotId: string, newOperatorId: string | null) => void;
-  allEnemies?: Enemy[];
-  onSwapEnemy?: (enemyId: string) => void;
   onEditEnemy?: () => void;
   /** Resource graph data keyed by column key (e.g. 'common-skill-points'). */
   resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number; wasted?: number }>;
@@ -157,6 +156,7 @@ interface CombatPlannerProps {
   showRealTime?: boolean;
   onToggleRealTime?: () => void;
   interactionMode?: InteractionModeType;
+  onToggleInteractionMode?: () => void;
   staggerBreaks?: readonly import('../controller/timeline/staggerTimeline').StaggerBreak[];
   /** Dynamic timeline length in frames (grows with content). */
   contentFrames?: number;
@@ -170,6 +170,9 @@ interface CombatPlannerProps {
   editingEventId?: string | null;
   /** Whether any info pane is currently open (event, damage, loadout, etc.). */
   infoPaneOpen?: boolean;
+  /** Close any open info pane. Invoked when the canvas detects an empty-space pointerdown
+   *  (the click-outside handler skips canvas clicks to avoid racing with event re-select). */
+  onRequestCloseInfoPane?: () => void;
   /** Ref to changed event UIDs from the last pipeline run (for incremental view updates). */
 }
 
@@ -182,6 +185,24 @@ const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 
 /** Special key for the cross-cutting "Permanent" filter (not a status category). */
 const PERMANENT_FILTER_KEY = 'PERMANENT';
+
+const HIDDEN_COLUMN_LABELS_KEY = 'zst-planner-hidden-column-labels';
+const HIDDEN_STATUS_TYPES_KEY = 'zst-planner-hidden-status-types';
+
+function loadStoredSet(key: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? new Set(parsed.filter((v): v is string => typeof v === 'string')) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function saveStoredSet(key: string, set: Set<string>): void {
+  try { localStorage.setItem(key, JSON.stringify(Array.from(set))); } catch { /* ignore */ }
+}
 
 // Column width weight — used for grid proportions within operator groups
 const COL_WEIGHT_SKILL_IDS = new Set<string>([NounType.BASIC_ATTACK, NounType.BATTLE, NounType.COMBO, NounType.ULTIMATE]);
@@ -201,6 +222,7 @@ export default React.memo(function CombatPlanner({
   columns: columnsProp,
   visibleSkills,
   loadouts,
+  loadoutProperties,
   zoom,
   onZoom,
   onToggleSkill,
@@ -220,8 +242,6 @@ export default React.memo(function CombatPlanner({
   editingSlotId,
   allOperators,
   onSwapOperator,
-  allEnemies,
-  onSwapEnemy,
   onEditEnemy,
   resourceGraphs,
   onEditResource,
@@ -251,6 +271,7 @@ export default React.memo(function CombatPlanner({
   showRealTime = true,
   onToggleRealTime,
   interactionMode,
+  onToggleInteractionMode,
   staggerBreaks,
   contentFrames: contentFramesProp,
   spInsufficiencyZones: spInsufficiencyZonesProp,
@@ -260,6 +281,7 @@ export default React.memo(function CombatPlanner({
   readOnly,
   editingEventId: editingEventIdProp,
   infoPaneOpen,
+  onRequestCloseInfoPane,
 }: CombatPlannerProps) {
   const axis = getAxisMap(orientation);
   const isHorizontal = orientation === 'horizontal';
@@ -383,10 +405,6 @@ export default React.memo(function CombatPlanner({
   const [outerRect,        setOuterRect]        = useState<DOMRect | null>(null);
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(0);
   const [scrollClientHeight, setScrollClientHeight] = useState<number | null>(null);
-  const [enemyMenuOpen,    setEnemyMenuOpen]    = useState(false);
-  const [enemyMenuPos,     setEnemyMenuPos]     = useState<{ top: number; left: number } | null>(null);
-  const [enemySearch,      setEnemySearch]      = useState('');
-  const [enemyActiveTiers, setEnemyActiveTiers] = useState<Set<string>>(new Set(ENEMY_TIERS));
   const [selectedIds,      setSelectedIds]      = useState<Set<string>>(new Set());
   // Apply external selection (e.g. after undo/redo)
   useEffect(() => {
@@ -405,20 +423,65 @@ export default React.memo(function CombatPlanner({
   const [dupOffset, setDupOffset] = useState(0);
   /** Whether the current ghost position is valid (no overlaps). */
   const [dupValid, setDupValid] = useState(false);
-  const enemyNameRef = useRef<HTMLDivElement>(null);
   const [draggingIds, setDraggingIds] = useState<Set<string> | null>(null);
   const [dragZonesSnapshot, setDragZonesSnapshot] = useState<Map<string, import('../controller/timeline/skillPointTimeline').ResourceZone[]> | null>(null);
-  const enemyMenuRef = useRef<HTMLDivElement>(null);
 
-  // Hidden status types — applies globally to all status columns
-  const [hiddenStatusTypes, setHiddenStatusTypes] = useState<Set<string>>(new Set());
+  // Hidden status types — applies globally to all status columns.
+  // Persisted locally so toggles survive reload.
+  const [hiddenStatusTypes, setHiddenStatusTypes] = useState<Set<string>>(
+    () => loadStoredSet(HIDDEN_STATUS_TYPES_KEY),
+  );
+  useEffect(() => { saveStoredSet(HIDDEN_STATUS_TYPES_KEY, hiddenStatusTypes); }, [hiddenStatusTypes]);
+  // Hidden column labels — hide entire columns whose localized label matches
+  // (ACTION, BATTLE, TEAM STATUS, STAGGER, etc.). Cross-cutting like
+  // hiddenStatusTypes: one label hides every column that uses it. Persisted
+  // locally.
+  const [hiddenColumnLabels, setHiddenColumnLabels] = useState<Set<string>>(
+    () => loadStoredSet(HIDDEN_COLUMN_LABELS_KEY),
+  );
+  useEffect(() => { saveStoredSet(HIDDEN_COLUMN_LABELS_KEY, hiddenColumnLabels); }, [hiddenColumnLabels]);
 
-  // Filter columns: remove hidden micro-columns from status columns
-  // Keep unfiltered reference for header context menu (to show all types)
+  // Filter columns: drop hidden column labels entirely, then strip hidden
+  // micro-columns from surviving status columns. Keep unfiltered reference
+  // for header context menu (needs all types for toggles).
   const columns = useMemo(() => {
-    if (hiddenStatusTypes.size === 0) return columnsProp;
+    let afterLabelFilter = columnsProp;
+    if (hiddenColumnLabels.size > 0) {
+      // columnBuilder orders cols as: common → slot 1 → slot 2 → … → enemy.
+      // Split on that structure, drop hidden labels, and re-pad each slot
+      // back up to MIN_SLOT_COLS so the loadout row's grid spans still
+      // align (columnBuilder's original padding was based on the full set).
+      const slotIds = new Set(slots.map((s) => s.slotId));
+      const isSlotCol = (c: typeof columnsProp[number]) =>
+        !!c.ownerEntityId && slotIds.has(c.ownerEntityId);
+      const hidden = (c: typeof columnsProp[number]) =>
+        c.type === 'mini-timeline' && hiddenColumnLabels.has(c.label);
+
+      const commonCols = columnsProp.filter((c) => !isSlotCol(c)
+        && !(c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY) && !hidden(c));
+      const enemyCols = columnsProp.filter((c) =>
+        c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY && !hidden(c));
+
+      const rebuilt: typeof columnsProp = [...commonCols];
+      for (const s of slots) {
+        const kept = columnsProp.filter((c) => c.ownerEntityId === s.slotId && !hidden(c));
+        rebuilt.push(...kept);
+        const needed = Math.max(0, MIN_SLOT_COLS - kept.length);
+        for (let p = 0; p < needed; p++) {
+          rebuilt.push({
+            key: `${s.slotId}-filter-pad-${p}`,
+            type: ColumnType.PLACEHOLDER,
+            ownerEntityId: s.slotId,
+            color: s.operator?.color ?? '#666',
+          } as typeof columnsProp[number]);
+        }
+      }
+      rebuilt.push(...enemyCols);
+      afterLabelFilter = rebuilt;
+    }
+    if (hiddenStatusTypes.size === 0) return afterLabelFilter;
     const hidePermanent = hiddenStatusTypes.has(PERMANENT_FILTER_KEY);
-    return columnsProp.map((col) => {
+    return afterLabelFilter.map((col) => {
       if (col.type !== 'mini-timeline' || !col.microColumns || col.microColumnAssignment !== 'dynamic-split') return col;
       const hasFilterable = col.microColumns.some((mc) => mc.statusType || mc.permanent);
       if (!hasFilterable) return col;
@@ -446,7 +509,7 @@ export default React.memo(function CombatPlanner({
         matchAllExcept: extendedExcept,
       };
     });
-  }, [columnsProp, hiddenStatusTypes]);
+  }, [columnsProp, hiddenStatusTypes, hiddenColumnLabels, slots]);
 
   // Map slotId → element color for sequenced event coloring
   const slotElementColors = useMemo(() => computeSlotElementColors(slots), [slots]);
@@ -507,26 +570,6 @@ export default React.memo(function CombatPlanner({
     return warnings.size > 0 ? warnings : null;
   }, [draggingIds, dragZonesSnapshot, events]);
 
-  const filteredEnemies = useMemo(() => {
-    if (!allEnemies) return [];
-    const lc = enemySearch.toLowerCase();
-    return allEnemies
-      .filter((en) => {
-        if (lc && !en.name.toLowerCase().includes(lc)) return false;
-        if (!enemyActiveTiers.has(en.tier)) return false;
-        return true;
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [allEnemies, enemySearch, enemyActiveTiers]);
-
-  const toggleEnemyTier = useCallback((t: string) => {
-    setEnemyActiveTiers((prev) => {
-      const next = new Set(prev);
-      if (next.has(t)) next.delete(t); else next.add(t);
-      return next;
-    });
-  }, []);
-
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
 
   // Track ctrl key held state via CSS class on outer container (avoids re-renders)
@@ -579,52 +622,10 @@ export default React.memo(function CombatPlanner({
     if (selectedFrames && selectedFrames.length > 0) setSelectedIds(new Set());
   }, [selectedFrames]);
 
-  // ─── Enemy selector ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!enemyMenuOpen) return;
-    const handle = (e: MouseEvent | TouchEvent) => {
-      if (
-        enemyNameRef.current && !enemyNameRef.current.contains(e.target as Node) &&
-        enemyMenuRef.current && !enemyMenuRef.current.contains(e.target as Node)
-      ) {
-        setEnemyMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handle);
-    document.addEventListener('touchstart', handle);
-    return () => {
-      document.removeEventListener('mousedown', handle);
-      document.removeEventListener('touchstart', handle);
-    };
-  }, [enemyMenuOpen]);
-
   const handleEnemyClick = useCallback(() => {
-    if (readOnly || !allEnemies || !onSwapEnemy) return;
-    if (enemyMenuOpen) { setEnemyMenuOpen(false); return; }
-    if (enemyNameRef.current) {
-      const rect = enemyNameRef.current.getBoundingClientRect();
-      // .lo-dropdown-menu max-height is 22.5rem (360px); clamp against viewport
-      // so the menu never falls off the bottom/right edge when the trigger is
-      // near a screen edge.
-      const estH = 360;
-      const estW = 320;
-      const preferred = isHorizontal
-        ? { top: rect.top, left: rect.right + 2 }
-        : { top: rect.bottom + 2, left: rect.left };
-      setEnemyMenuPos({
-        top: Math.max(8, Math.min(preferred.top, window.innerHeight - estH - 8)),
-        left: Math.max(8, Math.min(preferred.left, window.innerWidth - estW - 8)),
-      });
-    }
-    setEnemySearch('');
-    setEnemyActiveTiers(new Set(ENEMY_TIERS));
-    setEnemyMenuOpen(true);
-  }, [readOnly, enemyMenuOpen, allEnemies, onSwapEnemy, isHorizontal]);
-
-  const pickEnemy = useCallback((id: string) => {
-    onSwapEnemy?.(id);
-    setEnemyMenuOpen(false);
-  }, [onSwapEnemy]);
+    if (readOnly) return;
+    onEditEnemy?.();
+  }, [readOnly, onEditEnemy]);
 
   // ─── Compute slot groups for loadout row ──────────────────────────────────
   const commonColCount = columns.filter((c) => c.type === 'mini-timeline' && c.source === TimelineSourceType.COMMON).length;
@@ -1581,6 +1582,41 @@ export default React.memo(function CombatPlanner({
     if (!ev) return;
     const seg = ev.segments[segmentIndex];
     if (!seg) return;
+
+    // Reaction events (Combustion/Solidification/Corrosion/Electrification/Shatter)
+    // regenerate their rendered segments and frames from the raw event's single
+    // segment-0 duration on every pipeline run. Drag-resize must therefore
+    // adjust the TOTAL event duration and write to raw segments[0] — never a
+    // per-rendered-segment override, which would be silently discarded when
+    // the engine rebuilds (Corrosion), or clamped by regenerated DoT tick
+    // frame offsets (Combustion). No frame-offset floor: the engine will
+    // rebuild ticks to fit the new duration. No sibling: total-only resize.
+    if (REACTION_COLUMN_IDS.has(ev.columnId)) {
+      const totalDur = eventDuration(ev);
+      const rawTotal = contractByTimeStops(ev.startFrame, totalDur, timeStopRegions);
+      onBatchStart?.();
+      segResizeDragRef.current = {
+        eventUid,
+        segmentIndex: 0,
+        edge: 'end',
+        startMouseFrame: e[axis.clientFrame],
+        startDuration: rawTotal,
+        minDuration: 1,
+        siblingIndex: -1,
+        siblingStartDuration: 0,
+        siblingMinDuration: 0,
+      };
+      dragMovedRef.current = false;
+      setHoverFrame(null);
+      updateHoverLineDOM(null);
+      e.stopPropagation();
+      e.preventDefault();
+      outerRef.current?.classList.add('segment-resizing');
+      const handle = e.currentTarget as HTMLElement | undefined;
+      handle?.classList.add('resize-active');
+      return;
+    }
+
     // Minimum duration: max frame offset + 1 (so frames don't exceed segment bounds), or 1
     const maxFrameOffset = seg.frames?.reduce((mx, f) => Math.max(mx, f.offsetFrame), -1) ?? -1;
     const minDuration = maxFrameOffset + 1 || 1;
@@ -1637,6 +1673,12 @@ export default React.memo(function CombatPlanner({
       }
       return;
     }
+    // Empty-space pointerdown on the canvas → close any open info pane.
+    // This mirrors the click-outside behavior the window mousedown handler used to
+    // perform for canvas clicks; doing it here (instead of on every mousedown)
+    // means clicks that hit an event don't reach this handler and the pane stays
+    // open while onEventSelect swaps its content in place.
+    onRequestCloseInfoPane?.();
     // Right-click: cancel left-click marquee, start frame marquee
     if (e.button === 2) {
       if (marqueeRef.current) {
@@ -1691,7 +1733,7 @@ export default React.memo(function CombatPlanner({
       setSelectedIds(new Set());
       onSelectedFramesChange?.([]);
     }
-  }, [selectedIds, selectedFrames, onSelectedFramesChange, dupMode, dupValid, dupOffset, onDuplicateEvents, isHorizontal]);
+  }, [selectedIds, selectedFrames, onSelectedFramesChange, dupMode, dupValid, dupOffset, onDuplicateEvents, isHorizontal, onRequestCloseInfoPane]);
 
   // ─── Map controller menu items (actionId) to view callbacks ─────────────────
   const resolveMenuItemAction = useCallback((
@@ -1824,9 +1866,38 @@ export default React.memo(function CombatPlanner({
     return { statusTypeCounts: types, permanentCount: permCount };
   }, [columnsProp]);
 
+  // Safety net for persisted state: if the stored hidden set would hide
+  // every currently-available column label (e.g. bad localStorage state
+  // from manual edits), clear it so the user isn't left with an empty
+  // planner. Toggle-time guards prevent this state via the UI, but the
+  // invariant must hold regardless of how the state arrived.
+  // Collect column labels with counts across the unfiltered columnsProp —
+  // each unique label (ACTION, BATTLE, TEAM STATUS, STAGGER, ...) becomes a
+  // toggle in the Column Filters section. Using `col.label` (not columnId)
+  // means "BASIC" collapses the per-operator copies into one row.
+  const columnLabelCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const col of columnsProp) {
+      if (col.type !== 'mini-timeline') continue;
+      if (!col.label) continue;
+      counts.set(col.label, (counts.get(col.label) ?? 0) + 1);
+    }
+    return counts;
+  }, [columnsProp]);
+
+  // Safety net: if persisted state hides every currently-available label,
+  // clear it. Toggle-time guards prevent reaching this state via the UI.
+  useEffect(() => {
+    if (columnLabelCounts.size === 0) return;
+    const allHidden = Array.from(columnLabelCounts.keys()).every((l) => hiddenColumnLabels.has(l));
+    if (allHidden) setHiddenColumnLabels(new Set());
+  }, [columnLabelCounts, hiddenColumnLabels]);
+
   // Ref for checked getters to read current hidden state without stale closures
   const hiddenStatusTypesRef = useRef(hiddenStatusTypes);
   hiddenStatusTypesRef.current = hiddenStatusTypes;
+  const hiddenColumnLabelsRef = useRef(hiddenColumnLabels);
+  hiddenColumnLabelsRef.current = hiddenColumnLabels;
 
   /** Update hidden status types and eagerly sync the ref for immediate getter reads. */
   const toggleHiddenStatusTypes = useCallback((updater: (prev: Set<string>) => Set<string>) => {
@@ -1837,49 +1908,95 @@ export default React.memo(function CombatPlanner({
     });
   }, []);
 
+  const toggleHiddenColumnLabels = useCallback((updater: (prev: Set<string>) => Set<string>) => {
+    setHiddenColumnLabels((prev) => {
+      const next = updater(prev);
+      hiddenColumnLabelsRef.current = next;
+      return next;
+    });
+  }, []);
+
   const handleHeaderContextMenu = useCallback((e: React.MouseEvent, col: Column) => {
     e.preventDefault();
     e.stopPropagation();
-    if (col.type !== 'mini-timeline' || col.microColumnAssignment !== 'dynamic-split') return;
-    if (statusTypeCounts.size === 0) return;
-    const unfilteredCol = columnsProp.find((c) => c.key === col.key);
-    if (!unfilteredCol || unfilteredCol.type !== 'mini-timeline' || !unfilteredCol.microColumns?.some((mc) => mc.statusType)) return;
-    const categoryLabels = getAllStatusCategories();
-    const items: import('../consts/viewTypes').ContextMenuItem[] = [
-      { label: 'Status Filters', header: true },
-    ];
-    // Permanent filter (cross-cutting, not a category)
-    if (permanentCount > 0) {
-      items.push({
-        label: `Passive (${permanentCount})`,
-        checked: () => !hiddenStatusTypesRef.current.has(PERMANENT_FILTER_KEY),
-        keepOpen: true,
-        action: () => {
-          toggleHiddenStatusTypes((prev) => {
-            const next = new Set(prev);
-            if (next.has(PERMANENT_FILTER_KEY)) next.delete(PERMANENT_FILTER_KEY); else next.add(PERMANENT_FILTER_KEY);
-            return next;
-          });
-        },
-      });
+    if (col.type !== 'mini-timeline') return;
+    const items: import('../consts/viewTypes').ContextMenuItem[] = [];
+
+    // ── Column Filters ──────────────────────────────────────────────────
+    if (columnLabelCounts.size > 0) {
+      items.push({ label: 'Column Filters', header: true });
+      const sortedLabels = Array.from(columnLabelCounts.entries())
+        .sort(([a], [b]) => localizeColumnLabelMenu(a).localeCompare(localizeColumnLabelMenu(b)));
+      for (const [label, count] of sortedLabels) {
+        items.push({
+          label: `${localizeColumnLabelMenu(label)} (${count})`,
+          checked: () => !hiddenColumnLabelsRef.current.has(label),
+          keepOpen: true,
+          action: () => {
+            toggleHiddenColumnLabels((prev) => {
+              const next = new Set(prev);
+              if (next.has(label)) {
+                next.delete(label);
+                return next;
+              }
+              // Guard: refuse to hide if it would leave every column label
+              // hidden. At least one must remain visible.
+              const visibleLeft = Array.from(columnLabelCounts.keys())
+                .filter((l) => l !== label && !next.has(l))
+                .length;
+              if (visibleLeft === 0) return prev;
+              next.add(label);
+              return next;
+            });
+          },
+        });
+      }
     }
-    // One entry per category that actually has micro columns
-    for (const [type, count] of Array.from(statusTypeCounts.entries())) {
-      items.push({
-        label: `${categoryLabels[type] ?? type} (${count})`,
-        checked: () => !hiddenStatusTypesRef.current.has(type),
-        keepOpen: true,
-        action: () => {
-          toggleHiddenStatusTypes((prev) => {
-            const next = new Set(prev);
-            if (next.has(type)) next.delete(type); else next.add(type);
-            return next;
-          });
-        },
-      });
+
+    // ── Status Filters (shown whenever any status categories exist) ─────
+    if (statusTypeCounts.size > 0) {
+      const categoryLabels = getAllStatusCategories();
+      items.push({ label: 'Status Filters', header: true });
+      if (permanentCount > 0) {
+        items.push({
+          label: `Passive (${permanentCount})`,
+          checked: () => !hiddenStatusTypesRef.current.has(PERMANENT_FILTER_KEY),
+          keepOpen: true,
+          action: () => {
+            toggleHiddenStatusTypes((prev) => {
+              const next = new Set(prev);
+              if (next.has(PERMANENT_FILTER_KEY)) next.delete(PERMANENT_FILTER_KEY); else next.add(PERMANENT_FILTER_KEY);
+              return next;
+            });
+          },
+        });
+      }
+      // Sort categories alphabetically by their localized display label.
+      const sortedTypes = Array.from(statusTypeCounts.entries())
+        .sort(([a], [b]) => (categoryLabels[a] ?? a).localeCompare(categoryLabels[b] ?? b));
+      for (const [type, count] of sortedTypes) {
+        items.push({
+          label: `${categoryLabels[type] ?? type} (${count})`,
+          checked: () => !hiddenStatusTypesRef.current.has(type),
+          keepOpen: true,
+          action: () => {
+            toggleHiddenStatusTypes((prev) => {
+              const next = new Set(prev);
+              if (next.has(type)) next.delete(type); else next.add(type);
+              return next;
+            });
+          },
+        });
+      }
     }
+
+    if (items.length === 0) return;
     onContextMenu({ x: e.clientX, y: e.clientY, items });
-  }, [statusTypeCounts, permanentCount, onContextMenu, columnsProp, toggleHiddenStatusTypes]);
+  }, [
+    statusTypeCounts, permanentCount, columnLabelCounts,
+    onContextMenu,
+    toggleHiddenStatusTypes, toggleHiddenColumnLabels,
+  ]);
 
   // ─── Right-click on event ────────────────────────────────────────────────────
   const handleEventContextMenu = useCallback((
@@ -1928,8 +2045,8 @@ export default React.memo(function CombatPlanner({
           interactionMode,
         });
         if (colMenu) {
-          const addItems = colMenu.filter(i => i.actionId === 'addEvent').map((i) => resolveMenuItemAction(i));
-          if (addItems.length > 0) {
+          const addItems = colMenu.filter(i => i.actionId === 'addEvent' || i.header === true).map((i) => resolveMenuItemAction(i));
+          if (addItems.some((i) => !i.header)) {
             items.push({ separator: true });
             items.push(...addItems);
           }
@@ -1953,8 +2070,8 @@ export default React.memo(function CombatPlanner({
           interactionMode,
         });
         if (colMenu) {
-          const addItems = colMenu.filter(i => i.actionId === 'addEvent').map((i) => resolveMenuItemAction(i));
-          if (addItems.length > 0) {
+          const addItems = colMenu.filter(i => i.actionId === 'addEvent' || i.header === true).map((i) => resolveMenuItemAction(i));
+          if (addItems.some((i) => !i.header)) {
             onContextMenu({ x: e.clientX, y: e.clientY, items: addItems });
           }
         }
@@ -1991,6 +2108,41 @@ export default React.memo(function CombatPlanner({
       items.push({ label: t('ctx.resetSegment', { label: segLabel }), action: () => { onResetSegments(eventUid); onContextMenu(null); } });
     }
     items.push({ label: t('ctx.removeEvent'), action: () => { onRemoveEvent(eventUid); onContextMenu(null); }, danger: true });
+
+    // Right-clicking an event should also offer "add" items for its column —
+    // stackable status columns expose sibling status types; all other columns
+    // expose their own variants. Either way the "Add @ {frame}" header is
+    // preserved so the user sees the target frame uniformly across columns.
+    const statusParent = columns.find((c): c is MiniTimeline =>
+      c.type === ColumnType.MINI_TIMELINE &&
+      c.ownerEntityId === ev.ownerEntityId &&
+      !!c.microColumns &&
+      !!c.matchColumnIds?.includes(ev.columnId),
+    );
+    const addSourceCol: MiniTimeline | undefined = statusParent ?? columns.find((c): c is MiniTimeline =>
+      c.type === ColumnType.MINI_TIMELINE &&
+      c.ownerEntityId === ev.ownerEntityId &&
+      c.columnId === ev.columnId,
+    );
+    if (addSourceCol) {
+      const clickFrame = hoverFrameRef.current ?? ev.startFrame;
+      const colMenu = buildColumnContextMenu(addSourceCol, clickFrame, undefined, {
+        events, slots, resourceGraphs,
+        alwaysAvailableComboSlots: getAlwaysAvailableComboSlots(slots),
+        timeStopRegions,
+        staggerBreaks,
+        columnPositions: columnPositionsRef.current,
+        interactionMode,
+      });
+      if (colMenu) {
+        const addItems = colMenu.filter(i => i.actionId === 'addEvent' || i.header === true).map((i) => resolveMenuItemAction(i));
+        if (addItems.some((i) => !i.header)) {
+          items.push({ separator: true });
+          items.push(...addItems);
+        }
+      }
+    }
+
     onContextMenu({ x: e.clientX, y: e.clientY, items });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onRemoveEvent, onRemoveEvents, onResetEvent, onResetEvents, onResetSegments, onContextMenu, events, selectedIds, onSelectedFramesChange, interactionMode, axis]);
@@ -2197,27 +2349,16 @@ export default React.memo(function CombatPlanner({
           className="timeline-header-grid"
           style={isHorizontal ? { gridTemplateRows: gridRows } : { gridTemplateColumns: gridCols }}
         >
-          <div className="tl-loadout-corner">
-            <span className="corner-label">{t('planner.label.loadout')}</span>
-            {onToggleOrientation && (
-              <button
-                className="btn-orientation-toggle"
-                onClick={onToggleOrientation}
-                title={isHorizontal ? t('planner.tooltip.toggleVertical') : t('planner.tooltip.toggleHorizontal')}
-              >
-                {isHorizontal ? t('planner.btn.horizontal') : t('planner.btn.vertical')}
-              </button>
-            )}
-          </div>
+          <div className="tl-loadout-corner" />
 
-          <div
-            className="tl-loadout-cell tl-loadout-cell--common"
-            style={{ [isHorizontal ? 'gridRow' : 'gridColumn']: `${commonStartCol} / span ${commonColCount}` } as React.CSSProperties}
-          >
-            <div className="lo-cell lo-cell--common">
-              <span className="lo-common-label">{t('planner.label.team')}</span>
+          {commonColCount > 0 && (
+            <div
+              className="tl-loadout-cell tl-loadout-cell--common"
+              style={{ [isHorizontal ? 'gridRow' : 'gridColumn']: `${commonStartCol} / span ${commonColCount}` } as React.CSSProperties}
+            >
+              <div className="lo-cell lo-cell--common" />
             </div>
-          </div>
+          )}
 
           {slotGroups.map((group) => {
             const { slot } = group;
@@ -2231,14 +2372,13 @@ export default React.memo(function CombatPlanner({
                   '--op-color': op?.color ?? '#666',
                 } as React.CSSProperties}
               >
-                <OperatorLoadoutHeader
-                  operatorName={op?.name ?? 'EMPTY'}
-                  operatorColor={op?.color ?? '#666'}
-                  operatorWeaponTypes={op?.weaponTypes ?? EMPTY_WEAPON_TYPES}
-                  splash={op?.splash}
-                  state={loadouts[slot.slotId]}
-                  slotId={slot.slotId}
-                  onEdit={readOnly ? noop1 : onEditLoadout}
+                <OperatorStatsCard
+                  slot={slot}
+                  loadout={loadouts[slot.slotId]}
+                  potential={loadoutProperties[slot.slotId]?.operator.potential}
+                  weaponSkill3Level={loadoutProperties[slot.slotId]?.weapon.skill3Level}
+                  onSelect={readOnly ? undefined : onEditLoadout}
+                  isEditing={editingSlotId === slot.slotId}
                 />
               </div>
             );
@@ -2251,8 +2391,7 @@ export default React.memo(function CombatPlanner({
             >
               <div className="lo-cell lo-cell--enemy">
                 <div
-                  ref={enemyNameRef}
-                  className={`lo-enemy-splash${allEnemies ? ' lo-enemy-splash--clickable' : ''}`}
+                  className={`lo-enemy-splash${onEditEnemy && !readOnly ? ' lo-enemy-splash--clickable' : ''}`}
                   onClick={handleEnemyClick}
                 >
                   {enemy.sprite ? (
@@ -2266,48 +2405,6 @@ export default React.memo(function CombatPlanner({
                   <span className="lo-enemy-name">{enemy.name}</span>
                 </div>
               </div>
-
-              {onEditEnemy && (
-                <button className="lo-edit-btn" onClick={onEditEnemy} title="Edit enemy stats">
-                  <svg width="12" height="12" viewBox="0 0 10 10" fill="currentColor">
-                    <path d="M7.5.8 9.2 2.5 3.2 8.5.5 9.5l1-2.7z"/>
-                  </svg>
-                </button>
-              )}
-
-              {enemyMenuOpen && enemyMenuPos && allEnemies && createPortal(
-                <div
-                  ref={enemyMenuRef}
-                  className="lo-dropdown-menu lo-enemy-menu"
-                  style={{ top: enemyMenuPos.top, left: enemyMenuPos.left }}
-                  onMouseMove={(e) => e.stopPropagation()}
-                >
-                  <DropdownTierBar
-                    search={enemySearch}
-                    onSearch={setEnemySearch}
-                    tiers={Array.from(ENEMY_TIERS)}
-                    activeTiers={enemyActiveTiers}
-                    onToggleTier={toggleEnemyTier}
-                  />
-                  <div className="lo-dropdown-scroll">
-                    {filteredEnemies.map((en) => (
-                      <button
-                        key={en.id}
-                        className={`lo-dropdown-option${en.id === enemy.id ? ' selected' : ''}`}
-                        onClick={() => pickEnemy(en.id)}
-                      >
-                        {en.sprite ? (
-                          <img className="lo-enemy-option-sprite" src={en.sprite} alt={en.name} />
-                        ) : (
-                          <span className="lo-dropdown-option-empty" />
-                        )}
-                        <span className="lo-dropdown-option-name">{en.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>,
-                document.body,
-              )}
             </div>
           )}
         </div>
@@ -2322,6 +2419,40 @@ export default React.memo(function CombatPlanner({
           }
         >
           <div className="tl-corner">
+            {onToggleOrientation && (
+              <button
+                className="btn-orientation-toggle btn-orientation-toggle--fill"
+                onClick={onToggleOrientation}
+                title={isHorizontal ? t('planner.btn.horizontal') : t('planner.btn.vertical')}
+                aria-label={isHorizontal ? t('planner.btn.horizontal') : t('planner.btn.vertical')}
+              >
+                {isHorizontal ? (
+                  // Currently horizontal — horizontal-gantt icon (rows of
+                  // bars). Same path as the sidebar rail's LOADOUTS icon.
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden>
+                    <path d="M3 5h10v3H3zm4 5h12v3H7zm-4 5h8v3H3z" />
+                  </svg>
+                ) : (
+                  // Currently vertical — vertical-gantt icon (columns of
+                  // bars). Same shape, rotated 90° via transform.
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden>
+                    <g transform="rotate(90 12 12)">
+                      <path d="M3 5h10v3H3zm4 5h12v3H7zm-4 5h8v3H3z" />
+                    </g>
+                  </svg>
+                )}
+              </button>
+            )}
+            {onToggleInteractionMode && (
+              <button
+                className="btn-freeform"
+                onClick={onToggleInteractionMode}
+                title={interactionMode === InteractionModeType.STRICT ? t('app.tooltip.strictMode') : t('app.tooltip.freeformMode')}
+                aria-label={interactionMode === InteractionModeType.STRICT ? t('app.btn.strict') : t('app.btn.freeform')}
+              >
+                {interactionMode === InteractionModeType.STRICT ? t('app.btn.strict') : t('app.btn.freeform')}
+              </button>
+            )}
           </div>
 
           {columns.map((col) => (
@@ -2330,7 +2461,7 @@ export default React.memo(function CombatPlanner({
               className={`tl-header-cell${col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${groupStartKeys.has(col.key) ? ' tl-group-start' : ''}`}
               data-header-col-key={col.key}
               style={{ '--op-color': col.color } as React.CSSProperties}
-              onContextMenu={col.type === 'mini-timeline' && col.microColumns && col.microColumnAssignment === 'dynamic-split'
+              onContextMenu={col.type === 'mini-timeline'
                 ? (e) => handleHeaderContextMenu(e, col)
                 : undefined}
             >

@@ -110,7 +110,6 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
     "eventCategoryType": "POTENTIAL",
     "duration": {
       "value": {
@@ -125,10 +124,13 @@
         "value": 1
       },
       "interactionType": "RESET"
-    }
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

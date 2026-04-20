@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "GRAVITY_FIELD",
     "eventCategoryType": "ULTIMATE",
     "element": "NATURE",
-    "id": "GRAVITY_FIELD",
     "descriptionParams": {
       "atk_scale": 7.5,
       "poise": 20,
@@ -33,7 +32,10 @@
       "1-spell_vulnerable_4stack": 0.5800000000000001,
       "-spell_vulnerable_4stack": -0.42,
       "spell_vulnerable_4stack-1": -0.5800000000000001
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

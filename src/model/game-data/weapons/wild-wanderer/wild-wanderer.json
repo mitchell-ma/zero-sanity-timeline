@@ -143,7 +143,7 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/wild_wanderer_icon.png",
+    "icon": "weapons/wild_wanderer_icon.webp",
     "dataStatus": "RECONCILED"
   }
 }

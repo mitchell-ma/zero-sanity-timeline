@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "VETERAN_ANGLER_TALENT",
+    "id": "VETERAN_ANGLER_T2",
     "descriptionParams": {
       "prob_add": 0.005,
       "prob_max": 0.3,
@@ -21,8 +21,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ALESH",

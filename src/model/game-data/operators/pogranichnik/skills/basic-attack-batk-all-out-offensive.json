@@ -799,7 +799,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "objectId": "THE_LIVING_BANNER_T1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
@@ -874,11 +874,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "ALL_OUT_OFFENSIVE_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "ALL_OUT_OFFENSIVE_BATK",
     "descriptionParams": {
       "atk_scale": 0.97,
       "atb": 20,
@@ -892,7 +891,10 @@
       "1-poise": -17,
       "-poise": -18,
       "poise-1": 17
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "POGRANICHNIK",

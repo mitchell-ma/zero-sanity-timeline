@@ -7,7 +7,7 @@
  */
 import { EventType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
-import { checkKeys, checkIdAndName, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectEnemyWithDeterminer } from './validationUtils';
+import { checkKeys, checkIdAndName, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectEnemyWithDeterminer, validateEventTypes } from './validationUtils';
 import {
   LocaleKey, resolveEventName, resolveEventDescription,
   resolveSegmentName, resolveFrameName,
@@ -70,8 +70,8 @@ const VALID_SKILL_ENTRY_KEYS = new Set([
 
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
   'id', 'duration', 'windowFrames',
-  'enhancementTypes', 'dependencyTypes', 'element',
-  'eventType', 'eventCategoryType', 'eventQualifierType', 'suppliedParameters',
+  'dependencyTypes', 'element',
+  'eventTypes', 'eventCategoryType', 'eventQualifierType', 'suppliedParameters',
   // Blackboard values extracted from Warfarin's skill patch table; used by
   // the locale resolver to interpolate `{poise:0}` / `{atk_scale:0.0}` style
   // tokens in the skill description.
@@ -154,6 +154,7 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
   } else {
     errors.push(...checkKeys(props, VALID_SKILL_PROPERTIES_KEYS, `${path}.properties`));
     errors.push(...checkIdAndName(props, `${path}.properties`));
+    errors.push(...validateEventTypes(props, `${path}.properties`));
   }
 
   const meta = json.metadata as Record<string, unknown> | undefined;
@@ -183,10 +184,9 @@ export class OperatorSkill {
   readonly description: string;
   readonly duration?: SkillDuration;
   readonly windowFrames?: number;
-  readonly enhancementTypes?: string[];
   readonly dependencyTypes?: string[];
   readonly element?: string;
-  readonly eventType: EventType;
+  readonly eventTypes: EventType[];
   readonly eventCategoryType?: string;
   readonly eventQualifierType?: string;
   readonly activationWindow?: ActivationWindowDef;
@@ -218,10 +218,9 @@ export class OperatorSkill {
     this.segments = injectSegmentNames((json.segments ?? []) as unknown[], prefix);
     if (props.duration) this.duration = props.duration as SkillDuration;
     if (props.windowFrames != null) this.windowFrames = props.windowFrames as number;
-    if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
     if (props.dependencyTypes) this.dependencyTypes = props.dependencyTypes as string[];
     if (props.element) this.element = props.element as string;
-    this.eventType = (props.eventType as EventType) ?? EventType.SKILL;
+    this.eventTypes = (props.eventTypes as EventType[]) ?? [EventType.SKILL];
     if (props.eventCategoryType) this.eventCategoryType = props.eventCategoryType as string;
     if (props.eventQualifierType) this.eventQualifierType = props.eventQualifierType as string;
     if (json.activationWindow) this.activationWindow = json.activationWindow as ActivationWindowDef;
@@ -246,10 +245,9 @@ export class OperatorSkill {
         ...(this.description ? { description: this.description } : {}),
         ...(this.duration ? { duration: this.duration } : {}),
         ...(this.windowFrames != null ? { windowFrames: this.windowFrames } : {}),
-        ...(this.enhancementTypes ? { enhancementTypes: this.enhancementTypes } : {}),
         ...(this.dependencyTypes ? { dependencyTypes: this.dependencyTypes } : {}),
         ...(this.element ? { element: this.element } : {}),
-        eventType: this.eventType,
+        eventTypes: this.eventTypes,
         ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
         ...(this.eventQualifierType ? { eventQualifierType: this.eventQualifierType } : {}),
         ...(this.suppliedParameters ? { suppliedParameters: this.suppliedParameters } : {}),

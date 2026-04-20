@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "FLUORITE_POTENTIAL_1",
+    "id": "TEN_FINGER_SMITH_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "Agi": 10,
@@ -12,8 +14,10 @@
       "-Wisd": -10,
       "Wisd-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "FLUORITE",

@@ -69,7 +69,7 @@ const LOVE_THE_STAB_AND_TWIST_ID: string = require(
 ).properties.id;
 
 const CRAVER_OF_CHAOS_ID: string = require(
-  '../../../../model/game-data/operators/fluorite/statuses/status-craver-of-chaos.json',
+  '../../../../model/game-data/operators/fluorite/potentials/potential-5-craver-of-chaos.json',
 ).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -889,8 +889,8 @@ describe('L. P5 Cooldown Reduction', () => {
     return seg!.properties.duration;
   }
 
-  it('L1: At P5 CS cooldown is reduced by 1s vs P0 via CRAVER_OF_CHAOS (and deduped within 1s)', () => {
-    // P0 baseline — no CRAVER_OF_CHAOS should ever appear
+  it('L1: At P5 CS cooldown is reduced by 1s vs P0 via CRAVER_OF_CHAOS_P5 (and deduped within 1s)', () => {
+    // P0 baseline — no CRAVER_OF_CHAOS_P5 should ever appear
     const p0 = setupFluorite();
     act(() => { p0.result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     setFluoritePotential(p0.result.current, 0);
@@ -918,7 +918,7 @@ describe('L. P5 Cooldown Reduction', () => {
     const cdP5 = comboCooldownDuration(p5.result.current);
     expect(cdP0 - cdP5).toBe(1 * FPS);
 
-    // View layer: CRAVER_OF_CHAOS visible at P5
+    // View layer: CRAVER_OF_CHAOS_P5 visible at P5
     const viewModels = computeTimelinePresentation(
       p5.result.current.allProcessedEvents,
       p5.result.current.columns,
@@ -932,7 +932,7 @@ describe('L. P5 Cooldown Reduction', () => {
     expect(viewHasCraver).toBe(true);
 
     // Dedupe: second infliction within the 1s IMMEDIATE_COOLDOWN window must not
-    // create a second CRAVER_OF_CHAOS event.
+    // create a second CRAVER_OF_CHAOS_P5 event.
     const dedupe = setupFluorite();
     act(() => { dedupe.result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     setFluoritePotential(dedupe.result.current, 5);

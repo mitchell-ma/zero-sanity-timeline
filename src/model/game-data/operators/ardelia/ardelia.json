@@ -9,8 +9,8 @@
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "WILL",
   "talents": {
-    "one": "FRIENDLY_PRESENCE_TALENT",
-    "two": "MOUNTAINPEAK_SURFER_TALENT",
+    "one": "FRIENDLY_PRESENCE_T1",
+    "two": "MOUNTAINPEAK_SURFER_T2",
     "attributeIncrease": {
       "id": "KEEN_MIND"
     }

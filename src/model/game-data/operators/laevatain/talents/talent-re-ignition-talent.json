@@ -31,7 +31,7 @@
     }
   ],
   "properties": {
-    "id": "RE_IGNITION_TALENT",
+    "id": "RE_IGNITION_T2",
     "descriptionParams": {
       "hp_threshold": 0.4,
       "heal_max_hp": 0.05,
@@ -87,8 +87,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "segments": [
     {

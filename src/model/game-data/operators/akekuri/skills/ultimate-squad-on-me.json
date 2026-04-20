@@ -1,8 +1,7 @@
 {
   "properties": {
-    "eventType": "SKILL",
-    "eventCategoryType": "ULTIMATE",
     "id": "SQUAD_ON_ME",
+    "eventCategoryType": "ULTIMATE",
     "descriptionParams": {
       "atb_1": 26,
       "atb_2": 27,
@@ -20,7 +19,10 @@
       "1-atb_display": -79,
       "-atb_display": -80,
       "atb_display-1": 79
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {
@@ -161,7 +163,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "AKEKURI_P3_COMMITTED_TEAM_PLAYER",
+                  "objectId": "COMMITTED_TEAM_PLAYER_P3",
                   "to": "TEAM",
                   "with": {
                     "duration": {

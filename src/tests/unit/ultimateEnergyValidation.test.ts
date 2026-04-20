@@ -12,7 +12,7 @@ import { applyGainEfficiency, collectNoGainWindowsForEvent, UltimateEnergyContro
 import { ultimateGraphKey } from '../../model/channels';
 import { SkillPointController } from '../../controller/slot/skillPointController';
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
-import { EnhancementType, SegmentType } from '../../consts/enums';
+import { SegmentType } from '../../consts/enums';
 
 jest.mock('../../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [], getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
@@ -320,9 +320,12 @@ describe('hasEnableClauseAtFrame', () => {
 
   test('returns true when frame falls within a segment with ENABLE clause', () => {
     const ev = ultWithSegments(0, twilightSegments);
-    // All three pre-cooldown segments (Animation, Stasis, Active) have ENABLE for FLAMING_CINDERS_BATK_ENHANCED
-    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_BATK_ENHANCED', 100)).toBe(true);
+    // segments[0] is the ANIMATION window (~292 frames) carrying only CONSUME
+    // ULTIMATE_ENERGY; ENABLE/DISABLE effects live on segments[1] (the
+    // post-animation active window that runs ~1800 frames). Frame 500 falls
+    // inside segments[1].
     expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_BATK_ENHANCED', 500)).toBe(true);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'FLAMING_CINDERS_BATK_ENHANCED', 1500)).toBe(true);
   });
 
   test('returns false after ultimate ends (past all segments)', () => {
@@ -541,9 +544,9 @@ describe('ENABLE/DISABLE clause variant validation', () => {
     expect(result.disabled).toBe(false);
   });
 
-  test('finisher is disabled during ultimate (DISABLE FINISHER clause)', () => {
+  test('finisher is disabled during ultimate (DISABLE FLAMING_CINDERS_FINISHER clause)', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FINISHER', SLOT, events, 500, NounType.BASIC_ATTACK);
+    const result = checkVariantAvailability('FLAMING_CINDERS_FINISHER', SLOT, events, 500, NounType.BASIC_ATTACK);
     expect(result.disabled).toBe(true);
   });
 
@@ -570,7 +573,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic during ENABLE window: no warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: 500, enhancementType: EnhancementType.ENHANCED }),
+      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: 500 }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(false);
@@ -579,7 +582,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic outside ENABLE window: warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: totalDuration + 100, enhancementType: EnhancementType.ENHANCED }),
+      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_BATK_ENHANCED', startFrame: totalDuration + 100 }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(true);
@@ -603,10 +606,10 @@ describe('validateEnhanced and validateDisabledVariants', () => {
     expect(warnings.has('basic-1')).toBe(false);
   });
 
-  test('finisher during DISABLE window: warning (DISABLE FINISHER in Laevatain ultimate)', () => {
+  test('finisher during DISABLE window: warning (DISABLE FLAMING_CINDERS_FINISHER in Laevatain ultimate)', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FINISHER', startFrame: 500 }),
+      makeEvent({ uid: 'basic-1', ownerEntityId: SLOT, columnId: NounType.BASIC_ATTACK, name: 'FLAMING_CINDERS_FINISHER', startFrame: 500 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(true);

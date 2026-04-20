@@ -111,11 +111,13 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "STATUS"
+    "eventCategoryType": "STATUS",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
-    "originId": "THE_LIVING_BANNER_TALENT",
+    "originId": "THE_LIVING_BANNER_T1",
     "dataSources": [
       "ENDFIELD_WIKI"
     ],

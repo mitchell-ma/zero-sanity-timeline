@@ -21,7 +21,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.09,
                     0.108,
@@ -34,8 +34,11 @@
                     0.252
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "SOURCE"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "SOURCE"
+                    }
                   }
                 }
               },
@@ -64,8 +67,10 @@
       "interactionType": "RESET"
     },
     "to": "ENEMY",
-    "eventType": "STATUS",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "DETONATION_UNIT",

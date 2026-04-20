@@ -445,8 +445,8 @@ describe('F. Operator Identity & Metadata', () => {
   });
 
   test('F4: Talent IDs and attribute increase', () => {
-    expect(mockJson.talents.one).toBe('CHEER_OF_VICTORY_TALENT');
-    expect(mockJson.talents.two).toBe('STAYING_IN_THE_ZONE_TALENT');
+    expect(mockJson.talents.one).toBe('CHEER_OF_VICTORY_T1');
+    expect(mockJson.talents.two).toBe('STAYING_IN_THE_ZONE_T2');
     expect(mockJson.talents.attributeIncrease.id).toBe('SKIRMISHER');
   });
 

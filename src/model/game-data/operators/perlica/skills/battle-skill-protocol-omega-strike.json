@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "PROTOCOL_OMEGA_STRIKE",
     "eventCategoryType": "BATTLE",
     "element": "ELECTRIC",
-    "id": "PROTOCOL_OMEGA_STRIKE",
     "descriptionParams": {
       "atk_scale": 4,
       "poise": 10,
@@ -13,7 +12,10 @@
       "1-poise": -9,
       "-poise": -10,
       "poise-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "PERLICA",

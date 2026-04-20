@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "CHEN_QIANYU_POTENTIAL_3",
+    "id": "DUAL_WIELDING_SWORDMANCER_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "atk_scale1": 1.1,
@@ -16,8 +18,10 @@
       "-atk_scale": -1.1,
       "atk_scale-1": 0.10000000000000009
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

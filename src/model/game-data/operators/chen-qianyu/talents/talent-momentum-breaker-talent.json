@@ -161,7 +161,7 @@
     }
   ],
   "properties": {
-    "id": "MOMENTUM_BREAKER_TALENT",
+    "id": "MOMENTUM_BREAKER_T2",
     "descriptionParams": {
       "poise": 10,
       "1-poise": -9,
@@ -174,7 +174,6 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
     "eventCategoryType": "TALENT",
     "duration": {
       "value": {
@@ -189,7 +188,10 @@
         "value": 1
       },
       "interactionType": "NONE"
-    }
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

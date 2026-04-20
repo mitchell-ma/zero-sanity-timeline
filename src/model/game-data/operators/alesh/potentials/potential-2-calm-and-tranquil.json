@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "ALESH_POTENTIAL_2",
+    "id": "CALM_AND_TRANQUIL_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Str": 15,
@@ -59,8 +61,11 @@
       "-Wisd": -15,
       "Wisd-1": 14
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "ALESH",

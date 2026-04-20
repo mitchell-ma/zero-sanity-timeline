@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "ARCLIGHT_POTENTIAL_2",
+    "id": "SPEED_BATTLER_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Agi": 15,
@@ -59,8 +61,11 @@
       "-Wisd": -15,
       "Wisd-1": 14
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "ARCLIGHT",

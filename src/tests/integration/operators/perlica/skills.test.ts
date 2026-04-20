@@ -62,7 +62,7 @@ const ARTS_SUSCEPTIBILITY_ID = `ARTS_${NounType.SUSCEPTIBILITY}` as const;
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const P3_STATUS_JSON = require(
-  '../../../../model/game-data/operators/perlica/statuses/status-supervisory-duties.json',
+  '../../../../model/game-data/operators/perlica/potentials/potential-3-supervisory-duties.json',
 );
 const P3_STATUS_ID: string = P3_STATUS_JSON.properties.id;
 

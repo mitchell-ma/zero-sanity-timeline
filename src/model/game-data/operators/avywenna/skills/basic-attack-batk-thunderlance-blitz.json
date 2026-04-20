@@ -495,11 +495,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "THUNDERLANCE_BLITZ_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "THUNDERLANCE_BLITZ_BATK",
     "descriptionParams": {
       "atk_scale": 1.13,
       "atb": 19,
@@ -517,7 +516,10 @@
       "1-poise": -16,
       "-poise": -17,
       "poise-1": 16
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "AVYWENNA",

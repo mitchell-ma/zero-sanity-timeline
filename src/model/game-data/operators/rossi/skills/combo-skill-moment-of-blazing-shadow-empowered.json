@@ -13,13 +13,12 @@
     }
   ],
   "properties": {
-    "enhancementTypes": [
-      "EMPOWERED"
-    ],
-    "eventType": "SKILL",
+    "id": "MOMENT_OF_BLAZING_SHADOW_EMPOWERED",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "MOMENT_OF_BLAZING_SHADOW_EMPOWERED"
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

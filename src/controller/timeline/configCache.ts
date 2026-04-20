@@ -36,6 +36,10 @@ export interface StatusConfig {
   cooldownFrames?: number;
   segments?: EventSegmentData[];
   susceptibility?: Record<string, number>;
+  /** Cap on per-event statusLevel (from `stacks.level` in the status JSON).
+   *  Reactions cap at 4 (e.g. ELECTRIFICATION I-IV). doApply uses this to clamp
+   *  computed levels (e.g. `ADD(1, current)` would overshoot once `current = max`). */
+  maxStatusLevel?: number;
 }
 
 let _configCache: Map<string, StatusConfig> | null = null;
@@ -79,6 +83,11 @@ function buildCaches(): void {
         cooldownFrames = cdSeg.properties.duration;
       }
     }
+    const stackLevel = s.stacks?.level;
+    const maxStatusLevel = stackLevel
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? (typeof stackLevel === 'number' ? stackLevel : resolveValueNode(stackLevel as any, DEFAULT_VALUE_CONTEXT) ?? undefined)
+      : undefined;
     const cfg: StatusConfig = {
       duration: durationFrames,
       ...(s.duration?.value ? { durationNode: s.duration.value as ValueNode } : {}),
@@ -86,6 +95,7 @@ function buildCaches(): void {
       maxStacks: typeof maxStacks === 'number' ? maxStacks : undefined,
       ...(isExpression ? { maxStacksNode: stackLimit } : {}),
       ...(cooldownFrames != null ? { cooldownFrames } : {}),
+      ...(typeof maxStatusLevel === 'number' ? { maxStatusLevel } : {}),
     };
     _configCache.set(s.id, cfg);
 

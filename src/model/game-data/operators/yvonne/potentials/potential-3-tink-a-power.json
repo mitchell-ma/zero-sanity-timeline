@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "YVONNE_POTENTIAL_3",
+    "id": "TINK_A_POWER_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "inflict_up": 0.1,
@@ -12,8 +14,10 @@
       "-status_up": -0.2,
       "status_up-1": -0.8
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "YVONNE",

@@ -1,6 +1,99 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectQualifier": "ELECTRIFICATION",
+          "to": "ENEMY",
+          "objectId": "REACTION"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "value": {
+            "verb": "IS",
+            "value": 3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "stacks": {
+              "verb": "IS",
+              "value": 1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 5
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.2
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
   "properties": {
-    "id": "PERLICA_POTENTIAL_3",
+    "id": "SUPERVISORY_DUTIES_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 5
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 2
+      },
+      "interactionType": "RESET"
+    },
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ],
     "level": 3,
     "descriptionParams": {
       "atk_up": 0.2,
@@ -15,12 +108,14 @@
       "1-max_stack": -1,
       "-max_stack": -2,
       "max_stack-1": 1
-    },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    }
   },
   "metadata": {
     "originId": "PERLICA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/perlica_talent_1_icon.png",
     "dataStatus": "VERIFIED"
   }
 }

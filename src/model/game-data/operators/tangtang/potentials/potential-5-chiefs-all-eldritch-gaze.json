@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "TANGTANG_POTENTIAL_5",
+    "id": "CHIEFS_ALL_ELDRITCH_GAZE_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "potential5": 1,
@@ -24,8 +26,10 @@
       "-dmg_up_water_ult": -0.8,
       "dmg_up_water_ult-1": -0.19999999999999996
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "TANGTANG",

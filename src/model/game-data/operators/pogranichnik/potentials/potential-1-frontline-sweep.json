@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "POGRANICHNIK_POTENTIAL_1",
+    "id": "FRONTLINE_SWEEP_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "has_potential1": 1,
@@ -12,8 +14,10 @@
       "-atb_return": -15,
       "atb_return-1": 14
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "POGRANICHNIK",

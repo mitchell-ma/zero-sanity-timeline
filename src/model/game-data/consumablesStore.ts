@@ -175,7 +175,7 @@ export class ConsumableData {
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
         duration: this.duration,
-        eventType: EventType.STATUS,
+        eventTypes: [EventType.STATUS],
         eventCategoryType: NounType.CONSUMABLE,
       },
       metadata: {},
@@ -241,7 +241,7 @@ export class TacticalData {
         name: this.name,
         target: NounType.OPERATOR,
         targetDeterminer: DeterminerType.THIS,
-        eventType: EventType.STATUS,
+        eventTypes: [EventType.STATUS],
         eventCategoryType: NounType.TACTICAL,
       },
       metadata: {},
@@ -278,7 +278,6 @@ function resolveConsumableIcon(consumableId: string): string | undefined {
 // ── Loader ──────────────────────────────────────────────────────────────────
 
 const consumableCache = new Map<string, ConsumableData>();
-const consumableNameIndex = new Map<string, string>();
 
 const consumableContext = require.context('./consumables/consumables', false, /\.json$/);
 for (const key of consumableContext.keys()) {
@@ -287,12 +286,10 @@ for (const key of consumableContext.keys()) {
   if (consumable.id) {
     consumable.icon = resolveConsumableIcon(consumable.id);
     consumableCache.set(consumable.id, consumable);
-    consumableNameIndex.set(consumable.name, consumable.id);
   }
 }
 
 const tacticalCache = new Map<string, TacticalData>();
-const tacticalNameIndex = new Map<string, string>();
 
 const tacticalContext = require.context('./consumables/tacticals', false, /\.json$/);
 for (const key of tacticalContext.keys()) {
@@ -301,7 +298,6 @@ for (const key of tacticalContext.keys()) {
   if (tactical.id) {
     tactical.icon = resolveConsumableIcon(tactical.id);
     tacticalCache.set(tactical.id, tactical);
-    tacticalNameIndex.set(tactical.name, tactical.id);
   }
 }
 
@@ -315,18 +311,10 @@ export function getAllConsumables(): readonly ConsumableData[] {
   return Array.from(consumableCache.values());
 }
 
-export function getConsumableIdByName(name: string): string | undefined {
-  return consumableNameIndex.get(name);
-}
-
 export function getTactical(tacticalId: string): TacticalData | undefined {
   return tacticalCache.get(tacticalId);
 }
 
 export function getAllTacticals(): readonly TacticalData[] {
   return Array.from(tacticalCache.values());
-}
-
-export function getTacticalIdByName(name: string): string | undefined {
-  return tacticalNameIndex.get(name);
 }

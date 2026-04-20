@@ -18,16 +18,12 @@
     }
   ],
   "properties": {
-    "enhancementTypes": [
-      "EMPOWERED"
-    ],
+    "id": "SMOULDERING_FIRE_EMPOWERED",
     "dependencyTypes": [
       "PREVIOUS_FRAME"
     ],
-    "eventType": "SKILL",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
-    "id": "SMOULDERING_FIRE_EMPOWERED",
     "descriptionParams": {
       "atk_scale": 1.4,
       "atk_scale_2": 0.14,
@@ -61,7 +57,10 @@
       "1-extra_usp": -99,
       "-extra_usp": -100,
       "extra_usp-1": 99
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

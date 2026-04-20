@@ -190,8 +190,6 @@ function resolveWeaponIcon(weaponId: string): string | undefined {
 
 /** All weapons indexed by ID (e.g. "FORGEBORN_SCATHE"). */
 const weaponCache = new Map<string, Weapon>();
-/** Name → ID index for legacy name-based lookups. */
-const weaponNameIndex = new Map<string, string>();
 /** Custom weapon overlay (takes priority over built-in). */
 const customWeaponCache = new Map<string, Weapon>();
 
@@ -208,22 +206,12 @@ for (const key of weaponContext.keys()) {
   if (weapon.id) {
     weapon.icon = resolveWeaponIcon(weapon.id);
     weaponCache.set(weapon.id, weapon);
-    weaponNameIndex.set(weapon.name, weapon.id);
   }
 }
 
 /** Get a weapon by ID (e.g. "FORGEBORN_SCATHE"). Checks custom first, then built-in. */
 export function getWeapon(weaponId: string): Weapon | undefined {
   return customWeaponCache.get(weaponId) ?? weaponCache.get(weaponId);
-}
-
-/** Get a weapon ID by display name. Returns undefined if not found. */
-export function getWeaponIdByName(name: string): string | undefined {
-  // Check custom first
-  let customMatch: string | undefined;
-  customWeaponCache.forEach((w, id) => { if (w.name === name) customMatch = id; });
-  if (customMatch) return customMatch;
-  return weaponNameIndex.get(name);
 }
 
 /** Get all weapon IDs (custom + built-in, custom overrides built-in). */
@@ -248,6 +236,19 @@ export function getWeaponsByType(weaponType: string): readonly Weapon[] {
   return getAllWeapons().filter(w => w.type === weaponType);
 }
 
+/**
+ * Find the weapon containing the given skillId in its `skills[]`, plus the
+ * 0-based position (→ skill1/2/3). Returns undefined when no weapon owns the
+ * skill. Used by the value resolver to look up `RANK of THIS WEAPON`.
+ */
+export function findWeaponBySkillId(skillId: string): { weapon: Weapon; index: number } | undefined {
+  for (const w of getAllWeapons()) {
+    const idx = w.skills.indexOf(skillId);
+    if (idx >= 0) return { weapon: w, index: idx };
+  }
+  return undefined;
+}
+
 // ── Custom registration ─────────────────────────────────────────────────────
 
 /** Register a custom weapon (overlay — takes priority over built-in). */
@@ -255,20 +256,10 @@ export function registerCustomWeapon(json: Record<string, unknown>, icon?: strin
   const weapon = Weapon.deserialize(json, 'custom');
   weapon.icon = icon ?? resolveWeaponIcon(weapon.id);
   customWeaponCache.set(weapon.id, weapon);
-  weaponNameIndex.set(weapon.name, weapon.id);
   return weapon;
 }
 
 /** Deregister a custom weapon by ID. */
 export function deregisterCustomWeapon(weaponId: string): void {
-  const weapon = customWeaponCache.get(weaponId);
-  if (weapon) {
-    customWeaponCache.delete(weaponId);
-    // Only remove name index if it pointed to the custom entry
-    if (weaponNameIndex.get(weapon.name) === weaponId) {
-      weaponNameIndex.delete(weapon.name);
-      // Re-index built-in if one exists with that name
-      weaponCache.forEach((w, id) => { if (w.name === weapon.name) weaponNameIndex.set(w.name, id); });
-    }
-  }
+  customWeaponCache.delete(weaponId);
 }

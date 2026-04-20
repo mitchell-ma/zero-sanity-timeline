@@ -667,11 +667,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "BEAM_COHESION_ARTS_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "NATURE",
-    "id": "BEAM_COHESION_ARTS_BATK",
     "descriptionParams": {
       "atk_scale": 0.37,
       "atb": 16,
@@ -685,7 +684,10 @@
       "1-poise": -15,
       "-poise": -16,
       "poise-1": 15
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "GILBERTA",

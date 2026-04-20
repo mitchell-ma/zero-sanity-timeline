@@ -316,7 +316,7 @@ export default React.memo(function CombatSheet({
   slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight, headerRowHeight,
   selectedFrames, hoverFrameRef, onHoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows, onSelectFrame,
-  critMode = CritMode.NEVER, onCritModeChange, onRandomizeCrit, overrides, plannerHidden: _plannerHidden, resourceGraphs,
+  critMode = CritMode.NEVER, onCritModeChange, onRandomizeCrit, overrides, plannerHidden = false, resourceGraphs,
   onEditLoadout, editingSlotId,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -848,6 +848,9 @@ export default React.memo(function CombatSheet({
           tableColumns={tableColumns}
           onEditLoadout={onEditLoadout}
           editingSlotId={editingSlotId}
+          critMode={critMode}
+          onCritModeChange={onCritModeChange}
+          showOperators={plannerHidden}
         />
       </div>
 

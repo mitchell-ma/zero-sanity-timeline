@@ -2,7 +2,6 @@
   "properties": {
     "id": "HEAT_FRAGILITY",
     "to": "ENEMY",
-    "eventType": "STATUS",
     "eventCategoryType": "STATUS",
     "duration": {
       "value": {
@@ -10,7 +9,10 @@
         "value": 5
       },
       "unit": "SECOND"
-    }
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "generic",

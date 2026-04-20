@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "EMP_TEST_SITE",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
-    "id": "EMP_TEST_SITE",
     "descriptionParams": {
       "atk_scale": 3.4,
       "poise": 10,
@@ -17,7 +16,10 @@
       "1-usp": -9,
       "-usp": -10,
       "usp-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

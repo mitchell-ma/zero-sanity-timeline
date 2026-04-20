@@ -38,8 +38,10 @@
       },
       "interactionType": "NONE"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS"
+    "eventCategoryType": "SKILL_STATUS",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "SMOULDERING_FIRE",

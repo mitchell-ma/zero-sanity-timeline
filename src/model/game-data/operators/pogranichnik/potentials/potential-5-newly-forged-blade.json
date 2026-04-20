@@ -1,34 +1,8 @@
 {
-  "segments": [
-    {
-      "properties": {
-        "duration": {
-          "value": {
-            "verb": "IS",
-            "value": 99999
-          },
-          "unit": "SECOND"
-        }
-      },
-      "clause": [
-        {
-          "conditions": [],
-          "effects": [
-            {
-              "verb": "APPLY",
-              "object": "STATUS",
-              "objectId": "POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
-            }
-          ]
-        }
-      ],
-      "clauseType": "ALL"
-    }
-  ],
   "properties": {
-    "id": "POGRANICHNIK_POTENTIAL_5",
+    "id": "NEWLY_FORGED_BLADE_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "atb_ratio": 1.2,
@@ -40,8 +14,10 @@
       "-atb_ratio": -1.2,
       "atb_ratio-1": 0.19999999999999996
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "POGRANICHNIK",

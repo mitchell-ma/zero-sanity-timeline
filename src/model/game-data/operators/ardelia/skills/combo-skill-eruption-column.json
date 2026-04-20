@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "ERUPTION_COLUMN",
     "eventCategoryType": "COMBO",
     "element": "NATURE",
-    "id": "ERUPTION_COLUMN",
     "descriptionParams": {
       "atk_scale": 1,
       "usp": 10,
@@ -25,7 +24,10 @@
       "1-poise": -9,
       "-poise": -10,
       "poise-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

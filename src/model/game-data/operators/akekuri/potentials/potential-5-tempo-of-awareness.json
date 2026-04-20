@@ -1,34 +1,8 @@
 {
-  "segments": [
-    {
-      "properties": {
-        "duration": {
-          "value": {
-            "verb": "IS",
-            "value": 99999
-          },
-          "unit": "SECOND"
-        }
-      },
-      "clause": [
-        {
-          "conditions": [],
-          "effects": [
-            {
-              "verb": "APPLY",
-              "object": "STATUS",
-              "objectId": "AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
-            }
-          ]
-        }
-      ],
-      "clauseType": "ALL"
-    }
-  ],
   "properties": {
-    "id": "AKEKURI_POTENTIAL_5",
+    "id": "TEMPO_OF_AWARENESS_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "duration": 5,
@@ -40,8 +14,10 @@
       "-potential_5_duration": -5,
       "potential_5_duration-1": 4
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "AKEKURI",

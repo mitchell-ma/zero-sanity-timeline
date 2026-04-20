@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "CONSTRUCTIVE_SEQUENCE",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "CONSTRUCTIVE_SEQUENCE",
     "descriptionParams": {
       "atk_scale": 3.5,
       "poise": 10,
@@ -13,7 +12,10 @@
       "1-poise": -9,
       "-poise": -10,
       "poise-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

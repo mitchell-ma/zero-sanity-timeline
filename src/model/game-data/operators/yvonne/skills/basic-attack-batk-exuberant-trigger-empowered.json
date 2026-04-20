@@ -6228,11 +6228,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "EXUBERANT_TRIGGER_BATK_EMPOWERED",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "EXUBERANT_TRIGGER_BATK_EMPOWERED",
     "descriptionParams": {
       "atk_scale": 0.53,
       "atb": 0,
@@ -6246,7 +6245,10 @@
       "1-poise": -16,
       "-poise": -17,
       "poise-1": 16
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "YVONNE",

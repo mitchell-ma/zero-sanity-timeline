@@ -501,11 +501,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "COOLDOWN_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "COOLDOWN_BATK",
     "descriptionParams": {
       "atk_scale": 0.37,
       "poise": 15,
@@ -519,7 +518,10 @@
       "1-atb": 1,
       "-atb": 0,
       "atb-1": -1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "XAIHI",

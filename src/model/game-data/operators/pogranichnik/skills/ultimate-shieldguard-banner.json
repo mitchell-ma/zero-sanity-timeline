@@ -1,8 +1,7 @@
 {
   "properties": {
-    "eventType": "SKILL",
-    "eventCategoryType": "ULTIMATE",
     "id": "SHIELDGUARD_BANNER",
+    "eventCategoryType": "ULTIMATE",
     "descriptionParams": {
       "atk_scale_rush": 3,
       "atk_scale_trigger": 1,
@@ -36,7 +35,10 @@
       "1-poise_final": -14,
       "-poise_final": -15,
       "poise_final-1": 14
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

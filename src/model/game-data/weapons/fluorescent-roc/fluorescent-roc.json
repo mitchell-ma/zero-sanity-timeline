@@ -143,7 +143,7 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/fluorescent_roc_icon.png",
+    "icon": "weapons/fluorescent_roc_icon.webp",
     "dataStatus": "RECONCILED"
   }
 }

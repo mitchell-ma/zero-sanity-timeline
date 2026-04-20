@@ -1,12 +1,8 @@
 {
   "properties": {
-    "enhancementTypes": [
-      "EMPOWERED"
-    ],
-    "eventType": "SKILL",
+    "id": "FORWARD_MARCH_EMPOWERED",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
-    "id": "FORWARD_MARCH_EMPOWERED",
     "descriptionParams": {
       "atk_scale": 0.73,
       "poise": 10,
@@ -43,7 +39,10 @@
           "default": 1
         }
       ]
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "onEntryClause": [
     {

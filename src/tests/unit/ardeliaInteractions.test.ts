@@ -515,8 +515,8 @@ describe('G. Operator Identity & Metadata', () => {
   });
 
   test('G4: Talent IDs and attribute increase', () => {
-    expect(mockJson.talents.one).toBe('FRIENDLY_PRESENCE_TALENT');
-    expect(mockJson.talents.two).toBe('MOUNTAINPEAK_SURFER_TALENT');
+    expect(mockJson.talents.one).toBe('FRIENDLY_PRESENCE_T1');
+    expect(mockJson.talents.two).toBe('MOUNTAINPEAK_SURFER_T2');
     expect(mockJson.talents.attributeIncrease.id).toBe('KEEN_MIND');
   });
 

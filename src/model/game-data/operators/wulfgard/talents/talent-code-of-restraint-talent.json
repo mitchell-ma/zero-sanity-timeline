@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "id": "CODE_OF_RESTRAINT_T2",
+    "descriptionParams": {
+      "returnskillpower": 10,
+      "talent2": 1,
+      "1-returnskillpower": -9,
+      "-returnskillpower": -10,
+      "returnskillpower-1": 9,
+      "1-talent2": 0,
+      "-talent2": -1,
+      "talent2-1": 0
+    },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
+  },
+  "metadata": {
+    "originId": "WULFGARD",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
+    "icon": "skills/wulfgard_talent_2_icon.png",
+    "dataStatus": "VERIFIED"
+  }
+}

@@ -126,7 +126,6 @@ interface JsonSkillCategory {
     trigger?: unknown;
     hasDelayedHit?: boolean;
     delayedHitLabel?: string;
-    enhancementTypes?: string[];
     dependencyTypes?: string[];
     suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
   };

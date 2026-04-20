@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "SNOWSHINE_POTENTIAL_5",
+    "id": "COLD_DISASTER_SPECIALIST_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "atb": 10,
@@ -12,8 +14,10 @@
       "-potential_5_atb": -10,
       "potential_5_atb-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

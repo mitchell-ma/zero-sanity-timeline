@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ROSSI_P1_ORIGIN_OF_ADMIRATION",
+    "id": "ORIGIN_OF_ADMIRATION_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "potential_upgrade": 1,
@@ -36,8 +38,10 @@
       "-atb_return": -10,
       "atb_return-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

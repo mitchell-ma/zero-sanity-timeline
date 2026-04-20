@@ -1,0 +1,114 @@
+{
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 10
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "DAMAGE_BONUS",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "VARY_BY",
+                  "object": "TALENT_LEVEL",
+                  "value": [
+                    0,
+                    0.2,
+                    0.3
+                  ],
+                  "of": {
+                    "object": "OPERATOR",
+                    "determiner": "THIS"
+                  }
+                }
+              },
+              "objectQualifier": "HEAT"
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
+  "properties": {
+    "id": "SCORCHING_FANGS_T1",
+    "descriptionParams": {
+      "add": 0.3,
+      "duration": 10,
+      "1-add": 0.7,
+      "-add": -0.3,
+      "add-1": -0.7,
+      "1-duration": -9,
+      "-duration": -10,
+      "duration-1": 9
+    },
+    "maxLevel": {
+      "verb": "IS",
+      "value": 2
+    },
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 10
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
+  },
+  "metadata": {
+    "originId": "WULFGARD",
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "icon": "skills/wulfgard_talent_1_icon.png",
+    "dataStatus": "VERIFIED"
+  },
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectQualifier": "COMBUSTION",
+          "to": "ENEMY",
+          "objectId": "REACTION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ]
+}

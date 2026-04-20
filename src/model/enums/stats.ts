@@ -52,6 +52,42 @@ export enum StatType {
   FINAL_DAMAGE_REDUCTION = "FINAL_DAMAGE_REDUCTION",
   SKILL_DAMAGE_BONUS = "SKILL_DAMAGE_BONUS",
   ARTS_DAMAGE_BONUS = "ARTS_DAMAGE_BONUS",
+  // ── Combined skill-type × element damage bonuses ────────────────────────────
+  // Applied additively alongside the single-axis stats above. Authored in DSL
+  // via a compound objectQualifier (e.g. "BATTLE_ELECTRIC", "BATK_PHYSICAL",
+  // "FINISHER_ELECTRIC"); resolved to these verbose enum values in stats.ts.
+  // Skill-type shorthand: BATK=BASIC_ATTACK, BATTLE=BATTLE_SKILL,
+  // COMBO=COMBO_SKILL, FINISHER=FINAL_STRIKE, ULTIMATE=ULTIMATE.
+  BASIC_ATTACK_PHYSICAL_DAMAGE_BONUS = "BASIC_ATTACK_PHYSICAL_DAMAGE_BONUS",
+  BASIC_ATTACK_HEAT_DAMAGE_BONUS = "BASIC_ATTACK_HEAT_DAMAGE_BONUS",
+  BASIC_ATTACK_CRYO_DAMAGE_BONUS = "BASIC_ATTACK_CRYO_DAMAGE_BONUS",
+  BASIC_ATTACK_NATURE_DAMAGE_BONUS = "BASIC_ATTACK_NATURE_DAMAGE_BONUS",
+  BASIC_ATTACK_ELECTRIC_DAMAGE_BONUS = "BASIC_ATTACK_ELECTRIC_DAMAGE_BONUS",
+  BASIC_ATTACK_ARTS_DAMAGE_BONUS = "BASIC_ATTACK_ARTS_DAMAGE_BONUS",
+  BATTLE_SKILL_PHYSICAL_DAMAGE_BONUS = "BATTLE_SKILL_PHYSICAL_DAMAGE_BONUS",
+  BATTLE_SKILL_HEAT_DAMAGE_BONUS = "BATTLE_SKILL_HEAT_DAMAGE_BONUS",
+  BATTLE_SKILL_CRYO_DAMAGE_BONUS = "BATTLE_SKILL_CRYO_DAMAGE_BONUS",
+  BATTLE_SKILL_NATURE_DAMAGE_BONUS = "BATTLE_SKILL_NATURE_DAMAGE_BONUS",
+  BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS = "BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS",
+  BATTLE_SKILL_ARTS_DAMAGE_BONUS = "BATTLE_SKILL_ARTS_DAMAGE_BONUS",
+  COMBO_SKILL_PHYSICAL_DAMAGE_BONUS = "COMBO_SKILL_PHYSICAL_DAMAGE_BONUS",
+  COMBO_SKILL_HEAT_DAMAGE_BONUS = "COMBO_SKILL_HEAT_DAMAGE_BONUS",
+  COMBO_SKILL_CRYO_DAMAGE_BONUS = "COMBO_SKILL_CRYO_DAMAGE_BONUS",
+  COMBO_SKILL_NATURE_DAMAGE_BONUS = "COMBO_SKILL_NATURE_DAMAGE_BONUS",
+  COMBO_SKILL_ELECTRIC_DAMAGE_BONUS = "COMBO_SKILL_ELECTRIC_DAMAGE_BONUS",
+  COMBO_SKILL_ARTS_DAMAGE_BONUS = "COMBO_SKILL_ARTS_DAMAGE_BONUS",
+  ULTIMATE_PHYSICAL_DAMAGE_BONUS = "ULTIMATE_PHYSICAL_DAMAGE_BONUS",
+  ULTIMATE_HEAT_DAMAGE_BONUS = "ULTIMATE_HEAT_DAMAGE_BONUS",
+  ULTIMATE_CRYO_DAMAGE_BONUS = "ULTIMATE_CRYO_DAMAGE_BONUS",
+  ULTIMATE_NATURE_DAMAGE_BONUS = "ULTIMATE_NATURE_DAMAGE_BONUS",
+  ULTIMATE_ELECTRIC_DAMAGE_BONUS = "ULTIMATE_ELECTRIC_DAMAGE_BONUS",
+  ULTIMATE_ARTS_DAMAGE_BONUS = "ULTIMATE_ARTS_DAMAGE_BONUS",
+  FINAL_STRIKE_PHYSICAL_DAMAGE_BONUS = "FINAL_STRIKE_PHYSICAL_DAMAGE_BONUS",
+  FINAL_STRIKE_HEAT_DAMAGE_BONUS = "FINAL_STRIKE_HEAT_DAMAGE_BONUS",
+  FINAL_STRIKE_CRYO_DAMAGE_BONUS = "FINAL_STRIKE_CRYO_DAMAGE_BONUS",
+  FINAL_STRIKE_NATURE_DAMAGE_BONUS = "FINAL_STRIKE_NATURE_DAMAGE_BONUS",
+  FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS = "FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS",
+  FINAL_STRIKE_ARTS_DAMAGE_BONUS = "FINAL_STRIKE_ARTS_DAMAGE_BONUS",
   HP_BONUS = "HP_BONUS",
   FLAT_HP = "FLAT_HP",
   // ── Damage factor stats ──────────────────────────────────────────────────────
@@ -176,6 +212,37 @@ export const STAT_ATTRIBUTION: Record<StatType, StatOwnerType[]> = {
   [StatType.FINAL_STRIKE_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.SKILL],
   [StatType.SKILL_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.SKILL],
   [StatType.ARTS_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  // ── Combined skill-type × element damage bonuses ──────────────────────────
+  [StatType.BASIC_ATTACK_PHYSICAL_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BASIC_ATTACK_HEAT_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BASIC_ATTACK_CRYO_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BASIC_ATTACK_NATURE_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BASIC_ATTACK_ELECTRIC_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BASIC_ATTACK_ARTS_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BATTLE_SKILL_PHYSICAL_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BATTLE_SKILL_HEAT_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BATTLE_SKILL_CRYO_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BATTLE_SKILL_NATURE_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.BATTLE_SKILL_ARTS_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.COMBO_SKILL_PHYSICAL_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.COMBO_SKILL_HEAT_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.COMBO_SKILL_CRYO_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.COMBO_SKILL_NATURE_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.COMBO_SKILL_ELECTRIC_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.COMBO_SKILL_ARTS_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.ULTIMATE_PHYSICAL_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.ULTIMATE_HEAT_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.ULTIMATE_CRYO_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.ULTIMATE_NATURE_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.ULTIMATE_ELECTRIC_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.ULTIMATE_ARTS_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.FINAL_STRIKE_PHYSICAL_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.FINAL_STRIKE_HEAT_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.FINAL_STRIKE_CRYO_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.FINAL_STRIKE_NATURE_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
+  [StatType.FINAL_STRIKE_ARTS_DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
   // ── Damage factor stats ───────────────────────────────────────────────────
   [StatType.DAMAGE_BONUS]: [StatOwnerType.OPERATOR, StatOwnerType.WEAPON, StatOwnerType.SKILL],
   [StatType.DAMAGE_TAKEN_BONUS]: [StatOwnerType.ENEMY],
@@ -237,6 +304,25 @@ const STAT_TYPE_SET = new Set<string>(Object.values(StatType));
 /** The DSL object type for stat effects. Duplicated here to avoid model→DSL dependency. */
 const STAT_OBJECT = 'STAT' as const;
 
+/** DSL shorthand → verbose skill-type stem used in compound DAMAGE_BONUS stats.
+ *  Used by `resolveEffectStat` to parse qualifiers like `BATTLE_ELECTRIC` →
+ *  `BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS` and `FINISHER_ELECTRIC` →
+ *  `FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS`. */
+const SKILL_TYPE_SHORTHAND: Record<string, string> = {
+  BATK: 'BASIC_ATTACK',
+  BASIC_ATTACK: 'BASIC_ATTACK',
+  BATTLE: 'BATTLE_SKILL',
+  COMBO: 'COMBO_SKILL',
+  FINISHER: 'FINAL_STRIKE',
+  FINAL_STRIKE: 'FINAL_STRIKE',
+  ULTIMATE: 'ULTIMATE',
+};
+
+/** Element tokens accepted in compound qualifiers. */
+const COMPOUND_ELEMENT_TOKENS: ReadonlySet<string> = new Set([
+  'PHYSICAL', 'HEAT', 'CRYO', 'NATURE', 'ELECTRIC', 'ARTS',
+]);
+
 /**
  * Resolve a DSL effect's object/objectId/objectQualifier into a StatType.
  *
@@ -268,6 +354,20 @@ export function resolveEffectStat(
     // `{objectId: DAMAGE_BONUS, objectQualifier: BATTLE}` resolve correctly.
     const skillFlat = `${qual}_SKILL_${id}`;
     if (STAT_TYPE_SET.has(skillFlat)) return skillFlat as StatType;
+    // Compound skill-type × element qualifiers (e.g. BATTLE_ELECTRIC,
+    // BATK_PHYSICAL, FINISHER_ELECTRIC) flatten to `{STEM}_{ELEMENT}_{STAT}`.
+    // Parse greedily from the right so multi-word stems (BASIC_ATTACK,
+    // FINAL_STRIKE) are handled alongside their shorthand forms.
+    const underscore = qual.lastIndexOf('_');
+    if (underscore > 0) {
+      const shortStem = qual.slice(0, underscore);
+      const elementToken = qual.slice(underscore + 1);
+      const stem = SKILL_TYPE_SHORTHAND[shortStem];
+      if (stem && COMPOUND_ELEMENT_TOKENS.has(elementToken)) {
+        const compound = `${stem}_${elementToken}_${id}`;
+        if (STAT_TYPE_SET.has(compound)) return compound as StatType;
+      }
+    }
   }
   const bare = id ?? obj;
   return STAT_TYPE_SET.has(bare) ? bare as StatType : undefined;

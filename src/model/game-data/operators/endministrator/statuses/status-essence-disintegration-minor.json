@@ -67,11 +67,13 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
-    "originId": "ESSENCE_DISINTEGRATION_TALENT",
+    "originId": "ESSENCE_DISINTEGRATION_T1",
     "dataSources": [
       "ENDFIELD_WIKI"
     ],

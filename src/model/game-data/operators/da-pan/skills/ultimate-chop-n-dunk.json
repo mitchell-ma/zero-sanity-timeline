@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "CHOP_N_DUNK",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
-    "id": "CHOP_N_DUNK",
     "descriptionParams": {
       "atk_scale_end": 4,
       "atk_scale_loop": 0.5,
@@ -24,7 +23,10 @@
           "default": 0
         }
       ]
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {
@@ -569,7 +571,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "FINE_COOKING_POTENTIAL",
+                  "objectId": "FINE_COOKING_P1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR"
                 }

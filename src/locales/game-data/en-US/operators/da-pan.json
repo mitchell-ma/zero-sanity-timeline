@@ -107,15 +107,15 @@
     "text": "ROLLING CUT! (Finisher)",
     "dataStatus": "RECONCILED"
   },
-  "op.DA_PAN.status.FINE_COOKING_POTENTIAL.event.description": {
+  "op.DA_PAN.status.FINE_COOKING_P1.event.description": {
     "text": "Ultimate CHOP 'N DUNK! improved: If the ultimate defeats at least one enemy, Da Pan deals + Physical DMG for s. This effect cannot stack.",
     "dataStatus": "RECONCILED"
   },
-  "op.DA_PAN.status.FINE_COOKING_POTENTIAL.event.name": {
+  "op.DA_PAN.status.FINE_COOKING_P1.event.name": {
     "text": "Fine Cooking",
     "dataStatus": "RECONCILED"
   },
-  "op.DA_PAN.status.FINE_COOKING_POTENTIAL.segment.0.name": {
+  "op.DA_PAN.status.FINE_COOKING_P1.segment.0.name": {
     "text": "Fine Cooking",
     "dataStatus": "RECONCILED"
   },
@@ -127,23 +127,23 @@
     "text": "Prep Ingredients",
     "dataStatus": "RECONCILED"
   },
-  "op.DA_PAN.talent.REDUCE_AND_THICKEN_TALENT.event.description": {
+  "op.DA_PAN.talent.REDUCE_AND_THICKEN_T1.event.description": {
     "text": "After consuming 1 Vulnerability stack, Da Pan gains Physical DMG Dealt +4% for 10s. This effect can reach 4 stacks.",
     "dataStatus": "RECONCILED"
   },
-  "op.DA_PAN.talent.REDUCE_AND_THICKEN_TALENT.event.name": {
+  "op.DA_PAN.talent.REDUCE_AND_THICKEN_T1.event.name": {
     "text": "Reduce and Thicken (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.DA_PAN.talent.REDUCE_AND_THICKEN_TALENT.segment.0.name": {
+  "op.DA_PAN.talent.REDUCE_AND_THICKEN_T1.segment.0.name": {
     "text": "Reduce and Thicken (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.DA_PAN.talent.SALTY_OR_MILD_TALENT.event.description": {
+  "op.DA_PAN.talent.SALTY_OR_MILD_T2.event.description": {
     "text": "Ultimate CHOP 'N DUNK! improved: For every enemy hit by the final sequence of the ultimate, gains 1 stack of Prep Ingredients for 20s (max stacks: 2). When Prep Ingredients is active, hitting an enemy with combo skills immediately shortens cooldown by 40% and consumes 1 stack of Prep Ingredients.",
     "dataStatus": "RECONCILED"
   },
-  "op.DA_PAN.talent.SALTY_OR_MILD_TALENT.event.name": {
+  "op.DA_PAN.talent.SALTY_OR_MILD_T2.event.name": {
     "text": "Salty or Mild (T2)",
     "dataStatus": "RECONCILED"
   }

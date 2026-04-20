@@ -9,7 +9,7 @@
 
 import type { Effect, Interaction, Predicate, ValueNode, WithPreposition } from '../dsl/semantics';
 import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, NounType, VerbType, THRESHOLD_MAX } from '../dsl/semantics';
-import { UnitType, EnhancementType } from '../consts/enums';
+import { UnitType } from '../consts/enums';
 import { t } from '../locales/locale';
 
 // ── Output ───────────────────────────────────────────────────────────────────
@@ -227,28 +227,44 @@ export function splitConditionText(c: Record<string, unknown>): {
   threshold?: string;
 } {
   const parts: string[] = [];
+  const hasObject = c.object != null || c.objectId != null;
+
+  // Subject phrase: determiner + (qualifier-as-subject-qual when no object) + subject + of-chain.
+  // When the condition has no object/objectId, `objectQualifier` qualifies the subject
+  // (matches engine: evaluateStatusLevelSubject reads c.objectQualifier as subjectQualifier).
   if (c.subjectDeterminer) parts.push(translateDslToken(String(c.subjectDeterminer)).toLowerCase());
-  if (c.subject) parts.push(translateDslToken(String(c.subject)));
-  if (c.verb) parts.push(translateDslToken(String(c.verb)));
-  if (c.negated) parts.push('Not');
-  if (c.objectQualifier) {
+  if (!hasObject && c.objectQualifier) {
     parts.push(translateDslToken(String(c.objectQualifier)));
   }
-  if (c.objectDeterminer) parts.push(translateDslToken(String(c.objectDeterminer)).toLowerCase());
-  if (c.objectId) {
-    parts.push(titleCase(String(c.objectId)));
-    if (c.object) parts.push(translateDslToken(String(c.object)).toLowerCase());
-  } else if (c.object) {
-    parts.push(translateDslToken(String(c.object)));
-  }
-  if (c.of) {
-    const ofC = c.of as Record<string, unknown>;
+  if (c.subject) parts.push(translateDslToken(String(c.subject)));
+
+  // of-chain is a possessive attached to the subject — walk all nested `of.of` levels.
+  let ofC = c.of as Record<string, unknown> | undefined;
+  while (ofC) {
     parts.push('of');
     if (ofC.determiner) parts.push(translateDslToken(String(ofC.determiner)).toLowerCase());
     if (ofC.objectQualifier) parts.push(translateDslToken(String(ofC.objectQualifier)));
     if (ofC.objectId) parts.push(titleCase(String(ofC.objectId)));
     if (ofC.object) parts.push(translateDslToken(String(ofC.object)));
+    ofC = ofC.of as Record<string, unknown> | undefined;
   }
+
+  // Verb
+  if (c.verb) parts.push(translateDslToken(String(c.verb)).toLowerCase());
+  if (c.negated) parts.push('not');
+
+  // Object phrase — only emitted when an object actually exists on the condition.
+  if (hasObject) {
+    if (c.objectQualifier) parts.push(translateDslToken(String(c.objectQualifier)));
+    if (c.objectDeterminer) parts.push(translateDslToken(String(c.objectDeterminer)).toLowerCase());
+    if (c.objectId) {
+      parts.push(titleCase(String(c.objectId)));
+      if (c.object) parts.push(translateDslToken(String(c.object)).toLowerCase());
+    } else if (c.object) {
+      parts.push(translateDslToken(String(c.object)));
+    }
+  }
+
   if (c.to || c.toDeterminer) {
     parts.push('to');
     if (c.toDeterminer) parts.push(translateDslToken(String(c.toDeterminer)).toLowerCase());
@@ -480,11 +496,6 @@ export function translateEffects(effects: Effect[]): TranslatedEffect[] {
 
 // ── Skill display name formatting ───────────────────────────────────────────
 
-const ENHANCEMENT_LABELS: Record<string, string> = {
-  EMPOWERED: t('dsl.enhancement.EMPOWERED'),
-  ENHANCED: t('dsl.enhancement.ENHANCED'),
-};
-
 /**
  * Derive the base skill ID by stripping _ENHANCED/_EMPOWERED suffixes.
  * e.g. "SMOULDERING_FIRE_ENHANCED_EMPOWERED" → "SMOULDERING_FIRE"
@@ -532,21 +543,6 @@ export function formatEventLabel(baseName: string, id: string, eventCategoryType
     }
   }
   return baseName;
-}
-
-/**
- * Format a skill display name with enhancement type suffixes.
- * Uses the event's own name if provided, otherwise falls back to baseName.
- * e.g. ("Smouldering Fire", ["EMPOWERED", "ENHANCED"]) → "Smouldering Fire (Empowered + Enhanced)"
- */
-export function formatSkillDisplayName(baseName: string, enhancementTypes?: string[], eventName?: string): string {
-  const name = eventName ?? baseName;
-  if (!enhancementTypes?.length) return name;
-  const labels = enhancementTypes
-    .filter((t) => t !== EnhancementType.NORMAL)
-    .map((t) => ENHANCEMENT_LABELS[t] ?? titleCase(t));
-  if (labels.length === 0) return name;
-  return `${name} (${labels.join(' + ')})`;
 }
 
 // ── Semantics → JSON serialization ──────────────────────────────────────────

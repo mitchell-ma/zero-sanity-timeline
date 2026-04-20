@@ -1,8 +1,7 @@
 {
   "properties": {
-    "eventType": "SKILL",
-    "eventCategoryType": "ULTIMATE",
     "id": "OVERCLOCKED_MOMENT",
+    "eventCategoryType": "ULTIMATE",
     "descriptionParams": {
       "duration": 12,
       "rate": 0.2,
@@ -12,7 +11,10 @@
       "1-rate": 0.8,
       "-rate": -0.2,
       "rate-1": -0.8
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

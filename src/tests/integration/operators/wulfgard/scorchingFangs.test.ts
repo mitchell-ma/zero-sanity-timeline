@@ -17,7 +17,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { EnhancementType, EventStatusType } from '../../../../consts/enums';
+import { EventStatusType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -34,7 +34,7 @@ const WULFGARD_ID: string = WULFGARD_JSON.id;
 const TALENT1_ID: string = WULFGARD_JSON.talents.one;
 
 const SF_MINOR_ID: string = require(
-  '../../../../model/game-data/operators/wulfgard/talents/talent-1-scorching-fangs-minor.json',
+  '../../../../model/game-data/operators/wulfgard/talents/talent-scorching-fangs-minor-talent.json',
 ).properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -189,7 +189,7 @@ describe('B. Negative Triggers', () => {
     // Place empowered battle skill that consumes Electrification
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
-      v => v.enhancementType === EnhancementType.EMPOWERED,
+      v => v.id.endsWith('_EMPOWERED'),
     );
     if (!empowered) return;
 
@@ -295,7 +295,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
     //    P3 clause fires: apply SF to self (reset) + SF Minor to ALL_OTHER
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
-      v => v.enhancementType === EnhancementType.EMPOWERED,
+      v => v.id.endsWith('_EMPOWERED'),
     );
     expect(empowered).toBeDefined();
 
@@ -349,7 +349,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
 
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
-      v => v.enhancementType === EnhancementType.EMPOWERED,
+      v => v.id.endsWith('_EMPOWERED'),
     );
     if (!empowered) return;
 
@@ -390,7 +390,7 @@ describe('D. P3 — Minor Scorching Fangs', () => {
 
     const battleCol = findColumn(result.current, SLOT_WULFGARD, NounType.BATTLE);
     const empowered = battleCol?.eventVariants?.find(
-      v => v.enhancementType === EnhancementType.EMPOWERED,
+      v => v.id.endsWith('_EMPOWERED'),
     );
     if (!empowered) return;
 

@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "EMBER_POTENTIAL_2",
+    "id": "STEEL_HARDENED_VETERAN_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Str": 20,
@@ -12,8 +14,10 @@
       "-Will": -20,
       "Will-1": 19
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "EMBER",

@@ -1,34 +1,8 @@
 {
-  "segments": [
-    {
-      "properties": {
-        "duration": {
-          "value": {
-            "verb": "IS",
-            "value": 99999
-          },
-          "unit": "SECOND"
-        }
-      },
-      "clause": [
-        {
-          "conditions": [],
-          "effects": [
-            {
-              "verb": "APPLY",
-              "object": "STATUS",
-              "objectId": "LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE",
-              "toDeterminer": "THIS",
-              "to": "OPERATOR"
-            }
-          ]
-        }
-      ],
-      "clauseType": "ALL"
-    }
-  ],
   "properties": {
-    "id": "LAEVATAIN_POTENTIAL_5",
+    "id": "PROOF_OF_EXISTENCE_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "extend_duration": 1,
@@ -44,8 +18,10 @@
       "-ratio": -1.2,
       "ratio-1": 0.19999999999999996
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LAEVATAIN",

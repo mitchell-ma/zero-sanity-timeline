@@ -1,6 +1,59 @@
 {
+  "segments": [
+    {
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 3.425
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "ATTACK_BONUS",
+              "toDeterminer": "ALL",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
   "properties": {
-    "id": "AKEKURI_POTENTIAL_3",
+    "id": "COMMITTED_TEAM_PLAYER_P3",
+    "to": "TEAM",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 3.425
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ],
     "level": 3,
     "descriptionParams": {
       "potential_3": 1,
@@ -11,12 +64,13 @@
       "1-atk": 0.9,
       "-atk": -0.1,
       "atk-1": -0.9
-    },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    }
   },
   "metadata": {
     "originId": "AKEKURI",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ],
     "dataStatus": "VERIFIED"
   }
 }

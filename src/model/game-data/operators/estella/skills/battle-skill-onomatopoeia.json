@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "ONOMATOPOEIA",
     "eventCategoryType": "BATTLE",
     "element": "CRYO",
-    "id": "ONOMATOPOEIA",
     "descriptionParams": {
       "atk_scale": 3.5,
       "poise": 10,
@@ -13,7 +12,10 @@
       "1-poise": -9,
       "-poise": -10,
       "poise-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ESTELLA",
@@ -132,7 +134,7 @@
                   "subject": "OPERATOR",
                   "verb": "HAVE",
                   "object": "STATUS",
-                  "objectId": "COMMISERATION_TALENT"
+                  "objectId": "COMMISERATION_T1"
                 }
               ],
               "effects": [
@@ -158,7 +160,7 @@
                 {
                   "verb": "CONSUME",
                   "object": "STATUS",
-                  "objectId": "COMMISERATION_TALENT",
+                  "objectId": "COMMISERATION_T1",
                   "fromDeterminer": "THIS",
                   "from": "OPERATOR",
                   "with": {

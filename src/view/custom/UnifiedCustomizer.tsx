@@ -38,7 +38,7 @@ import { deleteCustomGearEffect } from '../../controller/custom/customGearEffect
 import { deleteCustomOperatorStatus } from '../../controller/custom/customOperatorStatusController';
 import { deleteCustomOperatorTalent } from '../../controller/custom/customOperatorTalentController';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
-import { getGearPiecesBySet, getWeapon, getWeaponIdByName, getWeaponEffectDefs, getGearEffectDefs, getGenericWeaponSkill, getNamedWeaponSkill, getWeaponStats } from '../../controller/gameDataStore';
+import { getGearPiecesBySet, getWeapon, getWeaponEffectDefs, getGearEffectDefs, getGenericWeaponSkill, getNamedWeaponSkill, getWeaponStats } from '../../controller/gameDataStore';
 import { getGearSetData, getGearSet } from '../../controller/gameDataStore';
 import { getGears } from '../../consts/gearSetEffects';
 import { GearSetType, GearCategory, SegmentType, ELEMENT_COLORS, ElementType, UnitType, EventCategoryType, CustomWeaponSkillKind } from '../../consts/enums';
@@ -1428,7 +1428,10 @@ function BuiltinOperatorStatusesView({ operatorId }: { operatorId: string }) {
       : [];
 
     return [...operatorStatuses, ...genericStatuses]
-      .filter(s => (s.properties as Record<string, unknown> | undefined)?.eventCategoryType !== EventCategoryType.TALENT);
+      .filter(s => {
+        const category = (s.properties as Record<string, unknown> | undefined)?.eventCategoryType;
+        return category !== EventCategoryType.TALENT && category !== EventCategoryType.POTENTIAL;
+      });
   }, [operatorId]);
   const [openIdxSet, setOpenIdxSet] = useState<Set<number>>(new Set());
 
@@ -1672,10 +1675,9 @@ function BuiltinOperatorView({ id }: { id: string }) {
 }
 
 function BuiltinWeaponView({ id }: { id: string }) {
-  const weaponId = getWeaponIdByName(id);
-  const weapon = weaponId ? getWeapon(weaponId) : undefined;
+  const weapon = getWeapon(id);
   const dslDefs = getWeaponEffectDefs(id);
-  const weaponStatuses = useMemo(() => weaponId ? getWeaponStats(weaponId) : [], [weaponId]);
+  const weaponStatuses = useMemo(() => getWeaponStats(id), [id]);
   const [activeTab, setActiveTab] = useState<'skills' | 'statuses'>('skills');
   const [openSkills, setOpenSkills] = useState<Set<number>>(new Set());
   const [openEffects, setOpenEffects] = useState<Set<number>>(new Set());
@@ -1683,7 +1685,7 @@ function BuiltinWeaponView({ id }: { id: string }) {
   const [weaponLevel, setWeaponLevel] = useState(90);
   if (!weapon) return null;
 
-  const namedSkill = getNamedWeaponSkill(weaponId!);
+  const namedSkill = getNamedWeaponSkill(id);
 
   return (
     <div className="ops-root ops-root--readonly ops-root--split">
@@ -1879,7 +1881,7 @@ function BuiltinGearSetView({ id }: { id: string }) {
     <div className="ops-root ops-root--readonly ops-root--split">
       {/* ── LEFT: Set info ── */}
       <div className="ops-split-left">
-        {/* Set effect — full JSON data (id, name, rarity, eventType,
+        {/* Set effect — full JSON data (id, name, rarity, eventTypes,
              eventCategoryType, originId, dataSources, dataStatus, clauses)
              via DataCardBody, plus any passive stats registered in
              gearSetEffects.ts not yet expressed in the DSL clause. */}

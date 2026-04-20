@@ -143,7 +143,7 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/fortmaker_icon.png",
+    "icon": "weapons/fortmaker_icon.webp",
     "dataStatus": "RECONCILED"
   }
 }

@@ -1,12 +1,8 @@
 {
   "properties": {
-    "enhancementTypes": [
-      "ENHANCED"
-    ],
-    "eventType": "SKILL",
+    "id": "BREATH_OF_TRANSFORMATION_ENHANCED",
     "eventCategoryType": "COMBO",
     "element": "ELECTRIC",
-    "id": "BREATH_OF_TRANSFORMATION_ENHANCED",
     "descriptionParams": {
       "atk_scale": 3.6,
       "poise": 10,
@@ -24,7 +20,10 @@
       "1-usp_extra": -9,
       "-usp_extra": -10,
       "usp_extra-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {
@@ -132,6 +131,88 @@
                   }
                 }
               ]
+            },
+            {
+              "conditions": [
+                {
+                  "subject": "ENEMY",
+                  "verb": "HAVE",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "ELECTRIC"
+                }
+              ],
+              "effects": [
+                {
+                  "verb": "APPLY",
+                  "object": "STATUS",
+                  "objectId": "REACTION",
+                  "objectQualifier": "ELECTRIFICATION",
+                  "to": "ENEMY",
+                  "with": {
+                    "isForced": {
+                      "verb": "IS",
+                      "value": 1
+                    },
+                    "statusLevel": {
+                      "operation": "ADD",
+                      "left": {
+                        "verb": "IS",
+                        "value": 1
+                      },
+                      "right": {
+                        "verb": "IS",
+                        "object": "STATUS_LEVEL",
+                        "of": {
+                          "object": "STATUS",
+                          "objectId": "REACTION",
+                          "objectQualifier": "ELECTRIFICATION",
+                          "of": {
+                            "object": "ENEMY"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "RECOVER",
+                  "object": "ULTIMATE_ENERGY",
+                  "toDeterminer": "THIS",
+                  "to": "OPERATOR",
+                  "with": {
+                    "value": {
+                      "operation": "MULT",
+                      "left": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "right": {
+                        "verb": "IS",
+                        "object": "STACKS",
+                        "of": {
+                          "object": "STATUS",
+                          "objectId": "INFLICTION",
+                          "objectQualifier": "ELECTRIC",
+                          "of": {
+                            "object": "ENEMY"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "verb": "CONSUME",
+                  "object": "STATUS",
+                  "objectId": "INFLICTION",
+                  "objectQualifier": "ELECTRIC",
+                  "from": "ENEMY",
+                  "with": {
+                    "stacks": "MAX"
+                  }
+                }
+              ]
             }
           ],
           "clauseType": "ALL"
@@ -149,25 +230,32 @@
         ],
         "duration": {
           "value": {
-            "verb": "VARY_BY",
-            "object": "SKILL_LEVEL",
-            "value": [
-              4.5,
-              4.5,
-              4.5,
-              4.5,
-              4.5,
-              4.5,
-              4.5,
-              4.5,
-              4.5,
-              4.5,
-              4.5,
-              4.25
-            ],
-            "of": {
-              "object": "OPERATOR",
-              "determiner": "THIS"
+            "operation": "MULT",
+            "left": {
+              "verb": "IS",
+              "value": 0.25
+            },
+            "right": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                18,
+                18,
+                18,
+                18,
+                18,
+                18,
+                18,
+                18,
+                18,
+                18,
+                18,
+                17
+              ],
+              "of": {
+                "object": "OPERATOR",
+                "determiner": "THIS"
+              }
             }
           },
           "unit": "SECOND"
@@ -179,7 +267,7 @@
   ],
   "metadata": {
     "originId": "ZHUANG_FANGYI",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   },
   "activationWindow": {
     "properties": {
@@ -189,22 +277,38 @@
       {
         "conditions": [
           {
-            "subjectDeterminer": "ANY",
+            "subjectDeterminer": "CONTROLLED",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "SKILL",
-            "objectId": "FINAL_STRIKE"
+            "objectId": "FINAL_STRIKE",
+            "to": "ENEMY"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "ELECTRIC"
           }
         ]
       },
       {
         "conditions": [
           {
-            "subjectDeterminer": "ANY",
+            "subjectDeterminer": "CONTROLLED",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "SKILL",
-            "objectId": "FINISHER"
+            "objectId": "FINISHER",
+            "to": "ENEMY"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "INFLICTION",
+            "objectQualifier": "ELECTRIC"
           }
         ]
       }

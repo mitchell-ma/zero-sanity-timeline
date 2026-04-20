@@ -153,6 +153,63 @@ describe('resolveEffectStat', () => {
     });
   });
 
+  describe('compound skill × element qualifiers — {STEM}_{ELEMENT}_DAMAGE_BONUS', () => {
+    test('BATTLE_ELECTRIC + DAMAGE_BONUS → BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'BATTLE_ELECTRIC'))
+        .toBe(StatType.BATTLE_SKILL_ELECTRIC_DAMAGE_BONUS);
+    });
+
+    test('BATTLE_PHYSICAL + DAMAGE_BONUS → BATTLE_SKILL_PHYSICAL_DAMAGE_BONUS', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'BATTLE_PHYSICAL'))
+        .toBe(StatType.BATTLE_SKILL_PHYSICAL_DAMAGE_BONUS);
+    });
+
+    test('COMBO_PHYSICAL + DAMAGE_BONUS → COMBO_SKILL_PHYSICAL_DAMAGE_BONUS', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'COMBO_PHYSICAL'))
+        .toBe(StatType.COMBO_SKILL_PHYSICAL_DAMAGE_BONUS);
+    });
+
+    test('BATK_PHYSICAL + DAMAGE_BONUS → BASIC_ATTACK_PHYSICAL_DAMAGE_BONUS (shorthand)', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'BATK_PHYSICAL'))
+        .toBe(StatType.BASIC_ATTACK_PHYSICAL_DAMAGE_BONUS);
+    });
+
+    test('BASIC_ATTACK_PHYSICAL + DAMAGE_BONUS → BASIC_ATTACK_PHYSICAL_DAMAGE_BONUS (verbose)', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'BASIC_ATTACK_PHYSICAL'))
+        .toBe(StatType.BASIC_ATTACK_PHYSICAL_DAMAGE_BONUS);
+    });
+
+    test('FINISHER_ELECTRIC + DAMAGE_BONUS → FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS (shorthand)', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'FINISHER_ELECTRIC'))
+        .toBe(StatType.FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS);
+    });
+
+    test('FINAL_STRIKE_ELECTRIC + DAMAGE_BONUS → FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS (verbose)', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'FINAL_STRIKE_ELECTRIC'))
+        .toBe(StatType.FINAL_STRIKE_ELECTRIC_DAMAGE_BONUS);
+    });
+
+    test('ULTIMATE_PHYSICAL + DAMAGE_BONUS → ULTIMATE_PHYSICAL_DAMAGE_BONUS', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'ULTIMATE_PHYSICAL'))
+        .toBe(StatType.ULTIMATE_PHYSICAL_DAMAGE_BONUS);
+    });
+
+    test('ULTIMATE_ARTS + DAMAGE_BONUS → ULTIMATE_ARTS_DAMAGE_BONUS', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'ULTIMATE_ARTS'))
+        .toBe(StatType.ULTIMATE_ARTS_DAMAGE_BONUS);
+    });
+
+    test('unknown stem (NOT_A_STEM_ELECTRIC) falls through to bare id', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'NOT_A_STEM_ELECTRIC'))
+        .toBe(StatType.DAMAGE_BONUS);
+    });
+
+    test('known stem but unknown element falls through to bare id', () => {
+      expect(resolveEffectStat(NounType.STAT, 'DAMAGE_BONUS', 'BATTLE_BOGUS'))
+        .toBe(StatType.DAMAGE_BONUS);
+    });
+  });
+
   describe('unqualified / direct shapes', () => {
     test('STAT + ATTACK_BONUS (no qualifier) → ATTACK_BONUS', () => {
       expect(resolveEffectStat(NounType.STAT, 'ATTACK_BONUS'))

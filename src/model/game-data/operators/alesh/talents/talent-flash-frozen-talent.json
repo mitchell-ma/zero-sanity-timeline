@@ -157,7 +157,7 @@
     }
   ],
   "properties": {
-    "id": "FLASH_FROZEN_FOR_FRESHNESS",
+    "id": "FLASH_FROZEN_FOR_FRESHNESS_T1",
     "descriptionParams": {
       "usp": 4,
       "usp_self": 8,
@@ -188,8 +188,10 @@
       },
       "interactionType": "NONE"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ALESH",

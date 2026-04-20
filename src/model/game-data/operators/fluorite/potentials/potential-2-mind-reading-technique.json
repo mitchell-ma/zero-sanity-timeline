@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "FLUORITE_POTENTIAL_2",
+    "id": "MIND_READING_TECHNIQUE_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "probability": 0.1,
@@ -8,8 +10,10 @@
       "-probability": -0.1,
       "probability-1": -0.9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "FLUORITE",

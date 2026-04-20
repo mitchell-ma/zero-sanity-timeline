@@ -10,7 +10,6 @@ import type { CustomWeaponEffect } from '../model/custom/customWeaponEffectTypes
 import type { CustomGearEffect } from '../model/custom/customGearEffectTypes';
 import type { CustomOperatorStatus } from '../model/custom/customOperatorStatusTypes';
 import type { CustomOperatorTalent } from '../model/custom/customOperatorTalentTypes';
-import { getWeaponIdByName } from '../controller/gameDataStore';
 import { GearCategory, CustomWeaponSkillKind } from '../consts/enums';
 import { needsMigration, migrateV1ToV2 } from './customContentMigration';
 
@@ -188,11 +187,6 @@ export function validateCustomWeapon(
 
   if (!weapon.name.trim()) {
     errors.push({ field: 'name', message: 'Name is required' });
-  }
-
-  // Name must be unique across all weapons (built-in + custom)
-  if (getWeaponIdByName(weapon.name) && !existingIds.has(weapon.id)) {
-    errors.push({ field: 'name', message: `Weapon name "${weapon.name}" is already in use` });
   }
 
   if (weapon.baseAtk.lv1 <= 0) {

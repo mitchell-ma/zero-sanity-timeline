@@ -21,7 +21,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../dsl/semantics';
 import { useApp } from '../../../app/useApp';
-import { InteractionModeType, EnhancementType } from '../../../consts/enums';
+import { InteractionModeType } from '../../../consts/enums';
 import { FPS } from '../../../utils/timeline';
 import { computeTimelinePresentation } from '../../../controller/timeline/eventPresentationController';
 import { findColumn, buildContextMenu, getMenuPayload } from '../helpers';
@@ -44,12 +44,10 @@ function getBattleCol(app: AppResult) {
   return col!;
 }
 
-/** Find a variant by enhancementType and optionally by id. */
-function getVariant(app: AppResult, enhancementType: EnhancementType, variantId?: string) {
+/** Find a variant by id. */
+function getVariant(app: AppResult, variantId: string) {
   const col = getBattleCol(app);
-  const variant = col.eventVariants?.find(
-    (v) => v.enhancementType === enhancementType && (variantId ? v.id === variantId : true),
-  );
+  const variant = col.eventVariants?.find((v) => v.id === variantId);
   expect(variant).toBeDefined();
   return variant!;
 }
@@ -63,7 +61,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
 
     // ── Context menu layer: verify empowered variant is enabled in freeform ──
     const battleCol = getBattleCol(result.current);
-    const empoweredVariant = getVariant(result.current, EnhancementType.EMPOWERED);
+    const empoweredVariant = getVariant(result.current, EMPOWERED_BS_ID);
     expect(empoweredVariant.id).toBe(EMPOWERED_BS_ID);
 
     const startFrame = 5 * FPS;
@@ -78,7 +76,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     expect(empoweredItem!.disabled).toBeFalsy();
 
     // ── Controller layer: place empowered BS via context menu flow ──
-    const payload = getMenuPayload(result.current, battleCol, startFrame, empoweredVariant.displayName);
+    const payload = getMenuPayload(result.current, battleCol, startFrame, { variantId: empoweredVariant.id });
     act(() => {
       result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
@@ -114,9 +112,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
 
     // ── Context menu layer: verify enhanced+empowered variant is enabled in freeform ──
     const battleCol = getBattleCol(result.current);
-    // ENHANCED_EMPOWERED is assigned enhancementType ENHANCED in column builder;
-    // disambiguate from the plain ENHANCED variant by matching on the game-data ID.
-    const eeVariant = getVariant(result.current, EnhancementType.ENHANCED, ENHANCED_EMPOWERED_BS_ID);
+    const eeVariant = getVariant(result.current, ENHANCED_EMPOWERED_BS_ID);
     expect(eeVariant.id).toBe(ENHANCED_EMPOWERED_BS_ID);
 
     const startFrame = 5 * FPS;
@@ -130,7 +126,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     expect(eeItem!.disabled).toBeFalsy();
 
     // ── Controller layer: place enhanced+empowered BS via context menu flow ──
-    const payload = getMenuPayload(result.current, battleCol, startFrame, eeVariant.displayName);
+    const payload = getMenuPayload(result.current, battleCol, startFrame, { variantId: eeVariant.id });
     act(() => {
       result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
@@ -163,7 +159,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
 
     // ── Context menu layer: verify enhanced variant is DISABLED in strict mode (no ultimate) ──
     const battleCol = getBattleCol(result.current);
-    const enhancedVariant = getVariant(result.current, EnhancementType.ENHANCED, ENHANCED_BS_ID);
+    const enhancedVariant = getVariant(result.current, ENHANCED_BS_ID);
     expect(enhancedVariant.id).toBe(ENHANCED_BS_ID);
 
     const startFrame = 5 * FPS;
@@ -190,7 +186,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     expect(enhancedItemFreeform!.disabled).toBeFalsy();
 
     // ── Controller layer: place enhanced BS via context menu flow in freeform ──
-    const payload = getMenuPayload(result.current, battleCol, startFrame, enhancedVariant.displayName);
+    const payload = getMenuPayload(result.current, battleCol, startFrame, { variantId: enhancedVariant.id });
     act(() => {
       result.current.handleAddEvent(payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill);
     });
@@ -199,7 +195,7 @@ describe('Freeform enhanced/empowered drag — no ultimate required', () => {
     act(() => { result.current.setInteractionMode(InteractionModeType.STRICT); });
 
     const ev = result.current.events.find(
-      (e) => e.enhancementType === EnhancementType.ENHANCED && e.columnId === NounType.BATTLE && e.name === ENHANCED_BS_ID,
+      (e) => e.id.endsWith('_ENHANCED') && e.columnId === NounType.BATTLE && e.name === ENHANCED_BS_ID,
     );
     expect(ev).toBeDefined();
 

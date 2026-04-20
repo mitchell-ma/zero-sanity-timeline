@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "CRIMSON_SHADOW",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "CRIMSON_SHADOW",
     "descriptionParams": {
       "atk_scale_1": 1.92,
       "poise_1": 5,
@@ -41,7 +40,10 @@
       "1-duration_bleed": -14,
       "-duration_bleed": -15,
       "duration_bleed-1": 14
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

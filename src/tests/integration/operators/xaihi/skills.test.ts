@@ -94,8 +94,8 @@ describe('A. Basic Attack', () => {
     const col = findColumn(result.current, SLOT_XAIHI, NounType.BASIC_ATTACK);
     expect(col).toBeDefined();
     expect(col!.eventVariants).toBeDefined();
-    const dive = col!.eventVariants!.find(v => v.id === BasicAttackType.DIVE);
-    const finisher = col!.eventVariants!.find(v => v.id === BasicAttackType.FINISHER);
+    const dive = col!.eventVariants!.find(v => v.category === NounType.DIVE);
+    const finisher = col!.eventVariants!.find(v => v.category === NounType.FINISHER);
     expect(dive).toBeDefined();
     expect(finisher).toBeDefined();
 

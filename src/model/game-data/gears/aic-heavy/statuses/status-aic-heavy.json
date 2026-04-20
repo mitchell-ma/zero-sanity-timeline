@@ -48,8 +48,10 @@
       "interactionType": "RESET"
     },
     "cooldownSeconds": 5,
-    "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "AIC_HEAVY_STAT",

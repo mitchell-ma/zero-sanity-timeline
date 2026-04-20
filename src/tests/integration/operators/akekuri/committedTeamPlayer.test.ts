@@ -31,8 +31,8 @@ import { findColumn, getMenuPayload } from '../../helpers';
 import type { AppResult } from '../../helpers';
 
 const SLOT_AKEKURI = 'slot-1';
-const P1_STATUS_ID = 'AKEKURI_P1_POSITIVE_FEEDBACK';
-const P3_STATUS_ID = 'AKEKURI_P3_COMMITTED_TEAM_PLAYER';
+const P1_STATUS_ID = 'POSITIVE_FEEDBACK_P1';
+const P3_STATUS_ID = 'COMMITTED_TEAM_PLAYER_P3';
 
 beforeEach(() => {
   localStorage.clear();

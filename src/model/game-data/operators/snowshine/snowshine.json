@@ -9,8 +9,8 @@
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "talents": {
-    "one": "POLAR_SURVIVAL_TALENT",
-    "two": "SAR_PROFESSIONAL_TALENT",
+    "one": "POLAR_SURVIVAL_T1",
+    "two": "SAR_PROFESSIONAL_T2",
     "attributeIncrease": {
       "id": "FORGED"
     }

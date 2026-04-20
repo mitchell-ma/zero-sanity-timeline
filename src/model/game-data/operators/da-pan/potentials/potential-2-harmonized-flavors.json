@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "DA_PAN_POTENTIAL_2",
+    "id": "HARMONIZED_FLAVORS_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "stack": 1,
@@ -20,8 +22,10 @@
       "-talent_1_duration": -10,
       "talent_1_duration-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "DA_PAN",

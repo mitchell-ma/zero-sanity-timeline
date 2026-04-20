@@ -495,7 +495,6 @@ function StatusProperties({ props, updateProps }: {
         <CustomSelect className="ev-select" value={(props.target as string) ?? ''} options={TARGET_OPTIONS} onChange={(v) => updateProps({ target: v || null })} />
         <CustomSelect className="ev-select" value={(props.targetDeterminer as string) ?? ''} options={DETERMINER_OPTIONS} onChange={(v) => updateProps({ targetDeterminer: v || null })} />
       </Row>
-      <Row label={t('eventViewer.label.enhancement')}><TagEditor value={(props.enhancementTypes as string[]) ?? []} options={['EMPOWERED', 'ENHANCED']} onChange={(v) => updateProps({ enhancementTypes: v.length ? v : null })} /></Row>
       <div className="ev-hr" />
       <DurationRow label={t('eventViewer.label.duration')} value={(props.duration as Record<string, JsonValue>) ?? null} onChange={(v) => updateProps({ duration: v })} />
       <StatusLevelRows value={(props.stacks as Record<string, JsonValue>) ?? null} onChange={(v) => updateProps({ stacks: v })} />
@@ -512,7 +511,6 @@ function SkillProperties({ props, updateProps }: {
       <Row label={t('eventViewer.label.description')}><input className="ib-input ev-input--wide" type="text" value={(props.description as string) ?? ''} onChange={(e) => updateProps({ description: e.target.value || null })} /></Row>
       <DurationRow label={t('eventViewer.label.duration')} value={(props.duration as Record<string, JsonValue>) ?? null} onChange={(v) => updateProps({ duration: v })} />
       <Row label={t('eventViewer.label.window')}><input className="ib-input ev-input--num" type="number" step="any" min={0} value={(props.windowFrames as number) ?? ''} placeholder={t('eventViewer.unit.frames')} onChange={(e) => updateProps({ windowFrames: Number(e.target.value) || null })} /><span className="ev-unit">{t('eventViewer.unit.frames')}</span></Row>
-      <Row label={t('eventViewer.label.enhancement')}><TagEditor value={(props.enhancementTypes as string[]) ?? []} options={['EMPOWERED', 'ENHANCED']} onChange={(v) => updateProps({ enhancementTypes: v.length ? v : null })} /></Row>
       <Row label={t('eventViewer.label.dependencies')}><TagEditor value={(props.dependencyTypes as string[]) ?? []} options={DEPENDENCY_OPTIONS.map(o => o.value)} onChange={(v) => updateProps({ dependencyTypes: v.length ? v : null })} /></Row>
     </>
   );

@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "COMPREHENSIVE_MINDSET_TALENT",
+    "id": "COMPREHENSIVE_MINDSET_T2",
     "descriptionParams": {
       "talent_1": 2,
       "atk_scale_shockwave": 0.45,
@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "CATCHER",

@@ -687,11 +687,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "FLAMING_CINDERS_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "HEAT",
-    "id": "FLAMING_CINDERS_BATK",
     "descriptionParams": {
       "atk_scale": 0.6,
       "1-atk_scale": 0.4,
@@ -705,7 +704,10 @@
       "1-atb": -19,
       "-atb": -20,
       "atb-1": 19
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "LAEVATAIN",

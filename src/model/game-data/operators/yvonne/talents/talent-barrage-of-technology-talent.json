@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "BARRAGE_OF_TECHNOLOGY_TALENT",
+    "id": "BARRAGE_OF_TECHNOLOGY_T1",
     "descriptionParams": {
       "dmg_up": 0.5,
       "1-dmg_up": 0.5,
@@ -13,8 +13,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "YVONNE",

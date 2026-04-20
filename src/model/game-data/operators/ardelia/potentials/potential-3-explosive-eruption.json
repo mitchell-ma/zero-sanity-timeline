@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ARDELIA_POTENTIAL_3",
+    "id": "EXPLOSIVE_ERUPTION_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "potential3_duration": 1,
@@ -12,8 +14,10 @@
       "-effect_prob": -1.2,
       "effect_prob-1": 0.19999999999999996
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ARDELIA",

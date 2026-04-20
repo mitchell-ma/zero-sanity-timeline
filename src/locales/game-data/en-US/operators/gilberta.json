@@ -119,23 +119,23 @@
     "text": "Anomalous Gravity Field",
     "dataStatus": "RECONCILED"
   },
-  "op.GILBERTA.talent.LATE_REPLY_TALENT.event.description": {
+  "op.GILBERTA.talent.LATE_REPLY_T2.event.description": {
     "text": "Battle skill Arcane Staff: Gravity Mode and combo skill Arcane Staff: Matrix Displacement improved: Hitting at least 2 enemies with either the combo skill or the last sequence of the battle skill restores [108 + Intellect×0.90] HP to the controlled operator. If the controlled operator is already at max HP, then restore the HP of the teammate with lowest percentage HP.",
     "dataStatus": "RECONCILED"
   },
-  "op.GILBERTA.talent.LATE_REPLY_TALENT.event.name": {
+  "op.GILBERTA.talent.LATE_REPLY_T2.event.name": {
     "text": "Late Reply (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.GILBERTA.talent.MESSENGER_S_SONG_TALENT.event.description": {
+  "op.GILBERTA.talent.MESSENGER_S_SONG_T1.event.description": {
     "text": "When fighting in the battlefield, all allied guards, casters, and supporters gain Ultimate Gain Efficiency +{add:0%}.",
     "dataStatus": "RECONCILED"
   },
-  "op.GILBERTA.talent.MESSENGER_S_SONG_TALENT.event.name": {
+  "op.GILBERTA.talent.MESSENGER_S_SONG_T1.event.name": {
     "text": "Messenger's Song (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.GILBERTA.talent.MESSENGER_S_SONG_TALENT.segment.0.name": {
+  "op.GILBERTA.talent.MESSENGER_S_SONG_T1.segment.0.name": {
     "text": "Messenger's Song (T1)",
     "dataStatus": "RECONCILED"
   }

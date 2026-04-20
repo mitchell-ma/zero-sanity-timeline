@@ -14,7 +14,7 @@ import { PERMANENT_DURATION } from '../../consts/enums';
 import { DataDrivenSkillEventFrame } from '../event-frames/dataDrivenEventFrames';
 
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
-import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectThisOperatorInClauses, collectEnemyWithDeterminer } from './validationUtils';
+import { checkKeys, checkIdAndName, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS, VALID_EFFECT_KEYS, VALID_EFFECT_WITH_KEYS, VALID_TRIGGER_CONDITION_KEYS, validateEffect, validateInteraction, validateSegmentShape, validateNonNegativeValues, collectThisOperatorInClauses, collectEnemyWithDeterminer, validateEventTypes, validateAutomaticTagRequired } from './validationUtils';
 import { LocaleKey, resolveEventName, resolveOptionalEventDescription, resolveSegmentName, resolveFrameName } from '../../locales/gameDataLocale';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType', 'level']);
 const VALID_PROPERTIES_KEYS = new Set([
   'id', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer',
-  'duration', 'stacks', 'enhancementType', 'enhancementTypes', 'eventType',
+  'duration', 'stacks', 'eventTypes',
   'eventCategoryType', 'maxLevel', 'crowdControls',
   // Allowed when a potential file is loaded-as-a-status:
   'level', 'descriptionParams',
@@ -144,6 +144,8 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
   if (!props) { errors.push('root.properties: required'); return errors; }
   errors.push(...checkKeys(props, VALID_PROPERTIES_KEYS, 'properties'));
   errors.push(...checkIdAndName(props, 'properties'));
+  errors.push(...validateEventTypes(props, 'properties'));
+  errors.push(...validateAutomaticTagRequired(json, 'root'));
 
   // eventCategoryType must be a known category. TALENT_STATUS / POTENTIAL_STATUS are
   // no longer valid — use TALENT / POTENTIAL instead. A TALENT or POTENTIAL is
@@ -156,6 +158,36 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
     // eslint-disable-next-line no-restricted-syntax
     } else if (props.eventCategoryType === 'POTENTIAL_STATUS') {
       errors.push(`properties.eventCategoryType: "POTENTIAL_STATUS" is invalid — use "POTENTIAL" instead`);
+    }
+  }
+
+  // ID naming convention:
+  //   POTENTIAL  → <NAME>_P[1-5]   (e.g. STORM_OF_TRANSFORMATION_P5)
+  //   TALENT     → <NAME>_T[12]    (e.g. FORCE_OF_NATURE_T1, MOMENTUM_BREAKER_T2)
+  // Exemptions:
+  //   - ORIGINIUM_CRYSTAL (Endministrator T2; legacy exemption per user)
+  //   - ENDMINISTRATOR_POTENTIAL_[3-5] (unnamed pending reconciliation)
+  const id = typeof props.id === 'string' ? props.id : '';
+  // eslint-disable-next-line no-restricted-syntax
+  const ID_EXEMPTIONS = new Set<string>([
+    'ORIGINIUM_CRYSTAL',
+    'ENDMINISTRATOR_POTENTIAL_3', 'ENDMINISTRATOR_POTENTIAL_4', 'ENDMINISTRATOR_POTENTIAL_5',
+    // Aux statuses that live in statuses/ folder but carry TALENT/POTENTIAL
+    // category so the engine's AUTOMATIC-seeding path applies. Bare ids (no
+    // _P/_T suffix) signal the "lives in statuses/ dir" convention.
+    'ESSENCE_DISINTEGRATION_MINOR', 'THE_STEEL_OATH_EMPOWERED',
+    'VIGIL_SERVICES_ULTIMATE_ENERGY_LOCKOUT', 'PREP_INGREDIENTS',
+    // Wulfgard P5 aux status (statuses/ folder; dual-file with the potential)
+    'NATURAL_PREDATOR',
+  ]);
+  if (id && !ID_EXEMPTIONS.has(id)) {
+    // eslint-disable-next-line no-restricted-syntax
+    if (props.eventCategoryType === 'POTENTIAL' && !/^[A-Z][A-Z0-9_]*_P[1-5]$/.test(id)) {
+      errors.push(`properties.id: POTENTIAL id "${id}" must match <NAME>_P[1-5] (e.g. STORM_OF_TRANSFORMATION_P5)`);
+    }
+    // eslint-disable-next-line no-restricted-syntax
+    if (props.eventCategoryType === 'TALENT' && !/^[A-Z][A-Z0-9_]*_T[12]$/.test(id)) {
+      errors.push(`properties.id: TALENT id "${id}" must match <NAME>_T[12] (e.g. FORCE_OF_NATURE_T1)`);
     }
   }
 
@@ -247,8 +279,7 @@ export class OperatorStatus {
   readonly toDeterminer?: string;
   readonly duration?: DurationConfig;
   readonly stacks?: StacksConfig;
-  readonly enhancementTypes?: string[];
-  readonly eventType: EventType;
+  readonly eventTypes: EventType[];
   readonly eventCategoryType?: string;
   readonly categoryType?: EventCategoryType;
   readonly isEnabled?: boolean;
@@ -339,8 +370,7 @@ export class OperatorStatus {
     if (props.stacks) {
       this.stacks = props.stacks as StacksConfig;
     }
-    if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
-    this.eventType = (props.eventType as EventType) ?? EventType.STATUS;
+    this.eventTypes = (props.eventTypes as EventType[]) ?? [EventType.STATUS];
     if (props.eventCategoryType) {
       this.eventCategoryType = props.eventCategoryType as string;
       this.categoryType = EVENT_CATEGORY_TO_GROUP[this.eventCategoryType];
@@ -428,8 +458,7 @@ export class OperatorStatus {
         ...(this.targetDeterminer ? { targetDeterminer: this.targetDeterminer } : {}),
         ...(this.duration ? { duration: this.duration } : {}),
         ...(this.stacks ? { stacks: this.stacks } : {}),
-        ...(this.enhancementTypes ? { enhancementTypes: this.enhancementTypes } : {}),
-        eventType: this.eventType,
+        eventTypes: this.eventTypes,
         ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
       },
       metadata: {
@@ -507,7 +536,8 @@ for (const key of operatorStatusContext.keys()) {
   const kind = match[2];
   if (kind === 'potentials') {
     const props = json.properties as Record<string, unknown> | undefined;
-    if (props?.eventType !== EventType.STATUS) continue;
+    const types = props?.eventTypes as EventType[] | undefined;
+    if (!types?.includes(EventType.STATUS)) continue;
   }
 
   // Pick the locale prefix that matches the source directory. Always derive

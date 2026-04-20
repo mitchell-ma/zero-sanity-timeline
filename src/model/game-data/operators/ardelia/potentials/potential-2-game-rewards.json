@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ARDELIA_POTENTIAL_2",
+    "id": "GAME_REWARDS_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "potential2": 1,
@@ -8,8 +10,10 @@
       "-potential2": -1,
       "potential2-1": 0
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ARDELIA",

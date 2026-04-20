@@ -353,11 +353,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "SWORD_ART_OF_ASSAULT_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "SWORD_ART_OF_ASSAULT_BATK",
     "descriptionParams": {
       "atk_scale": 1.84,
       "atb": 28,
@@ -371,7 +370,10 @@
       "1-poise": -24,
       "-poise": -25,
       "poise-1": 24
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "EMBER",

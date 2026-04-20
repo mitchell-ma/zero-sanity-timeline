@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "LAST_RITE_POTENTIAL_1",
+    "id": "UNDERTAKERS_GIFT_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "atk_up": 0.2,
@@ -16,8 +18,10 @@
       "-potential_1": -1,
       "potential_1-1": 0
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LAST_RITE",

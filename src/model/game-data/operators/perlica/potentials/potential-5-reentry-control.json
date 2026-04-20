@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "PERLICA_POTENTIAL_5",
+    "id": "REENTRY_CONTROL_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "crit": 0.3,
@@ -8,8 +10,10 @@
       "-crit": -0.3,
       "crit-1": -0.7
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "PERLICA",

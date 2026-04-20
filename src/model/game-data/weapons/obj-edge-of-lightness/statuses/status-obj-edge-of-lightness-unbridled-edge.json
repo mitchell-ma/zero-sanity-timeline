@@ -22,7 +22,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.03,
                     0.036,
@@ -35,8 +35,11 @@
                     0.084
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               },
@@ -51,7 +54,7 @@
               "with": {
                 "value": {
                   "verb": "VARY_BY",
-                  "object": "SKILL_LEVEL",
+                  "object": "RANK",
                   "value": [
                     0.03,
                     0.036,
@@ -64,8 +67,11 @@
                     0.084
                   ],
                   "of": {
-                    "object": "OPERATOR",
-                    "determiner": "THIS"
+                    "object": "WEAPON",
+                    "of": {
+                      "object": "OPERATOR",
+                      "determiner": "THIS"
+                    }
                   }
                 }
               },
@@ -95,8 +101,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "OTHER",
-    "eventType": "STATUS",
-    "eventCategoryType": "WEAPON"
+    "eventCategoryType": "WEAPON",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "OBJ_EDGE_OF_LIGHTNESS",

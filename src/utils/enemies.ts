@@ -1,9 +1,9 @@
 import { Enemy } from "../consts/viewTypes";
-import { StatType, ELEMENT_COLORS, ElementType } from "../consts/enums";
-import { getModelEnemy } from "../controller/calculation/enemyRegistry";
-import { BossEnemy } from "../model/enemies/bossEnemy";
+import { StatType, ELEMENT_COLORS, ElementType, EnemyTierType, RaceType } from "../consts/enums";
+import { getModelEnemy, getAllEnemyIds, getEnemyConfigById } from "../controller/calculation/enemyRegistry";
 import { INFLICTION_COLUMNS } from "../model/channels";
 import { t } from "../locales/locale";
+import { LocaleKey, resolveEventName } from "../locales/gameDataLocale";
 
 // ─── Enemy sprite imports ──────────────────────────────────────────────────
 import rhodagnSprite from "../assets/enemies/rhodagn_the_bonekrushing_fist_sprite.png";
@@ -64,6 +64,66 @@ import spottedRakerbeastSprite from "../assets/enemies/spotted_rakerbeast_sprite
 import groveArcherSprite from "../assets/enemies/grove_archer_sprite.png";
 import roadPlundererSprite from "../assets/enemies/road_plunderer_sprite.png";
 
+const ENEMY_SPRITES: Record<string, string> = {
+  RHODAGN: rhodagnSprite,
+  TRIAGGELOS: triaggelosSprite,
+  MARBLE_PALECORE: marblePalecoreSprite,
+  MARBLE_PALESENT: marblePalesentSprite,
+  MARBLE_APPENDAGE: marbleAppendageSprite,
+  RAM: ramSprite,
+  RAM_ALPHA: ramAlphaSprite,
+  STING: stingSprite,
+  STING_ALPHA: stingAlphaSprite,
+  FALSEWINGS: falsewingsSprite,
+  FALSEWINGS_ALPHA: falsewingsAlphaSprite,
+  MUDFLOW: mudflowSprite,
+  MUDFLOW_DELTA: mudflowDeltaSprite,
+  HEDRON: hedronSprite,
+  HEDRON_DELTA: hedronDeltaSprite,
+  PRISM: prismSprite,
+  HEAVY_RAM: heavyRamSprite,
+  HEAVY_RAM_ALPHA: heavyRamAlphaSprite,
+  HEAVY_STING: heavyStingSprite,
+  HEAVY_STING_ALPHA: heavyStingAlphaSprite,
+  EFFIGY: effigySprite,
+  SENTINEL: sentinelSprite,
+  TIDEWALKER: tidewalkerSprite,
+  TIDEWALKER_DELTA: tidewalkerDeltaSprite,
+  WALKING_CHRYSOPOLIS: walkingChrysopolisSprite,
+  TIDALKLAST: tidalklastSprite,
+  BONEKRUSHER_RIPPTUSK: bonekrusherRipptuskSprite,
+  ELITE_RIPPTUSK: eliteRipptuskSprite,
+  HAZEFYRE_TUSKBEAST: hazefyreTuskbeastSprite,
+  HAZEFYRE_CLAW: hazefyreClawSprite,
+  BONEKRUSHER_RAIDER: bonekrusherRaiderSprite,
+  ELITE_RAIDER: eliteRaiderSprite,
+  BONEKRUSHER_AMBUSHER: bonekrusherAmbusherSprite,
+  ELITE_AMBUSHER: eliteAmbusherSprite,
+  BONEKRUSHER_INFILTRATOR: bonekrusherInfiltratorSprite,
+  BONEKRUSHER_VANGUARD: bonekrusherVanguardSprite,
+  BONEKRUSHER_PYROMANCER: bonekrusherPyromancerSprite,
+  BONEKRUSHER_ARSONIST: bonekrusherArsonistSprite,
+  BONEKRUSHER_BALLISTA: bonekrusherBallistaSprite,
+  BONEKRUSHER_EXECUTIONER: bonekrusherExecutionerSprite,
+  ELITE_EXECUTIONER: eliteExecutionerSprite,
+  BONEKRUSHER_SIEGEKNUCKLES: bonekrusherSiegeknucklesSprite,
+  ACID_ORIGINIUM_SLUG: acidOriginiumSlugSprite,
+  BLAZEMIST_ORIGINIUM_SLUG: blazemistOriginiumSlugSprite,
+  FIREMIST_ORIGINIUM_SLUG: firemistOriginiumSlugSprite,
+  BRUTAL_PINCERBEAST: brutalPincerbeastSprite,
+  INDIGENOUS_PINCERBEAST: indigenousPincerbeastSprite,
+  WATERLAMP: waterlampSprite,
+  IMBUED_QUILLBEAST: imbuedQuillbeastSprite,
+  QUILLBEAST: quillbeastSprite,
+  TUNNELING_NIDWYRM: tunnelingNidwyrmSprite,
+  AXE_ARMORBEAST: axeArmorbeastSprite,
+  HAZEFYRE_AXE_ARMORBEAST: hazefyreAxeArmorbeastSprite,
+  GLARING_RAKERBEAST: glaringRakerbeastSprite,
+  SPOTTED_RAKERBEAST: spottedRakerbeastSprite,
+  GROVE_ARCHER: groveArcherSprite,
+  ROAD_PLUNDERER: roadPlundererSprite,
+};
+
 // ─── Default statuses (infliction columns on the timeline) ─────────────────
 const DEFAULT_STATUSES = [
   { id: INFLICTION_COLUMNS.HEAT,     label: t('infliction.heat'),     color: ELEMENT_COLORS[ElementType.HEAT] },
@@ -72,80 +132,62 @@ const DEFAULT_STATUSES = [
   { id: INFLICTION_COLUMNS.CRYO,     label: t('infliction.cryo'),     color: ELEMENT_COLORS[ElementType.CRYO] },
 ];
 
-function e(id: string, name: string, tier: string, sprite?: string): Enemy {
-  const model = getModelEnemy(id);
+const RACE_TIER_LABEL: Record<RaceType, string> = {
+  [RaceType.LANDBREAKERS]: 'Landbreaker',
+  [RaceType.AGGELOI]: 'Aggeloi',
+  [RaceType.WILDLIFE]: 'Wildlife',
+  [RaceType.CANGZEI_PIRATES]: 'Pirate',
+};
+
+function buildEnemy(enemyId: string): Enemy | null {
+  const config = getEnemyConfigById(enemyId);
+  if (!config) return null;
+  const model = getModelEnemy(enemyId);
+  const name = resolveEventName(LocaleKey.enemy(config.id));
+  const sprite = ENEMY_SPRITES[enemyId];
+  const tierLabel = config.tier === EnemyTierType.BOSS
+    ? 'Boss'
+    : (RACE_TIER_LABEL[config.race as RaceType] ?? String(config.race));
   const staggerHp = model?.stats[StatType.STAGGER_HP] ?? 60;
-  const staggerNodes = model instanceof BossEnemy ? model.staggerNodes : 0;
-  const staggerNodeRecoverySeconds = model instanceof BossEnemy ? model.staggerNodeRecoverySeconds : 0;
+  const staggerNodes = model?.staggerNodes ?? 0;
+  const staggerNodeRecoverySeconds = model?.staggerNodeRecoverySeconds ?? 0;
   const staggerBreakDurationSeconds = model?.stats[StatType.STAGGER_RECOVERY] ?? 6;
-  return { id, name, tier, sprite, statuses: DEFAULT_STATUSES, staggerHp, staggerNodes, staggerNodeRecoverySeconds, staggerBreakDurationSeconds };
+  return {
+    id: enemyId,
+    name,
+    tier: tierLabel,
+    sprite,
+    statuses: DEFAULT_STATUSES,
+    staggerHp,
+    staggerNodes,
+    staggerNodeRecoverySeconds,
+    staggerBreakDurationSeconds,
+  };
 }
 
+/** Display-tier labels used by the enemy selector filter chips. */
 export const ENEMY_TIERS = ['Boss', 'Aggeloi', 'Landbreaker', 'Wildlife', 'Pirate'] as const;
 
-export const ALL_ENEMIES: Enemy[] = [
-  // ── Bosses ────────────────────────────────────────────────
-  e('rhodagn',                   'Rhodagn the Bonekrushing Fist',   'Boss',        rhodagnSprite),
-  e('triaggelos',               'Triaggelos',                      'Boss',        triaggelosSprite),
-  e('marble_palecore',          'Marble Aggelomoirai Palecore',    'Boss',        marblePalecoreSprite),
-  e('marble_palesent',          'Marble Aggelomoirai Palesent',    'Boss',        marblePalesentSprite),
-  e('marble_appendage',         'Marble Appendage',                'Boss',        marbleAppendageSprite),
-  // ── Aggeloi ───────────────────────────────────────────────
-  e('ram',                       'Ram',                             'Aggeloi',     ramSprite),
-  e('ram_alpha',                 'Ram \u03b1',                      'Aggeloi',     ramAlphaSprite),
-  e('sting',                     'Sting',                           'Aggeloi',     stingSprite),
-  e('sting_alpha',               'Sting \u03b1',                    'Aggeloi',     stingAlphaSprite),
-  e('falsewings',                'Falsewings',                      'Aggeloi',     falsewingsSprite),
-  e('falsewings_alpha',          'Falsewings \u03b1',               'Aggeloi',     falsewingsAlphaSprite),
-  e('mudflow',                   'Mudflow',                         'Aggeloi',     mudflowSprite),
-  e('mudflow_delta',             'Mudflow \u03b4',                  'Aggeloi',     mudflowDeltaSprite),
-  e('hedron',                    'Hedron',                          'Aggeloi',     hedronSprite),
-  e('hedron_delta',              'Hedron \u03b4',                   'Aggeloi',     hedronDeltaSprite),
-  e('prism',                     'Prism',                           'Aggeloi',     prismSprite),
-  e('heavy_ram',                 'Heavy Ram',                       'Aggeloi',     heavyRamSprite),
-  e('heavy_ram_alpha',           'Heavy Ram \u03b1',                'Aggeloi',     heavyRamAlphaSprite),
-  e('heavy_sting',               'Heavy Sting',                     'Aggeloi',     heavyStingSprite),
-  e('heavy_sting_alpha',         'Heavy Sting \u03b1',              'Aggeloi',     heavyStingAlphaSprite),
-  e('effigy',                    'Effigy',                          'Aggeloi',     effigySprite),
-  e('sentinel',                  'Sentinel',                        'Aggeloi',     sentinelSprite),
-  e('tidewalker',                'Tidewalker',                      'Aggeloi',     tidewalkerSprite),
-  e('tidewalker_delta',          'Tidewalker \u03b4',               'Aggeloi',     tidewalkerDeltaSprite),
-  e('walking_chrysopolis',       'Walking Chrysopolis',             'Aggeloi',     walkingChrysopolisSprite),
-  e('tidalklast',                'Tidalklast',                      'Aggeloi',     tidalklastSprite),
-  // ── Landbreakers ──────────────────────────────────────────
-  e('bonekrusher_ripptusk',      'Bonekrusher Ripptusk',            'Landbreaker', bonekrusherRipptuskSprite),
-  e('elite_ripptusk',            'Elite Ripptusk',                  'Landbreaker', eliteRipptuskSprite),
-  e('hazefyre_tuskbeast',        'Hazefyre Tuskbeast',              'Landbreaker', hazefyreTuskbeastSprite),
-  e('hazefyre_claw',             'Hazefyre Claw',                   'Landbreaker', hazefyreClawSprite),
-  e('bonekrusher_raider',        'Bonekrusher Raider',              'Landbreaker', bonekrusherRaiderSprite),
-  e('elite_raider',              'Elite Raider',                    'Landbreaker', eliteRaiderSprite),
-  e('bonekrusher_ambusher',      'Bonekrusher Ambusher',            'Landbreaker', bonekrusherAmbusherSprite),
-  e('elite_ambusher',            'Elite Ambusher',                  'Landbreaker', eliteAmbusherSprite),
-  e('bonekrusher_infiltrator',   'Bonekrusher Infiltrator',         'Landbreaker', bonekrusherInfiltratorSprite),
-  e('bonekrusher_vanguard',      'Bonekrusher Vanguard',            'Landbreaker', bonekrusherVanguardSprite),
-  e('bonekrusher_pyromancer',    'Bonekrusher Pyromancer',           'Landbreaker', bonekrusherPyromancerSprite),
-  e('bonekrusher_arsonist',      'Bonekrusher Arsonist',            'Landbreaker', bonekrusherArsonistSprite),
-  e('bonekrusher_ballista',      'Bonekrusher Ballista',            'Landbreaker', bonekrusherBallistaSprite),
-  e('bonekrusher_executioner',   'Bonekrusher Executioner',         'Landbreaker', bonekrusherExecutionerSprite),
-  e('elite_executioner',         'Elite Executioner',               'Landbreaker', eliteExecutionerSprite),
-  e('bonekrusher_siegeknuckles', 'Bonekrusher Siegeknuckles',       'Landbreaker', bonekrusherSiegeknucklesSprite),
-  // ── Wildlife ──────────────────────────────────────────────
-  e('acid_originium_slug',       'Acid Originium Slug',             'Wildlife',    acidOriginiumSlugSprite),
-  e('blazemist_originium_slug',  'Blazemist Originium Slug',        'Wildlife',    blazemistOriginiumSlugSprite),
-  e('firemist_originium_slug',   'Firemist Originium Slug',         'Wildlife',    firemistOriginiumSlugSprite),
-  e('brutal_pincerbeast',        'Brutal Pincerbeast',              'Wildlife',    brutalPincerbeastSprite),
-  e('indigenous_pincerbeast',    'Indigenous Pincerbeast',           'Wildlife',    indigenousPincerbeastSprite),
-  e('waterlamp',                 'Waterlamp',                       'Wildlife',    waterlampSprite),
-  e('imbued_quillbeast',         'Imbued Quillbeast',               'Wildlife',    imbuedQuillbeastSprite),
-  e('quillbeast',                'Quillbeast',                      'Wildlife',    quillbeastSprite),
-  e('tunneling_nidwyrm',         'Tunneling Nidwyrm',               'Wildlife',    tunnelingNidwyrmSprite),
-  e('axe_armorbeast',            'Axe Armorbeast',                  'Wildlife',    axeArmorbeastSprite),
-  e('hazefyre_axe_armorbeast',   'Hazefyre Axe Armorbeast',         'Wildlife',    hazefyreAxeArmorbeastSprite),
-  e('glaring_rakerbeast',        'Glaring Rakerbeast',              'Wildlife',    glaringRakerbeastSprite),
-  e('spotted_rakerbeast',        'Spotted Rakerbeast',              'Wildlife',    spottedRakerbeastSprite),
-  // ── Cangzei Pirates ───────────────────────────────────────
-  e('grove_archer',              'Grove Archer',                    'Pirate',      groveArcherSprite),
-  e('road_plunderer',            'Road Plunderer',                  'Pirate',      roadPlundererSprite),
-];
+/** Stable sort: bosses first, then by tier-label order from ENEMY_TIERS, then by name. */
+const TIER_ORDER: Record<string, number> = {
+  Boss: 0,
+  Aggeloi: 1,
+  Landbreaker: 2,
+  Wildlife: 3,
+  Pirate: 4,
+};
 
-export const DEFAULT_ENEMY: Enemy = ALL_ENEMIES[0]; // Rhodagn
+/** Default-selected enemy id. Pinned here so the DEFAULT_ENEMY lookup isn't a magic string. */
+export const DEFAULT_ENEMY_ID = 'RHODAGN';
+
+export const ALL_ENEMIES: Enemy[] = getAllEnemyIds()
+  .map(buildEnemy)
+  .filter((e): e is Enemy => e !== null)
+  .sort((a, b) => {
+    const ta = TIER_ORDER[a.tier] ?? 99;
+    const tb = TIER_ORDER[b.tier] ?? 99;
+    if (ta !== tb) return ta - tb;
+    return a.name.localeCompare(b.name);
+  });
+
+export const DEFAULT_ENEMY: Enemy = ALL_ENEMIES.find((e) => e.id === DEFAULT_ENEMY_ID) ?? ALL_ENEMIES[0];

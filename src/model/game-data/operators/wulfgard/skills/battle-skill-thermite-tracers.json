@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "THERMITE_TRACERS",
     "eventCategoryType": "BATTLE",
     "element": "HEAT",
-    "id": "THERMITE_TRACERS",
     "descriptionParams": {
       "atk_scale": 0.77,
       "atk_scale_plus": 8.5,
@@ -33,7 +32,10 @@
       "1-poise_extra_bullet_fail": 1,
       "-poise_extra_bullet_fail": 0,
       "poise_extra_bullet_fail-1": -1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "WULFGARD",

@@ -94,8 +94,10 @@
     "id": "AETHERTECH_STAT",
     "rarity": 5,
     "piecesRequired": 3,
-    "eventType": "STATUS",
-    "eventCategoryType": "GEAR_STAT"
+    "eventCategoryType": "GEAR_STAT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "game",

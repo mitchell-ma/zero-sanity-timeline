@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "COMBO",
     "eventCategoryType": "COMBO",
     "element": "CRYO",
-    "id": "COMBO",
     "descriptionParams": {
       "atk_scale": 2.4,
       "usp": 10,
@@ -21,7 +20,10 @@
       "1-poise": -9,
       "-poise": -10,
       "poise-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

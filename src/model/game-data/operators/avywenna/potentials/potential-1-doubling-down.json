@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "AVYWENNA_POTENTIAL_1",
+    "id": "DOUBLING_DOWN_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "talent0_usp": 2,
@@ -8,8 +10,10 @@
       "-talent0_usp": -2,
       "talent0_usp-1": 1
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "AVYWENNA",

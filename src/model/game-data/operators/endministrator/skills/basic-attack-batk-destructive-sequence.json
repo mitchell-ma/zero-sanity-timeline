@@ -678,11 +678,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "DESTRUCTIVE_SEQUENCE_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "DESTRUCTIVE_SEQUENCE_BATK",
     "descriptionParams": {
       "atk_scale": 0.9,
       "atb": 20,
@@ -696,7 +695,10 @@
       "1-poise": -17,
       "-poise": -18,
       "poise-1": 17
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

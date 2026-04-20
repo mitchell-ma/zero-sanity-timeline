@@ -1,8 +1,7 @@
 {
   "properties": {
-    "eventType": "SKILL",
-    "eventCategoryType": "ULTIMATE",
     "id": "CRYOBLASTING_PISTOLIER",
+    "eventCategoryType": "ULTIMATE",
     "descriptionParams": {
       "atk_scale1": 0.2,
       "atk_scale2": 3,
@@ -24,7 +23,10 @@
       "1-atk_scale_extra": -5,
       "-atk_scale_extra": -6,
       "atk_scale_extra-1": 5
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {
@@ -97,7 +99,7 @@
             {
               "verb": "APPLY",
               "object": "STATUS",
-              "objectId": "EXPERT_MECHCRAFTER",
+              "objectId": "EXPERT_MECHCRAFTER_P5",
               "toDeterminer": "THIS",
               "to": "OPERATOR",
               "with": {

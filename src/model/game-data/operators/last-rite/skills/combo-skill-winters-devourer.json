@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "WINTERS_DEVOURER",
     "eventCategoryType": "COMBO",
     "element": "CRYO",
-    "id": "WINTERS_DEVOURER",
     "descriptionParams": {
       "atk_scale": 1.6,
       "atk_scale2": 1.6,
@@ -33,7 +32,10 @@
       "1-count": -2,
       "-count": -3,
       "count-1": 2
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

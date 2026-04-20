@@ -312,6 +312,11 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
                       const rel = e.relatedTarget as Node | null;
                       // Into the submenu → stay open.
                       if (rel && submenuRef.current?.contains(rel)) { cancelHoverClose(); return; }
+                      // Into the same row (the main menu option that owns this
+                      // submenu) → stay open; the parent option is conceptually
+                      // "highlighted" while its submenu is showing.
+                      const ownRow = e.currentTarget.parentElement;
+                      if (rel && ownRow?.contains(rel)) { cancelHoverClose(); return; }
                       // Into the scrollbar channel (relatedTarget is the menu
                       // itself) → brief grace so diagonal travel toward the
                       // submenu through the scrollbar gutter still works.
@@ -366,7 +371,15 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
           onMouseEnter={cancelHoverClose}
           onMouseLeave={(e) => {
             const rel = e.relatedTarget as Node | null;
-            // Moving back into the main menu → close immediately.
+            // Back onto the parent option's row (the main menu option that
+            // owns this submenu) → stay open; that row is conceptually
+            // "highlighted" while its submenu is showing.
+            const ownerRow = openSubmenu != null
+              ? expandRefs.current[openSubmenu]?.parentElement ?? null
+              : null;
+            if (rel && ownerRow?.contains(rel)) { cancelHoverClose(); return; }
+            // Moving back into the main menu (any other row) → close
+            // immediately.
             if (rel && menuRef.current?.contains(rel)) {
               cancelHoverClose();
               setOpenSubmenu(null);

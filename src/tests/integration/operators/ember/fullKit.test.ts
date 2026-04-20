@@ -37,7 +37,7 @@ const STEEL_OATH_ID: string = require('../../../../model/game-data/operators/emb
 const STEEL_OATH_EMPOWERED_ID: string = require('../../../../model/game-data/operators/ember/statuses/status-the-steel-oath-empowered.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-const PAY_THE_FERRIC_PRICE_ID = 'PAY_THE_FERRIC_PRICE';
+const PAY_THE_FERRIC_PRICE_ID = 'PAY_THE_FERRIC_PRICE_T2';
 const SLOT = 'slot-0';
 
 beforeEach(() => { localStorage.clear(); });

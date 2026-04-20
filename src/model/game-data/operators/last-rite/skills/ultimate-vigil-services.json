@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "VIGIL_SERVICES",
     "eventCategoryType": "ULTIMATE",
     "element": "CRYO",
-    "id": "VIGIL_SERVICES",
     "descriptionParams": {
       "atk_scale": 4,
       "atk_scale2": 8,
@@ -25,7 +24,10 @@
       "1-usp": -9,
       "-usp": -10,
       "usp-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

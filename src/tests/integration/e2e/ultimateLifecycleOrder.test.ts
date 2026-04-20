@@ -136,7 +136,7 @@ describe('Ultimate lifecycle order — Laevatain Twilight', () => {
     expect(hasDropBelowMax).toBe(true);
   });
 
-  it('animation+active clauses ENABLE the enhanced BATK and DISABLE the base BATK for the full ult window', () => {
+  it('active clause ENABLEs the enhanced BATK and DISABLEs the base BATK for the post-animation ult window', () => {
     const { result } = renderHook(() => useApp());
     act(() => { setUltimateEnergyToMax(result.current, SLOT, SLOT_INDEX); });
 
@@ -152,12 +152,14 @@ describe('Ultimate lifecycle order — Laevatain Twilight', () => {
     const activeFrame = placementFrame + ANIMATION_DURATION_FRAMES + 60; // inside ACTIVE
     const postFrame = placementFrame + ANIMATION_DURATION_FRAMES + ACTIVE_DURATION_FRAMES + 120; // past the ult
 
-    // ENABLE fires for FLAMING_CINDERS_BATK_ENHANCED in both segments
+    // ENABLE/DISABLE effects live on the active (post-animation) segment —
+    // hasEnableClauseAtFrame strictly checks the clause of the segment
+    // covering the given frame, so the animation window returns false.
     expect(
       hasEnableClauseAtFrame(
         result.current.allProcessedEvents, SLOT, ENHANCED_BATK_ID, animFrame,
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       hasEnableClauseAtFrame(
         result.current.allProcessedEvents, SLOT, ENHANCED_BATK_ID, activeFrame,
@@ -170,13 +172,15 @@ describe('Ultimate lifecycle order — Laevatain Twilight', () => {
       ),
     ).toBe(false);
 
-    // checkVariantAvailability applies DISABLE/ENABLE gating holistically:
-    // the enhanced variant is available during the ult window, the base is blocked.
+    // checkVariantAvailability is ENABLE-gated — the enhanced variant is
+    // available only while an ENABLE clause covers the current frame. ENABLE
+    // lives on segments[1], so the variant is unavailable during animation
+    // and available during the active window.
     const enhancedDuringAnim = checkVariantAvailability(
       ENHANCED_BATK_ID, SLOT, result.current.allProcessedEvents, animFrame,
       NounType.BASIC_ATTACK, result.current.slots,
     );
-    expect(enhancedDuringAnim.disabled).toBeFalsy();
+    expect(enhancedDuringAnim.disabled).toBe(true);
 
     const enhancedDuringActive = checkVariantAvailability(
       ENHANCED_BATK_ID, SLOT, result.current.allProcessedEvents, activeFrame,
@@ -184,12 +188,7 @@ describe('Ultimate lifecycle order — Laevatain Twilight', () => {
     );
     expect(enhancedDuringActive.disabled).toBeFalsy();
 
-    const baseDuringAnim = checkVariantAvailability(
-      BASE_BATK_ID, SLOT, result.current.allProcessedEvents, animFrame,
-      NounType.BASIC_ATTACK, result.current.slots,
-    );
-    expect(baseDuringAnim.disabled).toBe(true);
-
+    // Base BATK is blocked during the active window (DISABLE on segments[1]).
     const baseDuringActive = checkVariantAvailability(
       BASE_BATK_ID, SLOT, result.current.allProcessedEvents, activeFrame,
       NounType.BASIC_ATTACK, result.current.slots,
@@ -268,19 +267,14 @@ describe('Ultimate lifecycle order — Laevatain Twilight', () => {
     // clause (authored on the animation segment).
     expect(segments[1].properties.segmentTypes).toBeUndefined();
 
-    // Animation clause should include CONSUME ULTIMATE_ENERGY and ENABLE/DISABLE
+    // Animation clause carries CONSUME ULTIMATE_ENERGY; ENABLE/DISABLE effects
+    // live on the active segment (segments[1]) and run for its full duration.
     const animClause = segments[0].clause as {
       effects?: { verb: string; object?: string; objectQualifier?: string }[];
     }[];
     const animEffects = animClause.flatMap(c => c.effects ?? []);
     expect(
       animEffects.some(e => e.verb === VerbType.CONSUME && e.object === NounType.ULTIMATE_ENERGY),
-    ).toBe(true);
-    expect(
-      animEffects.some(e => e.verb === VerbType.ENABLE && e.objectQualifier === ENHANCED_BATK_ID),
-    ).toBe(true);
-    expect(
-      animEffects.some(e => e.verb === VerbType.DISABLE && e.objectQualifier === BASE_BATK_ID),
     ).toBe(true);
 
     // Active clause must sustain ENABLE(enhanced) + DISABLE(base)

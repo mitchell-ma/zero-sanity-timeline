@@ -27,8 +27,10 @@
       },
       "interactionType": "MERGE"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "PHYSICAL_STATUS"
+    "eventCategoryType": "PHYSICAL_STATUS",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "game",

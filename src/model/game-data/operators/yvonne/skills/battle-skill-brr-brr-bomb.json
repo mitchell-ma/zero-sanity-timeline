@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "BRR_BRR_BOMB",
     "eventCategoryType": "BATTLE",
     "element": "CRYO",
-    "id": "BRR_BRR_BOMB",
     "descriptionParams": {
       "atk_scale": 2.5,
       "poise": 10,
@@ -40,7 +39,10 @@
           "default": 1
         }
       ]
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "YVONNE",

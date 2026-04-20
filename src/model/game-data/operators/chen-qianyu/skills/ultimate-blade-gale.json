@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "BLADE_GALE",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
-    "id": "BLADE_GALE",
     "descriptionParams": {
       "atk_scale1": 0.81,
       "atk_scale2": 10.23,
@@ -21,7 +20,10 @@
       "1-poise_final": -19,
       "-poise_final": -20,
       "poise_final-1": 19
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

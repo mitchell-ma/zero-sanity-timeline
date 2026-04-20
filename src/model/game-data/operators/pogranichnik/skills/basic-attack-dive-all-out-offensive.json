@@ -1,13 +1,9 @@
 {
   "properties": {
-    "enhancementTypes": [
-      "DIVE"
-    ],
-    "eventType": "SKILL",
+    "id": "ALL_OUT_OFFENSIVE_DIVE",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "DIVE",
     "element": "PHYSICAL",
-    "id": "ALL_OUT_OFFENSIVE_DIVE",
     "descriptionParams": {
       "atk_scale": 1.8,
       "atb": 0,
@@ -17,7 +13,10 @@
       "1-atb": 1,
       "-atb": 0,
       "atb-1": -1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "POGRANICHNIK",

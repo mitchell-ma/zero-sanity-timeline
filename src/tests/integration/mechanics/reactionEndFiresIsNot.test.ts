@@ -11,12 +11,12 @@
  * `BECOME NOT <state>` conditions (e.g. Yvonne's Freezing Point talent)
  * never consumed and lingered forever.
  *
- * Scenario: Yvonne's Freezing Point (`FREEZING_POINT_TALENT`).
+ * Scenario: Yvonne's Freezing Point (`FREEZING_POINT_T2`).
  *   onTriggerClause:
  *     - ANY OPERATOR APPLY REACTION SOLIDIFICATION  →  APPLY EVENT (this)
  *     - ENEMY BECOME NOT SOLIDIFIED                  →  CONSUME EVENT (this)
  *   Placing a freeform SOLIDIFICATION on the enemy must:
- *     1. Create a FREEZING_POINT_TALENT event on Yvonne's slot
+ *     1. Create a FREEZING_POINT_T2 event on Yvonne's slot
  *     2. End that event exactly when SOLIDIFICATION ends (not permanent)
  *     3. Not create the talent for an unrelated reaction (COMBUSTION)
  */
@@ -65,7 +65,7 @@ function placeFreeformReaction(
 }
 
 describe('REACTION apply runs creation lifecycle (schedules EVENT_END → IS_NOT)', () => {
-  it('freeform SOLIDIFICATION creates FREEZING_POINT_TALENT on Yvonne', () => {
+  it('freeform SOLIDIFICATION creates FREEZING_POINT_T2 on Yvonne', () => {
     const { result } = setup();
     placeFreeformReaction(result.current, REACTION_COLUMNS.SOLIDIFICATION, 1 * FPS, SOLID_DURATION_FRAMES);
 
@@ -75,7 +75,7 @@ describe('REACTION apply runs creation lifecycle (schedules EVENT_END → IS_NOT
     expect(fp.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('FREEZING_POINT_TALENT ends exactly when SOLIDIFICATION ends (BECOME_NOT fires via EVENT_END)', () => {
+  it('FREEZING_POINT_T2 ends exactly when SOLIDIFICATION ends (BECOME_NOT fires via EVENT_END)', () => {
     const { result } = setup();
     placeFreeformReaction(result.current, REACTION_COLUMNS.SOLIDIFICATION, 1 * FPS, SOLID_DURATION_FRAMES);
 
@@ -93,7 +93,7 @@ describe('REACTION apply runs creation lifecycle (schedules EVENT_END → IS_NOT
     expect(fpEnd).toBe(reactionEnd);
   });
 
-  it('FREEZING_POINT_TALENT is NOT permanent (its JSON default would be if IS_NOT never fired)', () => {
+  it('FREEZING_POINT_T2 is NOT permanent (its JSON default would be if IS_NOT never fired)', () => {
     // Pre-fix symptom: FP ran forever because IS_NOT:solidification never
     // fired, so the talent retained its JSON-default 99999s permanent
     // duration. After the fix, EVENT_END of the reaction clamps the talent.
@@ -111,7 +111,7 @@ describe('REACTION apply runs creation lifecycle (schedules EVENT_END → IS_NOT
     expect(fpDur).toBeLessThanOrEqual(SOLID_DURATION_FRAMES);
   });
 
-  it('unrelated freeform reaction (COMBUSTION) does NOT create FREEZING_POINT_TALENT', () => {
+  it('unrelated freeform reaction (COMBUSTION) does NOT create FREEZING_POINT_T2', () => {
     // Confirms the trigger doesn't spuriously fire on the wrong reaction —
     // the onTriggerClause condition is scoped to SOLIDIFICATION, not any
     // freeform reaction application.

@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "TEMPESTUOUS_ARC",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "TEMPESTUOUS_ARC",
     "descriptionParams": {
       "atk_scale": 1.01,
       "poise1": 5,
@@ -25,7 +24,10 @@
       "1-atk_scale2": -3.05,
       "-atk_scale2": -4.05,
       "atk_scale2-1": 3.05
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ARCLIGHT",
@@ -304,7 +306,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "WILDLAND_TREKKER_TALENT",
+                  "objectId": "WILDLAND_TREKKER_T1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {

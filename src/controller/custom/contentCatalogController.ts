@@ -114,7 +114,7 @@ export function getAllContentItems(): ContentBrowserItem[] {
   // ── Weapons ─────────────────────────────────────────────────────────────
   for (const w of getAllWeapons()) {
     items.push({
-      id: w.name,
+      id: w.id,
       name: w.name,
       category: ContentCategory.WEAPONS,
       source: 'builtin',

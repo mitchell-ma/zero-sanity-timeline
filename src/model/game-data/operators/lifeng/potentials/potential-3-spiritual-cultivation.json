@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "LIFENG_POTENTIAL_3",
+    "id": "SPIRITUAL_CULTIVATION_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "atk_up": 0.0005,
@@ -8,8 +10,10 @@
       "-atk_up": -0.0005,
       "atk_up-1": -0.9995
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LIFENG",

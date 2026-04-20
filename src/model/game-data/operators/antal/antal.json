@@ -9,8 +9,8 @@
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "STRENGTH",
   "talents": {
-    "one": "IMPROVISER_TALENT",
-    "two": "SUBCONSCIOUS_ACT_TALENT",
+    "one": "IMPROVISER_T1",
+    "two": "SUBCONSCIOUS_ACT_T2",
     "attributeIncrease": {
       "id": "KEEN_MIND"
     }

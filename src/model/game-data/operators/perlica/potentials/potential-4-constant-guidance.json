@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "PERLICA_POTENTIAL_4",
+    "id": "CONSTANT_GUIDANCE_P4",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 4,
     "descriptionParams": {
       "extra_scaling": 1.33,
@@ -8,8 +10,10 @@
       "-extra_scaling": -1.33,
       "extra_scaling-1": 0.33000000000000007
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "PERLICA",

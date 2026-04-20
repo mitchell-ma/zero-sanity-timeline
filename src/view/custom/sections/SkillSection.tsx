@@ -219,8 +219,9 @@ function SegmentsEditor({ segments, onChange }: {
                   type="button"
                   className={`ops-conjoined-seg${isCurrent ? ' ops-conjoined-seg--current' : ''}${isAccented ? ' ops-conjoined-seg--active' : ''}`}
                   onClick={() => { setActiveSeg(si); setActiveFrame(null); }}
+                  title={s.name || `Segment ${si + 1}`}
                 >
-                  {s.name || `Segment ${si + 1}`}
+                  <span className="ops-conjoined-seg-label">{s.name || `Segment ${si + 1}`}</span>
                 </button>
                 <button
                   type="button"

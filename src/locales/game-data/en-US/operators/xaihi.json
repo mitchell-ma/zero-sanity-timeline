@@ -139,19 +139,19 @@
     "text": "Execute Process (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.XAIHI.talent.EXECUTE_PROCESS_TALENT.event.description": {
+  "op.XAIHI.talent.EXECUTE_PROCESS_T1.event.description": {
     "text": "Combo skill Stress Testing improved: Hitting an enemy with Cryo Infliction or Solidification also causes the enemy to suffer Cryo DMG Taken +10% for 5s. This effect cannot stack.",
     "dataStatus": "RECONCILED"
   },
-  "op.XAIHI.talent.EXECUTE_PROCESS_TALENT.event.name": {
+  "op.XAIHI.talent.EXECUTE_PROCESS_T1.event.name": {
     "text": "Execute Process (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.XAIHI.talent.FREEZE_PROTOCOL_TALENT.event.description": {
+  "op.XAIHI.talent.FREEZE_PROTOCOL_T2.event.description": {
     "text": "Ultimate Stack Overflow improved: The ultimate also dispels Cryo Infliction and Solidification from the entire team.",
     "dataStatus": "RECONCILED"
   },
-  "op.XAIHI.talent.FREEZE_PROTOCOL_TALENT.event.name": {
+  "op.XAIHI.talent.FREEZE_PROTOCOL_T2.event.name": {
     "text": "Freeze Protocol (T2)",
     "dataStatus": "RECONCILED"
   }

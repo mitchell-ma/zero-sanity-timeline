@@ -9,8 +9,8 @@
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "AGILITY",
   "talents": {
-    "one": "BARRAGE_OF_TECHNOLOGY_TALENT",
-    "two": "FREEZING_POINT_TALENT",
+    "one": "BARRAGE_OF_TECHNOLOGY_T1",
+    "two": "FREEZING_POINT_T2",
     "attributeIncrease": {
       "id": "KEEN_MIND"
     }

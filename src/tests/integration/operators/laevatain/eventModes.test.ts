@@ -24,7 +24,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { INFLICTION_COLUMNS, ENEMY_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
-import { ColumnType, EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
+import { ColumnType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import type { MiniTimeline } from '../../../../consts/viewTypes';
@@ -259,11 +259,11 @@ describe('Strict events — engine-driven chains', () => {
 
     // Empowered BS consumes all 4 engine-derived MF stacks — use variant displayName
     const empoweredVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.EMPOWERED,
+      (v) => v.id.endsWith('_EMPOWERED'),
     );
     expect(empoweredVariant).toBeDefined();
     const empPayload = getMenuPayload(
-      result.current, battleCol!, 50 * FPS, empoweredVariant!.displayName,
+      result.current, battleCol!, 50 * FPS, { variantId: empoweredVariant!.id },
     );
     act(() => {
       result.current.handleAddEvent(
@@ -312,11 +312,11 @@ describe('Strict events — engine-driven chains', () => {
 
     // Place enhanced BS during active phase via context menu with variant displayName
     const enhancedVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.ENHANCED,
+      (v) => v.id.endsWith('_ENHANCED'),
     );
     expect(enhancedVariant).toBeDefined();
     const enhPayload = getMenuPayload(
-      result.current, battleCol!, activationEnd + FPS, enhancedVariant!.displayName,
+      result.current, battleCol!, activationEnd + FPS, { variantId: enhancedVariant!.id },
     );
     act(() => {
       result.current.handleAddEvent(
@@ -327,7 +327,7 @@ describe('Strict events — engine-driven chains', () => {
     // Enhanced BS is accepted and has damage frames
     const enhancedBattles = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
-        && ev.enhancementType === EnhancementType.ENHANCED,
+        && ev.id.endsWith('_ENHANCED'),
     );
     expect(enhancedBattles).toHaveLength(1);
     expect(enhancedBattles[0].segments[0].frames!.length).toBeGreaterThan(0);
@@ -340,7 +340,7 @@ describe('Strict events — engine-driven chains', () => {
     const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const enhancedVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.ENHANCED,
+      (v) => v.id.endsWith('_ENHANCED'),
     );
     expect(enhancedVariant).toBeDefined();
 
@@ -360,7 +360,7 @@ describe('Strict events — engine-driven chains', () => {
     const menuBefore = buildContextMenu(result.current, battleCol!, 50 * FPS);
     expect(menuBefore).not.toBeNull();
     const enhItemBefore = menuBefore!.find(
-      (i) => i.actionId === 'addEvent' && i.label === enhancedVariant!.displayName,
+      (i) => i.actionId === 'addEvent' && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === enhancedVariant!.id,
     );
     expect(enhItemBefore).toBeDefined();
     expect(enhItemBefore!.disabled).toBe(true);
@@ -383,7 +383,7 @@ describe('Strict events — engine-driven chains', () => {
     const activationEnd = ultEvents[0].startFrame + ultSegs[0].properties.duration;
 
     const enhPayload = getMenuPayload(
-      result.current, battleCol!, activationEnd + FPS, enhancedVariant!.displayName,
+      result.current, battleCol!, activationEnd + FPS, { variantId: enhancedVariant!.id },
     );
     act(() => {
       result.current.handleAddEvent(
@@ -393,7 +393,7 @@ describe('Strict events — engine-driven chains', () => {
 
     const enhancedBattles = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
-        && ev.enhancementType === EnhancementType.ENHANCED,
+        && ev.id.endsWith('_ENHANCED'),
     );
     expect(enhancedBattles).toHaveLength(1);
   });
@@ -446,11 +446,11 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const empoweredVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.EMPOWERED,
+      (v) => v.id.endsWith('_EMPOWERED'),
     );
     expect(empoweredVariant).toBeDefined();
     const empPayload = getMenuPayload(
-      result.current, battleCol!, 10 * FPS, empoweredVariant!.displayName,
+      result.current, battleCol!, 10 * FPS, { variantId: empoweredVariant!.id },
     );
     act(() => {
       result.current.handleAddEvent(
@@ -482,11 +482,11 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     // Switch to freeform — empowered BS consumes the engine-derived MF via context menu
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     const empoweredVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.EMPOWERED,
+      (v) => v.id.endsWith('_EMPOWERED'),
     );
     expect(empoweredVariant).toBeDefined();
     const empPayload = getMenuPayload(
-      result.current, battleCol!, 50 * FPS, empoweredVariant!.displayName,
+      result.current, battleCol!, 50 * FPS, { variantId: empoweredVariant!.id },
     );
     act(() => {
       result.current.handleAddEvent(
@@ -527,11 +527,11 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
     const battleCol = findColumn(result.current, SLOT_LAEVATAIN, NounType.BATTLE);
     expect(battleCol).toBeDefined();
     const enhancedVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.ENHANCED,
+      (v) => v.id.endsWith('_ENHANCED'),
     );
     expect(enhancedVariant).toBeDefined();
     const enhPayload = getMenuPayload(
-      result.current, battleCol!, activationEnd + FPS, enhancedVariant!.displayName,
+      result.current, battleCol!, activationEnd + FPS, { variantId: enhancedVariant!.id },
     );
     act(() => {
       result.current.handleAddEvent(
@@ -541,7 +541,7 @@ describe('Mixed freeform + strict — cross-mode interactions', () => {
 
     const enhancedBattles = result.current.allProcessedEvents.filter(
       (ev) => ev.ownerEntityId === SLOT_LAEVATAIN && ev.columnId === NounType.BATTLE
-        && ev.enhancementType === EnhancementType.ENHANCED,
+        && ev.id.endsWith('_ENHANCED'),
     );
     expect(enhancedBattles).toHaveLength(1);
   });

@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "RE_IGNITED_OATH",
     "eventCategoryType": "ULTIMATE",
     "element": "HEAT",
-    "id": "RE_IGNITED_OATH",
     "descriptionParams": {
       "atk_scale": 6.5,
       "poise": 25,
@@ -21,7 +20,10 @@
       "1-hp_percent": 0.75,
       "-hp_percent": -0.25,
       "hp_percent-1": -0.75
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

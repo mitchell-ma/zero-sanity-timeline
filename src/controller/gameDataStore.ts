@@ -46,7 +46,7 @@ import {
   getWeapon,
   getAllWeapons,
   getWeaponsByType,
-  getWeaponIdByName,
+  findWeaponBySkillId,
   registerCustomWeapon,
   deregisterCustomWeapon,
   type Weapon,
@@ -56,7 +56,6 @@ import {
   getAllGearPieces,
   getGearPiecesBySet,
   getGearPiecesByType,
-  getGearPieceIdByName,
   registerCustomGearPiece,
   deregisterCustomGearPiece,
   type GearPiece,
@@ -155,8 +154,8 @@ import {
 // ── Consumables & Tacticals ─────────────────────────────────────────────────
 
 import {
-  getConsumable, getAllConsumables, getConsumableIdByName,
-  getTactical, getAllTacticals, getTacticalIdByName,
+  getConsumable, getAllConsumables,
+  getTactical, getAllTacticals,
   type ConsumableData, type TacticalData,
 } from '../model/game-data/consumablesStore';
 
@@ -187,12 +186,12 @@ export type {
 
 // ── Weapons ─────────────────────────────────────────────────────────────────
 
-export { getWeapon, getAllWeapons, getWeaponsByType, getWeaponIdByName };
+export { getWeapon, getAllWeapons, getWeaponsByType, findWeaponBySkillId };
 export { registerCustomWeapon, deregisterCustomWeapon };
 
 // ── Gear pieces ─────────────────────────────────────────────────────────────
 
-export { getGearPiece, getAllGearPieces, getGearPiecesBySet, getGearPiecesByType, getGearPieceIdByName };
+export { getGearPiece, getAllGearPieces, getGearPiecesBySet, getGearPiecesByType };
 export { registerCustomGearPiece, deregisterCustomGearPiece };
 
 // ── Gear statuses & set effects ─────────────────────────────────────────────
@@ -301,15 +300,9 @@ export { getTriggerAssociations, getAllTriggerAssociations };
 
 // ── Consumables & Tacticals ─────────────────────────────────────────────────
 
-export { getConsumable, getAllConsumables, getConsumableIdByName };
-export { getTactical, getAllTacticals, getTacticalIdByName };
+export { getConsumable, getAllConsumables };
+export { getTactical, getAllTacticals };
 
-// ── Legacy name→ID resolution (for sheet migration) ─────────────────────────
-
-export { getWeaponIdByName as resolveWeaponId };
-export { getGearPieceIdByName as resolveGearPieceId };
-export { getConsumableIdByName as resolveConsumableId };
-export { getTacticalIdByName as resolveTacticalId };
 export type { ConsumableData, TacticalData };
 
 // ── Derived label / metadata maps ────────────────────────────────────────────

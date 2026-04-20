@@ -514,5 +514,21 @@
   "weapon.GENERIC.skill.WILL_BOOST_S.segment.0.name": {
     "text": "Will Boost [S]",
     "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.status.EMERGENCY_BOOST.event.name": {
+    "text": "Emergency Boost",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.status.EMERGENCY_BOOST.segment.0.name": {
+    "text": "Emergency Boost",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.status.UNENDING_CYCLE.event.name": {
+    "text": "Unending Cycle",
+    "dataStatus": "RECONCILED"
+  },
+  "weapon.GENERIC.status.UNENDING_CYCLE.segment.0.name": {
+    "text": "Unending Cycle",
+    "dataStatus": "RECONCILED"
   }
 }

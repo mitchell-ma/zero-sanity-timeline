@@ -388,7 +388,7 @@ describe('E. Arts DMG% applicability in Damage Bonus breakdown', () => {
 
     const artsSub = dmgBonusEntry!.subEntries?.find(s => s.label === 'Arts DMG%');
     expect(artsSub).toBeDefined();
-    expect(artsSub!.source).toBe('Arts damage bonus');
+    expect(artsSub!.source).toBe('Active on this hit');
   });
 
   it('E3: physical hit — Physical DMG% is active, Heat/Cryo/Nature/Electric are "Does not apply"', () => {
@@ -415,7 +415,7 @@ describe('E. Arts DMG% applicability in Damage Bonus breakdown', () => {
     // Physical should be active
     const physSub = dmgBonusEntry!.subEntries?.find(s => s.label === 'Physical DMG%');
     expect(physSub).toBeDefined();
-    expect(physSub!.source).toBe('Active element bonus');
+    expect(physSub!.source).toBe('Active on this hit');
 
     // All arts elements + Arts DMG% should be inactive
     for (const inactiveLabel of ['Arts DMG%', 'Heat DMG%', 'Cryo DMG%', 'Nature DMG%', 'Electric DMG%']) {

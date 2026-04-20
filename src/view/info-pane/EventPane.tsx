@@ -11,7 +11,7 @@ import { getStatusElementMap, getStatusById, getAnyStatusSerialized } from '../.
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import type { LoadoutProperties } from '../InformationPane';
 import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, applyCardOverrides } from '../../controller/info-pane/eventPaneController';
-import { getOperatorSkill, getOperatorBase } from '../../controller/gameDataStore';
+import { getOperatorSkill, getOperatorBase, findWeaponBySkillId, getWeapon } from '../../controller/gameDataStore';
 import { DataCardBody, FrameCritState, EditState, EditableValue, VaryByLoadout } from '../custom/DataCardComponents';
 import type { OverrideStore } from '../../consts/overrideTypes';
 import { buildOverrideKey } from '../../controller/overrideController';
@@ -190,12 +190,32 @@ function EventPane({
       }
     }
 
+    // Weapon skill rank for `VARY_BY RANK of WEAPON of THIS OPERATOR`. Mirror
+    // the engine (resolveWeaponSkillRank): match the event id against some
+    // weapon's skills[] for a direct slot, else fall back to skill3Level when
+    // the status def's originId is a weapon id (signature-skill attribution).
+    const weaponLevels = props?.weapon ? [
+      props.weapon.skill1Level, props.weapon.skill2Level, props.weapon.skill3Level,
+    ] : undefined;
+    let weaponSkillRank: number | undefined;
+    if (weaponLevels) {
+      const directId = event.name;
+      const direct = directId ? findWeaponBySkillId(directId) : undefined;
+      if (direct && direct.index < weaponLevels.length) weaponSkillRank = weaponLevels[direct.index];
+      else if (originId) {
+        const asSkill = findWeaponBySkillId(originId);
+        if (asSkill && asSkill.index < weaponLevels.length) weaponSkillRank = weaponLevels[asSkill.index];
+        else if (getWeapon(originId)) weaponSkillRank = weaponLevels[2];
+      }
+    }
+
     return {
       skillLevel: resolvedSkillLevel ?? skills?.battleSkillLevel,
       potential: props?.operator?.potential,
       talentOneLevel: props?.operator?.talentOneLevel,
       talentTwoLevel: props?.operator?.talentTwoLevel,
       attributeIncreaseLevel: props?.operator?.attributeIncreaseLevel,
+      ...(weaponSkillRank != null ? { weaponSkillRank } : {}),
       talentSlot,
       ...(Object.keys(parameterIndices).length > 0 ? { parameterIndices } : {}),
     };

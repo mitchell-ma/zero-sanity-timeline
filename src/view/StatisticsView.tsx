@@ -1,14 +1,16 @@
-import { useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LoadoutTree } from '../utils/loadoutStorage';
 import type { StatisticsData, StatisticsSource } from '../utils/statisticsStorage';
 import type {
   ResolvedSource,
   SourceStatsBundle,
 } from '../controller/statistics/statisticsController';
+import type { SimulationResult } from '../controller/statistics/simulateSheet';
 import StatisticsLoadoutCard from './StatisticsLoadoutCard';
 import StatisticsGroupedView from './StatisticsGroupedView';
 import StatisticsSourcePickerModal from './StatisticsSourcePickerModal';
 import { ComparisonModeType, CritMode, LoadoutNodeType, StatisticsColumnType } from '../consts/enums';
+import { buildRowData, resolveReferenceIndex, type RowData } from './statisticsComparison';
 import { t } from '../locales/locale';
 
 /**
@@ -44,6 +46,7 @@ interface StatisticsViewProps {
   onNewStatistics: (parentId: string | null) => void;
   onToggleColumn: (column: StatisticsColumnType) => void;
   onToggleOperator: (slotId: string) => void;
+  onToggleAggregate: () => void;
   onSetCritMode: (critMode: CritMode) => void;
   onSetComparisonMode: (comparisonMode: ComparisonModeType) => void;
   onReorderSources: (fromIndex: number, toIndex: number) => void;
@@ -51,7 +54,7 @@ interface StatisticsViewProps {
 
 export default function StatisticsView({
   data, statisticsName, loadoutTree, activeLoadoutId, resolvedSources, sourceBundles,
-  onAddSource, onRemoveSource, onNewStatistics, onToggleColumn, onToggleOperator, onSetCritMode, onSetComparisonMode, onReorderSources,
+  onAddSource, onRemoveSource, onNewStatistics, onToggleColumn, onToggleOperator, onToggleAggregate, onSetCritMode, onSetComparisonMode, onReorderSources,
 }: StatisticsViewProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const hiddenColumns = useMemo<ReadonlySet<StatisticsColumnType>>(
@@ -62,6 +65,7 @@ export default function StatisticsView({
     () => new Set(data?.hiddenOperators ?? []),
     [data?.hiddenOperators],
   );
+  const hiddenAggregate = data?.hiddenAggregate ?? false;
   const critMode = data?.critMode ?? CritMode.EXPECTED;
   const comparisonMode = data?.comparisonMode ?? ComparisonModeType.RAW;
 
@@ -72,6 +76,31 @@ export default function StatisticsView({
     const parentNode = loadoutTree.nodes.find((n) => n.id === sharedParentId);
     return parentNode?.name ?? null;
   }, [sharedParentId, loadoutTree]);
+
+  // Pair resolved sources with their bundles. Memoized so the array + wrapper
+  // object identities only change when the underlying data actually changes —
+  // otherwise React.memo on StatisticsGroupedView / StatisticsGroupedTable is
+  // defeated and expensive buildRowData() calls fire on every UI click.
+  const pairedSources = useMemo(
+    () => resolvedSources.map((r, i) => ({ resolved: r, bundle: sourceBundles[i] })),
+    [resolvedSources, sourceBundles],
+  );
+
+  // Build RowData per source for inter-loadout comparison mode. Cached by
+  // simulation identity — content-hashed upstream, so unchanged sources return
+  // the same object reference and we reuse the previously-built RowData.
+  const rowDataCacheRef = useRef(new WeakMap<SimulationResult, RowData>());
+  const rowDataArr = useMemo(() => {
+    const cache = rowDataCacheRef.current;
+    return sourceBundles.map((bundle) => {
+      if (!bundle?.simulation) return null;
+      const cached = cache.get(bundle.simulation);
+      if (cached) return cached;
+      const built = buildRowData(bundle);
+      if (built) cache.set(bundle.simulation, built);
+      return built;
+    });
+  }, [sourceBundles]);
 
   if (!data) {
     return (
@@ -104,35 +133,36 @@ export default function StatisticsView({
       ) : sharedParentId ? (
         <StatisticsGroupedView
           label={groupedLabel ?? t('statistics.view.untitled')}
-          sources={resolvedSources.map((r, i) => ({ resolved: r, bundle: sourceBundles[i] }))}
+          sources={pairedSources}
           hiddenColumns={hiddenColumns}
           hiddenOperators={hiddenOperators}
+          hiddenAggregate={hiddenAggregate}
           critMode={critMode}
           comparisonMode={comparisonMode}
           onToggleColumn={onToggleColumn}
           onToggleOperator={onToggleOperator}
+          onToggleAggregate={onToggleAggregate}
           onSetCritMode={onSetCritMode}
           onSetComparisonMode={onSetComparisonMode}
           onReorderSources={onReorderSources}
         />
       ) : (
-        <div className="statistics-sources-stack">
-          {resolvedSources.map((r, i) => (
-            <StatisticsSourceCard
-              key={r.source.loadoutUuid}
-              resolved={r}
-              bundle={sourceBundles[i]}
-              hiddenColumns={hiddenColumns}
-              hiddenOperators={hiddenOperators}
-              critMode={critMode}
-              comparisonMode={comparisonMode}
-              onToggleColumn={onToggleColumn}
-              onToggleOperator={onToggleOperator}
-              onSetCritMode={onSetCritMode}
-              onSetComparisonMode={onSetComparisonMode}
-            />
-          ))}
-        </div>
+        <InterLoadoutStack
+          resolvedSources={resolvedSources}
+          sourceBundles={sourceBundles}
+          rowDataArr={rowDataArr}
+          hiddenColumns={hiddenColumns}
+          hiddenOperators={hiddenOperators}
+          hiddenAggregate={hiddenAggregate}
+          critMode={critMode}
+          comparisonMode={comparisonMode}
+          onToggleColumn={onToggleColumn}
+          onToggleOperator={onToggleOperator}
+          onToggleAggregate={onToggleAggregate}
+          onSetCritMode={onSetCritMode}
+          onSetComparisonMode={onSetComparisonMode}
+          onReorderSources={onReorderSources}
+        />
       )}
 
       <StatisticsSourcePickerModal
@@ -150,28 +180,172 @@ export default function StatisticsView({
   );
 }
 
-// ── Per-source card ─────────────────────────────────────────────────────────
+// ── Inter-loadout stack (drag-reorder + per-card reference) ─────────────────
 
-function StatisticsSourceCard({
-  resolved, bundle, hiddenColumns, hiddenOperators, critMode, comparisonMode, onToggleColumn, onToggleOperator, onSetCritMode, onSetComparisonMode,
-}: {
-  resolved: ResolvedSource;
-  bundle: SourceStatsBundle;
+interface InterLoadoutStackProps {
+  resolvedSources: ResolvedSource[];
+  sourceBundles: SourceStatsBundle[];
+  rowDataArr: Array<RowData | null>;
   hiddenColumns: ReadonlySet<StatisticsColumnType>;
   hiddenOperators: ReadonlySet<string>;
+  hiddenAggregate: boolean;
   critMode: CritMode;
   comparisonMode: ComparisonModeType;
   onToggleColumn: (column: StatisticsColumnType) => void;
   onToggleOperator: (slotId: string) => void;
+  onToggleAggregate: () => void;
+  onSetCritMode: (critMode: CritMode) => void;
+  onSetComparisonMode: (comparisonMode: ComparisonModeType) => void;
+  onReorderSources: (fromIndex: number, toIndex: number) => void;
+}
+
+function InterLoadoutStack({
+  resolvedSources, sourceBundles, rowDataArr, hiddenColumns, hiddenOperators, hiddenAggregate,
+  critMode, comparisonMode, onToggleColumn, onToggleOperator, onToggleAggregate, onSetCritMode,
+  onSetComparisonMode, onReorderSources,
+}: InterLoadoutStackProps) {
+  const stackRef = useRef<HTMLDivElement>(null);
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+
+  // Mirror reorder callback to a ref so the mousemove closure always calls
+  // the latest one after the parent rebuilds its sources array.
+  const onReorderRef = useRef(onReorderSources);
+  useEffect(() => { onReorderRef.current = onReorderSources; }, [onReorderSources]);
+
+  const handleDragStart = useCallback((startIdx: number, e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const startY = e.clientY;
+    let hasMoved = false;
+    let currentIdx = startIdx;
+    let rafId = 0;
+
+    const onMouseMove = (me: MouseEvent) => {
+      if (!hasMoved && Math.abs(me.clientY - startY) < 4) return;
+      if (!hasMoved) {
+        hasMoved = true;
+        setDraggingIdx(currentIdx);
+        document.body.style.cursor = 'grabbing';
+      }
+
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const stack = stackRef.current;
+        if (!stack) return;
+        const cards = Array.from(stack.querySelectorAll<HTMLElement>('[data-card-idx]'));
+        if (cards.length === 0) return;
+
+        // Find which card the cursor is currently over vertically; snap to
+        // the nearest end when outside the stack's bounds.
+        let targetIdx = currentIdx;
+        const firstRect = cards[0].getBoundingClientRect();
+        const lastRect = cards[cards.length - 1].getBoundingClientRect();
+        if (me.clientY < firstRect.top) {
+          targetIdx = 0;
+        } else if (me.clientY > lastRect.bottom) {
+          targetIdx = cards.length - 1;
+        } else {
+          for (let i = 0; i < cards.length; i++) {
+            const rect = cards[i].getBoundingClientRect();
+            if (me.clientY >= rect.top && me.clientY <= rect.bottom) {
+              targetIdx = i;
+              break;
+            }
+          }
+        }
+        if (targetIdx !== currentIdx) {
+          onReorderRef.current(currentIdx, targetIdx);
+          currentIdx = targetIdx;
+          setDraggingIdx(currentIdx);
+        }
+      });
+    };
+
+    const onMouseUp = () => {
+      cancelAnimationFrame(rafId);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+      setDraggingIdx(null);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, []);
+
+  return (
+    <div ref={stackRef} className="statistics-sources-stack">
+      {resolvedSources.map((r, i) => {
+        const refIdx = resolveReferenceIndex(i, comparisonMode);
+        const reference = refIdx == null ? null : rowDataArr[refIdx];
+        return (
+          <StatisticsSourceCard
+            key={r.source.loadoutUuid}
+            cardIndex={i}
+            resolved={r}
+            bundle={sourceBundles[i]}
+            reference={reference}
+            dragging={draggingIdx === i}
+            onDragStart={(e) => handleDragStart(i, e)}
+            hiddenColumns={hiddenColumns}
+            hiddenOperators={hiddenOperators}
+            hiddenAggregate={hiddenAggregate}
+            critMode={critMode}
+            comparisonMode={comparisonMode}
+            onToggleColumn={onToggleColumn}
+            onToggleOperator={onToggleOperator}
+            onToggleAggregate={onToggleAggregate}
+            onSetCritMode={onSetCritMode}
+            onSetComparisonMode={onSetComparisonMode}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Per-source card ─────────────────────────────────────────────────────────
+
+function StatisticsSourceCard({
+  resolved, bundle, reference, dragging, cardIndex, onDragStart,
+  hiddenColumns, hiddenOperators, hiddenAggregate, critMode, comparisonMode,
+  onToggleColumn, onToggleOperator, onToggleAggregate, onSetCritMode, onSetComparisonMode,
+}: {
+  resolved: ResolvedSource;
+  bundle: SourceStatsBundle;
+  reference: RowData | null;
+  dragging: boolean;
+  cardIndex: number;
+  onDragStart: (e: React.MouseEvent) => void;
+  hiddenColumns: ReadonlySet<StatisticsColumnType>;
+  hiddenOperators: ReadonlySet<string>;
+  hiddenAggregate: boolean;
+  critMode: CritMode;
+  comparisonMode: ComparisonModeType;
+  onToggleColumn: (column: StatisticsColumnType) => void;
+  onToggleOperator: (slotId: string) => void;
+  onToggleAggregate: () => void;
   onSetCritMode: (critMode: CritMode) => void;
   onSetComparisonMode: (comparisonMode: ComparisonModeType) => void;
 }) {
   const missing = !resolved.node;
-  const sim = bundle.simulation;
+  const sim = bundle?.simulation;
 
   if (missing || !sim) {
     return (
-      <section className="slc slc--unresolved">
+      <section
+        className={`slc slc--unresolved${dragging ? ' slc--dragging' : ''}`}
+        data-card-idx={cardIndex}
+      >
+        <span
+          className="slc-grab-handle slc-grab-handle--card"
+          onMouseDown={onDragStart}
+          aria-label={t('common.dragReorder')}
+        >
+          <span /><span /><span />
+        </span>
         <header className="slc-titlebar">
           <span className="slc-titlebar-name">{resolved.label}</span>
           {missing && <span className="statistics-source-badge">{t('statistics.sources.missing')}</span>}
@@ -189,12 +363,18 @@ function StatisticsSourceCard({
       simulation={sim}
       hiddenColumns={hiddenColumns}
       hiddenOperators={hiddenOperators}
+      hiddenAggregate={hiddenAggregate}
       critMode={critMode}
       comparisonMode={comparisonMode}
       onToggleColumn={onToggleColumn}
       onToggleOperator={onToggleOperator}
+      onToggleAggregate={onToggleAggregate}
       onSetCritMode={onSetCritMode}
       onSetComparisonMode={onSetComparisonMode}
+      reference={reference}
+      onDragStart={onDragStart}
+      dragging={dragging}
+      cardIndex={cardIndex}
     />
   );
 }

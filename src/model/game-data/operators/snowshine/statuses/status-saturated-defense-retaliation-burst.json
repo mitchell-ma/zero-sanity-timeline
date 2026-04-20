@@ -17,9 +17,11 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
     "eventCategoryType": "SKILL_STATUS",
-    "element": "CRYO"
+    "element": "CRYO",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

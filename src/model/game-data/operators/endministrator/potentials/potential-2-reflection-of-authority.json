@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ENDMINISTRATOR_POTENTIAL_2",
+    "id": "REFLECTION_OF_AUTHORITY_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "ratio": 0.5,
@@ -8,8 +10,10 @@
       "-ratio": -0.5,
       "ratio-1": -0.5
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

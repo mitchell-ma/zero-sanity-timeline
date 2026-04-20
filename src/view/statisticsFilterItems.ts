@@ -6,7 +6,7 @@
  * Structure (in order):
  *   1. Critical mode stepper (header + discrete stepper)
  *   2. Column filters (one toggle per StatisticsColumnType)
- *   3. Operator filters (one toggle per occupied slot)
+ *   3. Row filters (Aggregate toggle + one toggle per occupied slot)
  *
  * All toggle items use `keepOpen: true` so the menu stays open while the
  * user enables/disables multiple filters.
@@ -73,6 +73,7 @@ function cycleComparisonMode(current: ComparisonModeType, delta: 1 | -1): Compar
 export interface StatisticsFilterItemsConfig {
   hiddenColumns: ReadonlySet<StatisticsColumnType>;
   hiddenOperators: ReadonlySet<string>;
+  hiddenAggregate: boolean;
   occupiedSlots: Slot[];
   critMode: CritMode;
   comparisonMode: ComparisonModeType;
@@ -80,6 +81,7 @@ export interface StatisticsFilterItemsConfig {
   statistics?: DamageStatistics;
   onToggleColumn: (column: StatisticsColumnType) => void;
   onToggleOperator: (slotId: string) => void;
+  onToggleAggregate: () => void;
   onSetCritMode: (critMode: CritMode) => void;
   onSetComparisonMode: (comparisonMode: ComparisonModeType) => void;
 }
@@ -87,12 +89,14 @@ export interface StatisticsFilterItemsConfig {
 export function buildStatisticsFilterItems({
   hiddenColumns,
   hiddenOperators,
+  hiddenAggregate,
   occupiedSlots,
   critMode,
   comparisonMode,
   statistics,
   onToggleColumn,
   onToggleOperator,
+  onToggleAggregate,
   onSetCritMode,
   onSetComparisonMode,
 }: StatisticsFilterItemsConfig): ContextMenuItem[] {
@@ -128,17 +132,21 @@ export function buildStatisticsFilterItems({
     }),
   ];
 
-  if (occupiedSlots.length > 0) {
-    items.push(
-      { header: true, label: t('statistics.filter.operators') },
-      ...occupiedSlots.map((slot): ContextMenuItem => ({
-        label: slot.operator?.name ?? slot.slotId,
-        checked: !hiddenOperators.has(slot.slotId),
-        keepOpen: true,
-        action: () => onToggleOperator(slot.slotId),
-      })),
-    );
-  }
+  items.push(
+    { header: true, label: t('statistics.filter.rows') },
+    {
+      label: t('statistics.filter.aggregate'),
+      checked: !hiddenAggregate,
+      keepOpen: true,
+      action: onToggleAggregate,
+    },
+    ...occupiedSlots.map((slot, idx): ContextMenuItem => ({
+      label: t('statistics.filter.operator', { n: idx + 1 }),
+      checked: !hiddenOperators.has(slot.slotId),
+      keepOpen: true,
+      action: () => onToggleOperator(slot.slotId),
+    })),
+  );
 
   return items;
 }

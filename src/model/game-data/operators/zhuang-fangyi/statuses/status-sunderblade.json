@@ -13,16 +13,37 @@
     },
     "duration": {
       "value": {
-        "verb": "IS",
-        "value": 36
+        "operation": "ADD",
+        "left": {
+          "verb": "IS",
+          "value": 36
+        },
+        "right": {
+          "verb": "VARY_BY",
+          "object": "POTENTIAL",
+          "value": [
+            0,
+            0,
+            0,
+            10,
+            10,
+            10
+          ],
+          "of": {
+            "object": "OPERATOR",
+            "determiner": "THIS"
+          }
+        }
       },
       "unit": "SECOND"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS"
+    "eventCategoryType": "SKILL_STATUS",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "MANTRA_OF_SUNDERING",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

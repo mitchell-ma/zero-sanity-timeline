@@ -163,23 +163,23 @@
     "text": "The Steel Oath (Empowered)",
     "dataStatus": "RECONCILED"
   },
-  "op.EMBER.talent.INFLAMED_FOR_THE_ASSAULT_TALENT.event.description": {
+  "op.EMBER.talent.INFLAMED_FOR_THE_ASSAULT_T1.event.description": {
     "text": "When casting the battle skill Forward March and the combo skill Frontline Support, Ember gains 50% Protection and is less likely to be interrupted.",
     "dataStatus": "RECONCILED"
   },
-  "op.EMBER.talent.INFLAMED_FOR_THE_ASSAULT_TALENT.event.name": {
+  "op.EMBER.talent.INFLAMED_FOR_THE_ASSAULT_T1.event.name": {
     "text": "Inflamed for the Assault (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.EMBER.talent.PAY_THE_FERRIC_PRICE.event.description": {
+  "op.EMBER.talent.PAY_THE_FERRIC_PRICE_T2.event.description": {
     "text": "When Ember receives DMG from the enemy, she gains ATK +{attack:0%} for {duration:0}s. This effect can reach 3 stacks.",
     "dataStatus": "RECONCILED"
   },
-  "op.EMBER.talent.PAY_THE_FERRIC_PRICE.event.name": {
+  "op.EMBER.talent.PAY_THE_FERRIC_PRICE_T2.event.name": {
     "text": "Pay the Ferric Price (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.EMBER.talent.PAY_THE_FERRIC_PRICE.segment.0.name": {
+  "op.EMBER.talent.PAY_THE_FERRIC_PRICE_T2.segment.0.name": {
     "text": "Pay the Ferric Price (T2)",
     "dataStatus": "RECONCILED"
   }

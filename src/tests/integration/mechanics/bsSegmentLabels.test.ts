@@ -71,7 +71,7 @@ function placeVulnerableOnEnemy(result: { current: AppResult }, startSec: number
 
 function emptyValidationMaps(): ValidationMaps {
   return {
-    combo: new Map(), resource: new Map(), empowered: new Map(),
+    combo: new Map(), resource: new Map(),
     enhanced: new Map(), regularBasic: new Map(), clause: new Map(),
     finisherStagger: new Map(), timeStop: new Map(), infliction: new Map(),
   };

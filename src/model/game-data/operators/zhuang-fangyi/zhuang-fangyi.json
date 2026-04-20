@@ -9,8 +9,8 @@
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "INTELLECT",
   "talents": {
-    "one": "FORCE_OF_NATURE_TALENT",
-    "two": "ORDAINED_BY_HEAVEN_TALENT",
+    "one": "FORCE_OF_NATURE_T1",
+    "two": "ORDAINED_BY_HEAVEN_T2",
     "attributeIncrease": {
       "id": "STALWART"
     }
@@ -1670,6 +1670,6 @@
     "dataSources": [
       "WARFARIN"
     ],
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

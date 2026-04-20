@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "YVONNE_POTENTIAL_1",
+    "id": "FLASH_FREEZER_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "has_potential1": 1,
@@ -24,8 +26,10 @@
       "-usp_extra": -25,
       "usp_extra-1": 24
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "YVONNE",

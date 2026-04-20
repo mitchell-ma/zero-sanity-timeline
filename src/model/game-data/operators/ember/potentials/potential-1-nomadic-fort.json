@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "EMBER_POTENTIAL_1",
+    "id": "NOMADIC_FORT_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "potential_1": 1,
@@ -16,8 +18,10 @@
       "-extratime": -1.5,
       "extratime-1": 0.5
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "EMBER",

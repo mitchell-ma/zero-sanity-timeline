@@ -478,11 +478,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "RUINATION_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "RUINATION_BATK",
     "descriptionParams": {
       "atk_scale": 0.55,
       "atk_scale2": 1.13,
@@ -500,7 +499,10 @@
       "1-atb": 1,
       "-atb": 0,
       "atb-1": -1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "LIFENG",

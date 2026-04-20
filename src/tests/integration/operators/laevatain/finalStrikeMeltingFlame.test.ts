@@ -299,14 +299,12 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     expect(getHeatInflictions(result.current)).toHaveLength(2);
 
     // Laevatain finisher BA via eventVariants
-    const finisherVariant = laevBasicCol!.eventVariants?.find((v) => v.id === NounType.FINISHER);
+    const finisherVariant = laevBasicCol!.eventVariants?.find((v) => v.category === NounType.FINISHER);
     expect(finisherVariant).toBeDefined();
     const basicMenu = buildContextMenu(result.current, laevBasicCol!, 15 * FPS);
     expect(basicMenu).not.toBeNull();
     const finisherItem = basicMenu!.find(
-      (i) => i.actionId === 'addEvent' && i.label === (finisherVariant as { displayName?: string; name?: string }).displayName,
-    ) ?? basicMenu!.find(
-      (i) => i.actionId === 'addEvent' && (i.actionPayload as { defaultSkill?: { id?: string } }).defaultSkill?.id === finisherVariant!.id,
+      (i) => i.actionId === 'addEvent' && (i.actionPayload as { defaultSkill?: { id?: string } })?.defaultSkill?.id === finisherVariant!.id,
     );
     expect(finisherItem).toBeDefined();
     const payload = finisherItem!.actionPayload as { ownerEntityId: string; columnId: string; atFrame: number; defaultSkill: Parameters<typeof result.current.handleAddEvent>[3] };
@@ -426,7 +424,7 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     const survivorEndBefore = survivorStartBefore + survivorDurBefore;
 
     // Phase 3: Laevatain finisher fires → ALL UP_TO 4, but MF cap allows only 1 more stack
-    const finisherVariant = laevBasicCol!.eventVariants?.find((v) => v.id === NounType.FINISHER);
+    const finisherVariant = laevBasicCol!.eventVariants?.find((v) => v.category === NounType.FINISHER);
     expect(finisherVariant).toBeDefined();
     const laevBasicMenu = buildContextMenu(result.current, laevBasicCol!, 45 * FPS);
     expect(laevBasicMenu).not.toBeNull();
@@ -607,7 +605,7 @@ describe('4 Akekuri BS + BATK Final Strike → Melting Flame IV → Scorching He
     const survivorBefore = [...stacked].sort((a, b) => a.startFrame - b.startFrame)[1];
 
     // Trigger via Akekuri FINISHER variant (not regular BATK)
-    const finisherVariant = basicCol!.eventVariants?.find((v) => v.id === NounType.FINISHER);
+    const finisherVariant = basicCol!.eventVariants?.find((v) => v.category === NounType.FINISHER);
     expect(finisherVariant).toBeDefined();
     const menu = buildContextMenu(result.current, basicCol!, 45 * FPS);
     const finisherItem = menu!.find(

@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "XAIHI_POTENTIAL_4",
+    "id": "GRAYSCALE_RELEASE_P4",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 4,
     "descriptionParams": {
       "Wisd": 15,
@@ -59,8 +61,11 @@
       "-HealOutputIncrease": -0.1,
       "HealOutputIncrease-1": -0.9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "XAIHI",

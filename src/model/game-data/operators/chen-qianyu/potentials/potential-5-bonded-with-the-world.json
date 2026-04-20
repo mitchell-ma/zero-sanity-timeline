@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "CHEN_QIANYU_POTENTIAL_5",
+    "id": "BONDED_WITH_THE_WORLD_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 5,
     "descriptionParams": {
       "potential5": 1,
@@ -12,8 +14,10 @@
       "-potential5": -1,
       "potential5-1": 0
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "CHEN_QIANYU",

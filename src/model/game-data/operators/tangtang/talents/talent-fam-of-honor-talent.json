@@ -67,7 +67,7 @@
     }
   ],
   "properties": {
-    "id": "FAM_OF_HONOR_TALENT",
+    "id": "FAM_OF_HONOR_T1",
     "descriptionParams": {
       "talent1_speed": 1,
       "ratio_speedreduction": 0.6,
@@ -96,8 +96,11 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "ALL",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "TANGTANG",

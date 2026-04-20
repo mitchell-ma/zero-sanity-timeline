@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "GILBERTA_POTENTIAL_2",
+    "id": "WIND_WALKER_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "potential2": 1,
@@ -12,8 +14,10 @@
       "-potential2_onceadd": -0.1,
       "potential2_onceadd-1": -0.9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "GILBERTA",

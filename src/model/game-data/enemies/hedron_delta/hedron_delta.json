@@ -1,0 +1,57 @@
+{
+  "id": "HEDRON_DELTA",
+  "tier": "COMMON",
+  "race": "AGGELOI",
+  "location": "GROUND",
+  "attackElement": "CRYO",
+  "baseStats": {
+    "ELECTRIC_RESISTANCE": 0.8,
+    "CRYO_RESISTANCE": 0.8,
+    "STAGGER_HP": 90,
+    "ATTACK_RANGE": 6
+  },
+  "statsByLevel": [
+    {
+      "level": 1,
+      "attributes": {
+        "BASE_HP": 208,
+        "BASE_ATTACK": 30
+      }
+    },
+    {
+      "level": 20,
+      "attributes": {
+        "BASE_HP": 1490,
+        "BASE_ATTACK": 140
+      }
+    },
+    {
+      "level": 40,
+      "attributes": {
+        "BASE_HP": 9430,
+        "BASE_ATTACK": 434
+      }
+    },
+    {
+      "level": 60,
+      "attributes": {
+        "BASE_HP": 37126,
+        "BASE_ATTACK": 1078
+      }
+    },
+    {
+      "level": 80,
+      "attributes": {
+        "BASE_HP": 89303,
+        "BASE_ATTACK": 1622
+      }
+    },
+    {
+      "level": 90,
+      "attributes": {
+        "BASE_HP": 137575,
+        "BASE_ATTACK": 1858
+      }
+    }
+  ]
+}

@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "PROTOCOL_EPSILON",
     "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
-    "id": "PROTOCOL_EPSILON",
     "descriptionParams": {
       "atk_scale": 10,
       "poise": 20,
@@ -13,7 +12,10 @@
       "1-poise": -19,
       "-poise": -20,
       "poise-1": 19
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

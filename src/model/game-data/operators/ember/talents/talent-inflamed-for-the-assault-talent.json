@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "INFLAMED_FOR_THE_ASSAULT_TALENT",
+    "id": "INFLAMED_FOR_THE_ASSAULT_T1",
     "descriptionParams": {
       "talent1": 1,
       "shelterrate": 0.5,
@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "EMBER",

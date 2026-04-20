@@ -21,17 +21,19 @@ interface Props {
   sources: Array<{ resolved: ResolvedSource; bundle: SourceStatsBundle }>;
   hiddenColumns: ReadonlySet<StatisticsColumnType>;
   hiddenOperators: ReadonlySet<string>;
+  hiddenAggregate: boolean;
   critMode: CritMode;
   comparisonMode: ComparisonModeType;
   onToggleColumn: (column: StatisticsColumnType) => void;
   onToggleOperator: (slotId: string) => void;
+  onToggleAggregate: () => void;
   onSetCritMode: (critMode: CritMode) => void;
   onSetComparisonMode: (comparisonMode: ComparisonModeType) => void;
   onReorderSources: (fromIndex: number, toIndex: number) => void;
 }
 
 export default React.memo(function StatisticsGroupedView({
-  label, sources, hiddenColumns, hiddenOperators, critMode, comparisonMode, onToggleColumn, onToggleOperator, onSetCritMode, onSetComparisonMode, onReorderSources,
+  label, sources, hiddenColumns, hiddenOperators, hiddenAggregate, critMode, comparisonMode, onToggleColumn, onToggleOperator, onToggleAggregate, onSetCritMode, onSetComparisonMode, onReorderSources,
 }: Props) {
   // Pick the first resolvable source's sim as the "shared operator section"
   // canvas. Operators/gear/weapons don't vary across views, so any source's
@@ -62,10 +64,12 @@ export default React.memo(function StatisticsGroupedView({
           sources={sources}
           hiddenColumns={hiddenColumns}
           hiddenOperators={hiddenOperators}
+          hiddenAggregate={hiddenAggregate}
           critMode={critMode}
           comparisonMode={comparisonMode}
           onToggleColumn={onToggleColumn}
           onToggleOperator={onToggleOperator}
+          onToggleAggregate={onToggleAggregate}
           onSetCritMode={onSetCritMode}
           onSetComparisonMode={onSetComparisonMode}
           onReorderSources={onReorderSources}

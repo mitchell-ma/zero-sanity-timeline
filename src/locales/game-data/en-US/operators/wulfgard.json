@@ -115,43 +115,43 @@
     "text": "Animation",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.status.WULFGARD_P5_NATURAL_PREDATOR.event.description": {
+  "op.WULFGARD.status.NATURAL_PREDATOR.event.description": {
     "text": "Casting the ultimate Wolven Fury immediately resets the cooldown of the combo skill Frag Grenade·β.",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.status.WULFGARD_P5_NATURAL_PREDATOR.event.name": {
+  "op.WULFGARD.status.NATURAL_PREDATOR.event.name": {
     "text": "Natural Predator",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS.event.description": {
+  "op.WULFGARD.talent.SCORCHING_FANGS_T1.event.description": {
     "text": "Whenever Wulfgard applies Combustion, he gains Scorching Fangs for 10s. This effect cannot stack. Scorching Fangs: While active, Wulfgard gains Heat DMG Dealt +20%/+30%.",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS.event.name": {
+  "op.WULFGARD.talent.SCORCHING_FANGS_T1.event.name": {
     "text": "Scorching Fangs (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS.segment.0.name": {
+  "op.WULFGARD.talent.SCORCHING_FANGS_T1.segment.0.name": {
     "text": "Scorching Fangs (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS_MINOR.event.description": {
+  "op.WULFGARD.talent.SCORCHING_FANGS_MINOR_T1.event.description": {
     "text": "P3: Grants other teammates Scorching Fangs with 50% of the base effects. Heat DMG Dealt +10%/+15%.",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS_MINOR.event.name": {
+  "op.WULFGARD.talent.SCORCHING_FANGS_MINOR_T1.event.name": {
     "text": "Scorching Fangs (Minor) (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.talent.WULFGARD_TALENT1_SCORCHING_FANGS_MINOR.segment.0.name": {
+  "op.WULFGARD.talent.SCORCHING_FANGS_MINOR_T1.segment.0.name": {
     "text": "Scorching Fangs (Minor) (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.talent.WULFGARD_TALENT2_CODE_OF_RESTRAINT.event.description": {
+  "op.WULFGARD.talent.CODE_OF_RESTRAINT_T2.event.description": {
     "text": "Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 5/10 SP.",
     "dataStatus": "RECONCILED"
   },
-  "op.WULFGARD.talent.WULFGARD_TALENT2_CODE_OF_RESTRAINT.event.name": {
+  "op.WULFGARD.talent.CODE_OF_RESTRAINT_T2.event.name": {
     "text": "Code of Restraint (T2)",
     "dataStatus": "RECONCILED"
   }

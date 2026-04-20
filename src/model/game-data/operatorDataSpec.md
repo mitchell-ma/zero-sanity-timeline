@@ -76,7 +76,7 @@ One file per potential under `operators/<slug>/potentials/potential-<N>-<kebab-n
     "id": "DA_PAN_POTENTIAL_3",
     "level": 3,
     "descriptionParams": { "Str": 15, "PhysicalDamageIncrease": 0.08 },
-    "eventType": "POTENTIAL_EVENT",
+    "eventTypes": ["STATUS"],
     "eventCategoryType": "POTENTIAL"
   },
   "metadata": { "originId": "DA_PAN", "dataStatus": "RECONCILED" }
@@ -237,23 +237,7 @@ Skill categories are inferred from naming conventions:
 - **ULTIMATE**: The skill with `ANIMATION` segment type
 - **BATTLE_SKILL**: The remaining base skill
 
-Variant suffixes: `_ENHANCED` (during ultimate), `_EMPOWERED` (from status stacks), `_ENHANCED_EMPOWERED` (both).
-
-### Enhancement Types
-
-Variant skills (enhanced, empowered, or both) carry an `enhancementTypes` array indicating which enhancement conditions apply:
-
-```json
-"enhancementTypes": ["EMPOWERED"]
-```
-
-| Value | Meaning |
-|-------|---------|
-| `NORMAL` | Base skill (no enhancement) |
-| `EMPOWERED` | Requires operator-specific status at max stacks (e.g., Melting Flame, Crit Stacks) |
-| `ENHANCED` | Available during ultimate active phase |
-
-A skill can have multiple enhancement types (e.g., `["ENHANCED", "EMPOWERED"]` for skills that require both ultimate active and max status stacks). Base skills do not need this field — absence implies `NORMAL`.
+Variant suffixes: `_ENHANCED` (during ultimate), `_EMPOWERED` (from status stacks), `_ENHANCED_EMPOWERED` (both). Variants are identified by their skill ID alone; placement gating is handled via `ENABLE` / `DISABLE` clause effects keyed on the variant ID.
 
 ### Activation Window (Combo Skills)
 
@@ -320,7 +304,7 @@ Warfarin multiplier data is scoped to the **segment level** — each Warfarin sk
   "properties": {
     "id": "SMOULDERING_FIRE",
     "descriptionParams": { "atk_scale": 0.42, "poise": 17, "duration": 15 },
-    "eventType": "SKILL",
+    "eventTypes": ["SKILL"],
     "eventCategoryType": "BATTLE",
     "element": "HEAT"
   },
@@ -823,7 +807,6 @@ No other top-level keys are allowed. Legacy keys (`originId`, `stats`, `element`
 | `target` | string | No | Target of the status (`OPERATOR`, `ENEMY`). Defaults to `OPERATOR` |
 | `targetDeterminer` | string | No | `THIS`, `OTHER`, `ALL`, `ANY`. Defaults to `THIS` |
 | `isForced` | ValueNode | No | `{"verb":"IS","value":1}` to bypass normal rules. Raw booleans rejected by validator. |
-| `enhancementTypes` | string[] | No | `EnhancementType` values (e.g. `["EMPOWERED"]`) |
 | `stacks` | object | Yes | Stacking configuration (see below) |
 | `duration` | object | No | Duration struct (`{ value, unit }`). Use `99999` (PERMANENT_DURATION) for permanent statuses |
 
@@ -894,18 +877,6 @@ Effect values use `with.value` with a `verb` indicating how to resolve:
 | `VARY_BY` | `SKILL_LEVEL` | Array indexed by skill level (1–12), resolved via source chain |
 | `VARY_BY` | `TALENT_LEVEL` | Array indexed by talent level |
 | `VARY_BY` | `INTELLECT` | Array of per-intellect scaling values |
-
-#### Enhancement Type Adjectives
-
-The `DISABLE` verb uses enhancement type adjectives to target specific skill variant tiers:
-
-| Adjective | Description |
-|-----------|-------------|
-| `NONE` | Base skill variant (no enhancement) |
-| `ENHANCED` | Enhanced variant (active during ultimate) |
-| `EMPOWERED` | Empowered variant (requires max status stacks) |
-
-Skill variants declare their enhancement type via `properties.enhancementTypes` in the skill JSON. Base skills without this field are implicitly `NORMAL`.
 
 #### Frame Effects
 
@@ -1017,7 +988,6 @@ All enums used in this file are defined in the codebase:
 | `TimeInteractionType`    | `src/consts/enums.ts`         |
 | `DslTarget`              | `src/dsl/semantics.ts`        |
 | `CombatSkillType`        | `src/consts/enums.ts`         |
-| `EnhancementType`        | `src/consts/enums.ts`         |
 | `DataSourceType`         | `src/consts/enums.ts`         |
 
 ## DSL Grammar & Semantics

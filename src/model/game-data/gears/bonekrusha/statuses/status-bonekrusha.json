@@ -52,8 +52,10 @@
       },
       "interactionType": "NONE"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "GEAR"
+    "eventCategoryType": "GEAR",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "BONEKRUSHA_STAT",

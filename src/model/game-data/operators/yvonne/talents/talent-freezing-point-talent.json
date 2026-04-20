@@ -232,7 +232,7 @@
     }
   ],
   "properties": {
-    "id": "FREEZING_POINT_TALENT",
+    "id": "FREEZING_POINT_T2",
     "descriptionParams": {
       "inflict_up": 0.2,
       "status_up": 0.4,
@@ -263,8 +263,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "YVONNE",

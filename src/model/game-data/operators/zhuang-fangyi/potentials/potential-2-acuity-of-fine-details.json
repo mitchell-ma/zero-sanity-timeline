@@ -48,7 +48,9 @@
     }
   ],
   "properties": {
-    "id": "ZHUANG_FANGYI_POTENTIAL_2",
+    "id": "ACUITY_OF_FINE_DETAILS_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Will": 20,
@@ -60,11 +62,14 @@
       "-NormalSkillDamageIncrease": -0.15,
       "NormalSkillDamageIncrease-1": -0.85
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

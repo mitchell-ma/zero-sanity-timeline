@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "TEXTBOOK_ASSAULT",
     "eventCategoryType": "ULTIMATE",
     "element": "PHYSICAL",
-    "id": "TEXTBOOK_ASSAULT",
     "descriptionParams": {
       "atk_scale": 2,
       "atk_scale_1": 2.7,
@@ -41,7 +40,10 @@
       "1-WeakRateDisplay": 0.7,
       "-WeakRateDisplay": -0.3,
       "WeakRateDisplay-1": -0.7
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

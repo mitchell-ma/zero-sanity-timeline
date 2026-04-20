@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "EXPLODING_BLITZ",
     "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
-    "id": "EXPLODING_BLITZ",
     "descriptionParams": {
       "atk_scale1": 3.5,
       "atk_scale2": 5.5,
@@ -21,7 +20,10 @@
       "1-poise2": -9,
       "-poise2": -10,
       "poise2-1": 9
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

@@ -91,8 +91,10 @@
       },
       "unit": "SECOND"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS"
+    "eventCategoryType": "SKILL_STATUS",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ARCLIGHT",

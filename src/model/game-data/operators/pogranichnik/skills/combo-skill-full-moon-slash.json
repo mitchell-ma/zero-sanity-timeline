@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "FULL_MOON_SLASH",
     "eventCategoryType": "COMBO",
     "element": "PHYSICAL",
-    "id": "FULL_MOON_SLASH",
     "descriptionParams": {
       "atk_scale": 0.95,
       "atk_scale2": 1.22,
@@ -53,7 +52,10 @@
       "1-poise4": -8,
       "-poise4": -9,
       "poise4-1": 8
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {
@@ -208,7 +210,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "objectId": "THE_LIVING_BANNER_T1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
@@ -303,7 +305,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "objectId": "THE_LIVING_BANNER_T1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
@@ -411,7 +413,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "objectId": "THE_LIVING_BANNER_T1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {
@@ -489,7 +491,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "objectId": "THE_LIVING_BANNER_T1",
                   "toDeterminer": "THIS",
                   "to": "OPERATOR",
                   "with": {

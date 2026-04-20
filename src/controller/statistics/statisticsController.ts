@@ -45,8 +45,13 @@ export interface ResolvedSource {
 
 export interface SourceStatsBundle {
   resolved: ResolvedSource;
-  /** Per-slot aggregated stats. Indexed by slotId. Null if not computable. */
-  aggregated: Record<string, AggregatedStats | null>;
+  /**
+   * Per-slot aggregated stats. Lazy — computing this is expensive (one full
+   * DataDrivenOperator model + potential/gear/weapon walk per slot) and the
+   * only consumer is the AGGREGATED_STAT metric. Never instantiated by the
+   * grouped-mode table. Cached on first call.
+   */
+  getAggregated: () => Record<string, AggregatedStats | null>;
   /**
    * Full simulation output when the source sheet is loadable; otherwise null.
    * Bundles the pieces needed to render the combat-sheet header per source.
@@ -87,10 +92,23 @@ export function resolveSources(
   sources: readonly StatisticsSource[],
   loadoutTree: LoadoutTree,
 ): ResolvedSource[] {
-  return sources.map((source) => resolveSource(source, loadoutTree));
+  // Per-call cache: 25 views of the same parent share one localStorage read +
+  // JSON.parse instead of doing it 25 times.
+  const loadCache = new Map<string, SheetData | null>();
+  const cachedLoad = (id: string): SheetData | null => {
+    if (loadCache.has(id)) return loadCache.get(id)!;
+    const data = loadLoadoutData(id);
+    loadCache.set(id, data);
+    return data;
+  };
+  return sources.map((source) => resolveSource(source, loadoutTree, cachedLoad));
 }
 
-function resolveSource(source: StatisticsSource, loadoutTree: LoadoutTree): ResolvedSource {
+function resolveSource(
+  source: StatisticsSource,
+  loadoutTree: LoadoutTree,
+  load: (id: string) => SheetData | null,
+): ResolvedSource {
   const node = findNodeByUuid(loadoutTree, source.loadoutUuid) ?? null;
   if (!node) {
     return { source, node: null, sheetData: null, parentNode: null, label: source.alias ?? '(missing)' };
@@ -100,12 +118,12 @@ function resolveSource(source: StatisticsSource, loadoutTree: LoadoutTree): Reso
   // Views derive their sheet data from parent + override; loadouts load theirs directly.
   let sheetData = null;
   if (node.type === LoadoutNodeType.LOADOUT_VIEW && node.viewParentId) {
-    const parentData = loadLoadoutData(node.viewParentId);
+    const parentData = load(node.viewParentId);
     sheetData = parentData && node.viewOverride
       ? applyViewOverride(parentData, node.viewOverride)
       : parentData;
   } else {
-    sheetData = loadLoadoutData(node.id);
+    sheetData = load(node.id);
   }
   const label = source.alias?.trim() || node.name;
   return { source, node, sheetData, parentNode, label };
@@ -114,8 +132,8 @@ function resolveSource(source: StatisticsSource, loadoutTree: LoadoutTree): Reso
 // ─── Per-source computation ─────────────────────────────────────────────────
 
 /**
- * Compute the cheap part of a source's stats (per-slot aggregated stats).
- * This runs on every render since it's cheap.
+ * Compute per-slot aggregated stats. Expensive — instantiates a full operator
+ * model per slot. Call lazily via `bundle.getAggregated()`.
  */
 export function computeAggregatedForSheet(sheet: SheetData): Record<string, AggregatedStats | null> {
   const aggregated: Record<string, AggregatedStats | null> = {};
@@ -144,13 +162,16 @@ export function runSimulation(sheet: SheetData, critMode: CritMode = CritMode.EX
 /**
  * Assemble a bundle from already-computed pieces. Kept separate so the hook
  * layer can cache simulation results independently of the resolve step.
+ *
+ * `getAggregated` is a lazy thunk — the caller passes one in so the hook layer
+ * can share a per-sheet cache across bundles and across renders.
  */
 export function assembleBundle(
   resolved: ResolvedSource,
-  aggregated: Record<string, AggregatedStats | null>,
+  getAggregated: () => Record<string, AggregatedStats | null>,
   simulation: SimulationResult | null,
 ): SourceStatsBundle {
-  return { resolved, aggregated, simulation };
+  return { resolved, getAggregated, simulation };
 }
 
 // ─── Metric extraction ──────────────────────────────────────────────────────
@@ -223,9 +244,10 @@ function requireDamage(
 }
 
 function sumAggregatedStat(bundle: SourceStatsBundle, statType: StatType): number {
+  const aggregated = bundle.getAggregated();
   let total = 0;
   for (const slotId of SLOT_IDS) {
-    const agg = bundle.aggregated[slotId];
+    const agg = aggregated[slotId];
     if (!agg) continue;
     total += agg.stats[statType] ?? 0;
   }

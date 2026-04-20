@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "FREE_GIVEAWAY",
     "eventCategoryType": "COMBO",
     "element": "NATURE",
-    "id": "FREE_GIVEAWAY",
     "descriptionParams": {
       "atk_scale": 3.8,
       "poise": 10,
@@ -37,7 +36,10 @@
       "1-atk_scale_add_4": -3.1500000000000004,
       "-atk_scale_add_4": -4.15,
       "atk_scale_add_4-1": 3.1500000000000004
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

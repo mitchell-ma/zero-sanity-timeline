@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "WULFGARD_P3_HUNTING_HOUR",
+    "id": "HUNTING_HOUR_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "potential_3": 1,
@@ -12,8 +14,10 @@
       "-teammate_percent": -0.5,
       "teammate_percent-1": -0.5
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "WULFGARD",

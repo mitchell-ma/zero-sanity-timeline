@@ -333,11 +333,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "HYPOTHERMIC_ASSAULT_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "HYPOTHERMIC_ASSAULT_BATK",
     "descriptionParams": {
       "atk_scale": 1.32,
       "poise": 23,
@@ -351,7 +350,10 @@
       "1-atb": 1,
       "-atb": 0,
       "atb-1": -1
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

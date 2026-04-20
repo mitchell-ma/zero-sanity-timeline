@@ -1,6 +1,8 @@
 {
   "properties": {
     "id": "ENDMINISTRATOR_POTENTIAL_4",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 4,
     "descriptionParams": {
       "MaxHp": 0.1,
@@ -16,8 +18,10 @@
       "-Agi": -25,
       "Agi-1": 24
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ENDMINISTRATOR",

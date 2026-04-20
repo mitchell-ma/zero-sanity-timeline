@@ -37,7 +37,7 @@ import { runCalculation } from '../../../../controller/calculation/calculationCo
 const ALESH_ID: string = require('../../../../model/game-data/operators/alesh/alesh.json').id;
 const BATTLE_SKILL_ID: string = require('../../../../model/game-data/operators/alesh/skills/battle-skill-unconventional-lure.json').properties.id;
 const FLASH_FROZEN_ID: string = require('../../../../model/game-data/operators/alesh/talents/talent-flash-frozen-talent.json').properties.id;
-const MAY_THE_WILLING_BITE_ID: string = require('../../../../model/game-data/operators/alesh/statuses/status-may-the-willing-bite.json').properties.id;
+const MAY_THE_WILLING_BITE_ID: string = require('../../../../model/game-data/operators/alesh/potentials/potential-3-may-the-willing-bite.json').properties.id;
 const WULFGARD_ID: string = require('../../../../model/game-data/operators/wulfgard/wulfgard.json').id;
 const WULFGARD_EMP_BS_ID: string = require('../../../../model/game-data/operators/wulfgard/skills/battle-skill-thermite-tracers-empowered.json').properties.id;
 const ENDMIN_ID: string = require('../../../../model/game-data/operators/endministrator/endministrator.json').id;
@@ -419,7 +419,7 @@ describe('Alesh Skills — Ult suppliedParameter + P5 gating', () => {
   it('H2: ult at full HP gets base mult, ult after HP drops below 50% gets P5 1.5x mult', () => {
     // Use lowest-HP enemy so BS spam can push HP below 50%
     const { result } = setupAlesh();
-    act(() => { result.current.handleSwapEnemy('mudflow_delta'); });
+    act(() => { result.current.handleSwapEnemy('MUDFLOW_DELTA'); });
 
     // Place ult early (HP still full) → HP >= 50% clause fires → base mult
     act(() => { setUltimateEnergyToMax(result.current, SLOT_ALESH, 0); });
@@ -732,7 +732,7 @@ describe('Alesh Skills — Combo activation window', () => {
   });
 });
 
-describe('Alesh Skills — CHANCE pin + P3 MAY_THE_WILLING_BITE', () => {
+describe('Alesh Skills — CHANCE pin + P3 MAY_THE_WILLING_BITE_P3', () => {
   afterEach(() => { setRuntimeCritMode(CritMode.NEVER); });
 
   it('I0: CHANCE branch selects correct SP values — miss=base, hit=base+bonus', () => {
@@ -787,7 +787,7 @@ describe('Alesh Skills — CHANCE pin + P3 MAY_THE_WILLING_BITE', () => {
     expect(dealHit!.valueNode).toBeDefined();
   });
 
-  it('I1: CHANCE pinned to hit at P3+ applies MAY_THE_WILLING_BITE to team', () => {
+  it('I1: CHANCE pinned to hit at P3+ applies MAY_THE_WILLING_BITE_P3 to team', () => {
     const { result } = setupAlesh();
     // Set both React state and runtime global — pipeline reads pipelineCritMode
     // (normalized to EXPECTED), but doChance reads getRuntimeCritMode() (ALWAYS).

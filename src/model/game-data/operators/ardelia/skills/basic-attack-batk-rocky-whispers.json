@@ -543,11 +543,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "ROCKY_WHISPERS_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "NATURE",
-    "id": "ROCKY_WHISPERS_BATK",
     "descriptionParams": {
       "atk_scale": 1.24,
       "atk_scale_display": 1.18,
@@ -565,7 +564,10 @@
       "1-poise": -17,
       "-poise": -18,
       "poise-1": 17
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ARDELIA",

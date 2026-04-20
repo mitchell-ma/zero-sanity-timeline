@@ -617,11 +617,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "SEEK_AND_HUNT_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "PHYSICAL",
-    "id": "SEEK_AND_HUNT_BATK",
     "descriptionParams": {
       "atk_scale": 0.23,
       "atb": 0,
@@ -635,7 +634,10 @@
       "1-poise": -15,
       "-poise": -16,
       "poise-1": 15
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ARCLIGHT",

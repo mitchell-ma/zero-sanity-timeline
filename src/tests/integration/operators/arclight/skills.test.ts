@@ -532,7 +532,7 @@ describe('G. Ultimate — Electric Infliction / Electrification branch', () => {
 // The base Tempestuous Arc file has a conditional third frame gated on
 // ENEMY HAVE STATUS REACTION ELECTRIFICATION. When the enemy is electrified,
 // the frame fires: CONSUME the Electrification, deal Electric DMG, recover SP,
-// and APPLY WILDLAND_TREKKER_TALENT to Arclight (+1 stack). The Wildland
+// and APPLY WILDLAND_TREKKER_T1 to Arclight (+1 stack). The Wildland
 // Trekker T1 talent itself is the counter — its onTriggerClause fires when
 // stacks BECOME >= the P-dependent threshold (3 at P0–P4, 2 at P5), consuming
 // the accumulated stacks and applying WILDLAND_TREKKER_BUFF to: TEAM. The
@@ -594,7 +594,7 @@ describe('H. Wildland Trekker counter pipeline', () => {
     const triggers = getTriggerEvents(result.current);
     expect(triggers).toHaveLength(0);
 
-    // Layer 3 — view: no WILDLAND_TREKKER_TALENT event in any view model.
+    // Layer 3 — view: no WILDLAND_TREKKER_T1 event in any view model.
     const vms = computeTimelinePresentation(
       result.current.allProcessedEvents, result.current.columns,
     );
@@ -616,7 +616,7 @@ describe('H. Wildland Trekker counter pipeline', () => {
 
     placeBSE2E(result, 5);
 
-    // Layer 2 — controller: the conditional frame fires → WILDLAND_TREKKER_TALENT
+    // Layer 2 — controller: the conditional frame fires → WILDLAND_TREKKER_T1
     // event materializes on Arclight's slot with stacks > 0.
     const triggers = getTriggerEvents(result.current);
     expect(triggers.length).toBeGreaterThanOrEqual(1);

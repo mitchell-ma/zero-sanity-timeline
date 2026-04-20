@@ -119,43 +119,43 @@
     "text": "Sword of Aspiration (Finisher)",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.status.AKEKURI_P1_POSITIVE_FEEDBACK.event.description": {
+  "op.AKEKURI.status.POSITIVE_FEEDBACK_P1.event.description": {
     "text": "After recovering SP with skills, Akekuri gains ATK +10% for 10s. This effect can reach 5 stacks.",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.status.AKEKURI_P1_POSITIVE_FEEDBACK.event.name": {
+  "op.AKEKURI.status.POSITIVE_FEEDBACK_P1.event.name": {
     "text": "Positive Feedback",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.status.AKEKURI_P1_POSITIVE_FEEDBACK.segment.0.name": {
+  "op.AKEKURI.status.POSITIVE_FEEDBACK_P1.segment.0.name": {
     "text": "Positive Feedback",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.status.AKEKURI_P3_COMMITTED_TEAM_PLAYER.event.description": {
+  "op.AKEKURI.status.COMMITTED_TEAM_PLAYER_P3.event.description": {
     "text": "Ultimate SQUAD! ON ME! improved: While ultimate is active, entire team gains ATK +10%.",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.status.AKEKURI_P3_COMMITTED_TEAM_PLAYER.event.name": {
+  "op.AKEKURI.status.COMMITTED_TEAM_PLAYER_P3.event.name": {
     "text": "Committed Team Player",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.status.AKEKURI_P3_COMMITTED_TEAM_PLAYER.segment.0.name": {
+  "op.AKEKURI.status.COMMITTED_TEAM_PLAYER_P3.segment.0.name": {
     "text": "Committed Team Player",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.talent.CHEER_OF_VICTORY_TALENT.event.description": {
+  "op.AKEKURI.talent.CHEER_OF_VICTORY_T1.event.description": {
     "text": "Combo skill Flash and Dash improved: For every 10 points of Intellect, SP Recovery +{sp_rate:0%} (max: {sp_cap:0%}).",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.talent.CHEER_OF_VICTORY_TALENT.event.name": {
+  "op.AKEKURI.talent.CHEER_OF_VICTORY_T1.event.name": {
     "text": "Cheer of Victory (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.talent.STAYING_IN_THE_ZONE_TALENT.event.description": {
+  "op.AKEKURI.talent.STAYING_IN_THE_ZONE_T2.event.description": {
     "text": "Ultimate SQUAD! ON ME! improved: When ultimate is active, gains Link.",
     "dataStatus": "RECONCILED"
   },
-  "op.AKEKURI.talent.STAYING_IN_THE_ZONE_TALENT.event.name": {
+  "op.AKEKURI.talent.STAYING_IN_THE_ZONE_T2.event.name": {
     "text": "Staying in the Zone (T2)",
     "dataStatus": "RECONCILED"
   }

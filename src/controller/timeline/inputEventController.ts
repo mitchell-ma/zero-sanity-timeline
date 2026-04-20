@@ -7,13 +7,13 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { NounType, VerbType } from '../../dsl/semantics';
-import { ColumnType, EnhancementType, EventFrameType } from '../../consts/enums';
+import { ColumnType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
 import { ENEMY_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
-import { hasEnableClauseAtFrame } from './eventValidator';
+import { hasEnableClauseAtFrame, isEnableGated } from './eventValidator';
 import { isResetStatus } from './eventPresentationController';
 import type { CombatLoadoutController } from '../combat-loadout/combatLoadoutController';
 import { hasSkillPointClause, buildSkillPointRecoveryClause, hasStaggerClause, buildDealStaggerClause, stripStaggerClauses } from './clauseQueries';
@@ -232,6 +232,15 @@ export function clampDeltaByOverlap(
 
   const target = startFrame + clampedDelta;
 
+  // Combo skills inside a multi-skill activation window can legitimately stack
+  // with siblings placed in the same window — pass-3 CD clamping resolves
+  // their apparent span overlap. Skip sibling collection when the drag target
+  // lives inside such a window.
+  const comboWindowBypass = ev.columnId === NounType.COMBO
+    ? findMultiSkillWindow(ev.ownerEntityId, target, allEvents)
+      ?? findMultiSkillWindow(ev.ownerEntityId, startFrame, allEvents)
+    : undefined;
+
   // Collect non-dragged siblings in the same column
   const siblings: { start: number; end: number }[] = [];
   for (const sib of allEvents) {
@@ -239,6 +248,10 @@ export function clampDeltaByOverlap(
     if (draggedIds.has(sib.uid)) continue; // skip other dragged events
     // RESET statuses clamp same-id siblings — skip overlap check only for those
     if (evIsReset && sib.id === ev.id) continue;
+    // Siblings inside the same multi-skill combo window are allowed to stack
+    if (comboWindowBypass && sib.columnId === NounType.COMBO &&
+        sib.startFrame >= comboWindowBypass.startFrame &&
+        sib.startFrame < eventEndFrame(comboWindowBypass)) continue;
     const sibRange = getSibRange(sib, processedEvents);
     if (sibRange <= 0) continue;
     siblings.push({ start: sib.startFrame, end: sib.startFrame + sibRange });
@@ -328,6 +341,7 @@ export function createEvent(
   defaultSkill: {
     id?: string;
     name?: string;
+    category?: import('../../dsl/semantics').NounType;
     segments?: EventSegmentData[];
     operatorPotential?: number;
     timeInteraction?: string;
@@ -337,7 +351,6 @@ export function createEvent(
     skillPointCost?: number;
     sourceEntityId?: string;
     sourceSkillId?: string;
-    enhancementType?: import('../../consts/enums').EnhancementType;
     stacks?: Record<string, unknown>;
     segmentOrigin?: number[];
     suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>;
@@ -364,7 +377,7 @@ export function createEvent(
   return {
     uid: genEventUid(),
     id: eventId,
-    name: eventId,
+    name: defaultSkill?.name ?? eventId,
     ownerEntityId,
     columnId,
     startFrame: atFrame,
@@ -380,7 +393,7 @@ export function createEvent(
     ...(defaultSkill?.skillPointCost != null ? { skillPointCost: defaultSkill.skillPointCost } : {}),
     sourceEntityId: defaultSkill?.sourceEntityId ?? ownerEntityId,
     sourceSkillId: defaultSkill?.sourceSkillId ?? 'Freeform',
-    ...(defaultSkill?.enhancementType ? { enhancementType: defaultSkill.enhancementType } : {}),
+    ...(defaultSkill?.category ? { category: defaultSkill.category } : {}),
     ...(interactionMode ? { creationInteractionMode: interactionMode } : {}),
     ...(defaultSkill?.segmentOrigin ? { segmentOrigin: defaultSkill.segmentOrigin } : {}),
     ...(defaultSkill?.suppliedParameters ? { suppliedParameters: defaultSkill.suppliedParameters } : {}),
@@ -482,17 +495,18 @@ function clampToComboEdge(
 // ── Enhanced → ENABLE clause constraint ──────────────────────────────────
 
 /**
- * Clamp enhanced events so that all segment start frames remain within
- * an active ENABLE clause window targeting this variant's ID.
+ * If the variant is ENABLE-gated, snap back to the original startFrame when
+ * the desired frame falls outside an active ENABLE window. Non-gated variants
+ * are passed through unchanged.
  */
 function clampToEnableWindow(
   allEvents: TimelineEvent[],
   target: TimelineEvent,
   desiredFrame: number,
 ): number {
-  // Find the ENABLE window by scanning for a frame that has the clause
+  if (!isEnableGated(allEvents, target.ownerEntityId, target.name)) return desiredFrame;
   if (!hasEnableClauseAtFrame(allEvents, target.ownerEntityId, target.name, desiredFrame)) {
-    return target.startFrame; // desired frame outside ENABLE window
+    return target.startFrame;
   }
   return desiredFrame;
 }
@@ -574,15 +588,6 @@ export function validateUpdate(
   if (merged.columnId !== NounType.ULTIMATE && isInUltimateAnimation(allEvents, merged.startFrame, merged.uid)) return null;
   // Block battle skills from being placed during a combo animation
   if (merged.columnId === NounType.BATTLE && isInComboAnimation(allEvents, merged.startFrame, merged.uid)) return null;
-  // Enhanced skills require an active ultimate
-  if (merged.enhancementType === EnhancementType.ENHANCED) {
-    const ultActive = allEvents.some(
-      (e) => e.uid !== merged.uid && e.ownerEntityId === merged.ownerEntityId && e.columnId === NounType.ULTIMATE
-        && merged.startFrame >= e.startFrame + getAnimationDuration(e)
-        && merged.startFrame < eventEndFrame(e),
-    );
-    if (!ultActive) return null;
-  }
   return merged;
 }
 
@@ -620,10 +625,8 @@ export function validateMove(
     if (target.columnId === NounType.BATTLE || target.columnId === NounType.BASIC_ATTACK) {
       clamped = clampToComboEdge(allEvents, target, clamped);
     }
-    // Clamp enhanced events within the ENABLE clause window
-    if (target.enhancementType === EnhancementType.ENHANCED) {
-      clamped = clampToEnableWindow(allEvents, target, clamped);
-    }
+    // Clamp events to an active ENABLE clause window if one gates them
+    clamped = clampToEnableWindow(allEvents, target, clamped);
   }
   return clamped;
 }

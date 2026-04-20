@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "LIFENG_POTENTIAL_4",
+    "id": "BRIEF_INSTANT_P4",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 4,
     "descriptionParams": {
       "costValue": 0.85,
@@ -8,8 +10,10 @@
       "-costValue": -0.85,
       "costValue-1": -0.15000000000000002
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LIFENG",

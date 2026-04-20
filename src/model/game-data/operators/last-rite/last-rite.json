@@ -9,8 +9,8 @@
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "talents": {
-    "one": "HYPOTHERMIA_TALENT",
-    "two": "CRYOGENIC_EMBRITTLEMENT_TALENT",
+    "one": "HYPOTHERMIA_T1",
+    "two": "CRYOGENIC_EMBRITTLEMENT_T2",
     "attributeIncrease": {
       "id": "FORGED"
     }

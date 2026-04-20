@@ -22,7 +22,11 @@
     }
   ],
   "properties": {
-    "id": "SUPPRESSION_EMERGENCY_BOOST"
+    "id": "SUPPRESSION_EMERGENCY_BOOST",
+    "descriptionParams": {
+      "atk_up": 0.12,
+      "duration": 20
+    }
   },
   "metadata": {
     "originId": "game",

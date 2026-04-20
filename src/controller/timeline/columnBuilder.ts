@@ -1,7 +1,7 @@
 import { Column, MiniTimeline, MicroColumn, Operator, Enemy, VisibleSkills, EventFrameMarker, EventSegmentData } from '../../consts/viewTypes';
 import { AdjectiveType, DeterminerType, NounType, VerbType, isQualifiedId, type Effect, type Predicate } from '../../dsl/semantics';
 import type { FrameClausePredicate } from '../../model/event-frames/skillEventFrame';
-import { ColumnType, CombatResourceType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EnhancementType, EventFrameType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StackInteractionType, StatusType, TimeDependency, TimelineSourceType, UnitType, UNLIMITED_STACKS } from '../../consts/enums';
+import { ColumnType, CombatResourceType, DEFAULT_EVENT_COLOR, ELEMENT_COLORS, ElementType, EnemyActionType, EventFrameType, EventType, HeaderVariant, MicroColumnAssignment, PERMANENT_DURATION, SegmentType, StatusType, TimeDependency, TimelineSourceType, UnitType, UNLIMITED_STACKS } from '../../consts/enums';
 import { ENEMY_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, OPERATOR_STATUS_COLUMN_ID, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, COMBO_WINDOW_COLUMN_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { isTeamStatus } from '../gameDataStore';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, ENEMY_ACTION_LABELS } from '../../consts/timelineColumnLabels';
@@ -15,8 +15,7 @@ import { buildDealStaggerClause, stripStaggerClauses, buildDealDamageClause } fr
 import { getFrameSequences, getSegmentLabels, getOperatorSkill, getOperatorSkills, getRawSkillTypeMap, getEnabledStatusEvents } from '../gameDataStore';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
-import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { getBaseSkillId, formatSkillDisplayName } from '../../dsl/semanticsTranslation';
+import { getBaseSkillId } from '../../dsl/semanticsTranslation';
 import { buildContextForSkillColumn } from '../calculation/valueResolver';
 import { aggregateLoadoutStats } from '../calculation/loadoutAggregator';
 import { ATTRIBUTE_INCREASE_LOOKUP } from '../../model/operators/dataDrivenOperator';
@@ -83,12 +82,6 @@ function collectSuppliedParameters(
   const result: SuppliedParams = {};
   for (const k of keys) result[k] = Array.from(merged[k].values());
   return result;
-}
-
-/** Resolve a variant skill's display name from its JSON data + base skill label. */
-function resolveVariantDisplayName(varId: string, varSkill: Record<string, unknown>): string {
-  const baseName = COMBAT_SKILL_LABELS[getBaseSkillId(varId) as string] ?? (varSkill.name as string);
-  return formatSkillDisplayName(baseName, (varSkill.properties as Record<string, unknown> | undefined)?.enhancementTypes as string[] | undefined, varSkill.name as string | undefined);
 }
 
 const MIN_SLOT_COLS = 4;
@@ -176,15 +169,7 @@ function buildStatusMicroColumn(
     label,
     color,
     ...(categoryType ? { statusType: categoryType } : {}),
-    ...(overrides?.permanent
-      || ((cfg?.eventCategoryType === NounType.TALENT
-        || cfg?.eventCategoryType === NounType.POTENTIAL)
-        && !(cfg?.stacks?.interactionType === StackInteractionType.NONE && cfg?.maxStacks >= UNLIMITED_STACKS)
-        && !cfg?.onTriggerClause?.length
-        // Self-trigger talents with finite durations (Fluorite Unpredictable T2)
-        // are transient; not passive. `durationSeconds` is 0 for always-on
-        // talents and >=PERMANENT_DURATION for explicitly permanent ones.
-        && !(durSec > 0 && durSec < PERMANENT_DURATION))
+    ...(overrides?.permanent || cfg?.eventTypes?.includes(EventType.AUTOMATIC)
       ? { permanent: true } : {}),
     defaultEvent: {
       id: statusId,
@@ -595,12 +580,16 @@ export function buildColumns(
               };
             }
 
-            // Collect all BA categories + their variants
-            const categories: { baseId: string; categoryId: string; label?: string }[] = [
-              { baseId: batkId, categoryId: batkId },
+            // Collect all BA categories + their variants. categoryId carries the
+            // operator-specific skill id (e.g. JOLTING_ARTS_FINISHER) so DSL
+            // ENABLE/DISABLE clauses can target it directly. category carries the
+            // generic kind (FINISHER / DIVE / BATK) for engine/UI checks that
+            // need to identify the variant kind regardless of operator.
+            const categories: { baseId: string; categoryId: string; category: NounType; label?: string }[] = [
+              { baseId: batkId, categoryId: batkId, category: NounType.BATK },
             ];
-            if (finisherId) categories.push({ baseId: finisherId, categoryId: NounType.FINISHER, label: 'Finisher' });
-            if (diveId) categories.push({ baseId: diveId, categoryId: NounType.DIVE, label: 'Dive' });
+            if (finisherId) categories.push({ baseId: finisherId, categoryId: finisherId, category: NounType.FINISHER, label: 'Finisher' });
+            if (diveId) categories.push({ baseId: diveId, categoryId: diveId, category: NounType.DIVE, label: 'Dive' });
 
             // Only populate eventVariants if there are multiple categories or any category has variants
             const hasMultipleCategories = categories.length > 1;
@@ -611,7 +600,7 @@ export function buildColumns(
             if (hasMultipleCategories || hasAnyVariant) {
               col.eventVariants = [];
 
-              for (const { baseId, categoryId, label } of categories) {
+              for (const { baseId, categoryId, category, label } of categories) {
                 const seqs = getFrameSequences(op.id, baseId);
                 const seg = seqs.length
                   ? SkillSegmentBuilder.buildSegments(seqs, { labels: label ? [label] : undefined, ctx: skillCtx, useNumeralFallback: true })
@@ -619,11 +608,12 @@ export function buildColumns(
 
                 if (!seg) {
                   // Fallback for missing frame data
-                  const fallbackFrames = categoryId === NounType.FINISHER ? FINISHER_FRAMES : DIVE_FRAMES;
-                  const fallbackType = categoryId === NounType.FINISHER ? EventFrameType.FINISHER : EventFrameType.DIVE;
+                  const fallbackFrames = category === NounType.FINISHER ? FINISHER_FRAMES : DIVE_FRAMES;
+                  const fallbackType = category === NounType.FINISHER ? EventFrameType.FINISHER : EventFrameType.DIVE;
                   col.eventVariants.push({
                     id: categoryId,
-                    name: categoryId,
+                    name: baseId,
+                    category,
                     segments: [{ properties: { duration: fallbackFrames, name: label ?? categoryId }, frames: [{ offsetFrame: fallbackFrames, frameTypes: [fallbackType] }] }],
                   });
                   continue;
@@ -634,8 +624,8 @@ export function buildColumns(
                 const baCatParams = collectSuppliedParameters(baCatSkill?.suppliedParameters, seg.segments);
                 col.eventVariants.push({
                   id: categoryId,
-                  name: categoryId,
-                  ...(baseId === batkId ? { enhancementType: EnhancementType.NORMAL } : {}),
+                  name: baseId,
+                  category,
                   segments: seg.segments,
                   ...(baCatParams ? { suppliedParameters: baCatParams } : {}),
                 });
@@ -649,15 +639,10 @@ export function buildColumns(
                   const variantSeqs = getFrameSequences(op.id, varId);
                   if (variantSeqs?.length) {
                     const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { ctx: skillCtx, useNumeralFallback: true });
-                    const jsonEnhTypes = ((varSkill as Record<string, unknown>).enhancementTypes ?? (varSkill.properties as Record<string, unknown> | undefined)?.enhancementTypes) as string[] | undefined;
-                    const enhancementType = jsonEnhTypes?.includes(EnhancementType.ENHANCED) ? EnhancementType.ENHANCED
-                      : EnhancementType.EMPOWERED;
                     const baVarParams = collectSuppliedParameters(baVarSkillObj?.suppliedParameters, variantSeg.segments);
                     col.eventVariants.push({
                       id: varId,
                       name: varId,
-                      displayName: resolveVariantDisplayName(varId, varSkill),
-                      enhancementType,
                       segments: variantSeg.segments,
                       ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
                       ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
@@ -683,7 +668,7 @@ export function buildColumns(
             };
             const baseSkillObj = getOperatorSkill(op.id, skill.name);
             const baseBsParams = collectSuppliedParameters(baseSkillObj?.suppliedParameters, baseSeg.segments);
-            col.eventVariants = [{ ...col.defaultEvent!, enhancementType: EnhancementType.NORMAL, ...(baseBsParams ? { suppliedParameters: baseBsParams } : {}) }];
+            col.eventVariants = [{ ...col.defaultEvent!, ...(baseBsParams ? { suppliedParameters: baseBsParams } : {}) }];
             // Auto-discover variant skill IDs
             for (const suffix of ['_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED']) {
               const varId = skill.name + suffix;
@@ -707,16 +692,11 @@ export function buildColumns(
                   }
                 }
               }
-              const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED
-                : suffix === '_EMPOWERED' ? EnhancementType.EMPOWERED
-                : EnhancementType.ENHANCED; // ENHANCED_EMPOWERED treated as ENHANCED
               const varParams = collectSuppliedParameters(varSkillObj?.suppliedParameters, variantSeg.segments);
               col.eventVariants!.push({
                 ...col.defaultEvent!,
                 id: varId,
                 name: varId,
-                displayName: resolveVariantDisplayName(varId, varSkill),
-                enhancementType,
                 segments: variantSeg.segments,
                 ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
                 ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
@@ -783,7 +763,6 @@ export function buildColumns(
                 {
                   id: empoweredName,
                   name: empoweredName,
-                  displayName: resolveVariantDisplayName(empoweredBattleId, empBattleSkillObj?.serialize() ?? {}),
                   segments: empVarSegs,
                   triggerCondition: 'Requires: Empowered condition',
                   ...(empBattleParams ? { suppliedParameters: empBattleParams } : {}),
@@ -803,31 +782,24 @@ export function buildColumns(
                 const seqs = getFrameSequences(op.id, cs.id);
                 if (!seqs?.length) continue;
                 const labels = getSegmentLabels(op.id, cs.id);
-                const eTypes = cs.enhancementTypes ?? [];
-                const isEnhanced = eTypes.includes(EnhancementType.ENHANCED);
                 const seg = SkillSegmentBuilder.buildSegments(seqs, { labels, ctx: skillCtx });
-                const enhancementType = eTypes.includes(EnhancementType.EMPOWERED) ? EnhancementType.EMPOWERED
-                  : isEnhanced ? EnhancementType.ENHANCED
-                  : EnhancementType.NORMAL;
                 const raw = cs.serialize();
                 const comboParams = collectSuppliedParameters(cs.suppliedParameters, seg.segments);
                 variants.push({
                   ...col.defaultEvent!,
                   id: cs.id,
                   name: cs.id,
-                  displayName: resolveVariantDisplayName(cs.id, raw),
-                  enhancementType,
                   segments: seg.segments,
                   ...(raw.activationClause ? { activationClause: raw.activationClause as Predicate[] } : {}),
                   ...(comboParams ? { suppliedParameters: comboParams } : {}),
                 });
               }
-              // Sort: NORMAL variants first, then ENHANCED/EMPOWERED
+              // Sort: base (suffix-less) variants first, then _ENHANCED / _EMPOWERED
               variants.sort((a, b) => {
-                const aIsNormal = !a.enhancementType || a.enhancementType === EnhancementType.NORMAL;
-                const bIsNormal = !b.enhancementType || b.enhancementType === EnhancementType.NORMAL;
-                if (aIsNormal && !bIsNormal) return -1;
-                if (!aIsNormal && bIsNormal) return 1;
+                const aBase = getBaseSkillId(a.id) === a.id;
+                const bBase = getBaseSkillId(b.id) === b.id;
+                if (aBase && !bBase) return -1;
+                if (!aBase && bBase) return 1;
                 return 0;
               });
               if (variants.length === 1) {
@@ -894,20 +866,12 @@ export function buildColumns(
       const STATUS_SOURCE_ORDER: Record<string, number> = { talent: 0, weapon: 1, gear: 2, other: 3 };
       // Passive statuses (always-active talents/potentials like Illumination or
       // Catcher's potential) hug the left of the status column group so they
-      // stay visually anchored separate from transient statuses.
-      // A status is "truly passive" — and should hug the left of the status
-      // column group — if it's an always-on talent/potential with no trigger
-      // managing its lifecycle. Trigger-managed talents (onTriggerClause fires
-      // APPLY EVENT / CONSUME EVENT) are transient and should not hug left.
+      // stay visually anchored separate from transient statuses. The AUTOMATIC
+      // tag is the explicit marker — set in the JSON config for defs the
+      // engine seeds at frame 0 (permanent lifecycle, no counter).
       const isPassiveStatus = (def: OperatorStatusDef): boolean => {
         const cfg = getStatusById(def.statusId);
-        if (cfg?.eventCategoryType !== NounType.TALENT && cfg?.eventCategoryType !== NounType.POTENTIAL) return false;
-        const isCounter = cfg?.stacks?.interactionType === StackInteractionType.NONE && (cfg?.maxStacks ?? 0) >= UNLIMITED_STACKS;
-        if (isCounter) return false;
-        const durSec = cfg?.durationSeconds ?? 0;
-        if (durSec > 0 && durSec < PERMANENT_DURATION) return false;
-        if ((cfg?.onTriggerClause?.length ?? 0) > 0) return false;
-        return true;
+        return cfg?.eventTypes?.includes(EventType.AUTOMATIC) ?? false;
       };
       const ownDefs = (operatorStatusMap.get(slot.slotId) ?? [])
         .slice()
@@ -918,19 +882,7 @@ export function buildColumns(
         });
       for (const def of ownDefs) {
         const cfg = getStatusById(def.statusId);
-        const isCounter = cfg?.stacks?.interactionType === StackInteractionType.NONE && (cfg?.maxStacks ?? 0) >= UNLIMITED_STACKS;
-        // A talent/potential is "permanent" (always-active passive) only if it
-        // has no finite duration. Trigger-only talents like Fluorite's
-        // Unpredictable (T2) carry a 10s duration — the talent event exists
-        // transiently when the onTriggerClause fires, so they are NOT passive.
-        // `durationSeconds` is 0 for always-active talents (no `duration` field)
-        // and >=PERMANENT_DURATION for explicitly-permanent statuses.
-        const durSec = cfg?.durationSeconds ?? 0;
-        const hasFiniteDuration = durSec > 0 && durSec < PERMANENT_DURATION;
-        const isPermanent = !isCounter
-          && !hasFiniteDuration
-          && (cfg?.eventCategoryType === NounType.TALENT
-            || cfg?.eventCategoryType === NounType.POTENTIAL);
+        const isPermanent = cfg?.eventTypes?.includes(EventType.AUTOMATIC) ?? false;
         const mc = buildStatusMicroColumn(def.statusId, def.color, { label: def.label, permanent: isPermanent });
         // Use columnId (may differ from statusId for OPERATOR_COLUMNS entries)
         mc.id = def.columnId;

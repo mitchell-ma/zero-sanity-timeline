@@ -109,11 +109,13 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
-    "originId": "SALTY_OR_MILD_TALENT",
+    "originId": "SALTY_OR_MILD_T2",
     "dataSources": [
       "ENDFIELD_WIKI"
     ],

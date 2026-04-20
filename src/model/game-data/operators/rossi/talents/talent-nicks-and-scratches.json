@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "NICKS_AND_SCRATCHES_TALENT",
+    "id": "NICKS_AND_SCRATCHES_T1",
     "descriptionParams": {
       "2": 1,
       "talent_1_2": 1,
@@ -29,8 +29,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

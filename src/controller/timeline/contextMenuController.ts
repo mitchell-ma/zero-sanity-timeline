@@ -412,14 +412,14 @@ export function buildColumnContextMenu(
         const variantStackLimit = (v.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
         const overlap = variantStackLimit > 1 ? false : checkOverlap(col.ownerEntityId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
         let finisherBlock: string | undefined;
-        if (v.id === NounType.FINISHER && staggerBreaks) {
+        if (v.category === NounType.FINISHER && staggerBreaks) {
           const effectiveBreaks = getEffectiveStaggerWindows(events, staggerBreaks);
           const inBreak = effectiveBreaks.find((b) => atFrame >= b.startFrame && atFrame < b.endFrame);
           if (!inBreak) {
             finisherBlock = t('ctx.finisher.outsideBreak');
           } else {
             const existing = events.some((ev) =>
-              ev.id === NounType.FINISHER
+              ev.category === NounType.FINISHER
               && ev.startFrame >= inBreak.startFrame && ev.startFrame < inBreak.endFrame,
             );
             if (existing) finisherBlock = t('ctx.finisher.duplicate');
@@ -441,7 +441,7 @@ export function buildColumnContextMenu(
         // Build inline segment buttons for BATK variants with multiple segments
         const isBatkChain = col.columnId === NounType.BASIC_ATTACK
           && v.segments && v.segments.length > 1
-          && v.id !== NounType.FINISHER && v.id !== NounType.DIVE;
+          && v.category !== NounType.FINISHER && v.category !== NounType.DIVE;
         const inlineButtons = isBatkChain
           ? v.segments!.map((seg, segIdx) => {
             const segOverlap = checkOverlap(col.ownerEntityId, col.columnId, computeProspectiveRange({ segments: [seg] }, atFrame, timeStopRegions));
@@ -464,9 +464,9 @@ export function buildColumnContextMenu(
                 defaultSkill: {
                   id: v.id,
                   name: v.name,
+                  ...(v.category ? { category: v.category } : {}),
                   segments: [seg],
                   segmentOrigin: [segIdx],
-                  ...(v.enhancementType ? { enhancementType: v.enhancementType } : {}),
                 },
               },
               disabled: segDisabled,
@@ -490,12 +490,12 @@ export function buildColumnContextMenu(
             defaultSkill: {
               id: v.id,
               name: v.name,
+              ...(v.category ? { category: v.category } : {}),
               ...(v.segments ? { segments: v.segments } : {}),
               ...(v.timeInteraction ? { timeInteraction: v.timeInteraction } : {}),
               ...(v.isPerfectDodge ? { isPerfectDodge: v.isPerfectDodge } : {}),
               ...(v.timeDependency ? { timeDependency: v.timeDependency } : {}),
               ...(v.skillPointCost != null ? { skillPointCost: v.skillPointCost } : {}),
-              ...(v.enhancementType ? { enhancementType: v.enhancementType } : {}),
               ...(v.activationClause ? { activationClause: v.activationClause } : {}),
               ...(v.suppliedParameters ? { suppliedParameters: v.suppliedParameters } : {}),
               ...(v.stacks ? { stacks: v.stacks } : {}),

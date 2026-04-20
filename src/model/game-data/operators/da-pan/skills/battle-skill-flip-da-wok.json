@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "FLIP_DA_WOK",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "FLIP_DA_WOK",
     "descriptionParams": {
       "atk_scale": 2.59,
       "poise": 10,
@@ -21,7 +20,10 @@
       "1-airborne_duration": -0.8,
       "-airborne_duration": -1.8,
       "airborne_duration-1": 0.8
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "DA_PAN",

@@ -63,7 +63,7 @@
     }
   ],
   "properties": {
-    "id": "THE_LIVING_BANNER_TALENT",
+    "id": "THE_LIVING_BANNER_T1",
     "descriptionParams": {
       "atb_gain": 80,
       "duration": 20,
@@ -99,8 +99,10 @@
       },
       "interactionType": "NONE"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "POGRANICHNIK",

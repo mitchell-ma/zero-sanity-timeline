@@ -147,23 +147,23 @@
     "text": "Vigil Services (Ultimate Energy Lockout)",
     "dataStatus": "RECONCILED"
   },
-  "op.LAST_RITE.talent.CRYOGENIC_EMBRITTLEMENT_TALENT.event.description": {
+  "op.LAST_RITE.talent.CRYOGENIC_EMBRITTLEMENT_T2.event.description": {
     "text": "Ultimate Vigil Services improved: When the ultimate deals DMG to an enemy with Cryo Susceptibility, the effect of that Cryo Susceptibility is 1.2 times the original.",
     "dataStatus": "RECONCILED"
   },
-  "op.LAST_RITE.talent.CRYOGENIC_EMBRITTLEMENT_TALENT.event.name": {
+  "op.LAST_RITE.talent.CRYOGENIC_EMBRITTLEMENT_T2.event.name": {
     "text": "Cryogenic Embrittlement (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.LAST_RITE.talent.HYPOTHERMIA_TALENT.event.description": {
+  "op.LAST_RITE.talent.HYPOTHERMIA_T1.event.description": {
     "text": "After Last Rite consumes any Arts Infliction, she applies Cryo Susceptibility to the target with the effect of [Number of Arts Infliction stacks consumed × 4%] for 15s. This effect cannot stack.",
     "dataStatus": "RECONCILED"
   },
-  "op.LAST_RITE.talent.HYPOTHERMIA_TALENT.event.name": {
+  "op.LAST_RITE.talent.HYPOTHERMIA_T1.event.name": {
     "text": "Hypothermia (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.LAST_RITE.talent.HYPOTHERMIA_TALENT.segment.0.name": {
+  "op.LAST_RITE.talent.HYPOTHERMIA_T1.segment.0.name": {
     "text": "Hypothermia",
     "dataStatus": "RECONCILED"
   }

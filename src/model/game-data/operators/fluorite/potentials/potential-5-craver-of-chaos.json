@@ -1,6 +1,170 @@
 {
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "CRYO",
+          "to": "ENEMY"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 5
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "ANY",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "INFLICTION",
+          "objectQualifier": "NATURE",
+          "to": "ENEMY"
+        },
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "HAVE",
+          "object": "POTENTIAL",
+          "cardinalityConstraint": "GREATER_THAN_EQUAL",
+          "with": {
+            "value": {
+              "verb": "IS",
+              "value": 5
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "EVENT",
+          "objectDeterminer": "THIS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": [
+        {
+          "metadata": {
+            "eventComponentType": "FRAME"
+          },
+          "properties": {
+            "offset": {
+              "value": 0,
+              "unit": "SECOND"
+            }
+          },
+          "clause": [
+            {
+              "conditions": [],
+              "effects": [
+                {
+                  "verb": "REDUCE",
+                  "object": "COOLDOWN",
+                  "of": {
+                    "object": "SKILL",
+                    "objectId": "COMBO"
+                  },
+                  "with": {
+                    "value": {
+                      "verb": "IS",
+                      "value": 1
+                    },
+                    "unit": "SECOND"
+                  }
+                }
+              ]
+            }
+          ],
+          "clauseType": "ALL"
+        }
+      ],
+      "clauseType": "ALL"
+    },
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "segmentTypes": [
+          "COOLDOWN",
+          "IMMEDIATE_COOLDOWN"
+        ],
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 1
+          },
+          "unit": "SECOND"
+        }
+      },
+      "frames": []
+    }
+  ],
   "properties": {
-    "id": "FLUORITE_POTENTIAL_5",
+    "id": "CRAVER_OF_CHAOS_P5",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 1
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ],
     "level": 5,
     "descriptionParams": {
       "CD": 1,
@@ -11,9 +175,7 @@
       "1-reduce": 0,
       "-reduce": -1,
       "reduce-1": 0
-    },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    }
   },
   "metadata": {
     "originId": "FLUORITE",

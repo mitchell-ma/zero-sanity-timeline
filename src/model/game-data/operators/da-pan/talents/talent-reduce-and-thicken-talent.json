@@ -81,7 +81,7 @@
     }
   ],
   "properties": {
-    "id": "REDUCE_AND_THICKEN_TALENT",
+    "id": "REDUCE_AND_THICKEN_T1",
     "maxLevel": {
       "verb": "IS",
       "value": 2
@@ -102,8 +102,10 @@
       },
       "interactionType": "RESET"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "DA_PAN",

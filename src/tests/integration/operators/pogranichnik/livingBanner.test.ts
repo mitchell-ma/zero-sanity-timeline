@@ -5,7 +5,7 @@
 /**
  * Pogranichnik — The Living Banner (Talent 1) Integration Tests
  *
- * Tests the SP accumulator talent: RECOVER SP → adds stacks to THE_LIVING_BANNER_TALENT.
+ * Tests the SP accumulator talent: RECOVER SP → adds stacks to THE_LIVING_BANNER_T1.
  * Each APPLY stacks=N dispatches N underlying events (one per stack).
  * When the total active stack count reaches 80 (60 at P3+), consumes 80
  * stacks and applies FERVENT_MORALE.

@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ESTELLA_POTENTIAL_1",
+    "id": "HABITUAL_DELAY_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "has_potential1": 1,
@@ -12,8 +14,10 @@
       "-rate_plus": -3,
       "rate_plus-1": 2
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ESTELLA",

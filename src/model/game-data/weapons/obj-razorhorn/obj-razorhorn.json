@@ -143,7 +143,7 @@
       "WARFARIN"
     ],
     "originId": "game",
-    "icon": "weapons/obj_razorhorn_icon.png",
+    "icon": "weapons/obj_razorhorn_icon.webp",
     "dataStatus": "RECONCILED"
   }
 }

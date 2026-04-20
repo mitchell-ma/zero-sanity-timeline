@@ -90,7 +90,7 @@ describe('Chen Qianyu P1 — Shadowless', () => {
   it('at P1, battle skill damage triggers Shadowless when enemy drops below 50% HP', () => {
     const { result } = renderHook(() => useApp());
     // Swap to Falsewings so battle skill damage easily crosses 50% HP
-    act(() => { result.current.handleSwapEnemy('falsewings'); });
+    act(() => { result.current.handleSwapEnemy('FALSEWINGS'); });
     act(() => { result.current.handleSwapOperator(SLOT_CHEN, CHEN_QIANYU_ID); });
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
     act(() => { setPotential(result.current, 1); });

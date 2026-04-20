@@ -374,7 +374,7 @@ describe('E. Talent-Derived Statuses', () => {
    * Helper: place a freeform Solidification on the enemy then fire the given
    * Estella skill. The engine's Shatter auto-derivation should consume the
    * Solidification and create a Shatter event with Estella as the source,
-   * which triggers COMMISERATION_TALENT → COMMISERATION status.
+   * which triggers COMMISERATION_T1 → COMMISERATION status.
    */
   function runCommiserationScenario(
     place: (result: { current: AppResult }) => void,
@@ -667,7 +667,7 @@ describe('G. Commiseration SP return (Estella BS only)', () => {
     const { result } = setupEstella();
     act(() => { result.current.setInteractionMode(InteractionModeType.FREEFORM); });
 
-    // APPLY path: shatter on Estella self-applies COMMISERATION_TALENT.
+    // APPLY path: shatter on Estella self-applies COMMISERATION_T1.
     triggerCommiseration(result);
 
     const applied = result.current.allProcessedEvents.filter(

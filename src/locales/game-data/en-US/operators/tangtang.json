@@ -167,23 +167,23 @@
     "text": "Whirlpool",
     "dataStatus": "RECONCILED"
   },
-  "op.TANGTANG.talent.FAM_OF_HONOR_TALENT.event.description": {
+  "op.TANGTANG.talent.FAM_OF_HONOR_T1.event.description": {
     "text": "When within a 5-meter radius of a Whirlpool, allied operators gain 10% Haste while enemies suffer 20% Slow. These effects persist for 3s after leaving the area of effect.",
     "dataStatus": "RECONCILED"
   },
-  "op.TANGTANG.talent.FAM_OF_HONOR_TALENT.event.name": {
+  "op.TANGTANG.talent.FAM_OF_HONOR_T1.event.name": {
     "text": "Fam of Honor (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.TANGTANG.talent.FAM_OF_HONOR_TALENT.segment.0.name": {
+  "op.TANGTANG.talent.FAM_OF_HONOR_T1.segment.0.name": {
     "text": "Fam of Honor (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.TANGTANG.talent.RIOT_BRINGER_TALENT.event.description": {
+  "op.TANGTANG.talent.RIOT_BRINGER_T2.event.description": {
     "text": "During OLDEN STARE, performing a dive attack with the controlled operator ends its evolution early and creates a Waterspout. All nearby Whirlpools are also consumed and converted into additional Waterspouts. Waterspouts created this way have the same effects as those created by the battle skill IMA WAVERIDAAH! and gain DMG Dealt +40%.",
     "dataStatus": "RECONCILED"
   },
-  "op.TANGTANG.talent.RIOT_BRINGER_TALENT.event.name": {
+  "op.TANGTANG.talent.RIOT_BRINGER_T2.event.name": {
     "text": "Riot Bringer (T2)",
     "dataStatus": "RECONCILED"
   }

@@ -47,7 +47,9 @@
     }
   ],
   "properties": {
-    "id": "CATCHER_POTENTIAL_2",
+    "id": "BONUS_SPEC_TRAINING_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "Def": 20,
@@ -59,8 +61,11 @@
       "-Will": -10,
       "Will-1": 9
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "CATCHER",

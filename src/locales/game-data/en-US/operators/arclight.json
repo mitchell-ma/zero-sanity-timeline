@@ -131,19 +131,19 @@
     "text": "Wildland Trekker (Buff)",
     "dataStatus": "RECONCILED"
   },
-  "op.ARCLIGHT.talent.HANNABIT_WISDOM_TALENT.event.description": {
+  "op.ARCLIGHT.talent.HANNABIT_WISDOM_T2.event.description": {
     "text": "50% chance to ignore an Arts Infliction applied on her.",
     "dataStatus": "RECONCILED"
   },
-  "op.ARCLIGHT.talent.HANNABIT_WISDOM_TALENT.event.name": {
+  "op.ARCLIGHT.talent.HANNABIT_WISDOM_T2.event.name": {
     "text": "Hannabit Wisdom (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.ARCLIGHT.talent.WILDLAND_TREKKER_TALENT.event.description": {
+  "op.ARCLIGHT.talent.WILDLAND_TREKKER_T1.event.description": {
     "text": "Battle skill Tempestuous Arc improved: Triggering the additional effect 3 time(s) grants the team Electric DMG Dealt +0.05% for every point of Arclight's Intellect. This effect has a 15s duration and cannot stack.",
     "dataStatus": "RECONCILED"
   },
-  "op.ARCLIGHT.talent.WILDLAND_TREKKER_TALENT.event.name": {
+  "op.ARCLIGHT.talent.WILDLAND_TREKKER_T1.event.name": {
     "text": "Wildland Trekker (T1)",
     "dataStatus": "RECONCILED"
   }

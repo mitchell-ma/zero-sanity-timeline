@@ -9,8 +9,8 @@
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "STRENGTH",
   "talents": {
-    "one": "FAM_OF_HONOR_TALENT",
-    "two": "RIOT_BRINGER_TALENT",
+    "one": "FAM_OF_HONOR_T1",
+    "two": "RIOT_BRINGER_T2",
     "attributeIncrease": {
       "id": "SKIRMISHER"
     }

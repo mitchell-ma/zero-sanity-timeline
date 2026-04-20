@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "SCORCHING_HEART_TALENT",
+    "id": "SCORCHING_HEART_T1",
     "descriptionParams": {
       "ignore_fire_resist": 0.2,
       "ignore_fire_resist_duration": 20,
@@ -36,8 +36,10 @@
       "interactionType": "RESET"
     },
     "element": "HEAT",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "LAEVATAIN",

@@ -127,15 +127,15 @@
     "text": "Turbid Avatar",
     "dataStatus": "RECONCILED"
   },
-  "op.LIFENG.talent.ILLUMINATION_TALENT.event.description": {
+  "op.LIFENG.talent.ILLUMINATION_T1.event.description": {
     "text": "Every point of Intellect and Will further grants ATK +{atk_up:0.00%}.",
     "dataStatus": "RECONCILED"
   },
-  "op.LIFENG.talent.ILLUMINATION_TALENT.event.name": {
+  "op.LIFENG.talent.ILLUMINATION_T1.event.name": {
     "text": "Illumination (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.LIFENG.talent.ILLUMINATION_TALENT.segment.0.name": {
+  "op.LIFENG.talent.ILLUMINATION_T1.segment.0.name": {
     "text": "Illumination (T1)",
     "dataStatus": "RECONCILED"
   },

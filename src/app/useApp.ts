@@ -15,7 +15,7 @@ import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { ALL_OPERATORS, getUltimateEnergyCost, getUltimateEnergyCostForPotential } from '../controller/operators/operatorRegistry';
 import { hasDealDamageClause } from '../controller/timeline/clauseQueries';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
-import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, Column, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
+import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, Column, computeSegmentsSpan } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
 import { processCombatSimulation, getLastStatAccumulator } from '../controller/timeline/eventQueueController';
@@ -84,6 +84,7 @@ import { useResourceGraphs } from './useResourceGraphs';
 import { useAutoSave } from './useAutoSave';
 import { useCollaboration } from './useCollaboration';
 import { findNodeByUuid } from '../utils/loadoutStorage';
+import { saveEnemyStatsOverride, clearEnemyStatsOverride } from '../utils/enemyStatsStorage';
 import { LOADOUT_ROW_HEIGHT, FPS, TOTAL_FRAMES, frameToPx } from '../utils/timeline';
 import { TEAM_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import {
@@ -93,15 +94,16 @@ import {
   computeDefaultResourceConfig,
   attachDefaultSegments,
   getDefaultEnemyStats,
+  getBuiltInEnemyStats,
 } from '../controller/appStateController';
 import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
-import { StatType, DamageType, InteractionModeType, InfoLevel, CritMode, EnhancementType, ThemeType, ColumnType, LoadoutNodeType } from '../consts/enums';
+import { StatType, DamageType, InteractionModeType, InfoLevel, CritMode, ThemeType, ColumnType, LoadoutNodeType } from '../consts/enums';
 import { buildOverrideKey } from '../controller/overrideController';
 import type { MoveContext } from '../controller/combatStateController';
 import { setRuntimeCritMode, bumpCritModeGeneration } from '../controller/combatStateController';
 import { applyEventOverrides, applyJsonOverrides } from '../controller/timeline/overrideApplicator';
 import { GlobalSettings, loadSettings, saveSettings, migrateLegacySettings, PERFORMANCE_THROTTLE } from '../consts/settings';
-import { COMBO_WINDOW_COLUMN_ID, ultimateGraphKey } from '../model/channels';
+import { COMBO_WINDOW_COLUMN_ID, ultimateGraphKey, ENEMY_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../model/channels';
 // SkillPointConsumptionHistory/ResourceZone types inferred via useMemo from controller
 
 // ── Module-scope initialization ──────────────────────────────────────────────
@@ -828,12 +830,25 @@ export function useApp() {
       // Don't close when clicking inside the info pane itself
       if (target.closest('.event-edit-panel')) return;
       // Don't close when clicking a focusable element (damage cell, event block, loadout header)
-      if (target.closest('.dmg-cell-clickable') || target.closest('[data-event-uid]') || target.closest('.lo-cell')) return;
+      if (target.closest('.dmg-cell-clickable') || target.closest('[data-event-uid]') || target.closest('.lo-cell') || target.closest('.tl-loadout-cell')) return;
+      // Don't close on canvas clicks — the canvas's own handlers decide:
+      // event re-select swaps content in place; empty-space click closes via onMarqueeStart.
+      // Closing here would race with onEventSelect and cause a close+reopen flicker.
+      if (target.closest('.timeline-canvas')) return;
       setInfoPaneClosing(true);
     };
     window.addEventListener('mousedown', handler);
     return () => window.removeEventListener('mousedown', handler);
   }, [infoPanePinned, editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey, editingDamageRow]);
+
+  // Triggered by the canvas when an empty-space pointerdown happens (no event hit) —
+  // mirrors what the click-outside handler used to do for canvas clicks.
+  const requestCloseInfoPane = useCallback(() => {
+    if (infoPanePinnedRef.current) return;
+    const hasPaneOpen = editingEventIdRef.current || editingSlotIdRef.current || editingEnemyOpenRef.current || editingResourceKeyRef.current || editingDamageRowRef.current;
+    if (!hasPaneOpen) return;
+    setInfoPaneClosing(true);
+  }, []);
 
   // ─── Persistence ─────────────────────────────────────────────────────────
   const buildSheetData = useCallback(() => {
@@ -1278,7 +1293,7 @@ export function useApp() {
     ownerEntityId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { id?: string; name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceEntityId?: string; sourceSkillId?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown>; segmentOrigin?: number[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>; parameterValues?: Record<string, number>; statusLevel?: number } | null,
+    defaultSkill: { id?: string; name?: string; category?: import('../dsl/semantics').NounType; segments?: import('../consts/viewTypes').EventSegmentData[]; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceEntityId?: string; sourceSkillId?: string; stacks?: Record<string, unknown>; segmentOrigin?: number[]; suppliedParameters?: Record<string, { id: string; name: string; lowerRange: number; upperRange: number; default: number }[]>; parameterValues?: Record<string, number>; statusLevel?: number } | null,
     strictOverride?: boolean,
   ) => {
     if (isViewActiveRef.current) return; // view loadouts are read-only
@@ -1286,10 +1301,25 @@ export function useApp() {
     if (!validColumnPairsRef.current.has(`${ownerEntityId}:${columnId}`)) return;
     const isStrict = strictOverride ?? (interactionModeRef.current === InteractionModeType.STRICT);
     // Resolve sourceEntityId from slot → operator id before allocation so the
-    // 'user' placeholder never enters the event graph.
-    const resolvedSource = defaultSkill?.sourceEntityId
-      ?? slotOperatorMapRef.current[ownerEntityId]
-      ?? ownerEntityId;
+    // 'user' placeholder never enters the event graph. For enemy-owned
+    // freeform inflictions and reactions (columns that feed the combat-sheet
+    // damage pipeline — either directly, or transitively via derived reactions
+    // inheriting the source), fall back to the first occupied operator slot so
+    // damage frames attribute to a real slot. `ENEMY_ID` as sourceEntityId
+    // routes nowhere because the sheet only keys column lookups off operator
+    // slots. Enemy-action columns keep their enemy source — reactive triggers
+    // like Pay the Ferric Price depend on DEAL DAMAGE originating from the
+    // enemy.
+    let resolvedSource = defaultSkill?.sourceEntityId
+      ?? slotOperatorMapRef.current[ownerEntityId];
+    const isFreeformDamageColumn = REACTION_COLUMN_IDS.has(columnId)
+      || INFLICTION_COLUMN_IDS.has(columnId)
+      || PHYSICAL_INFLICTION_COLUMN_IDS.has(columnId);
+    if (!resolvedSource && ownerEntityId === ENEMY_ID && isFreeformDamageColumn) {
+      const firstOp = Object.values(slotOperatorMapRef.current)[0];
+      if (firstOp) resolvedSource = firstOp;
+    }
+    resolvedSource = resolvedSource ?? ownerEntityId;
     const skillWithSource = { ...(defaultSkill ?? {}), sourceEntityId: resolvedSource };
     const effectiveMode = isStrict ? InteractionModeType.STRICT : InteractionModeType.FREEFORM;
     const ev = createEvent(ownerEntityId, columnId, atFrame, skillWithSource, effectiveMode);
@@ -1301,30 +1331,6 @@ export function useApp() {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
         if (columnId === NounType.BATTLE && !hasSufficientSP(ownerEntityId, atFrame)) return prev;
-        // Enhanced skills require an active ultimate
-        if (ev.enhancementType === EnhancementType.ENHANCED) {
-          // Use processed events (full segments) for the ultimate check;
-          // fall back to raw prev if a just-added ultimate isn't processed yet
-          const eventsToCheck = processedEventsRef.current.some(
-            (e) => e.ownerEntityId === ownerEntityId && e.columnId === NounType.ULTIMATE,
-          ) ? processedEventsRef.current : prev;
-          const ultActive = eventsToCheck.some(
-            (e) => {
-              if (e.ownerEntityId !== ownerEntityId || e.columnId !== NounType.ULTIMATE) return false;
-              // Ultimate segments: [animation, statis, active, cooldown]
-              // "Active" phase starts after animation + statis
-              const segs = e.segments;
-              if (segs.length >= 3) {
-                const activationEnd = e.startFrame + segs[0].properties.duration + segs[1].properties.duration;
-                const activeEnd = activationEnd + segs[2].properties.duration;
-                return atFrame >= activationEnd && atFrame < activeEnd;
-              }
-              // Fallback: treat entire event as active
-              return atFrame >= e.startFrame && atFrame < eventEndFrame(e);
-            },
-          );
-          if (!ultActive) return prev;
-        }
       }
       return [...prev, ev];
     });
@@ -1593,7 +1599,18 @@ export function useApp() {
 
   const handleEnemyStatsChange = useCallback((stats: EnemyStats) => {
     if (isViewActiveRef.current) return;
-    setCombatState((prev) => ctrl.setEnemyStats(prev, stats));
+    setCombatState((prev) => {
+      saveEnemyStatsOverride(prev.enemy.id, stats);
+      return ctrl.setEnemyStats(prev, stats);
+    });
+  }, [ctrl, setCombatState]);
+
+  const handleResetEnemyStats = useCallback(() => {
+    if (isViewActiveRef.current) return;
+    setCombatState((prev) => {
+      clearEnemyStatsOverride(prev.enemy.id);
+      return ctrl.setEnemyStats(prev, getBuiltInEnemyStats(prev.enemy.id, prev.enemyStats.level));
+    });
   }, [ctrl, setCombatState]);
 
   const handleResourceConfigChange = useCallback((colKey: string, config: ResourceConfig) => {
@@ -1624,7 +1641,7 @@ export function useApp() {
     });
   }, []);
 
-  const handleNewLoadout = useCallback((parentId: string | null) => {
+  const handleNewLoadout = useCallback((parentId: string | null): { id: string; name: string } => {
     if (activeLoadoutId && !isCommunityLoadoutId(activeLoadoutId)) {
       saveLoadoutData(activeLoadoutId, buildSheetData());
     }
@@ -1667,6 +1684,7 @@ export function useApp() {
     saveLoadoutData(node.id, sheetData);
     setActiveLoadoutId(node.id);
     saveActiveLoadoutId(node.id);
+    return { id: node.id, name: node.name };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadoutTree, activeLoadoutId, buildSheetData, resetCombatState]);
 
@@ -2203,7 +2221,7 @@ export function useApp() {
     handleRemoveSegment, handleMoveFrame, handleResizeSegment, handleFrameClick,
 
     // Loadout/operator handlers
-    handleLoadoutChange, handleStatsChange, handleSwapOperator, handleSwapEnemy, handleEnemyStatsChange,
+    handleLoadoutChange, handleStatsChange, handleSwapOperator, handleSwapEnemy, handleEnemyStatsChange, handleResetEnemyStats,
     handleResourceConfigChange,
 
     // Loadout tree handlers
@@ -2218,6 +2236,7 @@ export function useApp() {
     handleZoom, handleToggleSkill,
     handleEditEvent, handleEditLoadout, handleEditEnemy, handleEditResource,
     handleCloseInfoPane, handleCloseLoadoutPane, handleCloseEnemyPane, handleCloseResourcePane, handleCloseDamagePane,
+    requestCloseInfoPane,
     handleDamageClick, damageRows, setDamageRows,
     handleResizerMouseDown, handleToggleScrollSync, handleToggleTheme, handleRestorePane, handleToggleOrientation,
     handleTimelineScroll, handleSheetScroll,

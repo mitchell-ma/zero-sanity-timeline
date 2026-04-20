@@ -151,19 +151,19 @@
     "text": "Overclocked Moment (Amp)",
     "dataStatus": "RECONCILED"
   },
-  "op.ANTAL.talent.IMPROVISER_TALENT.event.description": {
+  "op.ANTAL.talent.IMPROVISER_T1.event.description": {
     "text": "After an Amped teammate's skill deals DMG, Antal restores the said teammate's HP by [108 + Strength×0.9]. This HP restoring effect triggers 1 time every 30s for each operator.",
     "dataStatus": "RECONCILED"
   },
-  "op.ANTAL.talent.IMPROVISER_TALENT.event.name": {
+  "op.ANTAL.talent.IMPROVISER_T1.event.name": {
     "text": "IMPROVISER (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.ANTAL.talent.SUBCONSCIOUS_ACT_TALENT.event.description": {
+  "op.ANTAL.talent.SUBCONSCIOUS_ACT_T2.event.description": {
     "text": "Gains 30% chance of Physical DMG immunity and restores HP of self by [45 + Strength×0.38].",
     "dataStatus": "RECONCILED"
   },
-  "op.ANTAL.talent.SUBCONSCIOUS_ACT_TALENT.event.name": {
+  "op.ANTAL.talent.SUBCONSCIOUS_ACT_T2.event.name": {
     "text": "Subconscious Act (T2)",
     "dataStatus": "RECONCILED"
   }

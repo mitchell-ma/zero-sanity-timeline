@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "DOLLY_RUSH",
     "eventCategoryType": "BATTLE",
     "element": "NATURE",
-    "id": "DOLLY_RUSH",
     "descriptionParams": {
       "atk_scale": 3.2,
       "poise": 10,
@@ -25,7 +24,10 @@
       "1-rate_vul_max": 0.6,
       "-rate_vul_max": -0.4,
       "rate_vul_max-1": -0.6
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ARDELIA",

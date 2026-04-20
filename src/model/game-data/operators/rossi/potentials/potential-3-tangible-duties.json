@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "ROSSI_P3_TANGIBLE_DUTIES",
+    "id": "TANGIBLE_DUTIES_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "bleed_critical_damage_scale": 0.08,
@@ -16,8 +18,10 @@
       "-heal_scale": -0.04,
       "heal_scale-1": -0.96
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ROSSI",

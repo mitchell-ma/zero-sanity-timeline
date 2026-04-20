@@ -139,19 +139,19 @@
     "text": "Thunderlances Pierce",
     "dataStatus": "RECONCILED"
   },
-  "op.AVYWENNA.talent.EXPEDITED_DELIVERY_TALENT.event.description": {
+  "op.AVYWENNA.talent.EXPEDITED_DELIVERY_T1.event.description": {
     "text": "After a thrown or returning Thunderlance or Thunderlance EX hits the enemy, Avywenna gains 3 Ultimate Energy.",
     "dataStatus": "RECONCILED"
   },
-  "op.AVYWENNA.talent.EXPEDITED_DELIVERY_TALENT.event.name": {
+  "op.AVYWENNA.talent.EXPEDITED_DELIVERY_T1.event.name": {
     "text": "EXPEDITED DELIVERY (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.AVYWENNA.talent.TACTFUL_APPROACH_TALENT.event.description": {
+  "op.AVYWENNA.talent.TACTFUL_APPROACH_T2.event.description": {
     "text": "Ultimate Thunderlance: Final Shock improved: Also applies 10% Electric Susceptibility for 10s to enemies it hits.",
     "dataStatus": "RECONCILED"
   },
-  "op.AVYWENNA.talent.TACTFUL_APPROACH_TALENT.event.name": {
+  "op.AVYWENNA.talent.TACTFUL_APPROACH_T2.event.name": {
     "text": "Tactful Approach (T2)",
     "dataStatus": "RECONCILED"
   }

@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "POLAR_SURVIVAL_TALENT",
+    "id": "POLAR_SURVIVAL_T1",
     "descriptionParams": {
       "heal_up": 0.25,
       "rate": 0.55,
@@ -17,8 +17,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

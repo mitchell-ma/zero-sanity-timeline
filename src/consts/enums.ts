@@ -381,6 +381,18 @@ export enum DataStatus {
 export enum EventType {
   SKILL = "SKILL",
   STATUS = "STATUS",
+  /** Lifecycle marker (not effect-content): signals the engine must seed a
+   *  frame-0 presence event for this def because nothing else APPLYs it.
+   *  Required on TALENT/POTENTIAL configs that are permanent-duration, not
+   *  counters (NONE + unlimited stacks), and don't self-manage lifecycle via
+   *  `APPLY EVENT` / `CONSUME EVENT` triggers. Consumed by triggerIndex (seeds
+   *  the presence event) and columnBuilder (hug-left layout). Pure presence
+   *  flag — does NOT fire clauses by itself; clauses run via normal segment
+   *  processing once the event exists. Coexists with the kind tag in the
+   *  array (e.g. ["STATUS", "AUTOMATIC"]). Enforced at load time by
+   *  `validateAutomaticTagRequired`; backfilled by
+   *  `scripts/migrate_event_types.py`. */
+  AUTOMATIC = "AUTOMATIC",
 }
 
 
@@ -406,15 +418,6 @@ export enum TimeInteractionType {
 export enum TimeDependency {
   GAME_TIME = "GAME_TIME",
   REAL_TIME = "REAL_TIME",
-}
-
-/** Enhancement tier of a skill variant. Base skills are NORMAL; absence implies NORMAL. */
-export enum EnhancementType {
-  NORMAL = "NORMAL",
-  ENHANCED = "ENHANCED",
-  EMPOWERED = "EMPOWERED",
-  MINOR = "MINOR",
-  MAJOR = "MAJOR",
 }
 
 /**
@@ -486,70 +489,6 @@ export enum GearType {
   ARMOR = "ARMOR",
   GLOVES = "GLOVES",
   KIT = "KIT",
-}
-
-export enum EnemyType {
-  // ── Aggeloi ─────────────────────────────────────────────────────────────────
-  RAM = "RAM",
-  RAM_ALPHA = "RAM_ALPHA",
-  STING = "STING",
-  STING_ALPHA = "STING_ALPHA",
-  FALSEWINGS = "FALSEWINGS",
-  FALSEWINGS_ALPHA = "FALSEWINGS_ALPHA",
-  MUDFLOW = "MUDFLOW",
-  MUDFLOW_DELTA = "MUDFLOW_DELTA",
-  HEDRON = "HEDRON",
-  HEDRON_DELTA = "HEDRON_DELTA",
-  PRISM = "PRISM",
-  HEAVY_RAM = "HEAVY_RAM",
-  HEAVY_RAM_ALPHA = "HEAVY_RAM_ALPHA",
-  HEAVY_STING = "HEAVY_STING",
-  HEAVY_STING_ALPHA = "HEAVY_STING_ALPHA",
-  EFFIGY = "EFFIGY",
-  SENTINEL = "SENTINEL",
-  TIDEWALKER = "TIDEWALKER",
-  TIDEWALKER_DELTA = "TIDEWALKER_DELTA",
-  WALKING_CHRYSOPOLIS = "WALKING_CHRYSOPOLIS",
-  TIDALKLAST = "TIDALKLAST",
-  TRIAGGELOS = "TRIAGGELOS",
-  MARBLE_AGGELOMOIRAI_PALECORE = "MARBLE_AGGELOMOIRAI_PALECORE",
-  MARBLE_AGGELOMOIRAI_PALESENT = "MARBLE_AGGELOMOIRAI_PALESENT",
-  MARBLE_APPENDAGE = "MARBLE_APPENDAGE",
-  // ── Landbreakers ────────────────────────────────────────────────────────────
-  BONEKRUSHER_RIPPTUSK = "BONEKRUSHER_RIPPTUSK",
-  ELITE_RIPPTUSK = "ELITE_RIPPTUSK",
-  HAZEFYRE_TUSKBEAST = "HAZEFYRE_TUSKBEAST",
-  HAZEFYRE_CLAW = "HAZEFYRE_CLAW",
-  BONEKRUSHER_RAIDER = "BONEKRUSHER_RAIDER",
-  ELITE_RAIDER = "ELITE_RAIDER",
-  BONEKRUSHER_AMBUSHER = "BONEKRUSHER_AMBUSHER",
-  ELITE_AMBUSHER = "ELITE_AMBUSHER",
-  BONEKRUSHER_INFILTRATOR = "BONEKRUSHER_INFILTRATOR",
-  BONEKRUSHER_VANGUARD = "BONEKRUSHER_VANGUARD",
-  BONEKRUSHER_PYROMANCER = "BONEKRUSHER_PYROMANCER",
-  BONEKRUSHER_ARSONIST = "BONEKRUSHER_ARSONIST",
-  BONEKRUSHER_BALLISTA = "BONEKRUSHER_BALLISTA",
-  BONEKRUSHER_EXECUTIONER = "BONEKRUSHER_EXECUTIONER",
-  ELITE_EXECUTIONER = "ELITE_EXECUTIONER",
-  BONEKRUSHER_SIEGEKNUCKLES = "BONEKRUSHER_SIEGEKNUCKLES",
-  RHODAGN_THE_BONEKRUSHING_FIST = "RHODAGN_THE_BONEKRUSHING_FIST",
-  // ── Wildlife ────────────────────────────────────────────────────────────────
-  ACID_ORIGINIUM_SLUG = "ACID_ORIGINIUM_SLUG",
-  BLAZEMIST_ORIGINIUM_SLUG = "BLAZEMIST_ORIGINIUM_SLUG",
-  FIREMIST_ORIGINIUM_SLUG = "FIREMIST_ORIGINIUM_SLUG",
-  BRUTAL_PINCERBEAST = "BRUTAL_PINCERBEAST",
-  INDIGENOUS_PINCERBEAST = "INDIGENOUS_PINCERBEAST",
-  WATERLAMP = "WATERLAMP",
-  IMBUED_QUILLBEAST = "IMBUED_QUILLBEAST",
-  QUILLBEAST = "QUILLBEAST",
-  TUNNELING_NIDWYRM = "TUNNELING_NIDWYRM",
-  AXE_ARMORBEAST = "AXE_ARMORBEAST",
-  HAZEFYRE_AXE_ARMORBEAST = "HAZEFYRE_AXE_ARMORBEAST",
-  GLARING_RAKERBEAST = "GLARING_RAKERBEAST",
-  SPOTTED_RAKERBEAST = "SPOTTED_RAKERBEAST",
-  // ── Cangzei Pirates ─────────────────────────────────────────────────────────
-  GROVE_ARCHER = "GROVE_ARCHER",
-  ROAD_PLUNDERER = "ROAD_PLUNDERER",
 }
 
 export enum EnemyTierType {
@@ -791,6 +730,12 @@ export enum HeaderVariant {
   SKILL = "skill",
 }
 
+/** Placement of the gear strip relative to an operator card in statistics views. */
+export enum GearLayoutType {
+  RIGHT = "right",
+  BOTTOM = "bottom",
+}
+
 export enum LoadoutNodeType {
   FOLDER = "folder",
   LOADOUT = "loadout",
@@ -861,6 +806,12 @@ export enum StatisticsColumnType {
 export enum CollaborationRole {
   HOST = 'host',
   JOINER = 'joiner',
+}
+
+/** Mode shown inside the unified collaboration session modal. */
+export enum CollabSessionMode {
+  HOST = 'host',
+  JOIN = 'join',
 }
 
 export enum PermissionLevel {

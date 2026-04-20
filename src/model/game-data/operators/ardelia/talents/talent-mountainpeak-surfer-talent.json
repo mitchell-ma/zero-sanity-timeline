@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "MOUNTAINPEAK_SURFER_TALENT",
+    "id": "MOUNTAINPEAK_SURFER_T2",
     "descriptionParams": {
       "talent1": 1,
       "1-talent1": 0,
@@ -13,8 +13,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ARDELIA",

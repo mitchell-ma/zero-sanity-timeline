@@ -1,6 +1,6 @@
 {
   "properties": {
-    "id": "FREEZE_PROTOCOL_TALENT",
+    "id": "FREEZE_PROTOCOL_T2",
     "descriptionParams": {
       "exist_talent_2": 1,
       "1-exist_talent_2": 0,
@@ -13,8 +13,10 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "XAIHI",

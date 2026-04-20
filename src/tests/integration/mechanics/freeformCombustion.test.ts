@@ -229,7 +229,7 @@ describe('Freeform Combustion Reaction', () => {
       slotElementColors: {},
       autoFinisherIds: new Set(),
       validationMaps: {
-        combo: emptyMap, resource: emptyMap, empowered: emptyMap,
+        combo: emptyMap, resource: emptyMap,
         enhanced: emptyMap, regularBasic: emptyMap, clause: emptyMap,
         finisherStagger: emptyMap, timeStop: emptyMap, infliction: emptyMap,
       },

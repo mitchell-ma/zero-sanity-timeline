@@ -9,8 +9,10 @@
       },
       "unit": "SECOND"
     },
-    "eventType": "STATUS",
-    "eventCategoryType": "SKILL_STATUS"
+    "eventCategoryType": "SKILL_STATUS",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "segments": [
     {
@@ -127,7 +129,7 @@
                 {
                   "verb": "APPLY",
                   "object": "STATUS",
-                  "objectId": "THE_LIVING_BANNER_TALENT",
+                  "objectId": "THE_LIVING_BANNER_T1",
                   "toDeterminer": "SOURCE",
                   "to": "OPERATOR",
                   "with": {

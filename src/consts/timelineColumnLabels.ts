@@ -17,6 +17,15 @@ export const SKILL_LABELS: Record<string, string> = {
   [NounType.ULTIMATE]:     t('skill.type.ultimate'),
 };
 
+/** Menu-case skill labels — shown in context menus where Title Case reads
+ *  better than the compact ALL-CAPS column-header form. */
+export const SKILL_MENU_LABELS: Record<string, string> = {
+  [NounType.BASIC_ATTACK]: t('skill.type.menu.basic'),
+  [NounType.BATTLE]:       t('skill.type.menu.battle'),
+  [NounType.COMBO]:        t('skill.type.menu.combo'),
+  [NounType.ULTIMATE]:     t('skill.type.menu.ultimate'),
+};
+
 export const enum ColumnLabel {
   SKILL_POINTS         = 'SKILL POINTS',
   TEAM_STATUS          = 'TEAM STATUS',
@@ -71,6 +80,51 @@ const COLUMN_LABEL_LOCALE_KEYS: Record<string, string> = {
 export function localizeColumnLabel(raw: string): string {
   const key = COLUMN_LABEL_LOCALE_KEYS[raw];
   return key ? t(key) : raw;
+}
+
+/** Menu-case variants of the ColumnLabel locale keys (e.g. "Team Status"
+ *  vs "TEAM STATUS"). Stored as separate entries so the ALL-CAPS column
+ *  headers and the Title-Case menu items can diverge per-locale without
+ *  runtime string processing. */
+const COLUMN_LABEL_MENU_LOCALE_KEYS: Record<string, string> = {
+  [ColumnLabel.SKILL_POINTS]:        'columnMenu.skillPoints',
+  [ColumnLabel.TEAM_STATUS]:         'columnMenu.teamStatus',
+  [ColumnLabel.LINK]:                'columnMenu.link',
+  [ColumnLabel.SHIELD]:              'columnMenu.shield',
+  [ColumnLabel.INFLICTION]:          'columnMenu.infliction',
+  [ColumnLabel.ARTS_REACTION]:       'columnMenu.artsReaction',
+  [ColumnLabel.PHYSICAL_INFLICTION]: 'columnMenu.physicalInfliction',
+  [ColumnLabel.PHYSICAL_STATUS]:     'columnMenu.physicalStatus',
+  [ColumnLabel.SUSCEPTIBILITY]:      'columnMenu.susceptibility',
+  [ColumnLabel.FRAGILITY]:           'columnMenu.fragility',
+  [ColumnLabel.WEAPON_BUFF]:         'columnMenu.weapon',
+  [ColumnLabel.GEAR_BUFF]:           'columnMenu.gear',
+  [ColumnLabel.TACTICAL]:            'columnMenu.tactical',
+  [ColumnLabel.STATUS]:              'columnMenu.status',
+  [ColumnLabel.STAGGER]:             'columnMenu.stagger',
+  [ColumnLabel.STAGGER_FRAILTY]:     'columnMenu.staggerFrailty',
+  [ColumnLabel.ACTION]:              'columnMenu.action',
+  [ColumnLabel.CONTROLLED]:          'columnMenu.controlled',
+  [ColumnLabel.OTHER]:               'columnMenu.other',
+};
+
+/** Reverse lookup from a resolved SKILL_LABELS value back to the menu-case
+ *  label. Built at module load so it naturally handles any locale — the
+ *  keys are whatever the current locale's header-case strings happen to be. */
+const SKILL_LABEL_TO_MENU: Record<string, string> = Object.fromEntries(
+  Object.entries(SKILL_LABELS).map(([k, v]) => [v, SKILL_MENU_LABELS[k] ?? v]),
+);
+
+/** Menu-case version of `localizeColumnLabel`. Used by context menus where
+ *  Title Case reads better than the column-header ALL CAPS. Resolves via
+ *  dedicated locale entries — no runtime case conversion, so locale rules
+ *  (e.g. French capitalization) stay correct. */
+export function localizeColumnLabelMenu(raw: string): string {
+  const columnKey = COLUMN_LABEL_MENU_LOCALE_KEYS[raw];
+  if (columnKey) return t(columnKey);
+  const skillMenuLabel = SKILL_LABEL_TO_MENU[raw];
+  if (skillMenuLabel) return skillMenuLabel;
+  return raw;
 }
 
 /** Game-mechanic status labels (non-operator-specific). Operator status labels come from JSON via gameDataController. */

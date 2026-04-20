@@ -1,6 +1,44 @@
 {
+  "segments": [
+    {
+      "metadata": {
+        "eventComponentType": "SEGMENT"
+      },
+      "properties": {
+        "duration": {
+          "value": {
+            "verb": "IS",
+            "value": 25
+          },
+          "unit": "SECOND"
+        }
+      },
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "STAT",
+              "objectId": "RESISTANCE_IGNORE",
+              "objectQualifier": "ELECTRIC",
+              "toDeterminer": "THIS",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.15
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "clauseType": "ALL"
+    }
+  ],
   "properties": {
-    "id": "ZHUANG_FANGYI_POTENTIAL_5",
+    "id": "STORM_OF_TRANSFORMATION_P5",
     "level": 5,
     "descriptionParams": {
       "ignore_pulse_resist": 0.15,
@@ -8,11 +46,29 @@
       "-ignore_pulse_resist": -0.15,
       "ignore_pulse_resist-1": -0.85
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
+    "eventCategoryType": "POTENTIAL",
+    "duration": {
+      "value": {
+        "verb": "IS",
+        "value": 25
+      },
+      "unit": "SECOND"
+    },
+    "stacks": {
+      "limit": {
+        "verb": "IS",
+        "value": 1
+      },
+      "interactionType": "RESET"
+    },
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

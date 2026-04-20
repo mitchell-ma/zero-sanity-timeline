@@ -27,7 +27,7 @@ export type { StaggerBreak };
  * Build a ValueResolutionContext for a stagger-emitting event so VARY_BY
  * nodes inside DEAL STAGGER clauses resolve against the source operator's
  * loadout. Talent slot is inferred from the event's columnId matching the
- * operator's talent one/two IDs (e.g. MOMENTUM_BREAKER_TALENT → slot two).
+ * operator's talent one/two IDs (e.g. MOMENTUM_BREAKER_T2 → slot two).
  */
 function buildStaggerCtx(
   ev: TimelineEvent,

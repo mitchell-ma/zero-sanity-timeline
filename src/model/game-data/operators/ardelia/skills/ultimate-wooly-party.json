@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "WOOLY_PARTY",
     "eventCategoryType": "ULTIMATE",
     "element": "NATURE",
-    "id": "WOOLY_PARTY",
     "descriptionParams": {
       "atk_scale": 1.65,
       "duration": 3,
@@ -25,7 +24,10 @@
       "1-interval": 0.7,
       "-interval": -0.3,
       "interval-1": -0.7
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

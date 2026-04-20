@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "XAIHI_POTENTIAL_1",
+    "id": "AGILE_EXECUTION_P1",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 1,
     "descriptionParams": {
       "atk_up": 0.05,
@@ -8,8 +10,10 @@
       "-atk_up": -0.05,
       "atk_up-1": -0.95
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "XAIHI",

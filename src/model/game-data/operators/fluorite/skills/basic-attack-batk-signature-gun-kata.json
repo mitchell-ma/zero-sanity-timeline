@@ -357,11 +357,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "SIGNATURE_GUN_KATA_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "NATURE",
-    "id": "SIGNATURE_GUN_KATA_BATK",
     "descriptionParams": {
       "atk_scale": 1.35,
       "atb": 15,
@@ -375,7 +374,10 @@
       "1-attack_poise": -14,
       "-attack_poise": -15,
       "attack_poise-1": 14
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "FLUORITE",

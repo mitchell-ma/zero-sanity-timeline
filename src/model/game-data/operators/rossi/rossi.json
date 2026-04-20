@@ -9,8 +9,8 @@
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "INTELLECT",
   "talents": {
-    "one": "NICKS_AND_SCRATCHES_TALENT",
-    "two": "SEETHING_BLOOD_TALENT",
+    "one": "NICKS_AND_SCRATCHES_T1",
+    "two": "SEETHING_BLOOD_T2",
     "attributeIncrease": {
       "id": "SKIRMISHER"
     }

@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "THE_PULVERIZING_FRONT",
     "eventCategoryType": "BATTLE",
     "element": "PHYSICAL",
-    "id": "THE_PULVERIZING_FRONT",
     "descriptionParams": {
       "atk_scale": 1.92,
       "atk_scale2": 2.38,
@@ -44,7 +43,10 @@
           "default": 1
         }
       ]
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "POGRANICHNIK",

@@ -1,8 +1,7 @@
 {
   "properties": {
-    "eventType": "SKILL",
-    "eventCategoryType": "COMBO",
     "id": "POLAR_RESCUE",
+    "eventCategoryType": "COMBO",
     "descriptionParams": {
       "heal_static_value": 216,
       "heal_scale": 0.5,
@@ -36,7 +35,10 @@
       "1-trigger_hp_ratio": 0.4,
       "-trigger_hp_ratio": -0.6,
       "trigger_hp_ratio-1": -0.4
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {

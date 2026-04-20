@@ -94,6 +94,13 @@ function clearPersistedSession(): void {
   try { localStorage.removeItem(COLLAB_SESSION_LS_KEY); } catch { /* ignore */ }
 }
 
+/** Role the local user held in the most recent persisted session, if one
+ *  survives (within TTL, not explicitly left). Used by the collab modal to
+ *  default the mode toggle to the user's last role after a refresh. */
+export function getPersistedCollabRole(): CollaborationRole | null {
+  return loadPersistedSession()?.role ?? null;
+}
+
 export interface UseCollaborationParams {
   /** Load the SheetData for an arbitrary UUID (uses buildSheetData() for the active
    *  loadout, loadLoadoutData() for background ones). Returns null if the uuid
@@ -253,7 +260,14 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
         if (!localId) {
           localId = createLocalLoadoutForUuid(entry.uuid, entry.name);
         }
-        if (localId) observeLoadout(entry.uuid);
+        if (localId) {
+          observeLoadout(entry.uuid);
+          // The snapshot that populated the Y.Doc arrived before our observer
+          // was attached, so no observer callback will fire for it. Pull the
+          // current Y.Map state into local state explicitly — otherwise the
+          // joiner sees empty loadouts until the host makes a fresh edit.
+          scheduleInboundApply(entry.uuid);
+        }
       } else {
         // Name may have changed — propagate to local node.
         const prevEntry = prevShared.find((e) => e.uuid === entry.uuid);
@@ -268,7 +282,7 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
     }
 
     updateSession({ sharedLoadouts: shared });
-  }, [createLocalLoadoutForUuid, getLocalIdForUuid, observeLoadout, renameLocalLoadout, stopObservingLoadout, updateSession]);
+  }, [createLocalLoadoutForUuid, getLocalIdForUuid, observeLoadout, renameLocalLoadout, scheduleInboundApply, stopObservingLoadout, updateSession]);
 
   // ── Teardown ───────────────────────────────────────────────────────────────
 
@@ -316,7 +330,7 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
     const localPeerId = roomId;
     registerPeerInDoc(doc, localPeerId, displayName, CollaborationRole.HOST);
 
-    setSession({
+    const newSession: CollaborationSession = {
       roomId,
       role: CollaborationRole.HOST,
       localPeerId,
@@ -328,7 +342,12 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
       permissions: [],
       maxPeers,
       reconnect: provider.getReconnectInfo(),
-    });
+    };
+    // Sync the ref eagerly so synchronous follow-up calls (e.g. the
+    // caller's shareLoadout loop) see the live session instead of the
+    // stale `null` from before setSession has re-rendered.
+    sessionRef.current = newSession;
+    setSession(newSession);
     provider.onStatus((status) => updateSession({ connectionStatus: status }));
     provider.onReconnect((info) => updateSession({ reconnect: info }));
     provider.onPeers((peerIds) => {
@@ -382,7 +401,7 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
     // so session.localPeerId is never undefined.
     const placeholderLocalPeerId = `joiner-${uuidv4().slice(0, 8)}`;
 
-    setSession({
+    const newSession: CollaborationSession = {
       roomId,
       role: CollaborationRole.JOINER,
       localPeerId: placeholderLocalPeerId,
@@ -394,7 +413,10 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
       permissions: [],
       maxPeers: 0,
       reconnect: provider.getReconnectInfo(),
-    });
+    };
+    // Sync the ref eagerly so synchronous follow-up calls see the live session.
+    sessionRef.current = newSession;
+    setSession(newSession);
     provider.onStatus((status) => updateSession({ connectionStatus: status }));
     provider.onReconnect((info) => updateSession({ reconnect: info }));
     provider.onPeers(() => updateSession({ peers: readPeersFromDoc(doc) }));
@@ -425,6 +447,7 @@ export function useCollaboration(params: UseCollaborationParams): UseCollaborati
     }
     cleanup();
     rememberedSharedUuidsRef.current = new Set();
+    sessionRef.current = null;
     setSession(null);
     clearPersistedSession();
   }, [cleanup]);

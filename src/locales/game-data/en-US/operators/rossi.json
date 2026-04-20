@@ -183,23 +183,23 @@
     "text": "Razor Clawmark",
     "dataStatus": "RECONCILED"
   },
-  "op.ROSSI.talent.NICKS_AND_SCRATCHES_TALENT.event.description": {
+  "op.ROSSI.talent.NICKS_AND_SCRATCHES_T1.event.description": {
     "text": "After Wolven Ambrage activates, applies Razor Clawmark to target. While active: target takes Physical DMG per second and increased Physical + Heat DMG taken. Effect baked into battle skill Crimson Shadow.",
     "dataStatus": "RECONCILED"
   },
-  "op.ROSSI.talent.NICKS_AND_SCRATCHES_TALENT.event.name": {
+  "op.ROSSI.talent.NICKS_AND_SCRATCHES_T1.event.name": {
     "text": "Nicks and Scratches (T1)",
     "dataStatus": "RECONCILED"
   },
-  "op.ROSSI.talent.SEETHING_BLOOD_TALENT.event.description": {
+  "op.ROSSI.talent.SEETHING_BLOOD_T2.event.description": {
     "text": "When Rossi's skill deals Critical DMG to a Razor Clawmarked enemy, triggers another hit dealing Heat DMG (ATK%) and restoring HP (INT%). If target is also Combusted, DMG and heal are 1.5x. Trigger interval: 1s (P3: 0.5s). P3: +8% ATK DMG, +INT x0.04 heal.",
     "dataStatus": "RECONCILED"
   },
-  "op.ROSSI.talent.SEETHING_BLOOD_TALENT.event.name": {
+  "op.ROSSI.talent.SEETHING_BLOOD_T2.event.name": {
     "text": "Seething Blood (T2)",
     "dataStatus": "RECONCILED"
   },
-  "op.ROSSI.talent.SEETHING_BLOOD_TALENT.segment.0.name": {
+  "op.ROSSI.talent.SEETHING_BLOOD_T2.segment.0.name": {
     "text": "Seething Blood",
     "dataStatus": "RECONCILED"
   }

@@ -9,8 +9,8 @@
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "INTELLECT",
   "talents": {
-    "one": "CHEER_OF_VICTORY_TALENT",
-    "two": "STAYING_IN_THE_ZONE_TALENT",
+    "one": "CHEER_OF_VICTORY_T1",
+    "two": "STAYING_IN_THE_ZONE_T2",
     "attributeIncrease": {
       "id": "SKIRMISHER"
     }

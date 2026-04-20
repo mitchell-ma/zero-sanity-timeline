@@ -83,8 +83,12 @@ function getCritDamageAtFirstDamageRow(app: AppResult): number {
     app.allProcessedEvents, app.columns, app.slots, app.enemy,
     app.loadoutProperties, app.loadouts, app.staggerBreaks, CritMode.ALWAYS, app.overrides,
   );
+  // Scope to the basic-attack damage row on SLOT — freeform reactions now also
+  // attribute to SLOT via sourceEntityId fallback, and a reaction's own damage
+  // row doesn't carry Freezing Point deltas.
   const row = calc.rows.find(r =>
-    r.damage != null && r.damage > 0 && r.params?.sub && r.ownerEntityId === SLOT,
+    r.damage != null && r.damage > 0 && r.params?.sub
+    && r.ownerEntityId === SLOT && r.columnId === NounType.BASIC_ATTACK,
   );
   expect(row).toBeDefined();
   return row!.params!.sub!.critDamage;

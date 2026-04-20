@@ -6,6 +6,21 @@ const REPEAT_DELAY = 200;
 /** Interval between repeats (ms). */
 const REPEAT_INTERVAL = 300;
 
+const SVG_PROPS = {
+  width: 12,
+  height: 12,
+  viewBox: '0 0 12 12',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.6,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+};
+const ChevronLeft     = () => <svg {...SVG_PROPS}><path d="M7.5 3L4 6l3.5 3"/></svg>;
+const ChevronRight    = () => <svg {...SVG_PROPS}><path d="M4.5 3L8 6l-3.5 3"/></svg>;
+const ChevronLeftDbl  = () => <svg {...SVG_PROPS}><path d="M9 3L6 6l3 3"/><path d="M5 3L2 6l3 3"/></svg>;
+const ChevronRightDbl = () => <svg {...SVG_PROPS}><path d="M3 3l3 3-3 3"/><path d="M7 3l3 3-3 3"/></svg>;
+
 export default function NumberInputWithFastForwardButtons({ label, value, min, max, step = 1, holdStep, holdSnaps, holdInterval, showMinMax, onChange }: {
   label: React.ReactNode;
   value: number;
@@ -67,7 +82,7 @@ export default function NumberInputWithFastForwardButtons({ label, value, min, m
       <span className="edit-field-label">{label}</span>
       <div className="stat-field-controls">
         {showMinMax && (
-          <button tabIndex={-1} className="stat-arrow stat-arrow--minmax" disabled={value <= min} onClick={() => onChange(min)}>⏮</button>
+          <button tabIndex={-1} className="stat-arrow stat-arrow--minmax" disabled={value <= min} onClick={() => onChange(min)}><ChevronLeftDbl /></button>
         )}
         <button
           tabIndex={-1}
@@ -77,7 +92,7 @@ export default function NumberInputWithFastForwardButtons({ label, value, min, m
           onMouseDown={() => startRepeat(-1)}
           onMouseUp={stopRepeat}
           onMouseLeave={stopRepeat}
-        >-</button>
+        ><ChevronLeft /></button>
         <input
           className="edit-input stat-field-input"
           type="text"
@@ -100,9 +115,9 @@ export default function NumberInputWithFastForwardButtons({ label, value, min, m
           onMouseDown={() => startRepeat(1)}
           onMouseUp={stopRepeat}
           onMouseLeave={stopRepeat}
-        >+</button>
+        ><ChevronRight /></button>
         {showMinMax && (
-          <button tabIndex={-1} className="stat-arrow stat-arrow--minmax" disabled={value >= max} onClick={() => onChange(max)}>⏭</button>
+          <button tabIndex={-1} className="stat-arrow stat-arrow--minmax" disabled={value >= max} onClick={() => onChange(max)}><ChevronRightDbl /></button>
         )}
       </div>
     </div>

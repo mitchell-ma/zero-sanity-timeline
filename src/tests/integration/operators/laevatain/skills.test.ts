@@ -21,7 +21,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
 import { INFLICTION_COLUMNS, ENEMY_ID, OPERATOR_STATUS_COLUMN_ID, ENEMY_GROUP_COLUMNS } from '../../../../model/channels';
-import { EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
+import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS, TOTAL_FRAMES } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -350,13 +350,13 @@ describe('Laevatain Skills — integration through useApp', () => {
 
     // Find empowered variant label from battle column
     const empoweredVariant = battleCol!.eventVariants?.find(
-      (v) => v.enhancementType === EnhancementType.EMPOWERED,
+      (v) => v.id.endsWith('_EMPOWERED'),
     );
     expect(empoweredVariant).toBeDefined();
 
     // Add empowered BS via context menu with variant label, well after all 4 battle skills
     const empPayload = getMenuPayload(
-      result.current, battleCol!, 50 * FPS, empoweredVariant!.displayName,
+      result.current, battleCol!, 50 * FPS, { variantId: empoweredVariant!.id },
     );
     act(() => {
       result.current.handleAddEvent(

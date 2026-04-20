@@ -280,14 +280,10 @@
     }
   ],
   "properties": {
-    "enhancementTypes": [
-      "ENHANCED"
-    ],
-    "eventType": "SKILL",
+    "id": "JOLTING_ARTS_BATK_ENHANCED",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "ELECTRIC",
-    "id": "JOLTING_ARTS_BATK_ENHANCED",
     "descriptionParams": {
       "atk_scale": 2.1,
       "1-atk_scale": -1.1,
@@ -305,10 +301,13 @@
       "1-atk_scale_sword": 0.8200000000000001,
       "-atk_scale_sword": -0.18,
       "atk_scale_sword-1": -0.8200000000000001
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "ZHUANG_FANGYI",
-    "dataStatus": "RECONCILED"
+    "dataStatus": "VERIFIED"
   }
 }

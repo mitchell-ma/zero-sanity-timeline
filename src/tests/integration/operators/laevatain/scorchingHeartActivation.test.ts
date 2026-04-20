@@ -19,7 +19,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { NounType } from '../../../../dsl/semantics';
 import { useApp } from '../../../../app/useApp';
-import { EnhancementType, EventStatusType, InteractionModeType } from '../../../../consts/enums';
+import { EventStatusType, InteractionModeType } from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { eventDuration } from '../../../../consts/viewTypes';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -52,11 +52,11 @@ function addBattleSkills(app: AppResult, count: number, startAt: number, spacing
 function addEmpoweredBattleSkill(app: AppResult, atSecond: number) {
   const col = findColumn(app, SLOT_LAEVATAIN, NounType.BATTLE);
   const empoweredVariant = col!.eventVariants?.find(
-    (v) => v.enhancementType === EnhancementType.EMPOWERED,
+    (v) => v.id.endsWith('_EMPOWERED'),
   );
   expect(empoweredVariant).toBeDefined();
   const atFrame = atSecond * FPS;
-  const payload = getMenuPayload(app, col!, atFrame, empoweredVariant!.displayName);
+  const payload = getMenuPayload(app, col!, atFrame, { variantId: empoweredVariant!.id });
   act(() => {
     app.handleAddEvent(
       payload.ownerEntityId, payload.columnId, payload.atFrame, payload.defaultSkill,

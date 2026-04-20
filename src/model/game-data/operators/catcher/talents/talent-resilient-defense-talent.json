@@ -53,7 +53,7 @@
     }
   ],
   "properties": {
-    "id": "RESILIENT_DEFENSE_TALENT",
+    "id": "RESILIENT_DEFENSE_T1",
     "descriptionParams": {
       "rate": 1.2,
       "1-rate": -0.19999999999999996,
@@ -66,8 +66,11 @@
     },
     "to": "OPERATOR",
     "toDeterminer": "THIS",
-    "eventType": "STATUS",
-    "eventCategoryType": "TALENT"
+    "eventCategoryType": "TALENT",
+    "eventTypes": [
+      "STATUS",
+      "AUTOMATIC"
+    ]
   },
   "metadata": {
     "originId": "CATCHER",

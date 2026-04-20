@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "SNOWSHINE_POTENTIAL_3",
+    "id": "POLAR_SURVIVAL_GUIDE_P3",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 3,
     "descriptionParams": {
       "extra_duration": 2,
@@ -8,8 +10,10 @@
       "-extra_duration": -2,
       "extra_duration-1": 1
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

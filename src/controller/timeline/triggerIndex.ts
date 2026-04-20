@@ -16,7 +16,7 @@
  * - clause: lifecycle triggers (HAVE STACKS conditions, e.g. MF → SH)
  * - TALENT: permanent presence events created on first encounter
  */
-import { StackInteractionType, UnitType, UNLIMITED_STACKS } from '../../consts/enums';
+import { EventType, StackInteractionType, UnitType } from '../../consts/enums';
 import type { LoadoutProperties } from '../../view/InformationPane';
 import type { StatusEventDef } from './eventQueueTypes';
 import type { Predicate, TriggerEffect } from './triggerMatch';
@@ -157,7 +157,6 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
     properties: {
       id, name, target, targetDeterminer,
       isForced: raw.isForced ?? (rp?.isForced as boolean),
-      enhancementTypes: raw.enhancementTypes ?? (rp?.enhancementTypes as string[]),
       stacks,
       duration: rp?.duration as StatusEventDef['properties']['duration'],
       susceptibility: raw.susceptibility ?? (rp?.susceptibility as string),
@@ -480,20 +479,17 @@ export class TriggerIndex {
         const talentEntityId = resolveTargetEntityId(def.properties.target, slotId, opSlotMap, def.properties.targetDeterminer);
         const talentColumnId = def.properties.id;
 
-        // Trigger-only talents create instances via APPLY EVENT / CONSUME EVENT
-        // during queue processing — no template event. Template events for these
-        // falsely satisfy HAVE STATUS conditions.
-        // A talent is trigger-only if its triggers fire APPLY EVENT (self-creating) or
-        // CONSUME EVENT (self-removing) — indicating lifecycle is managed by triggers.
-        const hasSelfApplyConsume = hasTrigger && def.onTriggerClause?.some((tc: { effects?: { verb?: string; object?: string }[] }) =>
-          tc.effects?.some(e => (e.verb === VerbType.APPLY || e.verb === VerbType.CONSUME) && e.object === NounType.EVENT));
-        const isPassive = talentDurationFrames >= TOTAL_FRAMES && !hasSelfApplyConsume;
-        if (hasTrigger && !isPassive) {
+        // AUTOMATIC tag marks defs the engine seeds with a frame-0 presence
+        // event. Set explicitly in the JSON config (see migrate_event_types.py)
+        // for permanent-duration talents/potentials that aren't counters and
+        // don't manage their own lifecycle via APPLY EVENT / CONSUME EVENT.
+        const isAutomatic = (def.properties.eventTypes ?? []).includes(EventType.AUTOMATIC);
+        if (hasTrigger && !isAutomatic) {
           const existing = this.talentsBySlot.get(slotId) ?? [];
           existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent: null });
           this.talentsBySlot.set(slotId, existing);
           // Fall through to onTriggerClause indexing below (don't continue)
-        } else if (!isPassive) {
+        } else if (!isAutomatic) {
           // Finite-duration talent with no trigger: template-only status.
           // These are applied dynamically by other effects (e.g. APPLY STATUS from
           // empowered battle skill clauses) — do NOT create a presence event or
@@ -508,20 +504,6 @@ export class TriggerIndex {
             if (entries.some(t => t.talentEvent?.columnId === talentColumnId && t.talentEvent?.ownerEntityId === talentEntityId)) alreadyIndexed = true;
           });
           if (alreadyIndexed) continue;
-
-          // Counter talents (NONE + unlimited stacks, e.g. Living Banner) start at 0 —
-          // no presence event. The first APPLY creates the event at the frame where stacks are gained.
-          const stackLimit = def.properties.stacks?.limit;
-          const resolvedLimit = typeof stackLimit === 'number' ? stackLimit
-            : typeof (stackLimit as { value?: number })?.value === 'number' ? (stackLimit as { value?: number }).value! : 0;
-          const isCounter = def.properties.stacks?.interactionType === StackInteractionType.NONE
-            && resolvedLimit >= UNLIMITED_STACKS;
-          if (isCounter) {
-            const existing = this.talentsBySlot.get(slotId) ?? [];
-            existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent: null });
-            this.talentsBySlot.set(slotId, existing);
-            // Fall through to onTriggerClause indexing below
-          } else {
 
           const talentEvent: TimelineEvent = {
             uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
@@ -538,7 +520,6 @@ export class TriggerIndex {
           const existing = this.talentsBySlot.get(slotId) ?? [];
           existing.push({ def, operatorId, operatorSlotId: slotId, talentEvent });
           this.talentsBySlot.set(slotId, existing);
-          }
         }
       }
 

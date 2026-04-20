@@ -6,8 +6,7 @@
  * Coverage:
  *   1. Passive 3-piece bonus stat (ATTACK_BONUS +0.15) aggregates correctly
  *   2. Trigger fires on combo skill cast
- *   3. Buff status's STAT clause flows into damage breakdown — EXPECTED to
- *      fail until engine wires gear/weapon STAT ingestion.
+ *   3. Buff status's STAT clause flows into damage breakdown.
  *      Buff grants BATTLE_SKILL_DAMAGE_BONUS (objectQualifier BATTLE),
  *      consumed on next BS cast.
  */
@@ -79,7 +78,7 @@ describe('Bonekrusha — gear set E2E', () => {
       expect(contribution).toBeGreaterThan(0);
 
       const entries = breakdownFor(row);
-      const entry = findEntry(entries, 'Skill Type DMG%');
+      const entry = findEntry(entries, 'Battle Skill DMG%');
       expect(entry).toBeDefined();
     });
   });

@@ -9,8 +9,8 @@
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "INTELLECT",
   "talents": {
-    "one": "FLASH_FROZEN_FOR_FRESHNESS",
-    "two": "VETERAN_ANGLER_TALENT",
+    "one": "FLASH_FROZEN_FOR_FRESHNESS_T1",
+    "two": "VETERAN_ANGLER_T2",
     "attributeIncrease": {
       "id": "FORGED"
     }

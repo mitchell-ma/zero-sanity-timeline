@@ -27,7 +27,7 @@ import { useApp } from '../../../../app/useApp';
 import { NODE_STAGGER_COLUMN_ID, ENEMY_ID, USER_ID, ultimateGraphKey } from '../../../../model/channels';
 import { getUltimateEnergyCost } from '../../../../controller/operators/operatorRegistry';
 import { ColumnType, InteractionModeType } from '../../../../consts/enums';
-import { EnhancementType } from '../../../../consts/enums';
+import {} from '../../../../consts/enums';
 import { FPS } from '../../../../utils/timeline';
 import { checkVariantAvailability } from '../../../../controller/timeline/eventValidator';
 import { computeTimelinePresentation } from '../../../../controller/timeline/eventPresentationController';
@@ -44,6 +44,7 @@ const SMOULDERING_FIRE_EMPOWERED_ID: string = require('../../../../model/game-da
 const SMOULDERING_FIRE_ENHANCED_ID: string = require('../../../../model/game-data/operators/laevatain/skills/battle-skill-smouldering-fire-enhanced.json').properties.id;
 const SMOULDERING_FIRE_ENHANCED_EMPOWERED_ID: string = require('../../../../model/game-data/operators/laevatain/skills/battle-skill-smouldering-fire-enhanced-empowered.json').properties.id;
 const TWILIGHT_ID: string = require('../../../../model/game-data/operators/laevatain/skills/ultimate-twilight.json').properties.id;
+const FINISHER_ID: string = require('../../../../model/game-data/operators/laevatain/skills/basic-attack-finisher-flaming-cinders.json').properties.id;
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const SLOT = 'slot-0';
@@ -268,14 +269,14 @@ describe('Laevatain variant availability — integration through useApp', () => 
     it('finisher is disabled during ultimate (DISABLE FINISHER)', () => {
       const { result } = renderHook(() => useApp());
       placeUltimate(result, ULT_START);
-      const r = isAvailable(result.current, NounType.FINISHER, NounType.BASIC_ATTACK, ACTIVE_FRAME);
+      const r = isAvailable(result.current, FINISHER_ID, NounType.BASIC_ATTACK, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
 
       // Context menu: finisher variant is disabled during ultimate
       const batkCol = findMatchingColumn(result.current, SLOT, NounType.BASIC_ATTACK);
       const menu = buildContextMenu(result.current, batkCol!, ACTIVE_FRAME);
       expect(menu).not.toBeNull();
-      const item = findVariantMenuItem(menu!, NounType.FINISHER);
+      const item = findVariantMenuItem(menu!, FINISHER_ID);
       expect(item).toBeDefined();
       expect(item!.disabled).toBe(true);
     });
@@ -310,7 +311,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
         result.current.setInteractionMode(InteractionModeType.STRICT);
       });
       // Finisher should still be disabled by the DISABLE clause targeting its ID
-      const r = isAvailable(result.current, NounType.FINISHER, NounType.BASIC_ATTACK, ACTIVE_FRAME);
+      const r = isAvailable(result.current, FINISHER_ID, NounType.BASIC_ATTACK, ACTIVE_FRAME);
       expect(r.disabled).toBe(true);
     });
 
@@ -337,7 +338,7 @@ describe('Laevatain variant availability — integration through useApp', () => 
       // Place an enhanced battle skill during the active window (generates ultimate energy gain normally)
       const battleCol = findMatchingColumn(result.current, SLOT, NounType.BATTLE);
       const enhancedVariant = battleCol!.eventVariants?.find(
-        (v) => v.enhancementType === EnhancementType.ENHANCED,
+        (v) => v.id.endsWith('_ENHANCED'),
       );
       act(() => {
         result.current.handleAddEvent(SLOT, NounType.BATTLE, ACTIVE_FRAME, enhancedVariant!);

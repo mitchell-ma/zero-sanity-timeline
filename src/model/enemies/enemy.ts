@@ -3,11 +3,11 @@ import {
   EnemyLocationType,
   StatType,
   EnemyTierType,
-  EnemyType,
   RaceType,
 } from "../../consts/enums";
 import { lookupByLevel } from "../../utils/lookupByLevel";
 import { DEFAULT_STATS } from "../../consts/stats";
+import { LocaleKey, resolveEventName } from "../../locales/gameDataLocale";
 
 /** Default baseline for all enemy stats (spreads from DEFAULT_STATS, overrides enemy-specific values). */
 export const DEFAULT_ENEMY_STATS: Readonly<Record<StatType, number>> = {
@@ -31,8 +31,33 @@ export type EnemyStatsByLevel = Readonly<
   Record<number, Partial<Record<StatType, number>>>
 >;
 
-export abstract class Enemy {
-  readonly enemyType: EnemyType;
+export interface EnemyJsonLevelEntry {
+  level: number;
+  attributes: Partial<Record<StatType, number>>;
+}
+
+export interface EnemyJsonConfig {
+  id: string;
+  tier: EnemyTierType;
+  race: RaceType;
+  location: EnemyLocationType;
+  attackElement: ElementType | null;
+  baseStats?: Partial<Record<StatType, number>>;
+  statsByLevel: EnemyJsonLevelEntry[];
+  staggerNodes?: number;
+  staggerNodeRecoverySeconds?: number;
+}
+
+function statsByLevelFromJson(entries: EnemyJsonLevelEntry[]): EnemyStatsByLevel {
+  const out: Record<number, Partial<Record<StatType, number>>> = {};
+  for (const entry of entries) {
+    out[entry.level] = entry.attributes;
+  }
+  return out;
+}
+
+export class Enemy {
+  readonly id: string;
   readonly name: string;
   readonly tier: EnemyTierType;
   readonly race: RaceType;
@@ -43,48 +68,31 @@ export abstract class Enemy {
   stats: Record<StatType, number>;
 
   readonly statsByLevel: EnemyStatsByLevel;
+  readonly staggerNodes: number;
+  readonly staggerNodeRecoverySeconds: number;
 
-  constructor(params: {
-    enemyType: EnemyType;
-    name: string;
-    level: number;
-    tier: EnemyTierType;
-    race: RaceType;
-    location: EnemyLocationType;
-    attackElement: ElementType | null;
-    statsByLevel: EnemyStatsByLevel;
-    baseStats?: Partial<Record<StatType, number>>;
-  }) {
-    const {
-      enemyType,
-      name,
-      level,
-      tier,
-      race,
-      location,
-      attackElement,
-      statsByLevel,
-      baseStats = {},
-    } = params;
-
+  constructor(config: EnemyJsonConfig, level: number) {
     if (level < 1 || level > 90 || !Number.isInteger(level)) {
       throw new RangeError(
         `Enemy level must be an integer between 1 and 90, got ${level}`,
       );
     }
 
-    this.enemyType = enemyType;
-    this.name = name;
+    this.id = config.id;
+    this.name = resolveEventName(LocaleKey.enemy(config.id));
+    this.tier = config.tier;
+    this.race = config.race;
+    this.location = config.location;
+    this.attackElement = config.attackElement;
     this.level = level;
-    this.tier = tier;
-    this.race = race;
-    this.location = location;
-    this.attackElement = attackElement;
-    this.statsByLevel = statsByLevel;
+    this.statsByLevel = statsByLevelFromJson(config.statsByLevel);
+    this.staggerNodes = config.staggerNodes ?? 0;
+    this.staggerNodeRecoverySeconds = config.staggerNodeRecoverySeconds ?? 0;
+
     this.stats = {
       ...DEFAULT_ENEMY_STATS,
-      ...baseStats,
-      ...lookupByLevel(statsByLevel, level),
+      ...(config.baseStats ?? {}),
+      ...lookupByLevel(this.statsByLevel, level),
     };
   }
 

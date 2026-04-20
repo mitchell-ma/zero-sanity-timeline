@@ -9,8 +9,8 @@
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "INTELLECT",
   "talents": {
-    "one": "MESSENGER_S_SONG_TALENT",
-    "two": "LATE_REPLY_TALENT",
+    "one": "MESSENGER_S_SONG_T1",
+    "two": "LATE_REPLY_T2",
     "attributeIncrease": {
       "id": "STALWART"
     }

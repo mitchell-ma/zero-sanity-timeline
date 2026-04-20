@@ -1,6 +1,8 @@
 {
   "properties": {
-    "id": "SNOWSHINE_POTENTIAL_2",
+    "id": "STORM_REGION_P2",
+    "to": "OPERATOR",
+    "toDeterminer": "THIS",
     "level": 2,
     "descriptionParams": {
       "potential_2": 1,
@@ -16,8 +18,10 @@
       "-potential_2_range": -0.2,
       "potential_2_range-1": -0.8
     },
-    "eventType": "POTENTIAL_EVENT",
-    "eventCategoryType": "POTENTIAL"
+    "eventCategoryType": "POTENTIAL",
+    "eventTypes": [
+      "STATUS"
+    ]
   },
   "metadata": {
     "originId": "SNOWSHINE",

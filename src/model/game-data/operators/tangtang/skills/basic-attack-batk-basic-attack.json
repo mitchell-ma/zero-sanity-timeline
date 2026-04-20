@@ -439,11 +439,10 @@
     }
   ],
   "properties": {
-    "eventType": "SKILL",
+    "id": "ILL_BLOW_YOUR_MIND_BATK",
     "eventCategoryType": "BASIC_ATTACK",
     "eventQualifierType": "BATK",
     "element": "CRYO",
-    "id": "ILL_BLOW_YOUR_MIND_BATK",
     "descriptionParams": {
       "atk_scale_1": 0.18,
       "atk_scale_2": 0.46,
@@ -465,7 +464,10 @@
       "1-poise": -17,
       "-poise": -18,
       "poise-1": 17
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "metadata": {
     "originId": "TANGTANG",

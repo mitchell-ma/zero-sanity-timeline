@@ -1,9 +1,8 @@
 {
   "properties": {
-    "eventType": "SKILL",
+    "id": "THUNDERLANCE_FINAL_SHOCK",
     "eventCategoryType": "ULTIMATE",
     "element": "ELECTRIC",
-    "id": "THUNDERLANCE_FINAL_SHOCK",
     "descriptionParams": {
       "atk_scale": 9.5,
       "poise": 20,
@@ -25,7 +24,10 @@
       "1-lance_duration_ult": -29,
       "-lance_duration_ult": -30,
       "lance_duration_ult-1": 29
-    }
+    },
+    "eventTypes": [
+      "SKILL"
+    ]
   },
   "segments": [
     {
