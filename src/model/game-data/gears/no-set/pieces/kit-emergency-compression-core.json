@@ -45,7 +45,7 @@
   "properties": {
     "id": "EMERGENCY_COMPRESSION_CORE",
     "gearType": "KIT",
-    "gearSet": "NONE"
+    "gearSet": "NONE_STAT"
   },
   "metadata": {
     "originId": "game",

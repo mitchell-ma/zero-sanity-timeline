@@ -1,5 +1,8 @@
 # Devlog
 
+## 2026-05-09
+- No-set gear pieces show their proper names again. Redeemer Seal, Redeemer Armor, Miner gear, Basic gear, and the rest of the unsetted kit pieces were rendering as raw lookup keys (e.g. `gear.NONE.piece.REDEEMER_SEAL.event.name`) in loadout cards and pickers — they now display "Redeemer Seal" and friends as intended.
+
 ## 2026-04-19
 - Zhuang Fangyi added. New 6-star Striker (Electric / Arts Unit, main WILL / secondary INTELLECT). Her Battle Skill, Mantra of Sundering, consumes the enemy's Electrification and fires a chain of Thunder Strikes whose length matches how many Sunderblades she's holding — up to three, based on the Electrification level consumed. Each strike deals Electric damage, recovers Ultimate Energy, and adds a stack of Force of Nature (elemental AMP); the final strike hits for 6× damage. Her Ultimate, Smiting Tempest, transforms her into the Empyrean of Truth — enhanced Basic Attack and enhanced Breath of Transformation variants swap in for the duration, Finisher is disabled, and the first post-transform cast of Mantra of Sundering is a guaranteed free, full-conversion cast. P1–P5 potentials scale the chain's damage, refund SP, and extend the transformation window; the talents Force of Nature (per-strike Electric AMP) and Ordained by Heaven round out the kit.
 - Top bar slimmed down further. Devlog, Feedback, Keyboard shortcuts, the Freeform toggle, and the GitHub link are no longer separate buttons — they now live together under a single "About" button, which opens a compact menu with the same options. The theme, settings, and collab buttons stay where they were.

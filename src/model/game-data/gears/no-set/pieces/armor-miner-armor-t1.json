@@ -91,7 +91,7 @@
   "properties": {
     "id": "MINER_ARMOR_T1",
     "gearType": "ARMOR",
-    "gearSet": "NONE"
+    "gearSet": "NONE_STAT"
   },
   "metadata": {
     "originId": "game",

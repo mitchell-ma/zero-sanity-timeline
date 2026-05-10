@@ -68,7 +68,7 @@
   "properties": {
     "id": "REDEEMER_ARMOR",
     "gearType": "ARMOR",
-    "gearSet": "NONE"
+    "gearSet": "NONE_STAT"
   },
   "metadata": {
     "originId": "game",

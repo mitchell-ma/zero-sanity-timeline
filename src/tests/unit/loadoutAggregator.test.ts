@@ -87,8 +87,8 @@ jest.mock('../../utils/loadoutRegistry', () => {
     KITS: [{
       name: 'Redeemer Seal',
       rarity: 5,
-      gearSetType: 'NONE',
-      create: gearFactory(21, 'NONE', { '4': { INTELLECT: 55, ULTIMATE_GAIN_EFFICIENCY: 0.334 } }),
+      gearSetType: 'NONE_STAT',
+      create: gearFactory(21, 'NONE_STAT', { '4': { INTELLECT: 55, ULTIMATE_GAIN_EFFICIENCY: 0.334 } }),
     }],
     CONSUMABLES: [],
     TACTICALS: [],

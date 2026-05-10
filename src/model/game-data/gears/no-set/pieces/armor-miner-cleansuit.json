@@ -91,7 +91,7 @@
   "properties": {
     "id": "MINER_CLEANSUIT",
     "gearType": "ARMOR",
-    "gearSet": "NONE"
+    "gearSet": "NONE_STAT"
   },
   "metadata": {
     "originId": "game",

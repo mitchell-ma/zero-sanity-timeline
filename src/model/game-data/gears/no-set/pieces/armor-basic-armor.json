@@ -91,7 +91,7 @@
   "properties": {
     "id": "BASIC_ARMOR",
     "gearType": "ARMOR",
-    "gearSet": "NONE"
+    "gearSet": "NONE_STAT"
   },
   "metadata": {
     "originId": "game",

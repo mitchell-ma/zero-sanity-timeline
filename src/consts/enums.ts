@@ -348,7 +348,7 @@ export enum BatkType {
 }
 
 export enum GearSetType {
-  NONE = "NONE",
+  NONE = "NONE_STAT",
   AIC_HEAVY = "AIC_HEAVY_STAT",
   AIC_LIGHT = "AIC_LIGHT_STAT",
   ARMORED_MSGR = "ARMORED_MSGR_STAT",

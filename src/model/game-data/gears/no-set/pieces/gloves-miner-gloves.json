@@ -91,7 +91,7 @@
   "properties": {
     "id": "MINER_GLOVES",
     "gearType": "GLOVES",
-    "gearSet": "NONE"
+    "gearSet": "NONE_STAT"
   },
   "metadata": {
     "originId": "game",
